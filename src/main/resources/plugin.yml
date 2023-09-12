@@ -1,0 +1,16 @@
+name: Spartan
+author: Evangelos Dedes @Vagdedes
+main: me.vagdedes.spartan.Register
+version: Phase 521
+website: https://vagdedes.com/
+description: Advanced cheat prevention made simple
+api-version: 1.13
+softdepend: [ProtocolLib, UltimateStatistics, FileGUI, MinigameMaker, AntiAltAccount,
+             mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,
+             aSkyBlock, AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, GrapplingHook,
+             MagicSpells, MineBomb, MineTinker, MythicMobs, PrinterMode, ProjectKorra, RealDualWield,
+             SmashHit, SuperPickaxe, TreeFeller, Vehicles, WildTools, Geyser-Spigot, floodgate-bukkit]
+load: POSTWORLD
+folia-supported: true
+commands:
+  spartan:
