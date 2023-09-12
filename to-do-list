@@ -1,0 +1,4 @@
+Eliminate much of the static methods into object oriented programming.
+Rewrite of the Speed check
+Rewrite of the Velocity check
+Rewrite of IrregularMovements liquids detection (Jesus/WaterWalk)
