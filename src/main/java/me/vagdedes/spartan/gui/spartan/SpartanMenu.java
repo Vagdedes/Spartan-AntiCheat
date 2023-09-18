@@ -6,24 +6,23 @@ import me.vagdedes.spartan.compatibility.necessary.FileGUI;
 import me.vagdedes.spartan.compatibility.necessary.UltimateStatistics;
 import me.vagdedes.spartan.configuration.Compatibility;
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.configuration.Messages;
 import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.gui.configuration.ManageChecks;
 import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.helpers.PlayerStateLists;
 import me.vagdedes.spartan.gui.info.PlayerInfo;
 import me.vagdedes.spartan.handlers.connection.DiscordMemberCount;
+import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.objects.profiling.PlayerReport;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums.Permission;
-import me.vagdedes.spartan.system.IDs;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
@@ -51,11 +50,11 @@ public class SpartanMenu {
             oppositeVersion = "Spartan: " + opposite + " Edition";
 
     public static void refresh() {
-        if (Settings.getBoolean("Important.refresh_inventory_menu")) {
+        if (Config.settings.getBoolean("Important.refresh_inventory_menu")) {
             Runnable runnable = () -> {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-                if (players.size() > 0) {
+                if (!players.isEmpty()) {
                     String menuName = getMenuName();
 
                     for (SpartanPlayer p : players) {
@@ -121,7 +120,7 @@ public class SpartanMenu {
     public static boolean open(SpartanPlayer p, boolean permissionMessage) {
         if (!hasPermission(p)) {
             if (permissionMessage) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             }
             return false;
         }
@@ -131,7 +130,7 @@ public class SpartanMenu {
         Inventory inv = p.createInventory(54, getMenuName() + page);
 
         // Ecosystem
-        if (Settings.getBoolean(Settings.showEcosystemOption)) {
+        if (Config.settings.getBoolean(Settings.showEcosystemOption)) {
             ItemStack itemStack = new ItemStack(Material.GOLD_BLOCK);
             itemStack.setAmount(AlgebraUtils.randomInteger(1, 64));
             itemStack.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
@@ -268,11 +267,11 @@ public class SpartanMenu {
 
         // Compatibilities
         InventoryUtils.prepareDescription(lore, "Local Functionality");
-        List<Compatibility.CompatibilityType> activeCompatibilities = Compatibility.getActiveCompatibilities();
+        List<Compatibility.CompatibilityType> activeCompatibilities = Config.compatibility.getActiveCompatibilities();
         int activeCompatibilitiesSize = activeCompatibilities.size();
 
         lore.add("§7Identified§8:§a " + activeCompatibilitiesSize);
-        lore.add("§7Total§8:§a " + Compatibility.getInactiveCompatibilities().size());
+        lore.add("§7Total§8:§a " + Config.compatibility.getInactiveCompatibilities().size());
 
         if (activeCompatibilitiesSize > 0) {
             lore.add("");
@@ -324,13 +323,13 @@ public class SpartanMenu {
 
         } else if (item.equals("Compatibilities")) {
             if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 if (FileGUI.isEnabled()) {
                     Player n = p.getPlayer();
 
                     if (n != null && n.isOnline() && n.hasPermission(FileGUI.permission)) {
-                        FileGUIAPI.openMenu(n, Compatibility.getFile().getPath(), 1);
+                        FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                     } else {
                         ManageConfiguration.openChild(p, ManageConfiguration.compatibilityFileName);
                     }
@@ -341,7 +340,7 @@ public class SpartanMenu {
 
         } else if (item.equals("Configuration")) {
             if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 if (clickType == ClickType.LEFT) {
                     ManageChecks.open(p);
@@ -349,7 +348,7 @@ public class SpartanMenu {
                     ManageConfiguration.open(p);
                 } else if (clickType.isShiftClick()) {
                     if (!Permissions.has(p, Permission.RELOAD)) {
-                        p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                        p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                         return true;
                     } else {
                         Config.reload(p);

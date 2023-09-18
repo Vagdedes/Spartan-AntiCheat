@@ -1,19 +1,18 @@
 package me.vagdedes.spartan;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.protections.LagLeniencies;
-import me.vagdedes.spartan.features.protections.PlayerLimitPerIP;
-import me.vagdedes.spartan.features.protections.ReconnectCooldown;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.protections.LagLeniencies;
+import me.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
+import me.vagdedes.spartan.functionality.protections.ReconnectCooldown;
 import me.vagdedes.spartan.handlers.connection.DiscordMemberCount;
+import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.interfaces.commands.CommandExecution;
 import me.vagdedes.spartan.interfaces.commands.CommandTab;
 import me.vagdedes.spartan.interfaces.listeners.*;
-import me.vagdedes.spartan.system.Cache;
-import me.vagdedes.spartan.system.Piracy;
 import me.vagdedes.spartan.utils.server.NetworkUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
@@ -61,7 +60,7 @@ public class Register extends JavaPlugin {
         DiscordMemberCount.get();
 
         // Base
-        Settings.runOnLogin();
+        Config.settings.runOnLogin();
         LagLeniencies.cache();
         PlayerLimitPerIP.cache();
         ReconnectCooldown.loadCooldowns();
@@ -115,7 +114,8 @@ public class Register extends JavaPlugin {
     // Utilities
 
     public static void enable(Listener l, Class<?> c) {
-        if (isPluginEnabled() && listeners.add(c)) {
+        if (isPluginEnabled()
+                && listeners.add(c)) {
             manager.registerEvents(l, plugin);
         }
     }

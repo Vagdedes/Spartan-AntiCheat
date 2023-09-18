@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.objects.replicates;
 
 import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.handlers.stability.Chunks;
 import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
@@ -737,11 +737,11 @@ public class SpartanLocation {
             if (playerProfile.isSuspectedOrHacker()) {
                 return getSurroundingLocations(x, y, z, true);
             } else {
-                LiveViolation liveViolation = playerProfile.getLastInteraction();
+                LiveViolation liveViolation = player.getLastViolation();
                 return getSurroundingLocations(x, y, z,
                         liveViolation.hasLevel()
                                 || liveViolation.hasCancelledLevel()
-                                || liveViolation.getLastViolation(true) <= Check.violationCycleSeconds
+                                || liveViolation.getLastViolationTime(true) <= Check.violationCycleSeconds
                 );
             }
         }

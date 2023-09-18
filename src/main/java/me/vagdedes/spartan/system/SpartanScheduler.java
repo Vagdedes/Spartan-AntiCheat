@@ -2,7 +2,7 @@ package me.vagdedes.spartan.system;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import org.bukkit.Bukkit;

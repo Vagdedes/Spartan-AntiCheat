@@ -5,27 +5,24 @@ import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.checks.combat.criticals.Criticals;
 import me.vagdedes.spartan.checks.combat.criticals.CriticalsUtils;
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.configuration.SQLFeature;
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.configuration.AntiCheatLogs;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.moderation.BanManagement;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.notifications.DetectionNotifications;
-import me.vagdedes.spartan.features.performance.FalsePositiveDetection;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
-import me.vagdedes.spartan.features.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudConnections;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.moderation.BanManagement;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import me.vagdedes.spartan.functionality.performance.FalsePositiveDetection;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
+import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudConnections;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import me.vagdedes.spartan.gui.info.PlayerInfo;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.objects.features.StatisticalProgress;
 import me.vagdedes.spartan.objects.profiling.*;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.Check;
-import me.vagdedes.spartan.system.Cache;
 import me.vagdedes.spartan.system.Enums;
-import me.vagdedes.spartan.system.IDs;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.gameplay.CombatUtils;
 import me.vagdedes.spartan.utils.java.StringUtils;
@@ -53,7 +50,7 @@ public class ResearchEngine {
     // Constants
     public static final int
             maxDataLength = 4096,
-            logRequirement = Check.maxViolations,
+            logRequirement = Check.maxViolationsPerCycle,
             profileRequirement = logRequirement / 10;
     public static final double downloadedVersion = Double.parseDouble(API.getVersion().substring(6));
     public static final int
@@ -98,7 +95,7 @@ public class ResearchEngine {
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
             if (players.size() > 0) {
-                boolean added = !Settings.getBoolean("Important.load_player_head_textures") || skulls.size() == logRequirement;
+                boolean added = !Config.settings.getBoolean("Important.load_player_head_textures") || skulls.size() == logRequirement;
                 Inventory inv = Bukkit.createInventory(players.get(0).getPlayer(), 9, "");
 
                 for (PlayerProfile playerProfile : playerProfiles) {
@@ -187,7 +184,7 @@ public class ResearchEngine {
     }
 
     public static boolean isStorageMode() {
-        return Settings.getBoolean("Logs.log_file") || isDatabaseMode();
+        return Config.settings.getBoolean("Logs.log_file") || isDatabaseMode();
     }
 
     public static DataType[] getDynamicUsableDataTypes(boolean universal) {
@@ -200,7 +197,7 @@ public class ResearchEngine {
     // Separator
 
     public static boolean isDatabaseMode() {
-        return SQLFeature.isEnabled();
+        return Config.sql.isEnabled();
     }
 
     public static boolean enoughData() {
@@ -246,7 +243,7 @@ public class ResearchEngine {
         if (!enabledPlugin || !isCaching()) {
             // Complete Storage
             AntiCheatLogs.refresh();
-            SQLFeature.refreshDatabase();
+            Config.sql.refreshDatabase();
             Criticals.clear();
 
             if (enabledPlugin) {
@@ -526,7 +523,7 @@ public class ResearchEngine {
         if (deep) {
             Collection<PlayerProfile> playerProfiles = ResearchEngine.playerProfiles.values();
 
-            if (playerProfiles.size() > 0) {
+            if (!playerProfiles.isEmpty()) {
                 for (PlayerProfile playerProfile : playerProfiles) {
                     if (playerProfile.getName().equalsIgnoreCase(name)) {
                         return playerProfile;
@@ -596,8 +593,8 @@ public class ResearchEngine {
 
             // Separator
 
-            if (SQLFeature.isEnabled()) {
-                SQLFeature.update("DELETE FROM " + SQLFeature.getTable() + " WHERE functionality = '" + hackTypeString + "';");
+            if (Config.sql.isEnabled()) {
+                Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE functionality = '" + hackTypeString + "';");
             }
 
             // Separator
@@ -640,7 +637,7 @@ public class ResearchEngine {
 
                     if (foundPlayer) {
                         for (Enums.HackType hackType : Enums.HackType.values()) {
-                            hackType.getCheck().getViolations(p).reset();
+                            p.getViolations(hackType).reset();
                         }
                     }
 
@@ -662,8 +659,8 @@ public class ResearchEngine {
                             legitimatePlayers.add(newPlayerProfile);
                             p.setProfile(newPlayerProfile);
                         }
-                        if (SQLFeature.isEnabled()) {
-                            SQLFeature.update("DELETE FROM " + SQLFeature.getTable() + " WHERE information LIKE '%" + playerName + "%';");
+                        if (Config.sql.isEnabled()) {
+                            Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE information LIKE '%" + playerName + "%';");
                         }
                         Collection<File> files = getFiles();
 
@@ -755,7 +752,7 @@ public class ResearchEngine {
                 String[] incomingInformation = CloudConnections.getCrossServerInformation("log", crossServerInformationOption);
 
                 if (incomingInformation != null && incomingInformation.length > 0) {
-                    String key = AntiCheatLogs.syntaxDate(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now()), AlgebraUtils.randomInteger(1, Check.maxViolations - 1));
+                    String key = AntiCheatLogs.syntaxDate(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now()), AlgebraUtils.randomInteger(1, Check.maxViolationsPerCycle - 1));
 
                     for (String information : incomingInformation) {
                         if (isLogValid(information)) {
@@ -779,10 +776,10 @@ public class ResearchEngine {
 
         // Separator
 
-        if (SQLFeature.isEnabled()) {
+        if (Config.sql.isEnabled()) {
             if (!isFull) {
                 try {
-                    ResultSet rs = SQLFeature.query("SELECT creation_date, information FROM " + SQLFeature.getTable() + " ORDER BY id DESC LIMIT " + maxSize + ";");
+                    ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + maxSize + ";");
 
                     if (rs != null) {
                         while (rs.next()) {
@@ -790,7 +787,7 @@ public class ResearchEngine {
 
                             if (isLogValid(data)) {
                                 Timestamp t = rs.getTimestamp("creation_date");
-                                String date = "(" + AlgebraUtils.randomInteger(1, Check.maxViolations - 1) + ")[" + TimeUtils.getYearMonthDay(t) + " " + TimeUtils.getTime(t) + "]";
+                                String date = "(" + AlgebraUtils.randomInteger(1, Check.maxViolationsPerCycle - 1) + ")[" + TimeUtils.getYearMonthDay(t) + " " + TimeUtils.getTime(t) + "]";
                                 cache.put(date, data);
                                 byteSize += date.length() + data.length();
 

@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.objects.profiling;
 
-import me.vagdedes.spartan.features.performance.FalsePositiveDetection;
+import me.vagdedes.spartan.functionality.performance.FalsePositiveDetection;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 

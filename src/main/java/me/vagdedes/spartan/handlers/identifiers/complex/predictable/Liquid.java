@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.handlers.identifiers.complex.predictable;
 
 import me.vagdedes.spartan.configuration.Compatibility;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.utils.gameplay.BlockUtils;

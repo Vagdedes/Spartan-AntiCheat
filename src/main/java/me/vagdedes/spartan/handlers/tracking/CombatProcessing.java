@@ -1,11 +1,11 @@
 package me.vagdedes.spartan.handlers.tracking;
 
 import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.objects.data.Cooldowns;
 import me.vagdedes.spartan.objects.data.Decimals;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import me.vagdedes.spartan.system.Cache;
 import me.vagdedes.spartan.utils.gameplay.CombatUtils;
 import org.bukkit.util.Vector;
 

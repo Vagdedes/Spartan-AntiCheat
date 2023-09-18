@@ -7,14 +7,14 @@ import com.comphenix.protocol.events.PacketEvent;
 import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.checks.movement.NoSlowdown;
 import me.vagdedes.spartan.compatibility.manual.essential.protocollib.ProtocolLib;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.data.Cooldowns;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.gameplay.BlockUtils;
 import me.vagdedes.spartan.utils.gameplay.CombatUtils;
-import me.vagdedes.spartan.utils.gameplay.MoveUtils;
 import me.vagdedes.spartan.utils.gameplay.PlayerData;
 import org.bukkit.Material;
 
@@ -82,7 +82,7 @@ public class PlibHandlers {
                                             || bow && (newType == Material.BOW || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14) && newType == Material.CROSSBOW) && p.getInventory().contains(Material.ARROW)
                                             || potion && newType == Material.POTION
                                             || shield && PlayerData.hasItemInHands(p, Material.SHIELD)) {
-                                        NoSlowdown.runUse("packets", true, 1, p, loc, MoveUtils.getCachedLocation(p), 0, 0, 0);
+                                        p.getExecutor(Enums.HackType.NoSlowdown).handle(NoSlowdown.PACKETS);
                                     }
                                 }
                             }, delay);

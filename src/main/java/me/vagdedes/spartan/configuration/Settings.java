@@ -1,13 +1,13 @@
 package me.vagdedes.spartan.configuration;
 
-import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.features.chat.ChatProtection;
-import me.vagdedes.spartan.features.moderation.PlayerReports;
-import me.vagdedes.spartan.features.notifications.DetectionNotifications;
-import me.vagdedes.spartan.features.performance.MaximumCheckedPlayers;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
-import me.vagdedes.spartan.features.synchronicity.DiscordWebhooks;
-import me.vagdedes.spartan.handlers.commands.RawCommands;
+import me.vagdedes.spartan.abstraction.ConfigurationBuilder;
+import me.vagdedes.spartan.functionality.chat.ChatProtection;
+import me.vagdedes.spartan.functionality.commands.RawCommands;
+import me.vagdedes.spartan.functionality.moderation.PlayerReports;
+import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import me.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
+import me.vagdedes.spartan.functionality.synchronicity.DiscordWebhooks;
 import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.interfaces.commands.CommandExecution;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -18,19 +18,17 @@ import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
-public class Settings {
+public class Settings extends ConfigurationBuilder {
 
-    private static File file = new File(Register.plugin.getDataFolder() + "/settings.yml");
-    private static final Map<String, Boolean>
-            saved = new LinkedHashMap<>(40),
-            exists = new LinkedHashMap<>(60);
-    private static final Map<String, Integer> variable = new LinkedHashMap<>(10);
-    private static final Map<String, String> str = new LinkedHashMap<>(5);
+    public Settings() {
+        super("settings");
+    }
 
     public static final String explosionOption = "Protections.explosion_detection_cooldown",
             permissionOption = "Important.use_permission_cache", // test server
@@ -38,23 +36,18 @@ public class Settings {
             tpsProtectionOption = "Protections.use_tps_protection";
     private static int usingCustomPunishmentCommands = 0;
 
-    public static File getFile() {
-        return file;
-    }
-
-    public static void clear() {
+    @Override
+    public void clear() {
         usingCustomPunishmentCommands = 0;
-        saved.clear();
-        variable.clear();
-        str.clear();
-        exists.clear();
+        internalClear();
 
         // Systems based in this configuration
         ChatProtection.clear();
     }
 
-    public static void create(boolean local) {
-        file = new File(Register.plugin.getDataFolder() + "/settings.yml");
+    @Override
+    public void create(boolean local) {
+        file = new File(directory);
         boolean exists = file.exists();
         clear();
 
@@ -122,92 +115,24 @@ public class Settings {
         }
     }
 
-    public static void setOption(String name, Object value) {
-        ConfigUtils.set(file, name, value);
-        clear();
-    }
-
-    public static void addOption(String name, Object value) {
-        ConfigUtils.add(file, name, value);
-        clear();
-    }
-
-    public static String getOldOption(String old, String current) {
-        return exists(old) ? old : current;
-    }
-
-    private static YamlConfiguration getPath() {
-        if (!file.exists()) {
-            create(false);
-        }
-        return YamlConfiguration.loadConfiguration(file);
-    }
-
-    public static boolean exists(String path) {
-        Boolean data = exists.get(path);
-
-        if (data != null) {
-            return data;
-        }
-        boolean result = getPath().contains(path);
-        exists.put(path, result);
-        return result;
-    }
-
-    public static boolean getBoolean(String path) {
-        Boolean data = saved.get(path);
-
-        if (data != null) {
-            return data;
-        }
-        boolean value = getPath().getBoolean(path);
-        saved.put(path, value);
-        return value;
-    }
-
-    public static int getInteger(String path) {
-        Integer data = variable.get(path);
-
-        if (data != null) {
-            return data;
-        }
-        int value = getPath().getInt(path);
-        variable.put(path, value);
-        return value;
-    }
-
-    public static String getString(String path) {
-        String data = str.get(path);
-
-        if (data != null) {
-            return data;
-        }
-        String value = getPath().getString(path);
-
-        if (value == null) {
-            return path;
-        }
-        str.put(path, value);
-        return value;
-    }
-
-    public static void runOnLogin(SpartanPlayer p) {
-        if (getBoolean("Notifications.enable_notifications_on_login") && DetectionNotifications.hasPermission(p)) {
+    public void runOnLogin(SpartanPlayer p) {
+        if (getBoolean("Notifications.enable_notifications_on_login")
+                && DetectionNotifications.hasPermission(p)) {
             DetectionNotifications.set(p, true, 0);
         }
     }
 
-    public static void runOnLogin() {
+    public void runOnLogin() {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-        if (players.size() > 0) {
+        if (!players.isEmpty()) {
             for (SpartanPlayer p : players) {
                 runOnLogin(p);
             }
         }
     }
 
-    public static List<String> getPunishments() {
+    public List<String> getPunishments() {
         String sectionString = "Punishments.Commands";
         ConfigurationSection section = getPath().getConfigurationSection(sectionString);
 
@@ -215,7 +140,7 @@ public class Settings {
             List<String> list = new LinkedList<>();
             Set<String> keys = section.getKeys(true);
 
-            if (keys.size() > 0) {
+            if (!keys.isEmpty()) {
                 sectionString += ".";
 
                 for (String key : keys) {
@@ -223,7 +148,7 @@ public class Settings {
                         int number = Integer.parseInt(key);
 
                         if (number >= 1 && number <= Check.maxCommands) {
-                            String command = Settings.getString(sectionString + number);
+                            String command = getString(sectionString + number);
 
                             if (command != null && command.length() > 0) {
                                 list.add(command);
@@ -237,7 +162,7 @@ public class Settings {
         return new LinkedList<>();
     }
 
-    public static boolean isUsingCustomPunishmentCommands() {
+    public boolean isUsingCustomPunishmentCommands() {
         if (usingCustomPunishmentCommands != 0) {
             return usingCustomPunishmentCommands == 1;
         }
@@ -245,7 +170,7 @@ public class Settings {
             for (Enums.HackType hackType : Enums.HackType.values()) {
                 Check check = hackType.getCheck();
 
-                for (int i = 1; i < Check.maxViolations; i++) {
+                for (int i = 1; i < Check.maxViolationsPerCycle; i++) {
                     String[] commands = check.getLegacyCommands(i);
 
                     if (commands.length > 0) {

@@ -1,14 +1,14 @@
 package me.vagdedes.spartan.handlers.connection;
 
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import org.bukkit.entity.Player;
 
 public class Latency {
 
     public static boolean canUseProtection() {
-        return Settings.getInteger("Protections.max_supported_player_latency") > 0;
+        return Config.settings.getInteger("Protections.max_supported_player_latency") > 0;
     }
 
     public static int ping(Player p) {

@@ -1,10 +1,9 @@
 package me.vagdedes.spartan.gui.configuration;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.configuration.Messages;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
@@ -31,7 +30,7 @@ public class ManageChecks {
 
     public static void open(SpartanPlayer p) {
         if (!Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         Inventory inv = p.createInventory(54, menu);
@@ -55,7 +54,7 @@ public class ManageChecks {
         boolean enabled = check.isEnabled(null, null, null),
                 silent = check.isSilent(null, null),
                 bypassing = Permissions.isBypassing(p, hackType);
-        String[] disabledDetections = CloudFeature.getDisabledDetections(hackType);
+        String[] disabledDetections = CloudFeature.getShownDisabledDetections(hackType);
         int cancelViolation = check.getDefaultCancelViolation();
         int problematicDetections = check.getProblematicDetections();
 
@@ -91,7 +90,7 @@ public class ManageChecks {
         }
 
         // Separator
-        if (disabledDetections.length > 0) {
+        if (disabledDetections != null) {
             List<String> extra = new ArrayList<>();
             int normalPlaceholder = 0;
             extra.add("");
@@ -150,7 +149,7 @@ public class ManageChecks {
         }*/
 
         if (Config.isLegacy()) {
-            for (int i = 1; i <= Check.maxViolations; i++) {
+            for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
                 int counter = 0;
 
                 for (String s : check.getLegacyCommands(i)) {
@@ -214,7 +213,7 @@ public class ManageChecks {
         item = item.startsWith("§") ? item.substring(2) : item;
 
         if (!Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return true;
         }
         if (item.equals("Back")) {

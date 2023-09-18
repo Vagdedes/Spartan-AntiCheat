@@ -4,7 +4,7 @@ import dev.lone.itemsadder.api.CustomBlock;
 import dev.lone.itemsadder.api.CustomMob;
 import dev.lone.itemsadder.api.CustomStack;
 import me.vagdedes.spartan.configuration.Compatibility;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanInventory;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.utils.server.ReflectionUtils;

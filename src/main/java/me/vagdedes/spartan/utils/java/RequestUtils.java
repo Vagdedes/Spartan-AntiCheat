@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.utils.java;
 
-import me.vagdedes.spartan.features.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;

@@ -1,12 +1,12 @@
 package me.vagdedes.spartan.gui.helpers;
 
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.moderation.PlayerReports;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.moderation.PlayerReports;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
 import me.vagdedes.spartan.objects.profiling.PlayerReport;
 import me.vagdedes.spartan.objects.profiling.PunishmentHistory;
-import me.vagdedes.spartan.system.Cache;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.server.InventoryUtils;
@@ -175,7 +175,7 @@ public class PlayerStateLists {
             }
 
             if (listSize != limit) {
-                boolean option = Settings.getBoolean("Important.inventory_menu_empty_heads");
+                boolean option = Config.settings.getBoolean("Important.inventory_menu_empty_heads");
 
                 if (option) {
                     InventoryUtils.prepareDescription(lore, title);

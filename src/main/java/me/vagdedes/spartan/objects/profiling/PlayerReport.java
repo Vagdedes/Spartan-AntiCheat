@@ -1,8 +1,8 @@
 package me.vagdedes.spartan.objects.profiling;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.features.configuration.AntiCheatLogs;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.handlers.stability.Moderation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;

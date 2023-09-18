@@ -4,11 +4,9 @@ import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.api.CheckSilentToggleEvent;
 import me.vagdedes.spartan.api.CheckToggleEvent;
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.notifications.DetectionNotifications;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import me.vagdedes.spartan.gui.info.PlayerInfo;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
@@ -39,13 +37,13 @@ public class Check {
     public static final int
             maxCommands = 10,
             maxMath = 10,
-            maxViolations = 100,
-            sufficientViolations = (maxViolations / 10),
+            maxViolationsPerCycle = 100,
+            sufficientViolations = (maxViolationsPerCycle / 10),
             minimumDefaultCancelViolation = 1,
             maximumDefaultCancelViolation = 6,
             hackerCheckAmount = 3;
 
-    public static final Enums.PunishmentCategory analysisMultiplierCategory = Enums.PunishmentCategory.NORMAL;
+    public static final Enums.PunishmentCategory analysisMultiplierCategory = Enums.PunishmentCategory.CERTAIN;
     public static final double analysisMultiplier = analysisMultiplierCategory.getMultiplier();
 
     // Static Methods
@@ -58,7 +56,7 @@ public class Check {
         return getCategoryPunishment(CancelViolation.get(hackType, dataType), category);
     }
 
-    public static Enums.PunishmentCategory getCategoryFromViolations(int violations, Enums.HackType hackType, ResearchEngine.DataType dataType, boolean suspectedOrHacker) {
+    public static Enums.PunishmentCategory getCategoryFromViolations(int violations, Enums.HackType hackType, boolean suspectedOrHacker) {
         if (!suspectedOrHacker) {
             int cancelViolation = hackType.getCheck().getDefaultCancelViolation();
 
@@ -68,7 +66,7 @@ public class Check {
                 }
             }
         }
-        return Enums.PunishmentCategory.MAXIMUM;
+        return Enums.PunishmentCategory.ABSOLUTE;
     }
 
     // Separator
@@ -79,64 +77,6 @@ public class Check {
 
     private static boolean canPunishByDefault(Enums.HackType hackType) {
         return hackType != Enums.HackType.GhostHand;
-    }
-
-    // Separator
-
-    public static Set<Map.Entry<Enums.HackType, Integer>> getViolationsEntry(UUID uuid) {
-        Enums.HackType[] hackTypes = Enums.HackType.values();
-        Map<Enums.HackType, Integer> map = new LinkedHashMap<>(hackTypes.length);
-
-        for (Enums.HackType hackType : hackTypes) {
-            LiveViolation violations = hackType.getCheck().getLocalOrEmptyViolations(uuid);
-
-            if (violations != null) {
-                map.put(hackType, violations.getLevel());
-            }
-        }
-        return map.entrySet();
-    }
-
-    // Separator
-
-    public static List<LiveViolation> getViolationsObjects(UUID uuid) {
-        Enums.HackType[] hackTypes = Enums.HackType.values();
-        List<LiveViolation> list = new ArrayList<>(hackTypes.length);
-
-        for (Enums.HackType hackType : hackTypes) {
-            LiveViolation violations = hackType.getCheck().getLocalOrEmptyViolations(uuid);
-
-            if (violations != null) {
-                list.add(violations);
-            }
-        }
-        return list;
-    }
-
-    // Separator
-
-    public static int getViolationCount(UUID uuid) {
-        int sum = 0;
-
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            LiveViolation violations = hackType.getCheck().getLocalOrEmptyViolations(uuid);
-
-            if (violations != null) {
-                sum += violations.getLevel();
-            }
-        }
-        return sum;
-    }
-
-    public static boolean hasViolations(UUID uuid) {
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            LiveViolation violations = hackType.getCheck().getLocalOrEmptyViolations(uuid);
-
-            if (violations != null && violations.hasLevel()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Separator
@@ -153,7 +93,7 @@ public class Check {
     public static boolean isUsingPerWorldFeatures() {
         List<World> worlds = Bukkit.getWorlds();
 
-        if (worlds.size() > 0) {
+        if (!worlds.isEmpty()) {
             for (Enums.HackType hackType : Enums.HackType.values()) {
                 Check check = hackType.getCheck();
 
@@ -194,24 +134,21 @@ public class Check {
     private final Map<UUID, CancelCause>
             disabledUsers,
             silentUsers;
-    private final Map<UUID, LiveViolation> violations;
 
     // Object Methods
 
     public Check(Enums.HackType hackType) {
         this(
                 hackType,
-                new HashMap<>(Config.getMaxPlayers()), // Not concurrent as it is accessed specifically and rapidly
-                new HashMap<>(Config.getMaxPlayers()), // Not concurrent as it is accessed specifically and rapidly
-                MultiVersion.folia ? new HashMap<>(Config.getMaxPlayers()) : new ConcurrentHashMap<>(Config.getMaxPlayers()),
-                new HashMap<>() // Not concurrent as it is accessed specifically and rapidly
+                new LinkedHashMap<>(Config.getMaxPlayers()), // Not concurrent as it is accessed specifically and rapidly
+                new LinkedHashMap<>(Config.getMaxPlayers()), // Not concurrent as it is accessed specifically and rapidly
+                new LinkedHashMap<>() // Not concurrent as it is accessed specifically and rapidly
         );
     }
 
     public Check(Enums.HackType hackType,
                  Map<UUID, CancelCause> disabledUsers,
                  Map<UUID, CancelCause> silentUsers,
-                 Map<UUID, LiveViolation> violations,
                  Map<Integer, Integer> maxCancelledViolations) {
         switch (hackType) {
             case FastBow:
@@ -463,10 +400,9 @@ public class Check {
 
         this.options = new ConcurrentHashMap<>();
         this.hackType = hackType;
-        this.commandsLegacy = new LinkedHashMap<>(maxViolations);
+        this.commandsLegacy = new LinkedHashMap<>(maxViolationsPerCycle);
         this.disabledUsers = disabledUsers;
         this.silentUsers = silentUsers;
-        this.violations = violations;
         this.maxCancelledViolations = maxCancelledViolations;
 
         // Separator
@@ -548,7 +484,7 @@ public class Check {
                 }
             } else {
                 this.canPunishByDefault = canPunishByDefault(hackType);
-                File file = Settings.getFile();
+                File file = Config.settings.getFile();
                 String[] commandsAfterException = new String[]{};
 
                 try {
@@ -556,9 +492,9 @@ public class Check {
                         for (int position = 1; position <= commands.size(); position++) {
                             ConfigUtils.add(file, "Punishments.Commands." + position, commands.get(position - 1));
                         }
-                        List<String> list = Settings.getPunishments();
+                        List<String> list = Config.settings.getPunishments();
 
-                        if (list.size() > 0) {
+                        if (!list.isEmpty()) {
                             commandsAfterException = list.toArray(new String[0]);
                         }
                     } else {
@@ -623,9 +559,9 @@ public class Check {
                 this.hasCancelViolation = true;
                 int cancelViolation = (int) cancelAfterViolation;
 
-                if (cancelViolation > maxViolations) {
+                if (cancelViolation > maxViolationsPerCycle) {
                     this.silent = 1;
-                    this.cancelViolation = maxViolations;
+                    this.cancelViolation = maxViolationsPerCycle;
                 } else {
                     this.cancelViolation = Math.max(1, cancelViolation);
                 }
@@ -633,9 +569,9 @@ public class Check {
                 try {
                     int cancelViolation = Integer.parseInt(cancelAfterViolation.toString());
 
-                    if (cancelViolation > maxViolations) {
+                    if (cancelViolation > maxViolationsPerCycle) {
                         this.silent = 1;
-                        this.cancelViolation = maxViolations;
+                        this.cancelViolation = maxViolationsPerCycle;
                     } else {
                         this.cancelViolation = Math.max(1, cancelViolation);
                     }
@@ -648,9 +584,9 @@ public class Check {
                 try {
                     int cancelViolation = AlgebraUtils.integerRound((double) cancelAfterViolation);
 
-                    if (cancelViolation > maxViolations) {
+                    if (cancelViolation > maxViolationsPerCycle) {
                         this.silent = 1;
-                        this.cancelViolation = maxViolations;
+                        this.cancelViolation = maxViolationsPerCycle;
                     } else {
                         this.cancelViolation = Math.max(1, cancelViolation);
                     }
@@ -680,11 +616,11 @@ public class Check {
                 for (String world : worldsSplit) {
                     world = world.replace(" ", "");
 
-                    if (world.length() > 0) {
+                    if (!world.isEmpty()) {
                         set.add(world.toLowerCase());
                     }
                 }
-                if (set.size() > 0) {
+                if (!set.isEmpty()) {
                     this.disabledWorlds = set.toArray(new String[0]);
                 } else {
                     this.disabledWorlds = new String[]{};
@@ -708,11 +644,11 @@ public class Check {
                 for (String world : worldsSplit) {
                     world = world.replace(" ", "");
 
-                    if (world.length() > 0) {
+                    if (!world.isEmpty()) {
                         set.add(world.toLowerCase());
                     }
                 }
-                if (set.size() > 0) {
+                if (!set.isEmpty()) {
                     this.silentWorlds = set.toArray(new String[0]);
                 } else {
                     this.silentWorlds = new String[]{};
@@ -741,47 +677,8 @@ public class Check {
 
     public void clearCache() {
         clearConfigurationCache();
-        clearViolations();
         clearCancelCauses();
         clearMaxCancelledViolations();
-    }
-
-    // Separator
-
-    public void clearViolations() {
-        for (LiveViolation violations : violations.values()) {
-            violations.reset();
-        }
-        violations.clear();
-    }
-
-    public Map<UUID, LiveViolation> copyViolations() {
-        return new ConcurrentHashMap<>(violations);
-    }
-
-    private LiveViolation getLocalViolations(UUID uuid, ResearchEngine.DataType dataType) {
-        return this.violations.getOrDefault(uuid, new LiveViolation(uuid, dataType, this.hackType));
-    }
-
-    private LiveViolation getLocalOrEmptyViolations(UUID uuid) {
-        return this.violations.get(uuid);
-    }
-
-    public LiveViolation getViolations(UUID uuid, ResearchEngine.DataType dataType) {
-        if (!isEnabled(null, null, null) || !SpartanBukkit.isPlayer(uuid)) {
-            return new LiveViolation(uuid, dataType, this.hackType);
-        }
-        LiveViolation violations = this.violations.get(uuid);
-
-        if (violations == null) {
-            violations = new LiveViolation(uuid, dataType, this.hackType);
-            this.violations.put(uuid, violations);
-        }
-        return violations;
-    }
-
-    public LiveViolation getViolations(SpartanPlayer player) {
-        return getViolations(player.getUniqueId(), player.getDataType());
     }
 
     // Separator
@@ -852,7 +749,7 @@ public class Check {
             if (enabled[ordinal] != b) {
                 CheckToggleEvent event;
 
-                if (Settings.getBoolean("Important.enable_developer_api")) {
+                if (Config.settings.getBoolean("Important.enable_developer_api")) {
                     event = new CheckToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
                     Register.manager.callEvent(event);
                 } else {
@@ -866,8 +763,11 @@ public class Check {
                         CloudFeature.refresh(true);
                     } else {
                         clearConfigurationCache();
-                        clearViolations();
                         clearCancelCauses();
+
+                        for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
+                            player.getViolations(hackType).reset();
+                        }
                     }
                     setOption("enabled." + type.lowerCase, b, false);
                 }
@@ -953,7 +853,7 @@ public class Check {
                             Register.plugin.reloadConfig();
                         }
                         if (production) {
-                            this.hackType.resetCheck(false);
+                            this.hackType.resetCheck();
                         } else {
                             options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
                         }
@@ -1200,7 +1100,7 @@ public class Check {
             switch (s) {
                 case "dynamic":
                     if (silent != 2) {
-                        if (Settings.getBoolean("Important.enable_developer_api")) {
+                        if (Config.settings.getBoolean("Important.enable_developer_api")) {
                             CheckSilentToggleEvent event = new CheckSilentToggleEvent(this.hackType, Enums.ToggleAction.ENABLE);
                             Register.manager.callEvent(event);
 
@@ -1214,7 +1114,7 @@ public class Check {
                     break;
                 case "true":
                     if (silent != 1) {
-                        if (Settings.getBoolean("Important.enable_developer_api")) {
+                        if (Config.settings.getBoolean("Important.enable_developer_api")) {
                             CheckSilentToggleEvent event = new CheckSilentToggleEvent(this.hackType, Enums.ToggleAction.ENABLE);
                             Register.manager.callEvent(event);
 
@@ -1228,7 +1128,7 @@ public class Check {
                     break;
                 case "false":
                     if (silent != 0) {
-                        if (Settings.getBoolean("Important.enable_developer_api")) {
+                        if (Config.settings.getBoolean("Important.enable_developer_api")) {
                             CheckSilentToggleEvent event = new CheckSilentToggleEvent(this.hackType, Enums.ToggleAction.DISABLE);
                             Register.manager.callEvent(event);
 
@@ -1282,9 +1182,9 @@ public class Check {
                 this.hasCancelViolation = true;
                 setOption("cancel_after_violation", i, false);
 
-                if (i > maxViolations) {
+                if (i > maxViolationsPerCycle) {
                     this.silent = 1;
-                    this.cancelViolation = maxViolations;
+                    this.cancelViolation = maxViolationsPerCycle;
                 } else {
                     this.cancelViolation = Math.max(1, i);
                 }
@@ -1321,8 +1221,6 @@ public class Check {
             return 0;
         }
     }
-
-
 
     public void setMaxCancelledViolations(ResearchEngine.DataType dataType, Map<Integer, Double> map) {
         synchronized (maxCancelledViolations) {
@@ -1391,7 +1289,7 @@ public class Check {
                 categoriesFound.add(category);
             }
         }
-        boolean containsCategory = categoriesFound.size() > 0;
+        boolean containsCategory = !categoriesFound.isEmpty();
 
         if (containsCategory) {
             int defaultCancelViolation = this.getDefaultCancelViolation();
@@ -1476,7 +1374,7 @@ public class Check {
                             if (mathKey > 0 && violation > 0) {
                                 int violationModifiable = violation;
 
-                                while (violationModifiable <= maxViolations) {
+                                while (violationModifiable <= maxViolationsPerCycle) {
 
                                     if (multiply) {
                                         violationModifiable *= mathKey;
@@ -1493,7 +1391,7 @@ public class Check {
         }
 
         // Empty Handler
-        if (commandsFound.size() == 0) {
+        if (commandsFound.isEmpty()) {
             commandsLegacy.put(violation, new LinkedList<>());
         }
 

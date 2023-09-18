@@ -23,7 +23,7 @@ public class MovementProcessing {
     private static final int ticks = 2;
 
     public static void run(SpartanPlayer p, SpartanLocation to, Entity vehicle, Buffer buffer, Cooldowns cooldowns, Decimals decimals,
-                           double dis, double hor, double ver, double rem, boolean groundGliding, int airTicks) {
+                           double dis, double hor, double ver, double box, boolean groundGliding) {
         if (p.canRunChecks(false)) {
             // Damage
             Damage.runMove(p);
@@ -37,6 +37,7 @@ public class MovementProcessing {
             p.setNmsDistance(dis);
             p.setNmsHorizontalDistance(hor);
             p.setNmsVerticalDistance(ver);
+            p.setNmsBox(box);
 
             if (!groundGliding) {
                 // Jump/Fall Identifier
@@ -89,7 +90,7 @@ public class MovementProcessing {
                         // Separator
 
                         if ((walkJumping || sprintJumping)
-                                && p.isJumping(rem)
+                                && p.isJumping(box)
                                 && (ground
                                 || PlayerData.isOnGround(p, to, 0, -1, 0)
                                 || PlayerData.isOnGround(p, to, 0, -1.5, 0))) {

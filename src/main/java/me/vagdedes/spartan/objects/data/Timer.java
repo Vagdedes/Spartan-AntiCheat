@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.objects.data;
 
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.utils.java.StringUtils;
 
 import java.util.ArrayList;

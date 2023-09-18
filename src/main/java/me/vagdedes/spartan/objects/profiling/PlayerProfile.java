@@ -2,7 +2,7 @@ package me.vagdedes.spartan.objects.profiling;
 
 import me.vagdedes.spartan.checks.world.XRay;
 import me.vagdedes.spartan.compatibility.necessary.bedrock.BedrockCompatibility;
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.gui.info.PlayerInfo;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
@@ -10,7 +10,6 @@ import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.Check;
-import me.vagdedes.spartan.objects.system.LiveViolation;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.StringUtils;
@@ -40,7 +39,6 @@ public class PlayerProfile {
     private OfflinePlayer offlinePlayer;
     private final PlayerCombat playerCombat;
     private long lastPlayed;
-    private LiveViolation lastInteraction;
 
     // Separator
 
@@ -63,7 +61,6 @@ public class PlayerProfile {
             this.bedrockPlayer = false;
             this.bedrockPlayerCheck = true;
             this.lastPlayed = 0L;
-            this.lastInteraction = null;
         } else {
             SpartanPlayer player = this.getSpartanPlayer();
 
@@ -78,10 +75,6 @@ public class PlayerProfile {
                 this.bedrockPlayerCheck = bedrockPlayer;
                 this.lastPlayed = 0L;
             }
-            this.lastInteraction = new LiveViolation(
-                    hackTypes[0],
-                    bedrockPlayer ? ResearchEngine.DataType.Bedrock : ResearchEngine.DataType.Java
-            );
         }
 
         // Separator
@@ -110,7 +103,6 @@ public class PlayerProfile {
         this.staff = Permissions.isStaff(player);
         this.bedrockPlayerCheck = true;
         this.lastPlayed = player.getLastPlayed();
-        this.lastInteraction = new LiveViolation(hackTypes[0], player.getDataType());
 
         this.violationHistory = new ViolationHistory[Enums.hackTypeLength];
         this.miningHistory = new MiningHistory[Enums.miningOreLength];
@@ -245,16 +237,6 @@ public class PlayerProfile {
 
     public void setOnline(SpartanPlayer player) {
         this.lastPlayed = player.getLastPlayed();
-    }
-
-    // Separator
-
-    public LiveViolation getLastInteraction() {
-        return lastInteraction;
-    }
-
-    public void setLastInteraction(LiveViolation liveViolation) {
-        lastInteraction = liveViolation;
     }
 
     // Separator
@@ -394,8 +376,7 @@ public class PlayerProfile {
             return true;
         }
         if (hackType != Enums.HackType.XRay) {
-            Check check = hackType.getCheck();
-            int violationCount = check.getViolations(player).getLevel() - check.getCancelViolation();
+            int violationCount = player.getViolations(hackType).getLevel() - hackType.getCheck().getCancelViolation();
 
             if (violationCount > 0) {
                 violationCount += punishmentHistory.getReportCount(hackType, 0);
@@ -477,19 +458,26 @@ public class PlayerProfile {
     }
 
     public boolean isHacker() {
-        return evidence.has(PlayerEvidence.EvidenceType.Hacker).size() > 0;
+        return !evidence.has(PlayerEvidence.EvidenceType.Hacker).isEmpty();
     }
 
     public boolean isSuspected() {
-        return evidence.has(PlayerEvidence.EvidenceType.Suspected).size() > 0;
+        return !evidence.has(PlayerEvidence.EvidenceType.Suspected).isEmpty();
     }
 
     public boolean isSuspectedOrHacker() {
         return isSuspected() || isHacker();
     }
 
-    public boolean isSuspectedOrHacker(Collection<Enums.HackType> hackType) {
-        return evidence.has(PlayerEvidence.EvidenceType.Suspected).containsAll(hackType) || isHacker();
+    public boolean isSuspectedOrHacker(Enums.HackType[] hackTypes) {
+        Collection<Enums.HackType> evidence = this.evidence.has(PlayerEvidence.EvidenceType.Suspected);
+
+        for (Enums.HackType hackType : hackTypes) {
+            if (evidence.contains(hackType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isSuspectedOrHacker(Enums.HackType hackType) {

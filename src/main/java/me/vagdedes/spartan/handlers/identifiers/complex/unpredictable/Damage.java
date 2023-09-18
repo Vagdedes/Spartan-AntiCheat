@@ -1,9 +1,9 @@
 package me.vagdedes.spartan.handlers.identifiers.complex.unpredictable;
 
 import me.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.objects.data.Buffer;
 import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
@@ -173,7 +173,7 @@ public class Damage {
 
                 // Do not connect with else statement
                 if (!selfHitHandling(p, damager)) {
-                    return Settings.getBoolean("Protections.avoid_self_bow_damage") && !Permissions.isBypassing(p, null);
+                    return Config.settings.getBoolean("Protections.avoid_self_bow_damage") && !Permissions.isBypassing(p, null);
                 }
             } else if (projectile.getShooter() != null) {
                 if (projectile.getShooter() instanceof EnderDragon) {

@@ -1,9 +1,9 @@
 package me.vagdedes.spartan.gui.spartan;
 
 import me.vagdedes.spartan.compatibility.manual.essential.MinigameMaker;
-import me.vagdedes.spartan.configuration.Messages;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.objects.features.IncompatibleItem;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -31,7 +31,7 @@ public class SupportIncompatibleItems {
 
     public static void open(SpartanPlayer p) {
         if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         Inventory inv = p.createInventory(menuSize, menu);

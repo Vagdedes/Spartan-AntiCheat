@@ -1,8 +1,8 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
-import me.vagdedes.spartan.checks.movement.NoSlowdown;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.TridentUse;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -64,7 +64,7 @@ public class EventsHandler_1_13 implements Listener {
 
                 // Detections
                 if (!e.isCancelled()) {
-                    NoSlowdown.runPotion(p);
+                    p.getExecutor(Enums.HackType.NoSlowdown).handle(e);
                 }
             }
         }

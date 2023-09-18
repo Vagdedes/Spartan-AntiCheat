@@ -4,6 +4,7 @@ import me.vagdedes.spartan.checks.combat.VelocityCheck;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.gameplay.BlockUtils;
 import me.vagdedes.spartan.utils.gameplay.MoveUtils;
 import me.vagdedes.spartan.utils.gameplay.PlayerData;
@@ -78,7 +79,7 @@ public class PlayerVelocity {
     public void collect(SpartanPlayer player, SpartanLocation location) {
         boolean hasTimeAllowance = timeAllowance != 0L;
 
-        if (VelocityCheck.canDo(player, false)) { // Check if the algorithm can collect data (usually after hits)
+        if (player.getExecutor(Enums.HackType.Velocity).handle(VelocityCheck.CAN_DO)) { // Check if the algorithm can collect data (usually after hits)
             if (hasTimeAllowance) {
                 float blockY = (float) location.getY();
 
@@ -121,7 +122,7 @@ public class PlayerVelocity {
 
     private void runDetections(SpartanPlayer player) {
         if (!ResearchEngine.isCaching()) {
-            VelocityCheck.run(player, verticalCalculator, horizontalCalculator);
+            player.getExecutor(Enums.HackType.Velocity).handle(new LinkedList[]{verticalCalculator, horizontalCalculator});
         }
     }
 

@@ -2,7 +2,7 @@ package me.vagdedes.spartan.compatibility.manual.enchants;
 
 import com.willfp.ecoenchants.enchants.EcoEnchant;
 import me.vagdedes.spartan.configuration.Compatibility;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanInventory;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import org.bukkit.enchantments.Enchantment;

@@ -1,10 +1,10 @@
 package me.vagdedes.spartan.handlers.identifiers.complex.unpredictable;
 
-import me.vagdedes.spartan.checks.exploits.ElytraGlideSpam;
-import me.vagdedes.spartan.checks.exploits.IllegalElytraPacket;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.checks.exploits.Exploits;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -21,7 +21,8 @@ public class ElytraUse {
             if (i != null) {
                 if (i.getType() == Material.ELYTRA) {
                     if (i.getDurability() < 432) {
-                        if (!event || !ElytraGlideSpam.run(p)) {
+                        if (!event
+                                || !p.getExecutor(Enums.HackType.Exploits).handle(Exploits.ELYTRA_GLIDE_SPAM)) {
                             p.setGliding(gliding, false);
                             Handlers handlers = p.getHandlers();
                             handlers.add(Handlers.HandlerType.ElytraWear, 2);
@@ -34,7 +35,7 @@ public class ElytraUse {
                         p.setGliding(false, gliding);
 
                         if (gliding) {
-                            IllegalElytraPacket.run(p, 2, 2);
+                            p.getExecutor(Enums.HackType.Exploits).handle(new int[]{2, 2});
                         }
                     }
                 } else {
@@ -44,14 +45,14 @@ public class ElytraUse {
                 p.setGliding(false, gliding);
 
                 if (gliding && !p.getHandlers().has(Handlers.HandlerType.ElytraWear)) {
-                    IllegalElytraPacket.run(p, 3, 2);
+                    p.getExecutor(Enums.HackType.Exploits).handle(new int[]{3, 2});
                 }
             }
         } else {
             p.setGliding(false, gliding);
 
             if (gliding) {
-                IllegalElytraPacket.run(p, 1, 0);
+                p.getExecutor(Enums.HackType.Exploits).handle(new int[]{1, 0});
             }
         }
     }

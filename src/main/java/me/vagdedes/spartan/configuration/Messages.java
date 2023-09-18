@@ -1,36 +1,25 @@
 package me.vagdedes.spartan.configuration;
 
-import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
-import me.vagdedes.spartan.features.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.abstraction.ConfigurationBuilder;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-public class Messages {
+public class Messages extends ConfigurationBuilder {
 
-    private static final String prefix = "{prefix}";
-    private static File file = new File(Register.plugin.getDataFolder() + "/messages.yml");
-    private static final Map<String, String> saved = new LinkedHashMap<>(60);
-
-    public static void clear() {
-        saved.clear();
+    public Messages() {
+        super("messages");
     }
 
-    public static File getFile() {
-        return file;
+    @Override
+    public void clear() {
+        internalClear();
     }
 
-    public static void create(boolean local) {
-        file = new File(Register.plugin.getDataFolder() + "/language.yml");
-
-        if (!file.exists()) {
-            file = new File(Register.plugin.getDataFolder() + "/messages.yml");
-        }
+    @Override
+    public void create(boolean local) {
+        file = new File(directory);
         boolean exists = file.exists();
 
         clear();
@@ -122,26 +111,5 @@ public class Messages {
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);
         }
-    }
-
-    public static String get(String path) {
-        String data = saved.get(path);
-
-        if (data != null) {
-            return data;
-        }
-        if (!file.exists()) {
-            create(false);
-        }
-        String message = YamlConfiguration.loadConfiguration(file).getString(path);
-
-        if (message == null) {
-            return path;
-        } else {
-            message = ChatColor.translateAlternateColorCodes('&', message)
-                    .replace(prefix, SpartanEdition.getProductName(false));
-        }
-        saved.put(path, message);
-        return message;
     }
 }

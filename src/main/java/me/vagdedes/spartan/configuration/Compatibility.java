@@ -1,6 +1,7 @@
 package me.vagdedes.spartan.configuration;
 
 import me.vagdedes.spartan.Register;
+import me.vagdedes.spartan.abstraction.ConfigurationBuilder;
 import me.vagdedes.spartan.checks.movement.speed.Speed;
 import me.vagdedes.spartan.compatibility.manual.abilities.*;
 import me.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShot;
@@ -16,10 +17,10 @@ import me.vagdedes.spartan.compatibility.manual.essential.protocollib.ProtocolLi
 import me.vagdedes.spartan.compatibility.manual.vanilla.DragonPhases;
 import me.vagdedes.spartan.compatibility.manual.world.AcidRain;
 import me.vagdedes.spartan.compatibility.necessary.bedrock.plugins.Floodgate;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
 import me.vagdedes.spartan.utils.server.PluginUtils;
@@ -28,9 +29,17 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Compatibility {
+
+    private static final String
+            fileName = "compatibility",
+            staticDirectory = ConfigurationBuilder.getDirectory(fileName);
+    private static File file = new File(staticDirectory);
+    private static final Map<String, Boolean> bool = new LinkedHashMap<>();
 
     public enum CompatibilityType {
         AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, Essentials, MagicSpells, ProtocolLib, mcMMO, NoHitDelay,
@@ -71,15 +80,15 @@ public class Compatibility {
                 this.forced = false;
                 this.functional = PluginUtils.exists(this.toString());
             } else {
-                file = new File(Register.plugin.getDataFolder() + "/compatibility.yml");
+                file = new File(staticDirectory);
                 String compatibility = this.toString();
 
                 if (create) {
                     ConfigUtils.add(file, compatibility + ".enabled", !this.equals(CompatibilityType.WildTools));
                     ConfigUtils.add(file, compatibility + ".force", false);
                 }
-                this.enabled = get(compatibility + ".enabled", create);
-                this.forced = get(compatibility + ".force", create);
+                this.enabled = getBoolean(compatibility + ".enabled", create);
+                this.forced = getBoolean(compatibility + ".force", create);
             }
         }
 
@@ -224,7 +233,9 @@ public class Compatibility {
         }
     }
 
-    private static File file = new File(Register.plugin.getDataFolder() + "/compatibility.yml");
+    public File getFile() {
+        return file;
+    }
 
     private static void refresh(boolean create) {
         for (CompatibilityType compatibilityType : CompatibilityType.values()) {
@@ -359,13 +370,36 @@ public class Compatibility {
         SpartanMenu.refresh();
     }
 
-    public static void clear() {
+    private static boolean getBoolean(String path, boolean create) {
+        Boolean data = bool.get(path);
+
+        if (data != null) {
+            return data;
+        }
+        if (!file.exists()) {
+            if (!create) {
+                return false;
+            }
+            create(false);
+        }
+        boolean value = YamlConfiguration.loadConfiguration(file).getBoolean(path);
+        bool.put(path, value);
+        return value;
+    }
+
+    public void clear() {
+        bool.clear();
+        fastClear();
+    }
+
+    public void fastClear() {
         refresh(false);
     }
 
-    public static void create(boolean local) {
-        file = new File(Register.plugin.getDataFolder() + "/compatibility.yml");
+    static void create(boolean local) {
+        file = new File(staticDirectory);
         boolean exists = file.exists();
+        bool.clear();
         refresh(true);
 
         if (!local && exists) {
@@ -373,27 +407,9 @@ public class Compatibility {
         }
     }
 
-    public static void memoryRefresh() {
-        refresh(false);
-    }
-
-    private static boolean get(String path, boolean create) {
-        if (!file.exists()) {
-            if (!create) {
-                return false;
-            }
-            create(false);
-        }
-        return YamlConfiguration.loadConfiguration(file).getBoolean(path);
-    }
-
-    public static File getFile() {
-        return file;
-    }
-
     // Separator
 
-    public static List<CompatibilityType> getActiveCompatibilities() {
+    public List<CompatibilityType> getActiveCompatibilities() {
         CompatibilityType[] compatibilities = CompatibilityType.values();
         List<CompatibilityType> active = new ArrayList<>(compatibilities.length);
 
@@ -405,7 +421,7 @@ public class Compatibility {
         return active;
     }
 
-    public static List<CompatibilityType> getInactiveCompatibilities() {
+    public List<CompatibilityType> getInactiveCompatibilities() {
         CompatibilityType[] compatibilities = CompatibilityType.values();
         List<CompatibilityType> active = new ArrayList<>(compatibilities.length);
 

@@ -1,14 +1,11 @@
 package me.vagdedes.spartan.system;
 
 import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.objects.system.CancelCause;
 import me.vagdedes.spartan.objects.system.Check;
-import me.vagdedes.spartan.objects.system.LiveViolation;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Enums {
 
@@ -28,14 +25,13 @@ public class Enums {
             return check != null ? check : (check = new Check(this));
         }
 
-        public void resetCheck(boolean clearViolations) {
+        public void resetCheck() {
             if (this.check != null) {
                 Map<UUID, CancelCause> disabledUsers = this.check.copyDisabledUsers();
                 Map<UUID, CancelCause> silentUsers = this.check.copySilentUsers();
-                Map<UUID, LiveViolation> violations = clearViolations ? new ConcurrentHashMap<>(Config.getMaxPlayers()) : this.check.copyViolations();
                 Map<Integer, Integer> maxCancelledViolations = this.check.copyMaxCancelledViolations();
                 this.check.clearCache();
-                this.check = new Check(this, disabledUsers, silentUsers, violations, maxCancelledViolations);
+                this.check = new Check(this, disabledUsers, silentUsers, maxCancelledViolations);
             }
         }
     }
@@ -55,7 +51,7 @@ public class Enums {
     }
 
     public enum PunishmentCategory {
-        MINIMUM, UNSAFE, NORMAL, SAFE, MAXIMUM;
+        UNLIKE, POTENTIAL, CERTAIN, DEFINITE, ABSOLUTE;
 
         private final String string;
         private final double multiplier;

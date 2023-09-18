@@ -1,9 +1,9 @@
 package me.vagdedes.spartan.gui.info;
 
-import me.vagdedes.spartan.configuration.Messages;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.moderation.Debug;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.moderation.Debug;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -60,13 +60,13 @@ public class DebugMenu {
         SpartanPlayer t = SpartanBukkit.getPlayer(title.substring(menu.length()));
 
         if (t == null) {
-            p.sendInventoryCloseMessage(Messages.get("player_not_found_message"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
         } else if (item.equals("Disable")) {
             Debug.remove(p, t);
             p.sendInventoryCloseMessage(null);
         } else {
             if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 for (Enums.Debug debug : Enums.Debug.values()) {
                     if (debug.getString().equals(item)) {

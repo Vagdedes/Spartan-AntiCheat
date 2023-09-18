@@ -3,10 +3,10 @@ package me.vagdedes.spartan.gui.configuration;
 import com.vagdedes.filegui.api.FileGUIAPI;
 import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.compatibility.necessary.FileGUI;
-import me.vagdedes.spartan.configuration.*;
-import me.vagdedes.spartan.features.configuration.ConfigurationDiagnostics;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.configuration.ConfigurationDiagnostics;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -34,7 +34,7 @@ public class ManageConfiguration {
             compatibilityFileName = "compatibility.yml",
             checksFileName = "checks.yml";
     public static final String[] configs = new String[]{
-            "config.yml", "settings.yml", checksFileName, compatibilityFileName,
+            "config.yml", "Config.settings.yml", checksFileName, compatibilityFileName,
             "messages.yml", "sql.yml"
     };
     private static final Map<UUID, Integer> map = new LinkedHashMap<>(Config.getMaxPlayers());
@@ -73,7 +73,7 @@ public class ManageConfiguration {
             return;
         }
         if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         if (FileGUI.isEnabled()) {
@@ -136,7 +136,7 @@ public class ManageConfiguration {
 
     private static void openChild(SpartanPlayer p, String s, int slot, List<String> list) {
         if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         boolean access = false;
@@ -218,7 +218,7 @@ public class ManageConfiguration {
             }
         } else if (item.equals("Configuration Diagnostics")) {
             if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                 return true;
             }
             ConfigurationDiagnostics.execute(p);
@@ -316,10 +316,10 @@ public class ManageConfiguration {
                 hackType.getCheck().clearConfigurationCache();
             }
         }
-        Settings.clear();
-        Messages.clear();
-        Compatibility.clear();
-        SQLFeature.refreshConfiguration();
+        Config.settings.clear();
+        Config.messages.clear();
+        Config.sql.refreshConfiguration();
+        Config.compatibility.clear();
 
         // Always last
         Config.refreshVariables(resetChecks);

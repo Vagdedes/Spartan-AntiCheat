@@ -3,7 +3,6 @@ package me.vagdedes.spartan.interfaces.listeners;
 import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
 import me.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import me.vagdedes.spartan.objects.system.hackPrevention.HackPrevention;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import org.bukkit.entity.Entity;
@@ -115,7 +114,7 @@ public class EventsHandler8 implements Listener {
             if (p == null) {
                 return;
             }
-            if (HackPrevention.canCancel(p, Enums.HackType.EntityMove)) {
+            if (p.getViolations(Enums.HackType.EntityMove).process()) {
                 e.setCancelled(true);
             } else {
                 // Handlers

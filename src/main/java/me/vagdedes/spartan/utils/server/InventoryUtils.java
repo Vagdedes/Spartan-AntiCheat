@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.utils.server;
 
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

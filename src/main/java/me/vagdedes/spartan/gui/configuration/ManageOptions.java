@@ -1,8 +1,8 @@
 package me.vagdedes.spartan.gui.configuration;
 
-import me.vagdedes.spartan.configuration.Messages;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -27,7 +27,7 @@ public class ManageOptions {
 
         if (amount > 0) {
             if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                 return;
             }
             double division = (amount + 2) / 9.0;
@@ -76,7 +76,7 @@ public class ManageOptions {
         item = item.startsWith("§") ? item.substring(2) : item;
 
         if (!Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return true;
         }
         if (item.equals("Back")) {
@@ -92,7 +92,7 @@ public class ManageOptions {
 
                     if (name.equals(hackTypeString)) { // Do not use name, this is configuration based
                         ResearchEngine.resetData(hackType);
-                        String message = Messages.get("check_stored_data_delete_message").replace("{check}", name);
+                        String message = Config.messages.getColorfulString("check_stored_data_delete_message").replace("{check}", name);
                         p.sendMessage(message);
                         ManageChecks.open(p);
                         break;

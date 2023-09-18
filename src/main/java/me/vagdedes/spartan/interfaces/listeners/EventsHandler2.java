@@ -1,20 +1,16 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
-import me.vagdedes.spartan.checks.combat.FastBow;
-import me.vagdedes.spartan.checks.movement.NoSlowdown;
-import me.vagdedes.spartan.checks.player.NoSwing;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.protections.Teleport;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.protections.Teleport;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.FishingHook;
 import me.vagdedes.spartan.handlers.identifiers.simple.GameModeProtection;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.Moderation;
 import me.vagdedes.spartan.handlers.tracking.CombatProcessing;
 import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import me.vagdedes.spartan.objects.system.hackPrevention.HackPrevention;
-import me.vagdedes.spartan.system.Cache;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.gameplay.MoveUtils;
@@ -75,8 +71,8 @@ public class EventsHandler2 implements Listener {
         p.setInventory(n.getInventory(), n.getOpenInventory());
 
         // Detections
-        NoSlowdown.runItemChange(p);
-        NoSwing.runItemChange(p);
+        p.getExecutor(Enums.HackType.NoSlowdown).handle(e);
+        p.getExecutor(Enums.HackType.NoSwing).handle(e);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -93,16 +89,16 @@ public class EventsHandler2 implements Listener {
             Entity projectile = e.getProjectile();
 
             // Detections
-            if (NoSlowdown.runBow(p)) {
+            if (p.getExecutor(Enums.HackType.NoSlowdown).handle(e)) {
                 e.setCancelled(true);
             } else {
                 // Detections
-                FastBow.run(p, force);
+                p.getExecutor(Enums.HackType.FastBow).handle(e);
 
                 // Protections
                 Damage.runBow(entity, projectile);
 
-                if (HackPrevention.canCancel(p, Enums.HackType.FastBow)) {
+                if (p.getViolations(Enums.HackType.FastBow).process()) {
                     e.setCancelled(true);
                 }
             }

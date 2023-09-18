@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.handlers.bug;
 
-import me.vagdedes.spartan.features.important.Permissions;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.handlers.stability.Moderation;
 import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
@@ -26,18 +26,17 @@ public class FalseFallDamage {
                     && dmg == EntityDamageEvent.DamageCause.FALL
 
                     && !Moderation.wasDetected(p)
-                    && p.getProfile().getLastInteraction().getLastViolation(false) > 500L
-                    && Check.hasViolations(uuid)
+                    && p.getLastViolation().getLastViolationTime(false) > 500L
+                    && p.hasViolations()
 
                     && !p.getHandlers().has(Handlers.HandlerType.Explosion)) {
                 ItemStack itemStack = p.getItemInHand();
 
-                if (itemStack == null
-                        || itemStack.getType() != Material.WATER_BUCKET
-                        && itemStack.getType() != Material.BUCKET) {
+                if (itemStack.getType() != Material.WATER_BUCKET
+                        && itemStack.getType() != Material.BUCKET
+                        && (!p.isOnGround() || !p.isOnGroundCustom())) {
                     SpartanLocation to = p.getLocation();
-                    return (!p.isOnGround() || !p.isOnGroundCustom())
-                            && !PlayerData.isOnGround(p, to, 0, -1, 0)
+                    return !PlayerData.isOnGround(p, to, 0, -1, 0)
                             && !PlayerData.isOnGround(p, to, 0, -1.5, 0);
                 }
             }

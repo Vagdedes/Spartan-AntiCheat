@@ -1,22 +1,15 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
-import me.vagdedes.spartan.checks.movement.MorePackets;
-import me.vagdedes.spartan.checks.movement.NoSlowdown;
-import me.vagdedes.spartan.checks.player.FastEat;
-import me.vagdedes.spartan.checks.player.FastHeal;
-import me.vagdedes.spartan.checks.player.NoSwing;
-import me.vagdedes.spartan.checks.world.*;
 import me.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
-import me.vagdedes.spartan.features.moderation.Debug;
-import me.vagdedes.spartan.features.notifications.DetectionNotifications;
-import me.vagdedes.spartan.features.protections.Building;
-import me.vagdedes.spartan.features.protections.Explosion;
+import me.vagdedes.spartan.functionality.moderation.Debug;
+import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import me.vagdedes.spartan.functionality.protections.Building;
+import me.vagdedes.spartan.functionality.protections.Explosion;
 import me.vagdedes.spartan.handlers.identifiers.complex.predictable.BouncingBlocks;
 import me.vagdedes.spartan.handlers.identifiers.simple.BlockBreak;
 import me.vagdedes.spartan.handlers.identifiers.simple.BlockPlace;
 import me.vagdedes.spartan.objects.replicates.SpartanBlock;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import me.vagdedes.spartan.objects.system.hackPrevention.HackPrevention;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.gameplay.BlockUtils;
@@ -53,11 +46,12 @@ public class EventsHandler5 implements Listener {
                 int lvl = e.getFoodLevel();
 
                 // Detections
-                FastEat.runFood(p, lvl);
-                NoSlowdown.runFood(p, lvl);
-                FastHeal.runFood(p, lvl);
+                p.getExecutor(Enums.HackType.FastEat).handle(e);
+                p.getExecutor(Enums.HackType.NoSlowdown).handle(e);
+                p.getExecutor(Enums.HackType.FastHeal).handle(e);
 
-                if (HackPrevention.canCancel(p, new Enums.HackType[]{Enums.HackType.FastEat, Enums.HackType.NoSlowdown})) {
+                if (p.getViolations(Enums.HackType.FastEat).process()
+                        || p.getViolations(Enums.HackType.NoSlowdown).process()) {
                     e.setCancelled(true);
                     p.setFoodLevel(n.getFoodLevel(), false);
                 } else {
@@ -84,9 +78,9 @@ public class EventsHandler5 implements Listener {
 
             if (!e.isCancelled()) {
                 // Detections
-                FastHeal.run(p, e.getRegainReason());
+                p.getExecutor(Enums.HackType.NoSwing).handle(e);
 
-                if (HackPrevention.canCancel(p, Enums.HackType.FastHeal)) {
+                if (p.getViolations(Enums.HackType.FastHeal).process()) {
                     e.setCancelled(true);
                 }
             }
@@ -107,11 +101,11 @@ public class EventsHandler5 implements Listener {
         if (!cancelled) {
             // Detections
             if (!ItemsAdder.is(nb)) {
-                NoSwing.runBreak(p, b);
-                ImpossibleActions.runBreak(p, b);
-                BlockReach.runBreak(p, b);
-                FastBreak.run(p, b);
-                GhostHand.runBreak(p, b, e.isCancelled());
+                p.getExecutor(Enums.HackType.NoSwing).handle(e);
+                p.getExecutor(Enums.HackType.BlockReach).handle(e);
+                p.getExecutor(Enums.HackType.FastBreak).handle(e);
+                p.getExecutor(Enums.HackType.GhostHand).handle(e);
+                p.getExecutor(Enums.HackType.ImpossibleActions).handle(e);
             }
 
             // Features
@@ -124,9 +118,12 @@ public class EventsHandler5 implements Listener {
             // Detections
             DetectionNotifications.runMining(p, b);
 
-            if (HackPrevention.canCancel(p, new Enums.HackType[]{Enums.HackType.NoSwing, Enums.HackType.BlockReach,
-                    Enums.HackType.ImpossibleActions, Enums.HackType.FastBreak, Enums.HackType.GhostHand,
-                    Enums.HackType.XRay})) {
+            if (p.getViolations(Enums.HackType.NoSwing).process()
+                    || p.getViolations(Enums.HackType.BlockReach).process()
+                    || p.getViolations(Enums.HackType.ImpossibleActions).process()
+                    || p.getViolations(Enums.HackType.FastBreak).process()
+                    || p.getViolations(Enums.HackType.GhostHand).process()
+                    || p.getViolations(Enums.HackType.XRay).process()) {
                 e.setCancelled(true);
             }
         }
@@ -135,7 +132,7 @@ public class EventsHandler5 implements Listener {
         BlockBreak.run(p, cancelled, b);
 
         // Detections
-        MorePackets.handleMining(p, b);
+        p.getExecutor(Enums.HackType.MorePackets).handle(e);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -165,9 +162,9 @@ public class EventsHandler5 implements Listener {
         if (!cancelled) {
             // Detections
             if (!ItemsAdder.is(nb)) {
-                ImpossibleActions.runPlace(p, b, ba, blockFace);
-                FastPlace.run(p, b, true, true, true);
-                BlockReach.runPlace(p, b, ba);
+                p.getExecutor(Enums.HackType.ImpossibleActions).handle(e);
+                p.getExecutor(Enums.HackType.BlockReach).handle(e);
+                p.getExecutor(Enums.HackType.FastPlace).handle(e);
             }
 
             // Feature
@@ -179,12 +176,11 @@ public class EventsHandler5 implements Listener {
                         + "block-face: " + blockFace);
             }
 
-            if (HackPrevention.canCancel(p, new Enums.HackType[]{Enums.HackType.FastPlace, Enums.HackType.BlockReach,
-                    Enums.HackType.ImpossibleActions})) {
+            if (p.getViolations(Enums.HackType.FastPlace).process()
+                    || p.getViolations(Enums.HackType.BlockReach).process()
+                    || p.getViolations(Enums.HackType.ImpossibleActions).process()) {
                 e.setCancelled(true);
             }
-        } else if (!ItemsAdder.is(nb)) {
-            FastPlace.run(p, b, false, false, true);
         }
     }
 

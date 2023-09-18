@@ -3,26 +3,27 @@ package me.vagdedes.spartan.configuration;
 import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.moderation.BanManagement;
-import me.vagdedes.spartan.features.moderation.Wave;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
-import me.vagdedes.spartan.features.synchronicity.DiscordWebhooks;
-import me.vagdedes.spartan.features.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.moderation.BanManagement;
+import me.vagdedes.spartan.functionality.moderation.Wave;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
+import me.vagdedes.spartan.functionality.synchronicity.DiscordWebhooks;
+import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
+import me.vagdedes.spartan.handlers.connection.IDs;
+import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.Chunks;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.interfaces.listeners.EventsHandler7;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.Check;
-import me.vagdedes.spartan.system.Cache;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
-import me.vagdedes.spartan.system.IDs;
-import me.vagdedes.spartan.system.Piracy;
+import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
 import me.vagdedes.spartan.utils.server.PluginUtils;
 import org.bukkit.Bukkit;
@@ -42,6 +43,10 @@ public class Config {
     private static String construct = defaultConstruct;
     private static boolean legacyFile = false;
     private static int maxPlayers = 20;
+    public static Settings settings = new Settings();
+    public static SQLFeature sql = new SQLFeature();
+    public static Messages messages = new Messages();
+    public static Compatibility compatibility = new Compatibility();
 
     static {
         refreshVariables(false);
@@ -94,11 +99,11 @@ public class Config {
 
     public static int getMaxPunishmentViolation(HackType hackType, ResearchEngine.DataType dataType) {
         if (!Config.isLegacy()) {
-            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.MAXIMUM);
+            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.ABSOLUTE);
         }
         Check check = hackType.getCheck();
 
-        for (int i = 1; i <= Check.maxViolations; i++) {
+        for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
             for (String s : check.getLegacyCommands(i)) {
                 if (s != null) {
                     return i;
@@ -110,11 +115,11 @@ public class Config {
 
     public static int getMinPunishmentViolation(HackType hackType, ResearchEngine.DataType dataType) {
         if (!Config.isLegacy()) {
-            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.MINIMUM);
+            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.UNLIKE);
         }
         Check check = hackType.getCheck();
 
-        for (int i = 1; i <= Check.maxViolations; i++) {
+        for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
             for (String s : check.getLegacyCommands(i)) {
                 if (s != null) {
                     return i;
@@ -188,8 +193,20 @@ public class Config {
 
         // Check Cache
         if (clearChecksCache) {
-            for (HackType hackType : Enums.HackType.values()) {
-                hackType.resetCheck(true);
+            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+
+            if (!players.isEmpty()) {
+                for (HackType hackType : Enums.HackType.values()) {
+                    hackType.resetCheck();
+
+                    for (SpartanPlayer p : players) {
+                        p.getViolations(hackType).reset();
+                    }
+                }
+            } else {
+                for (HackType hackType : Enums.HackType.values()) {
+                    hackType.resetCheck();
+                }
             }
         }
     }
@@ -206,9 +223,9 @@ public class Config {
                 CrossServerInformation.sendConfiguration(file);
             }
         }
-        Settings.create(local); // Always Second (Research Engine File Logs)
-        SQLFeature.create(local); // Always Third (Research Engine SQL Logs)
-        Messages.create(local);
+        settings.create(local); // Always Second (Research Engine File Logs)
+        sql.create(local); // Always Third (Research Engine SQL Logs)
+        messages.create(local);
         Compatibility.create(local);
         BanManagement.create(local);
         Wave.create(local);
@@ -226,10 +243,10 @@ public class Config {
         if (enabledPlugin) {
             createConfigurations(false); // Always First
         } else {
-            Settings.clear();
-            SQLFeature.refreshConfiguration();
-            Messages.clear();
-            Compatibility.clear();
+            settings.clear();
+            sql.refreshConfiguration();
+            messages.clear();
+            compatibility.clear();
             BanManagement.clear();
             Wave.clearCache();
         }
@@ -288,7 +305,7 @@ public class Config {
     }
 
     public static void reload(Object sender) {
-        if (Settings.getBoolean("Important.enable_developer_api")) {
+        if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanReloadEvent event = new SpartanReloadEvent();
             Register.manager.callEvent(event);
 
@@ -297,7 +314,7 @@ public class Config {
             }
         }
         if (sender != null) {
-            String message = Messages.get("config_reload");
+            String message = Config.messages.getColorfulString("config_reload");
 
             if (sender instanceof CommandSender) {
                 ((CommandSender) sender).sendMessage(message);

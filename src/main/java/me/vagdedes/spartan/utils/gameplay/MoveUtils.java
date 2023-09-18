@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.utils.gameplay;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
@@ -36,14 +36,13 @@ public class MoveUtils {
 
     public static final int
             height,
-            voidDamageHeight = -64,
             fallDamageBlocks = 4,
             chunkInt = AlgebraUtils.integerRound(chunk),
             jumpingMotions = 5;
 
     private static final Map<UUID, SpartanLocation> loc = new ConcurrentHashMap<>(Config.getMaxPlayers());
     private static final Set<Double> jumps = new HashSet<>(jumpingMotions);
-    private static final Map<Integer, Double> gravity = new HashMap<>();
+    private static final Map<Integer, Double> gravity = new LinkedHashMap<>();
 
     static {
         jumps.add(jumping[1]); // 0.41999
@@ -103,14 +102,14 @@ public class MoveUtils {
 
     static SpartanLocation trackLocation(SpartanPlayer p) {
         SpartanLocation to = p.getLocation(),
-                from = getCachedLocation(p, true);
+                from = p.getFromLocation();
 
         if (from != null) {
             p.setCustomDistance(to.distance(from));
             p.setCustomHorizontalDistance(AlgebraUtils.getHorizontalDistance(to, from));
             p.setCustomVerticalDistance(to.getY() - from.getY());
         }
-        loc.put(p.getUniqueId(), to); // Always last
+        p.setFromLocation(to); // Always last
         return to;
     }
 
@@ -170,16 +169,6 @@ public class MoveUtils {
             min = Math.min(min, value);
         }
         return new double[]{min, max};
-    }
-
-    // Location
-
-    public static SpartanLocation getCachedLocation(SpartanPlayer p, boolean returnNull) {
-        return loc.getOrDefault(p.getUniqueId(), returnNull ? null : p.getLocation());
-    }
-
-    public static SpartanLocation getCachedLocation(SpartanPlayer p) {
-        return getCachedLocation(p, false);
     }
 
     // Limits

@@ -1,8 +1,8 @@
 package me.vagdedes.spartan.handlers.stability;
 
-import me.vagdedes.spartan.features.moderation.Debug;
-import me.vagdedes.spartan.features.moderation.Spectate;
-import me.vagdedes.spartan.features.notifications.DetectionNotifications;
+import me.vagdedes.spartan.functionality.moderation.Debug;
+import me.vagdedes.spartan.functionality.moderation.Spectate;
+import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.Check;
 import me.vagdedes.spartan.system.SpartanBukkit;

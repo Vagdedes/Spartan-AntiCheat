@@ -1,8 +1,9 @@
 package me.vagdedes.spartan.handlers.stability;
 
 import me.vagdedes.spartan.Register;
+import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.SpartanBukkit;
@@ -96,8 +97,8 @@ public class TPS {
     // Helpers
 
     public static void setProtection(SpartanPlayer player, int ticks) {
-        if (!Settings.exists(Settings.permissionOption)) {
-            Settings.setOption(Settings.permissionOption, false);
+        if (!Config.settings.exists(Settings.permissionOption)) {
+            Config.settings.setOption(Settings.permissionOption, false);
         }
 
         // Separator
@@ -157,12 +158,12 @@ public class TPS {
             Calculator calculator = getCalculator(getHash(player), false);
             return calculator != null && (calculator.protection > 0
 
-                    || (TestServer.isIdentified() || Settings.getBoolean(Settings.tpsProtectionOption))
+                    || (TestServer.isIdentified() || Config.settings.getBoolean(Settings.tpsProtectionOption))
                     && calculator.result(false) < minimum);
         } else {
             return calculator.protection > 0
 
-                    || (TestServer.isIdentified() || Settings.getBoolean(Settings.tpsProtectionOption))
+                    || (TestServer.isIdentified() || Config.settings.getBoolean(Settings.tpsProtectionOption))
                     && calculator.result(false) < minimum;
         }
     }
@@ -181,7 +182,7 @@ public class TPS {
 
         private double result(boolean protection) {
             if (counter < minimumCounted
-                    || protection && !Settings.getBoolean(Settings.tpsProtectionOption)) {
+                    || protection && !Config.settings.getBoolean(Config.settings.tpsProtectionOption)) {
                 return maximum;
             }
             int target = (counter - 1 - minimumCounted) % tickCalculator.length;

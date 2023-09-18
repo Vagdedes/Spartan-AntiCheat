@@ -1,16 +1,16 @@
 package me.vagdedes.spartan.gui.info;
 
-import me.vagdedes.spartan.configuration.Messages;
-import me.vagdedes.spartan.configuration.Settings;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.important.Permissions;
-import me.vagdedes.spartan.features.moderation.Spectate;
-import me.vagdedes.spartan.features.performance.MaximumCheckedPlayers;
-import me.vagdedes.spartan.features.protections.LagLeniencies;
-import me.vagdedes.spartan.features.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.configuration.Config;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.functionality.moderation.Spectate;
+import me.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
+import me.vagdedes.spartan.functionality.protections.LagLeniencies;
+import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.helpers.PlayerStateLists;
 import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.profiling.MiningHistory;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
@@ -20,7 +20,6 @@ import me.vagdedes.spartan.objects.system.Check;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
-import me.vagdedes.spartan.system.IDs;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.data.CooldownUtils;
 import me.vagdedes.spartan.utils.java.StringUtils;
@@ -46,7 +45,7 @@ public class PlayerInfo {
 
     public static void open(SpartanPlayer p, String name, boolean back) {
         if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Messages.get("no_permission"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         SpartanPlayer t = SpartanBukkit.getPlayer(name);
@@ -54,7 +53,7 @@ public class PlayerInfo {
         PlayerProfile playerProfile = isOnline ? t.getProfile() : ResearchEngine.getPlayerProfileAdvanced(name, true);
 
         if (playerProfile == null) {
-            p.sendInventoryCloseMessage(Messages.get("player_not_found_message"));
+            p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
             return;
         }
         Inventory inv = p.createInventory(36, menu + (isOnline ? t.getName() : playerProfile.getName()));
@@ -98,10 +97,10 @@ public class PlayerInfo {
         InventoryUtils.add(inv, "§2Mining History", lore, item, 16);
 
         if (isOnline) {
-            int violations = Check.getViolationCount(t.getUniqueId());
+            int violations = t.getViolationCount();
             lore.clear();
             lore.add("");
-            lore.add("§7CPS (Clicks Per Second)§8:§a " + t.getClickData().getCount());
+            lore.add("§7CPS (Clicks Per Second)§8:§a " + t.getClicks().getCount());
             lore.add("§7Player Latency§8:§a " + t.getPing() + "ms");
             lore.add("§7Overall Violations§8:§a " + violations);
             lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + t.getDataType() + ")");
@@ -142,10 +141,8 @@ public class PlayerInfo {
 
         if (isOnline) {
             for (HackType hackType : hackTypes) {
-                Check check = hackType.getCheck();
-
-                if (check.getCheckType() == checkType) {
-                    violations += check.getViolations(p).getLevel();
+                if (hackType.getCheck().getCheckType() == checkType) {
+                    violations += p.getViolations(hackType).getLevel();
                 }
             }
         }
@@ -168,10 +165,8 @@ public class PlayerInfo {
         String cancellableCompatibility = isOnline ? p.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
-            Check check = hackType.getCheck();
-
-            if (check.getCheckType() == checkType) {
-                violations = isOnline ? check.getViolations(p).getLevel() : 0;
+            if (hackType.getCheck().getCheckType() == checkType) {
+                violations = isOnline ? p.getViolations(hackType).getLevel() : 0;
                 boolean hasViolations = violations > 0,
                         hasData = playerProfile.isSuspectedOrHacker() && playerProfile.getEvidence().has(hackType);
 
@@ -200,8 +195,7 @@ public class PlayerInfo {
                                  List<String> lore) {
         lore.clear();
         lore.add("");
-        Check check = hackType.getCheck();
-        int violations = !isOnline ? 0 : check.getViolations(p).getLevel();
+        int violations = !isOnline ? 0 : p.getViolations(hackType).getLevel();
         ItemStack item = isOnline && violations > 0 ?
                 new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
                 new ItemStack(Material.QUARTZ_BLOCK);
@@ -261,7 +255,7 @@ public class PlayerInfo {
         Check check = hackType.getCheck();
 
         if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
-            return returnNull ? null : "Disabled"; //todo
+            return returnNull ? null : "Disabled";
         }
         UUID uuid = p.getUniqueId();
         String delay = delayNumber == 0.0 ? "" : " (" + (Math.floor(delayNumber) == delayNumber ? String.valueOf((int) delayNumber) : String.valueOf(delayNumber)) + ")";
@@ -286,7 +280,7 @@ public class PlayerInfo {
     public static void refresh(String targetName) {
         String key = "player-info=inventory-menu";
 
-        if (Settings.getBoolean("Important.refresh_inventory_menu")
+        if (Config.settings.getBoolean("Important.refresh_inventory_menu")
                 && CooldownUtils.store.canDo(SpartanBukkit.uuid + "=" + key)) {
             CooldownUtils.store.add(SpartanBukkit.uuid + "=" + key, 1);
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
@@ -325,26 +319,26 @@ public class PlayerInfo {
 
         if (item.equals("Debug")) {
             if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 String playerName = title.substring(menu.length());
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
                 if (t == null) {
-                    p.sendInventoryCloseMessage(Messages.get("player_not_found_message"));
+                    p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
                 } else {
                     DebugMenu.open(p, t);
                 }
             }
         } else if (item.equals("Spectate")) {
             if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 String playerName = title.substring(menu.length());
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
                 if (t == null) {
-                    p.sendInventoryCloseMessage(Messages.get("player_not_found_message"));
+                    p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
                 } else {
                     Spectate.run(p, t);
                 }
@@ -353,24 +347,24 @@ public class PlayerInfo {
             String playerName = title.substring(menu.length());
 
             if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Messages.get("no_permission"));
+                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
                 if (t != null && clickType.isLeftClick()) {
                     for (HackType hackType : Enums.HackType.values()) {
-                        hackType.getCheck().getViolations(t).reset();
+                        t.getViolations(hackType).reset();
                     }
-                    String message = Messages.get("player_violation_reset_message").replace("{player}", t.getName());
+                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.getName());
                     p.sendMessage(message);
                 } else {
                     String name = Bukkit.getOfflinePlayer(playerName).getName();
 
                     if (name == null) {
-                        p.sendMessage(Messages.get("player_not_found_message"));
+                        p.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                     } else {
                         ResearchEngine.resetData(name);
-                        p.sendMessage(Messages.get("player_stored_data_delete_message").replace("{player}", name));
+                        p.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                     }
                 }
                 p.sendInventoryCloseMessage(null);

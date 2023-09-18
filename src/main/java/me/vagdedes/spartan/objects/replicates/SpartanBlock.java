@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.objects.replicates;
 
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.handlers.stability.Chunks;
 import me.vagdedes.spartan.utils.gameplay.BlockUtils;
 import org.bukkit.Chunk;

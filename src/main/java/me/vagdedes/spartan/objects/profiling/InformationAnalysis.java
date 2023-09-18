@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.objects.profiling;
 
-import me.vagdedes.spartan.system.Cache;
+import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.CharUtils;

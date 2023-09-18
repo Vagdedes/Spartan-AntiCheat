@@ -3,10 +3,13 @@ package me.vagdedes.spartan.system;
 import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.compatibility.manual.essential.protocollib.ProtocolLib;
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.features.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.handlers.connection.IDs;
+import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.objects.system.Threads;
 import me.vagdedes.spartan.utils.server.ReflectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -99,7 +102,8 @@ public class SpartanBukkit {
     }
 
     public static boolean isProductionServer() {
-        return !TestServer.isIdentified() && players.size() >= 7;
+        return !TestServer.isIdentified()
+                && players.size() >= 7;
     }
 
     public static int getPlayerCount() {
@@ -117,7 +121,8 @@ public class SpartanBukkit {
     // Separator
 
     public static boolean isSynchronised() {
-        return Bukkit.isPrimaryThread() || !Register.isPluginEnabled();
+        return Bukkit.isPrimaryThread()
+                || !Register.isPluginEnabled();
     }
 
     // Separator

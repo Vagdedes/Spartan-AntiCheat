@@ -1,12 +1,12 @@
 package me.vagdedes.spartan.configuration;
 
-import me.vagdedes.spartan.Register;
+import me.vagdedes.spartan.abstraction.ConfigurationBuilder;
 import me.vagdedes.spartan.api.API;
-import me.vagdedes.spartan.features.configuration.AntiCheatLogs;
-import me.vagdedes.spartan.features.important.MultiVersion;
-import me.vagdedes.spartan.features.moderation.BanManagement;
-import me.vagdedes.spartan.features.notifications.AwarenessNotifications;
-import me.vagdedes.spartan.features.synchronicity.CrossServerInformation;
+import me.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
+import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.moderation.BanManagement;
+import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
@@ -18,190 +18,127 @@ import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class SQLFeature {
+public class SQLFeature extends ConfigurationBuilder {
 
-    private static File file = new File(Register.plugin.getDataFolder() + "/sql.yml");
-    private static final Map<String, String> saved = new LinkedHashMap<>(8);
-    private static final Map<String, Boolean> bool = new LinkedHashMap<>(1);
+    public SQLFeature() {
+        super("sql");
+    }
+
     private static boolean enabled = false;
 
     private static Connection con = null;
     private static final List<String> list = new CopyOnWriteArrayList<>();
 
-    private static YamlConfiguration getPath() {
-        if (!file.exists()) {
-            create(false);
-        }
-        return YamlConfiguration.loadConfiguration(file);
-    }
-
     // Separator
 
-    public static String getHost() {
-        String data = saved.get("host");
+    @Override
+    public void clear() {
+        internalClear();
+    }
 
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("host");
+    public String getHost() {
+        String result = getString("host");
 
         if (result != null) {
             result = result.toLowerCase().replace("localhost", "127.0.0.1").replace(" ", "");
         }
-        saved.put("host", result);
         return result;
     }
 
-    public static String getUser() {
-        String data = saved.get("user");
-
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("user");
+    public String getUser() {
+        String result = getString("user");
 
         if (result != null) {
             result = result.replace(" ", "");
         }
-        saved.put("user", result);
         return result;
     }
 
-    public static String getPassword() {
-        String data = saved.get("password");
+    public String getPassword() {
+        String result = getString("password");
 
-        if (data != null) {
-            return data;
-        }
-        YamlConfiguration path = getPath();
-        String result = path.getString("password");
-
-        if (result != null && path.getBoolean("escape_special_characters")) {
+        if (result != null && getBoolean("escape_special_characters")) {
             result = StringUtils.escapeMetaCharacters(result);
         }
-        saved.put("password", result);
         return result;
     }
 
-    public static String getDatabase() {
-        String data = saved.get("database");
-
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("database");
+    public String getDatabase() {
+        String result = getString("database");
 
         if (result != null) {
             result = result.replace(" ", "");
         }
-        saved.put("database", result);
         return result;
     }
 
-    public static String getTable() {
-        String data = saved.get("table");
-
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("table");
+    public String getTable() {
+        String result = getString("table");
 
         if (result != null) {
             result = result.replace(" ", "");
         }
-        saved.put("table", result);
         return result;
     }
 
-    public static String getPort() {
-        String data = saved.get("port");
-
-        if (data != null) {
-            return data;
-        }
-        Object result = getPath().get("port");
+    public String getPort() {
+        String result = getString("port");
 
         if (result != null) {
-            String string = result.toString().replace(" ", "");
-            Double decimal = AlgebraUtils.returnValidDecimal(string);
+            result = result.replace(" ", "");
+            Double decimal = AlgebraUtils.returnValidDecimal(result);
 
             if (decimal != null) {
-                string = String.valueOf(AlgebraUtils.integerFloor(decimal));
+                result = String.valueOf(AlgebraUtils.integerFloor(decimal));
             }
-            saved.put("port", string);
-            return string;
+            return result;
+        } else {
+            return null;
         }
-        saved.put("port", null);
-        return null;
     }
 
-    public static String getDriver() {
-        String data = saved.get("driver");
-
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("driver");
+    public String getDriver() {
+        String result = getString("driver");
 
         if (result == null) {
             result = "mysql";
         }
-        saved.put("driver", result);
         return result;
     }
 
-    public static String getTLSVersion() {
-        String data = saved.get("tls");
-
-        if (data != null) {
-            return data;
-        }
-        String result = getPath().getString("tls_Version");
-        saved.put("tls", result);
-        return result;
+    public String getTLSVersion() {
+        return getString("tls_Version");
     }
 
-    public static boolean getSSL() {
-        Boolean data = bool.get("ssl");
-
-        if (data != null) {
-            return data;
-        }
-        boolean result = getPath().getBoolean("use_SSL");
-        bool.put("ssl", result);
-        return result;
+    public boolean getSSL() {
+        return getBoolean("use_SSL");
     }
 
     // Separator
 
-    public static void refreshConfiguration() {
-        saved.clear();
-        bool.clear();
-
+    public void refreshConfiguration() {
+        clear();
         // Always after cache is cleared
-        enabled = getHost().length() > 0
-                && getUser().length() > 0
-                && getPassword().length() > 0
-                && getDatabase().length() > 0
-                && getTable().length() > 0
-                && getDriver().length() > 0;
+        enabled = !getHost().isEmpty()
+                && !getUser().isEmpty()
+                && !getPassword().isEmpty()
+                && !getDatabase().isEmpty()
+                && !getTable().isEmpty()
+                && !getDriver().isEmpty();
     }
 
-    public static void refreshDatabase() {
+    public void refreshDatabase() {
         // Queries
-        if (list.size() > 0) {
+        if (!list.isEmpty()) {
             for (String insert : list) {
                 update(insert);
             }
@@ -223,12 +160,9 @@ public class SQLFeature {
 
     // Separator
 
-    public static void create(boolean local) {
-        file = new File(Register.plugin.getDataFolder() + "/mysql.yml");
-
-        if (!file.exists()) {
-            file = new File(Register.plugin.getDataFolder() + "/sql.yml");
-        }
+    @Override
+    public void create(boolean local) {
+        file = new File(directory);
         boolean exists = file.exists();
         ConfigUtils.add(file, "host", "");
         ConfigUtils.add(file, "user", "");
@@ -242,7 +176,7 @@ public class SQLFeature {
         ConfigUtils.add(file, "escape_special_characters", false);
         refreshConfiguration();
 
-        SpartanBukkit.storageThread.execute(SQLFeature::connect);
+        SpartanBukkit.storageThread.execute(this::connect);
 
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);
@@ -251,7 +185,7 @@ public class SQLFeature {
 
     // Separator
 
-    private static boolean isConnected(boolean message) {
+    private boolean isConnected(boolean message) {
         if (con != null) {
             try {
                 return !con.isClosed();
@@ -264,7 +198,7 @@ public class SQLFeature {
         return false;
     }
 
-    public static void connect() {
+    public void connect() {
         String host = getHost(),
                 user = getUser(),
                 password = getPassword(),
@@ -325,7 +259,7 @@ public class SQLFeature {
 
     // Separator
 
-    public static void update(String command) {
+    public void update(String command) {
         connect();
 
         try {
@@ -341,7 +275,7 @@ public class SQLFeature {
         }
     }
 
-    public static ResultSet query(final String command) {
+    public ResultSet query(final String command) {
         connect();
         ResultSet rs = null;
 
@@ -360,7 +294,7 @@ public class SQLFeature {
 
     // Separator
 
-    private static void createTable(String table) {
+    private void createTable(String table) {
         update(
                 "CREATE TABLE IF NOT EXISTS " + table + " (" +
                         "id INT(11) NOT NULL AUTO_INCREMENT, " +
@@ -390,10 +324,10 @@ public class SQLFeature {
 
     // Separator
 
-    public static void logInfo(SpartanPlayer p, String information,
-                               Material material, Enums.HackType hackType,
-                               boolean falsePositive, boolean miningNotification,
-                               int violations, int cancelViolation) {
+    public void logInfo(SpartanPlayer p, String information,
+                        Material material, Enums.HackType hackType,
+                        boolean falsePositive, boolean miningNotification,
+                        int violations, int cancelViolation) {
         if (enabled) {
             String table = getTable();
             boolean hasPlayer = p != null;

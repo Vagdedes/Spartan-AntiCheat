@@ -131,7 +131,7 @@ public class PlayerOpponent {
     // Separator
 
     private void updateData(SpartanPlayer p, int entities, boolean lastDamage) {
-        int cps = p.getClickData().getCount();
+        int cps = p.getClicks().getCount();
 
         if (cps > this.maxCPS) {
             this.maxCPS = cps;
