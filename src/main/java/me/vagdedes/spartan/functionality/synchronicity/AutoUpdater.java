@@ -23,7 +23,8 @@ public class AutoUpdater {
             UPDATE_FAILURE = -2;
 
     public static void complete() {
-        if (fileToReplace != null && downloadedFile != null) {
+        if (fileToReplace != null
+                && downloadedFile != null) {
             String pluginName = Register.plugin.getName();
 
             if (fileToReplace.exists()) {
@@ -54,7 +55,8 @@ public class AutoUpdater {
                 downloadedFileName = directoryFile.toString().replace(pluginName, pluginName + "Updated" + token + fileType);
         File downloadedFile = new File(downloadedFileName);
 
-        if (!downloadedFile.exists() || downloadedFile.delete()) {
+        if (!downloadedFile.exists()
+                || downloadedFile.delete()) {
             try (InputStream in = new URL(StringUtils.decodeBase64(CloudFeature.downloadWebsite) + token).openStream();
                  ReadableByteChannel rbc = Channels.newChannel(in);
 
@@ -109,4 +111,5 @@ public class AutoUpdater {
         downloadedFile = null;
         AwarenessNotifications.forcefullySend("The auto-updater feature failed to update this outdated version of " + pluginName + ": " + reason);
     }
+
 }

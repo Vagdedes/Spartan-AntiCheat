@@ -37,15 +37,16 @@ public class Enums {
     }
 
     public enum MiningOre {
-        ANCIENT_DEBRIS, DIAMOND, EMERALD, Gold;
+        ANCIENT_DEBRIS, DIAMOND, EMERALD, GOLD;
 
         private final String string;
 
         MiningOre() {
-            string = this.toString().toLowerCase().replace("_", "-");
+            string = this.name().toLowerCase().replace("_", "-");
         }
 
-        public String getString() {
+        @Override
+        public String toString() {
             return string;
         }
     }
@@ -78,7 +79,8 @@ public class Enums {
             }
         }
 
-        public String getString() {
+        @Override
+        public String toString() {
             return string;
         }
 
@@ -126,7 +128,8 @@ public class Enums {
             }
         }
 
-        public String getString() {
+        @Override
+        public String toString() {
             return string;
         }
     }
@@ -159,15 +162,10 @@ public class Enums {
             }
         }
 
-        public String getName() {
+        @Override
+        public String toString() {
             return string;
         }
 
     }
-
-    // Separator
-
-    public static final int
-            hackTypeLength = HackType.values().length,
-            miningOreLength = MiningOre.values().length;
 }

@@ -2,9 +2,9 @@ package me.vagdedes.spartan.functionality.commands;
 
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.Permissions;
-import me.vagdedes.spartan.functionality.moderation.PlayerReports;
 import me.vagdedes.spartan.functionality.moderation.Spectate;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.Moderation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
@@ -106,7 +106,7 @@ public class RawCommands {
                     if (t == null) {
                         p.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                     } else {
-                        PlayerReports.menu(p, t);
+                        SpartanMenu.playerReports.open(p, t);
                     }
                 } else if (args.length >= 3) {
                     SpartanPlayer t = SpartanBukkit.getPlayer(args[1]);

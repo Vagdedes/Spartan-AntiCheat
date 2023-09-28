@@ -143,4 +143,8 @@ public abstract class ConfigurationBuilder {
     abstract public void clear();
 
     abstract public void create(boolean local);
+
+    protected void addOption(String option, String value) {
+        ConfigUtils.add(file, option, value);
+    }
 }

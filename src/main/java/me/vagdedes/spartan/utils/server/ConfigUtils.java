@@ -131,7 +131,7 @@ public class ConfigUtils {
             int lastLevel = liveViolation.getLastCancelledLevel();
             boolean cancelled = lastLevel != 0;
             int violations = cancelled ? liveViolation.getCancelledLevel(lastLevel) : liveViolation.getLevel();
-            String category = cancelled ? Enums.PunishmentCategory.UNLIKE.getString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).getString();
+            String category = cancelled ? Enums.PunishmentCategory.UNLIKE.toString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).toString();
             message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName, uuid)));
             message = replace(message, "{vls:detection}", String.valueOf(violations));
             message = replace(message, "{category:detection}", category);
@@ -183,7 +183,7 @@ public class ConfigUtils {
                     int lastLevel = liveViolation.getLastCancelledLevel();
                     boolean cancelled = lastLevel != 0;
                     int violations = cancelled ? liveViolation.getCancelledLevel(lastLevel) : liveViolation.getLevel();
-                    String category = cancelled ? Enums.PunishmentCategory.UNLIKE.getString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).getString();
+                    String category = cancelled ? Enums.PunishmentCategory.UNLIKE.toString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).toString();
                     message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName, uuid)));
                     message = replace(message, "{vls:detection}", String.valueOf(violations));
                     message = replace(message, "{category:detection}", category);

@@ -51,9 +51,9 @@ public class BackgroundAPI {
                     player.getViolations(hackType).getLevel(),
                     hackType,
                     player.getProfile().isSuspectedOrHacker(hackType)
-            ).getString();
+            ).toString();
         }
-        return Enums.PunishmentCategory.UNLIKE.getString();
+        return Enums.PunishmentCategory.UNLIKE.toString();
     }
 
     @Deprecated

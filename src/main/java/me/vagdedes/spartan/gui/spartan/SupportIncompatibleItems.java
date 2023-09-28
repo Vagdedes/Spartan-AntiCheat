@@ -1,9 +1,9 @@
 package me.vagdedes.spartan.gui.spartan;
 
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.compatibility.manual.essential.MinigameMaker;
-import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
-import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.objects.features.IncompatibleItem;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -16,25 +16,21 @@ import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SupportIncompatibleItems {
+public class SupportIncompatibleItems extends InventoryMenu {
 
-    private static final String menu = "§0Support Incompatible Items".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
     private static final int menuSize = 54;
 
-    public static void open(SpartanPlayer p) {
-        if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            return;
-        }
-        Inventory inv = p.createInventory(menuSize, menu);
+    public SupportIncompatibleItems() {
+        super("§0Support Incompatible Items".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0), menuSize, Enums.Permission.MANAGE);
+    }
+
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
         int counter = 0;
 
@@ -63,40 +59,37 @@ public class SupportIncompatibleItems {
             for (Enums.HackType hackType : incompatibleItem.getHackTypes()) {
                 lore.add("§e" + hackType.toString().replace("_", "-"));
             }
-            InventoryUtils.add(inv, "§6" + name, lore, new ItemStack(incompatibleItem.getMaterial()), -1);
+            InventoryUtils.add(inventory, "§6" + name, lore, new ItemStack(incompatibleItem.getMaterial()), -1);
 
             if (counter == menuSize) {
                 break;
             }
         }
 
-        InventoryUtils.add(inv, "§2Add Item", null, new ItemStack(MaterialUtils.get("redstone_torch")), 52);
+        InventoryUtils.add(inventory, "§2Add Item", null, new ItemStack(MaterialUtils.get("redstone_torch")), 52);
 
-        InventoryUtils.add(inv, "§4Back", AntiCheatUpdates.getInformation(false),
+        InventoryUtils.add(inventory, "§4Back", AntiCheatUpdates.getInformation(false),
                 new ItemStack(Material.ARROW), 53);
-
-        p.openInventory(inv);
+        return true;
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title, ClickType clickType) {
-        ItemMeta meta = i.getItemMeta();
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String item = itemStack.getItemMeta().getDisplayName();
 
-        if (meta == null || meta.getDisplayName() == null || !title.equals(menu)) {
-            return false;
-        }
-        String item = i.getItemMeta().getDisplayName();
+        if (itemStack.getType() == Material.ARROW && item.equals("§4Back")) {
+            SpartanMenu.mainMenu.open(player);
+        } else if (itemStack.getType() == MaterialUtils.get("redstone_torch")
+                && item.equals("§2Add Item")) {
+            Player n = player.getPlayer();
 
-        if (i.getType() == Material.ARROW && item.equals("§4Back")) {
-            SpartanMenu.open(p);
-        } else if (i.getType() == MaterialUtils.get("redstone_torch") && item.equals("§2Add Item")) {
-            Player n = p.getPlayer();
-
-            if (n != null && n.isOnline()) {
+            if (n != null
+                    && n.isOnline()) {
                 Bukkit.dispatchCommand(n, "spartan add-incompatible-item");
                 n.closeInventory();
             }
         } else {
-            List<String> lore = meta.getLore();
+            List<String> lore = itemStack.getItemMeta().getLore();
 
             if (lore != null) {
                 for (String line : lore) {
@@ -118,7 +111,7 @@ public class SupportIncompatibleItems {
                                     MinigameMaker.removeItem(incompatibleItem);
                                 }
                             }
-                            open(p);
+                            open(player);
                             break;
                         }
                     }

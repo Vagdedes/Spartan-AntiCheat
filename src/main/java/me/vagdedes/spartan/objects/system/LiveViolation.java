@@ -10,7 +10,7 @@ import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import me.vagdedes.spartan.functionality.performance.FalsePositiveDetection;
 import me.vagdedes.spartan.functionality.protections.LagLeniencies;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
 import me.vagdedes.spartan.handlers.stability.Moderation;
@@ -137,7 +137,7 @@ public class LiveViolation {
         if (hp != null
                 && !LagLeniencies.hasInconsistencies(player, null)
                 && !player.getHandlers().has(Handlers.HandlerType.GameMode)
-                && !CloudFeature.isInformationCancelled(hackType, hp.information)) {
+                && !CloudFeature.isPublicInformationCancelled(hackType, hp.information)) {
             UUID uuid = player.getUniqueId();
             Check check = hackType.getCheck();
             CancelCause disableCause = check.getDisabledCause(uuid);
@@ -350,7 +350,7 @@ public class LiveViolation {
 
         // Always last
         if (previousLevel != level) {
-            PlayerInfo.refresh(player.getName());
+            SpartanMenu.playerInfo.refresh(player.getName());
         }
     }
 
@@ -430,7 +430,7 @@ public class LiveViolation {
             player.getProfile().resetLiveEvidence(hackType);
 
             if (local) {
-                PlayerInfo.refresh(player.getName());
+                SpartanMenu.playerInfo.refresh(player.getName());
             }
         }
     }

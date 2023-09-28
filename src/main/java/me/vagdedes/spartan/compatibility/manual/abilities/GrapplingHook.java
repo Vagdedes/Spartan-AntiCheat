@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class GrapplingHook implements Listener {
 
-    public static boolean isItem(ItemStack i) {
+    private static boolean isItem(ItemStack i) {
         if (Compatibility.CompatibilityType.GrapplingHook.isFunctional()) {
             try {
                 return PluginUtils.exists("grapplinghook") ? HookAPI.isGrapplingHook(i) : i.getType() == Material.FISHING_ROD;

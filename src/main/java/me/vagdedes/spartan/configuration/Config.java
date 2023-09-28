@@ -10,7 +10,7 @@ import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import me.vagdedes.spartan.functionality.synchronicity.DiscordWebhooks;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
@@ -260,7 +260,7 @@ public class Config {
         Permissions.clear();
 
         // Features
-        ManageConfiguration.clear();
+        SpartanMenu.manageConfiguration.clear();
         AwarenessNotifications.refresh();
 
         // Objects

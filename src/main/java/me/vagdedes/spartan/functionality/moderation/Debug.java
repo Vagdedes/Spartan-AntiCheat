@@ -79,7 +79,7 @@ public class Debug {
         }
         String msg = Config.messages.getColorfulString(enable ? "debug_enable_message" : "debug_disable_message");
         msg = msg.replace("{player}", t.getName());
-        msg = msg.replace("{type}", s.getString());
+        msg = msg.replace("{type}", s.toString());
         p.getPlayer().sendMessage(msg);
     }
 
@@ -94,7 +94,7 @@ public class Debug {
                 if (owner != null) {
                     String msg = Config.messages.getColorfulString("debug_player_message");
                     msg = msg.replace("{player}", p.getName());
-                    msg = msg.replace("{type}", t.getString());
+                    msg = msg.replace("{type}", t.toString());
                     msg = msg.replace("{info}", s.toLowerCase().replace("_", "-"));
                     owner.sendMessage(msg);
                 }

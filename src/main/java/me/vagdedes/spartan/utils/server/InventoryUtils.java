@@ -22,7 +22,7 @@ public class InventoryUtils {
     public static void prepareDescription(List<String> array, String title) {
         array.clear();
 
-        if (title.length() > 0) {
+        if (!title.isEmpty()) {
             array.add("§e" + title);
             array.add("");
         }

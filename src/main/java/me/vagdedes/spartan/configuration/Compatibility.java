@@ -21,7 +21,7 @@ import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.gui.spartan.MainMenu;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
 import me.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.utils.server.ReflectionUtils;
@@ -78,7 +78,7 @@ public class Compatibility {
             if (hardcoded) {
                 this.enabled = true;
                 this.forced = false;
-                this.functional = PluginUtils.exists(this.toString());
+                this.functional = PluginUtils.exists(this.name().toLowerCase());
             } else {
                 file = new File(staticDirectory);
                 String compatibility = this.toString();
@@ -367,7 +367,7 @@ public class Compatibility {
         CompatibilityType.NoHitDelay.setFunctional(
                 new String[]{""}
         );
-        SpartanMenu.refresh();
+        MainMenu.refresh();
     }
 
     private static boolean getBoolean(String path, boolean create) {

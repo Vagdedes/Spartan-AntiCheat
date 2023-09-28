@@ -6,7 +6,7 @@ import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.synchronicity.AutoUpdater;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.system.Enums;
@@ -24,13 +24,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CloudFeature {
 
     // URLs
-    static final String website = "aHR0cHM6Ly92YWdkZWRlcy5jb20vbWluZWNyYWZ0L2Nsb3VkLw==",
-            accountWebsite = "aHR0cHM6Ly92YWdkZWRlcy5jb20vYWNjb3VudC9hcGkvdmVyaWZ5RG93bmxvYWQv";
-    public static final String downloadWebsite = "aHR0cHM6Ly92YWdkZWRlcy5jb20vYWNjb3VudC9kb3dubG9hZEZpbGUvP3Rva2VuPQ==";
+    static final String website = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL21pbmVjcmFmdC9jbG91ZC8=",
+            accountWebsite = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL2FjY291bnQvYXBpL3ZlcmlmeURvd25sb2FkLw==";
+    public static final String downloadWebsite = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL2FjY291bnQvZG93bmxvYWRGaWxlLz90b2tlbj0=";
 
     // Cache
     private static final Map<Enums.HackType, String[]>
             disabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
+            hiddenDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
             allDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
     static final CopyOnWriteArrayList<UUID> punishedPlayers = new CopyOnWriteArrayList<>(),
             updatedPunishedPlayers = new CopyOnWriteArrayList<>();
@@ -42,7 +43,8 @@ public class CloudFeature {
     // Frequencies, Cooldowns & Timers
     private static final int connectionRefreshFrequencyInMinutes = 10;
     private static int connectionRefreshTimer = connectionRefreshFrequencyInMinutes * 1200;
-    private static long connectionFailedCooldown = 0L, connectionRefreshCooldown = 0L;
+    private static long connectionFailedCooldown = 0L;
+    private static final long[] connectionRefreshCooldown = new long[2];
 
     // Features
     static String outdatedVersionMessage = null;
@@ -55,7 +57,7 @@ public class CloudFeature {
     public static final String separator = ">@#&!%<;=";
 
     static {
-        clear(false);
+         clear(false);
 
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
@@ -84,7 +86,7 @@ public class CloudFeature {
 
     public static String getMaximumServerLimitMessage() {
         return "You have reached your Maximum Server Limit. " +
-                "Register your account on §nhttps://vagdedes.com/account/profile§r " +
+                "Register your account on §nhttps://www.vagdedes.com/account/profile§r " +
                 "§lOR§r join the Discord server " +
                 "§lOR§r use the " + IDs.getPlatform(true) + " platform to verify";
     }
@@ -131,9 +133,7 @@ public class CloudFeature {
         return disabledDetections.get(check);
     }
 
-    public static boolean isInformationCancelled(Enums.HackType hackType, String info) {
-        String[] disabledDetections = allDisabledDetections.get(hackType);
-
+    private static boolean isInformationCancelled(String[] disabledDetections, String info) {
         if (disabledDetections != null) {
             for (String detection : disabledDetections) {
                 if (info.contains(detection)) {
@@ -142,6 +142,14 @@ public class CloudFeature {
             }
         }
         return false;
+    }
+
+    public static boolean isInformationCancelled(Enums.HackType hackType, String info) {
+        return isInformationCancelled(hiddenDisabledDetections.get(hackType), info);
+    }
+
+    public static boolean isPublicInformationCancelled(Enums.HackType hackType, String info) {
+        return isInformationCancelled(allDisabledDetections.get(hackType), info);
     }
 
     // Separator
@@ -171,6 +179,7 @@ public class CloudFeature {
     public static void clear(boolean cache) {
         if (cache) {
             disabledDetections.clear();
+            hiddenDisabledDetections.clear();
             allDisabledDetections.clear();
             punishedPlayers.clear();
             updatedPunishedPlayers.clear();
@@ -182,8 +191,8 @@ public class CloudFeature {
     public static void refresh(boolean independent) {
         long ms = System.currentTimeMillis();
 
-        if (!recentError(ms) && connectionRefreshCooldown <= ms) {
-            connectionRefreshCooldown = ms + 60_000L;
+        if (!recentError(ms) && connectionRefreshCooldown[independent ? 0 : 1] <= ms) {
+            connectionRefreshCooldown[independent ? 0 : 1] = ms + 60_000L;
             connectionRefreshTimer = connectionRefreshFrequencyInMinutes * 1200;
             boolean async = !SpartanBukkit.isSynchronised(),
                     validIDs = IDs.isValid();
@@ -305,7 +314,7 @@ public class CloudFeature {
                             }
 
                             if (changed) {
-                                ManageConfiguration.reload(true);
+                                SpartanMenu.manageConfiguration.reload(true);
                             }
                         }
                     } catch (Exception e) {
@@ -362,6 +371,7 @@ public class CloudFeature {
             if (independent) {
                 Map<Enums.HackType, String[]>
                         disabledDetections = new LinkedHashMap<>(),
+                        hiddenDisabledDetections = new LinkedHashMap<>(),
                         allDisabledDetections = new LinkedHashMap<>();
 
                 // Doesn't need ID validation due to its unique anti-piracy purpose
@@ -379,6 +389,7 @@ public class CloudFeature {
                                     Enums.HackType hackType = null;
                                     Set<String>
                                             detections = new LinkedHashSet<>(),
+                                            hiddenDetections = new LinkedHashSet<>(),
                                             allDetections = new LinkedHashSet<>();
 
                                     for (String detection : data.split("\\|")) {
@@ -395,17 +406,21 @@ public class CloudFeature {
                                                 break;
                                             }
                                         } else {
+                                            detection = detection.replace("__", " ");
+
                                             if (detection.startsWith(" ")) {
-                                                allDetections.add(detection.substring(1).replace("__", " "));
+                                                hiddenDetections.add(detection);
                                             } else {
-                                                detection = detection.replace("__", " ");
                                                 detections.add(detection);
-                                                allDetections.add(detection);
                                             }
+                                            allDetections.add(detection);
                                         }
                                     }
                                     if (!detections.isEmpty()) {
                                         disabledDetections.put(hackType, detections.toArray(new String[0]));
+                                    }
+                                    if (!hiddenDetections.isEmpty()) {
+                                        hiddenDisabledDetections.put(hackType, hiddenDetections.toArray(new String[0]));
                                     }
                                     if (!allDetections.isEmpty()) {
                                         allDisabledDetections.put(hackType, allDetections.toArray(new String[0]));
@@ -414,10 +429,13 @@ public class CloudFeature {
                             }
                             CloudFeature.disabledDetections.clear();
                             CloudFeature.disabledDetections.putAll(disabledDetections);
+                            CloudFeature.hiddenDisabledDetections.clear();
+                            CloudFeature.hiddenDisabledDetections.putAll(hiddenDisabledDetections);
                             CloudFeature.allDisabledDetections.clear();
                             CloudFeature.allDisabledDetections.putAll(allDisabledDetections);
                         } else {
                             CloudFeature.disabledDetections.clear();
+                            CloudFeature.hiddenDisabledDetections.clear();
                             CloudFeature.allDisabledDetections.clear();
                         }
                     } catch (Exception e) {

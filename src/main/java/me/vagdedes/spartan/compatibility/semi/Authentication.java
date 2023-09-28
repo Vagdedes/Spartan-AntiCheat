@@ -6,6 +6,7 @@ import me.vagdedes.spartan.utils.server.PluginUtils;
 public class Authentication {
 
     public static boolean isEnabled() {
-        return Compatibility.CompatibilityType.Authentication.isFunctional() && PluginUtils.contains("auth");
+        return Compatibility.CompatibilityType.Authentication.isFunctional()
+                && PluginUtils.contains("auth");
     }
 }

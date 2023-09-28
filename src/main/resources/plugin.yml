@@ -1,9 +1,9 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
 main: me.vagdedes.spartan.Register
-version: Phase 522
-website: https://vagdedes.com/
-description: Advanced cheat prevention made simple
+version: Phase 522.1
+website: https://www.vagdedes.com
+description: Advanced cheat prevention made simple.
 api-version: 1.13
 softdepend: [ProtocolLib, UltimateStatistics, FileGUI, MinigameMaker, AntiAltAccount,
              mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,

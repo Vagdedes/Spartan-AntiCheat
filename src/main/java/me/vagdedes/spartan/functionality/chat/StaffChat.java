@@ -25,7 +25,7 @@ public class StaffChat {
                 message = ConfigUtils.replaceWithSyntax(p, message, null);
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-                if (players.size() > 0) {
+                if (!players.isEmpty()) {
                     for (SpartanPlayer o : players) {
                         if (Permissions.has(o, Enums.Permission.STAFF_CHAT)) {
                             o.sendMessage(message);

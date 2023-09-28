@@ -1,15 +1,9 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
-import me.vagdedes.spartan.functionality.moderation.PlayerReports;
 import me.vagdedes.spartan.functionality.moderation.Spectate;
-import me.vagdedes.spartan.gui.configuration.ManageChecks;
-import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
-import me.vagdedes.spartan.gui.configuration.ManageOptions;
-import me.vagdedes.spartan.gui.info.DebugMenu;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
-import me.vagdedes.spartan.gui.spartan.SupportIncompatibleItems;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Piston;
 import me.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -107,14 +101,16 @@ public class EventsHandler4 implements Listener {
             }
 
             // GUIs
-            if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-                    && (SpartanMenu.run(p, item, title, click) | ManageChecks.run(p, item, title, click)
-                    | ManageOptions.run(p, item, title) | PlayerInfo.run(p, item, title, click)
-                    | DebugMenu.run(p, item, title) | ManageConfiguration.run(p, item, title, click, slot) |
-                    PlayerReports.run(p, item, title) | SupportIncompatibleItems.run(p, item, title, click))
-                    | p.getViolations(Enums.HackType.ImpossibleInventory).process()
+            if (p.getViolations(Enums.HackType.ImpossibleInventory).process()
                     | p.getViolations(Enums.HackType.InventoryClicks).process()) {
                 e.setCancelled(true);
+            } else if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                for (InventoryMenu menu : SpartanMenu.menus) {
+                    if (menu.handle(p, title, item, click, slot)) {
+                        e.setCancelled(true);
+                        break;
+                    }
+                }
             }
         }
     }

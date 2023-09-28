@@ -49,7 +49,8 @@ public class EventsHandler_1_13 implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void PotionEffect(EntityPotionEffectEvent e) {
-        if (e.getAction() == EntityPotionEffectEvent.Action.ADDED && e.getCause() == EntityPotionEffectEvent.Cause.PLUGIN) { // Attention for new methods
+        if (e.getAction() == EntityPotionEffectEvent.Action.ADDED
+                && e.getCause() == EntityPotionEffectEvent.Cause.PLUGIN) { // Attention for new methods
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {

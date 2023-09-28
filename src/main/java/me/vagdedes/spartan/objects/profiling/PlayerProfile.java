@@ -3,8 +3,8 @@ package me.vagdedes.spartan.objects.profiling;
 import me.vagdedes.spartan.checks.world.XRay;
 import me.vagdedes.spartan.compatibility.necessary.bedrock.BedrockCompatibility;
 import me.vagdedes.spartan.functionality.important.Permissions;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.gui.SpartanMenu;
+import me.vagdedes.spartan.gui.spartan.MainMenu;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.handlers.stability.TestServer;
@@ -78,8 +78,8 @@ public class PlayerProfile {
         }
 
         // Separator
-        this.violationHistory = new ViolationHistory[Enums.hackTypeLength];
-        this.miningHistory = new MiningHistory[Enums.miningOreLength];
+        this.violationHistory = new ViolationHistory[hackTypes.length];
+        this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
             this.violationHistory[hackType.ordinal()] = new ViolationHistory(hackType, getDataType());
@@ -104,8 +104,8 @@ public class PlayerProfile {
         this.bedrockPlayerCheck = true;
         this.lastPlayed = player.getLastPlayed();
 
-        this.violationHistory = new ViolationHistory[Enums.hackTypeLength];
-        this.miningHistory = new MiningHistory[Enums.miningOreLength];
+        this.violationHistory = new ViolationHistory[hackTypes.length];
+        this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
             this.violationHistory[hackType.ordinal()] = new ViolationHistory(hackType, getDataType());
@@ -253,13 +253,14 @@ public class PlayerProfile {
 
     public void calculateHistoricalEvidence() {
         if (evidence.startCalculation(shouldCalculateEvidence())) {
+            ResearchEngine.DataType dataType = getDataType();
             boolean hasStatistics = ViolationStatistics.has();
 
             for (ViolationHistory violationHistory : violationHistory) {
                 Enums.HackType hackType = violationHistory.getHackType();
 
                 if (hackType == Enums.HackType.XRay) {
-                    Map<Enums.MiningOre, Integer> suspectedOres = new LinkedHashMap<>(Enums.miningOreLength);
+                    Map<Enums.MiningOre, Integer> suspectedOres = new LinkedHashMap<>(Enums.MiningOre.values().length);
 
                     for (MiningHistory miningHistory : getMiningHistory()) {
                         for (World.Environment environment : World.Environment.values()) {
@@ -279,7 +280,7 @@ public class PlayerProfile {
                         }
                     }
 
-                    if (suspectedOres.size() > 0) {
+                    if (!suspectedOres.isEmpty()) {
                         String separator = "§l/§r";
                         evidence.add(hackType,
                                 StringUtils.toString(suspectedOres.keySet().toArray(new Enums.MiningOre[0]), separator)
@@ -288,27 +289,25 @@ public class PlayerProfile {
                         evidence.remove(hackType);
                     }
                 } else if (hasStatistics) {
-                    ViolationStatistics.GlobalWarmup globalStatistics = ViolationStatistics.get(hackType);
+                    ViolationStatistics.GlobalWarmup globalStatistics = ViolationStatistics.get(hackType); // Already checked check & detections
 
                     if (globalStatistics.has) {
                         List<PlayerViolation> data = violationHistory.getViolationsList();
 
-                        if (data.size() > 0) {
+                        if (!data.isEmpty()) {
                             Map<String, ViolationStatistics> comparedStatistics = new LinkedHashMap<>();
 
                             // Calculate compared profile data
 
                             for (PlayerViolation playerViolation : data) {
-                                if (playerViolation.isDetectionEnabled()) {
-                                    String date = playerViolation.getDate();
-                                    ViolationStatistics statistics = comparedStatistics.get(date);
+                                String date = playerViolation.getDate();
+                                ViolationStatistics statistics = comparedStatistics.get(date);
 
-                                    if (statistics == null) {
-                                        statistics = new ViolationStatistics();
-                                        comparedStatistics.put(date, statistics);
-                                    }
-                                    statistics.count(playerViolation);
+                                if (statistics == null) {
+                                    statistics = new ViolationStatistics();
+                                    comparedStatistics.put(date, statistics);
                                 }
+                                statistics.count(playerViolation);
                             }
 
                             // Collide Compared and Global Data
@@ -388,8 +387,8 @@ public class PlayerProfile {
                             "suspicion: " + AlgebraUtils.integerRound(thresholdSurpassing * 100.0) + "%"
                     );
                     judgeEvidence();
-                    PlayerInfo.refresh(player.getName());
-                    SpartanMenu.refresh();
+                    SpartanMenu.playerInfo.refresh(player.getName());
+                    MainMenu.refresh();
                     return true;
                 }
             }

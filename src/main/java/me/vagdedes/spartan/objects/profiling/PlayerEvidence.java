@@ -34,7 +34,7 @@ public class PlayerEvidence {
 
     PlayerEvidence() {
         this.type = EvidenceType.Legitimate;
-        this.evidence = new LinkedHashMap<>(Enums.hackTypeLength);
+        this.evidence = new LinkedHashMap<>(Enums.HackType.values().length);
         this.noCalculations = true;
     }
 

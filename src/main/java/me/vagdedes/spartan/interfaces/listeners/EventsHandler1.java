@@ -12,8 +12,7 @@ import me.vagdedes.spartan.functionality.protections.LagLeniencies;
 import me.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import me.vagdedes.spartan.functionality.protections.ReconnectCooldown;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Velocity;
 import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.DetectionLocation;
@@ -63,7 +62,7 @@ public class EventsHandler1 implements Listener {
                 Config.settings.runOnLogin(p);
 
                 // Features
-                if (!SpartanMenu.notify(p)) {
+                if (!SpartanMenu.mainMenu.notify(p)) {
                     SuspicionNotifications.run(p);
                 }
             }
@@ -86,7 +85,7 @@ public class EventsHandler1 implements Listener {
         PlayerLimitPerIP.remove(p);
 
         // Features
-        ManageConfiguration.save(p, true);
+        SpartanMenu.manageConfiguration.save(p, true);
         ReconnectCooldown.remove(n);
         ChatProtection.remove(p);
 

@@ -33,7 +33,7 @@ public class PluginUtils {
                 List<String> dependentList = new ArrayList<>(descriptionFile.getDepend());
                 dependentList.addAll(descriptionFile.getSoftDepend());
 
-                if (dependentList.size() > 0) {
+                if (!dependentList.isEmpty()) {
                     for (String dependent : dependentList) {
                         if (independent.equals(dependent)) {
                             results.add(p);

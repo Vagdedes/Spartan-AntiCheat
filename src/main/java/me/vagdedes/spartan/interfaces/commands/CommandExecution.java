@@ -8,16 +8,13 @@ import me.vagdedes.spartan.configuration.Compatibility;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.functionality.moderation.BanManagement;
-import me.vagdedes.spartan.functionality.moderation.PlayerReports;
 import me.vagdedes.spartan.functionality.moderation.Wave;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import me.vagdedes.spartan.functionality.notifications.clickablemessage.ClickableMessage;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudConnections;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
-import me.vagdedes.spartan.gui.spartan.SupportIncompatibleItems;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.stability.Moderation;
@@ -68,13 +65,7 @@ public class CommandExecution implements CommandExecutor {
             } else {
                 command += " §8" + v;
             }
-            if (isPlayer) {
-                ClickableMessage.sendURL(sender, command,
-                        "Click this command to visit the developer's official website.",
-                        "https://vagdedes.com/" + Register.plugin.getName().toLowerCase() + (IDs.isSpigotMC(true) ? "/?source=spigotmc" : ""));
-            } else {
-                sender.sendMessage(command);
-            }
+            sender.sendMessage(command);
             sender.sendMessage("§8§l<> §7Required command argument");
             sender.sendMessage("§8§l[] §7Optional command argument");
             return true;
@@ -229,7 +220,7 @@ public class CommandExecution implements CommandExecutor {
             }
             if (args.length == 1) {
                 if (isPlayer && args[0].equalsIgnoreCase("Menu")) {
-                    SpartanMenu.open(player);
+                    SpartanMenu.mainMenu.open(player);
 
                 } else if (args[0].equalsIgnoreCase("Moderation")) {
                     completeMessage(sender, args[0].toLowerCase());
@@ -257,7 +248,7 @@ public class CommandExecution implements CommandExecutor {
                         sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                         return true;
                     }
-                    PlayerInfo.open(player, sender.getName(), false);
+                    SpartanMenu.playerInfo.open(player, sender.getName());
 
                 } else if (isPlayer && args[0].equalsIgnoreCase("Notifications")) {
                     if (!DetectionNotifications.hasPermission(player)) {
@@ -295,7 +286,7 @@ public class CommandExecution implements CommandExecutor {
                     sender.sendMessage("");
 
                     if (isPlayer) {
-                        SupportIncompatibleItems.open(player);
+                        SpartanMenu.supportIncompatibleItems.open(player);
                     }
 
                 } else {
@@ -353,7 +344,7 @@ public class CommandExecution implements CommandExecutor {
                             sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                             return true;
                         }
-                        PlayerInfo.open(player, ConfigUtils.replaceWithSyntax(args[1], null), false);
+                        SpartanMenu.playerInfo.open(player, ConfigUtils.replaceWithSyntax(args[1], null));
 
                     } else if (args[0].equalsIgnoreCase("Toggle")) {
                         String check = args[1];
@@ -401,7 +392,7 @@ public class CommandExecution implements CommandExecutor {
                             sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                             return true;
                         }
-                        PlayerReports.menu(player, t);
+                        SpartanMenu.playerReports.open(player, t);
 
                     } else if (args[0].equalsIgnoreCase("Unban")) {
                         OfflinePlayer t = Bukkit.getOfflinePlayer(args[1]);
@@ -795,7 +786,7 @@ public class CommandExecution implements CommandExecutor {
 
                                 if (AlgebraUtils.validInteger(seconds) && MinigameMaker.addItem(args[1], args[2], args[4], args[3], Math.max(Integer.parseInt(seconds), 1))) {
                                     if (isPlayer) {
-                                        SupportIncompatibleItems.open(player);
+                                        SpartanMenu.supportIncompatibleItems.open(player);
                                     } else {
                                         sender.sendMessage(ChatColor.GREEN + "Incompatible item successfully added.");
                                     }
@@ -811,7 +802,7 @@ public class CommandExecution implements CommandExecutor {
 
                                 if (AlgebraUtils.validInteger(seconds) && MinigameMaker.addItem(args[1], args[2], args[3], "%spc%", Math.max(Integer.parseInt(seconds), 1))) {
                                     if (isPlayer) {
-                                        SupportIncompatibleItems.open(player);
+                                        SpartanMenu.supportIncompatibleItems.open(player);
                                     } else {
                                         sender.sendMessage(ChatColor.GREEN + "Incompatible item successfully added.");
                                     }
@@ -887,7 +878,7 @@ public class CommandExecution implements CommandExecutor {
                         completeMessage(sender, "default");
                     }
                 }
-            } else if (isPlayer && SpartanMenu.open(player, false)) {
+            } else if (isPlayer && SpartanMenu.mainMenu.open(player, false)) {
                 completeMessage(sender, "commands");
             } else {
                 completeMessage(sender, "default");

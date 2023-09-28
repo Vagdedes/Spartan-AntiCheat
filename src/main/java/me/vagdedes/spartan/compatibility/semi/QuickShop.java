@@ -6,6 +6,7 @@ import me.vagdedes.spartan.utils.server.PluginUtils;
 public class QuickShop {
 
     public static boolean isEnabled() {
-        return Compatibility.CompatibilityType.QuickShop.isFunctional() && PluginUtils.exists("quickshop");
+        return Compatibility.CompatibilityType.QuickShop.isFunctional()
+                && PluginUtils.exists("quickshop");
     }
 }

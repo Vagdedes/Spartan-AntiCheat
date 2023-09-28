@@ -12,9 +12,6 @@ import java.util.UUID;
 
 public class UltimateStatistics {
 
-    private static final String key = "amount";
-    public static final String name = Compatibility.CompatibilityType.UltimateStatistics.toString();
-
     private static final Map<UUID, Boolean> hm = Cache.store(new LinkedHashMap<>(Config.getMaxPlayers()));
 
     public static boolean isSuspected(UUID uuid) {
@@ -32,11 +29,11 @@ public class UltimateStatistics {
     }
 
     private static double getRatio(UUID uuid) {
-        Object obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Players_Killed, key);
+        Object obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Players_Killed, "amount");
 
         if (obj instanceof Integer) {
             int kills = (int) obj;
-            obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Deaths_By_Player, key);
+            obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Deaths_By_Player, "amount");
 
             if (obj instanceof Integer) {
                 int deaths = (int) obj;
@@ -50,7 +47,7 @@ public class UltimateStatistics {
     }
 
     private static double getKicks(UUID uuid) {
-        Object obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Times_Kicked, key);
+        Object obj = UltimateStatisticsAPI.getStats(uuid, Enums.EventType.Times_Kicked, "amount");
         return obj instanceof Integer ? (int) obj : 0.0;
     }
 }

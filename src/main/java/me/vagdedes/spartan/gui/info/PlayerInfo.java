@@ -1,5 +1,6 @@
 package me.vagdedes.spartan.gui.info;
 
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.important.Permissions;
@@ -7,9 +8,9 @@ import me.vagdedes.spartan.functionality.moderation.Spectate;
 import me.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import me.vagdedes.spartan.functionality.protections.LagLeniencies;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.helpers.PlayerStateLists;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.profiling.MiningHistory;
@@ -21,14 +22,12 @@ import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
 import me.vagdedes.spartan.system.SpartanBukkit;
-import me.vagdedes.spartan.utils.data.CooldownUtils;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
@@ -37,103 +36,104 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PlayerInfo {
+public class PlayerInfo extends InventoryMenu {
 
-    public static final String name = "Player Info",
-            menu = ("§0" + name + ": ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
+    public static final String menu = ("§0Player Info: ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
     private static final String documentationURL = "https://docs.google.com/document/d/e/2PACX-1vRSwc6vazSE5uCv6pcYkaWsP_RaHTmkU70lBLB9f9tudlSbJZr2ZdRQg3ZGXFtz-QWjDzTQqkSzmMt2/pub";
 
-    public static void open(SpartanPlayer p, String name, boolean back) {
-        if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            return;
-        }
-        SpartanPlayer t = SpartanBukkit.getPlayer(name);
-        boolean isOnline = t != null;
-        PlayerProfile playerProfile = isOnline ? t.getProfile() : ResearchEngine.getPlayerProfileAdvanced(name, true);
-
-        if (playerProfile == null) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
-            return;
-        }
-        Inventory inv = p.createInventory(36, menu + (isOnline ? t.getName() : playerProfile.getName()));
-        List<String> lore = new ArrayList<>(20);
-
-        int i = 10;
-
-        for (Enums.CheckType checkType : Enums.CheckType.values()) {
-            if (checkType == Enums.CheckType.EXPLOITS) {
-                addCheck(HackType.Exploits, 15, isOnline, t, inv, playerProfile, lore);
-            } else {
-                addChecks(i, isOnline, t, inv, playerProfile, lore, checkType);
-                i++;
-            }
-        }
-
-        lore.clear();
-        lore.add("");
-        boolean added = false;
-
-        for (MiningHistory history : playerProfile.getMiningHistory()) {
-            int mines = history.getMines();
-
-            if (mines > 0) {
-                added = true;
-                String ore = history.getOre().getString();
-                int days = history.getDays();
-                lore.add("§c" + mines + " §7" + ore + (mines == 1 ? "" : (ore.endsWith("s") ? "es" : "s"))
-                        + " in §c" + days + " §7" + (days == 1 ? "day" : "days"));
-            }
-        }
-        if (!added) {
-            lore.add("§c" + PlayerStateLists.noDataAvailable);
-        }
-        int miningHistoryMines = playerProfile.getOverallMiningHistory().getMines(),
-                information = 33,
-                reset = 34;
-        ItemStack item = miningHistoryMines > 0 ?
-                new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(miningHistoryMines, 64), (short) 14) :
-                new ItemStack(Material.QUARTZ_BLOCK);
-        InventoryUtils.add(inv, "§2Mining History", lore, item, 16);
-
-        if (isOnline) {
-            int violations = t.getViolationCount();
-            lore.clear();
-            lore.add("");
-            lore.add("§7CPS (Clicks Per Second)§8:§a " + t.getClicks().getCount());
-            lore.add("§7Player Latency§8:§a " + t.getPing() + "ms");
-            lore.add("§7Overall Violations§8:§a " + violations);
-            lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + t.getDataType() + ")");
-            InventoryUtils.add(inv, "§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
-
-            lore.clear();
-            lore.add("");
-            lore.add("§eLeft click to reset the player's live violations.");
-            lore.add("§cRight click to delete the player's stored data.");
-            InventoryUtils.add(inv, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
-        } else {
-            lore.clear();
-            lore.add("");
-            lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + playerProfile.getDataType() + ")");
-            InventoryUtils.add(inv, "§2Information", lore, new ItemStack(Material.BOOK), information);
-
-            lore.clear();
-            lore.add("");
-            lore.add("§cClick to delete the player's stored data.");
-            InventoryUtils.add(inv, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
-        }
-        InventoryUtils.add(inv, "§2Debug", null, new ItemStack(Material.IRON_SWORD), 28);
-        InventoryUtils.add(inv, "§2Spectate", null, new ItemStack(MaterialUtils.get("watch")), 29);
-
-        InventoryUtils.add(inv, "§c" + (back ? "Back" : "Close"), AntiCheatUpdates.getInformation(false),
-                new ItemStack(Material.ARROW), 31);
-
-        p.openInventory(inv);
+    public PlayerInfo() {
+        super(menu, 36, new Permission[]{Permission.MANAGE, Permission.INFO});
     }
 
-    private static void addChecks(int slot, boolean isOnline,
-                                  SpartanPlayer p, Inventory inv, PlayerProfile playerProfile,
-                                  List<String> lore, Enums.CheckType checkType) {
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
+        boolean back = !permissionMessage;
+        SpartanPlayer target = SpartanBukkit.getPlayer(object.toString());
+        boolean isOnline = target != null;
+        PlayerProfile playerProfile = isOnline ? target.getProfile() : ResearchEngine.getPlayerProfileAdvanced(object.toString(), true);
+
+        if (playerProfile == null) {
+            player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
+            return false;
+        } else {
+            setTitle(player, menu + (isOnline ? target.getName() : playerProfile.getName()));
+            List<String> lore = new ArrayList<>(20);
+
+            int i = 10;
+
+            for (Enums.CheckType checkType : Enums.CheckType.values()) {
+                if (checkType == Enums.CheckType.EXPLOITS) {
+                    addCheck(HackType.Exploits, 15, isOnline, target, inventory, playerProfile, lore);
+                } else {
+                    addChecks(i, isOnline, target, inventory, playerProfile, lore, checkType);
+                    i++;
+                }
+            }
+
+            lore.clear();
+            lore.add("");
+            boolean added = false;
+
+            for (MiningHistory history : playerProfile.getMiningHistory()) {
+                int mines = history.getMines();
+
+                if (mines > 0) {
+                    added = true;
+                    String ore = history.getOre().toString();
+                    int days = history.getDays();
+                    lore.add("§c" + mines + " §7" + ore + (mines == 1 ? "" : (ore.endsWith("s") ? "es" : "s"))
+                            + " in §c" + days + " §7" + (days == 1 ? "day" : "days"));
+                }
+            }
+            if (!added) {
+                lore.add("§c" + PlayerStateLists.noDataAvailable);
+            }
+            int miningHistoryMines = playerProfile.getOverallMiningHistory().getMines(),
+                    information = 33,
+                    reset = 34;
+            ItemStack item = miningHistoryMines > 0 ?
+                    new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(miningHistoryMines, 64), (short) 14) :
+                    new ItemStack(Material.QUARTZ_BLOCK);
+            InventoryUtils.add(inventory, "§2Mining History", lore, item, 16);
+
+            if (isOnline) {
+                int violations = target.getViolationCount();
+                lore.clear();
+                lore.add("");
+                lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
+                lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
+                lore.add("§7Overall Violations§8:§a " + violations);
+                lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + target.getDataType() + ")");
+                InventoryUtils.add(inventory, "§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
+
+                lore.clear();
+                lore.add("");
+                lore.add("§eLeft click to reset the player's live violations.");
+                lore.add("§cRight click to delete the player's stored data.");
+                InventoryUtils.add(inventory, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
+            } else {
+                lore.clear();
+                lore.add("");
+                lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + playerProfile.getDataType() + ")");
+                InventoryUtils.add(inventory, "§2Information", lore, new ItemStack(Material.BOOK), information);
+
+                lore.clear();
+                lore.add("");
+                lore.add("§cClick to delete the player's stored data.");
+                InventoryUtils.add(inventory, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
+            }
+            InventoryUtils.add(inventory, "§2Debug", null, new ItemStack(Material.IRON_SWORD), 28);
+            InventoryUtils.add(inventory, "§2Spectate", null, new ItemStack(MaterialUtils.get("watch")), 29);
+
+            InventoryUtils.add(inventory, "§c" + (back ? "Back" : "Close"), AntiCheatUpdates.getInformation(false),
+                    new ItemStack(Material.ARROW), 31);
+            return true;
+        }
+    }
+
+    private void addChecks(int slot, boolean isOnline,
+                           SpartanPlayer player, Inventory inv, PlayerProfile playerProfile,
+                           List<String> lore, Enums.CheckType checkType) {
         lore.clear();
         lore.add("");
         int violations = 0;
@@ -142,7 +142,7 @@ public class PlayerInfo {
         if (isOnline) {
             for (HackType hackType : hackTypes) {
                 if (hackType.getCheck().getCheckType() == checkType) {
-                    violations += p.getViolations(hackType).getLevel();
+                    violations += player.getViolations(hackType).getLevel();
                 }
             }
         }
@@ -155,22 +155,22 @@ public class PlayerInfo {
 
         // Separator
 
-        double delayNumber = isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(p)) : 0.0; // Base
-        ResearchEngine.DataType dataType = isOnline ? p.getDataType() : playerProfile.getDataType();
-        boolean tpsDropping = isOnline && LagLeniencies.hasInconsistencies(p, "tps"),
-                latencyLag = isOnline && LagLeniencies.hasInconsistencies(p, "ping"),
-                notChecked = isOnline && !MaximumCheckedPlayers.isChecked(p.getUniqueId()),
+        double delayNumber = isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(player)) : 0.0; // Base
+        ResearchEngine.DataType dataType = isOnline ? player.getDataType() : playerProfile.getDataType();
+        boolean tpsDropping = isOnline && LagLeniencies.hasInconsistencies(player, "tps"),
+                latencyLag = isOnline && LagLeniencies.hasInconsistencies(player, "ping"),
+                notChecked = isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
                 detectionsNotAvailable = SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 listedChecks = false;
-        String cancellableCompatibility = isOnline ? p.getCancellableCompatibility() : null;
+        String cancellableCompatibility = isOnline ? player.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
             if (hackType.getCheck().getCheckType() == checkType) {
-                violations = isOnline ? p.getViolations(hackType).getLevel() : 0;
+                violations = isOnline ? player.getViolations(hackType).getLevel() : 0;
                 boolean hasViolations = violations > 0,
                         hasData = playerProfile.isSuspectedOrHacker() && playerProfile.getEvidence().has(hackType);
 
-                String state = getDetectionState(p, hackType, dataType, cancellableCompatibility, delayNumber, isOnline,
+                String state = getDetectionState(player, hackType, dataType, cancellableCompatibility, delayNumber, isOnline,
                         tpsDropping, latencyLag, notChecked, detectionsNotAvailable, !SpartanEdition.supportsCheck(dataType, hackType),
                         !hasViolations && !hasData);
 
@@ -190,27 +190,27 @@ public class PlayerInfo {
         InventoryUtils.add(inv, "§2" + checkType.toString() + " Checks", lore, item, slot);
     }
 
-    private static void addCheck(HackType hackType, int slot, boolean isOnline,
-                                 SpartanPlayer p, Inventory inv, PlayerProfile playerProfile,
-                                 List<String> lore) {
+    private void addCheck(HackType hackType, int slot, boolean isOnline,
+                          SpartanPlayer player, Inventory inv, PlayerProfile playerProfile,
+                          List<String> lore) {
         lore.clear();
         lore.add("");
-        int violations = !isOnline ? 0 : p.getViolations(hackType).getLevel();
+        int violations = !isOnline ? 0 : player.getViolations(hackType).getLevel();
         ItemStack item = isOnline && violations > 0 ?
                 new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
                 new ItemStack(Material.QUARTZ_BLOCK);
         boolean hasViolations = violations > 0,
                 hasData = playerProfile.isSuspectedOrHacker() && playerProfile.getEvidence().has(hackType);
-        ResearchEngine.DataType dataType = isOnline ? p.getDataType() : playerProfile.getDataType();
-        String state = getDetectionState(p,
+        ResearchEngine.DataType dataType = isOnline ? player.getDataType() : playerProfile.getDataType();
+        String state = getDetectionState(player,
                 hackType,
                 dataType,
-                isOnline ? p.getCancellableCompatibility() : null,
-                isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(p)) : 0.0,
+                isOnline ? player.getCancellableCompatibility() : null,
+                isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(player)) : 0.0,
                 isOnline,
-                isOnline && LagLeniencies.hasInconsistencies(p, "tps"),
-                isOnline && LagLeniencies.hasInconsistencies(p, "ping"),
-                isOnline && !MaximumCheckedPlayers.isChecked(p.getUniqueId()),
+                isOnline && LagLeniencies.hasInconsistencies(player, "tps"),
+                isOnline && LagLeniencies.hasInconsistencies(player, "ping"),
+                isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
                 SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 !SpartanEdition.supportsCheck(dataType, hackType),
                 !hasViolations && !hasData);
@@ -229,16 +229,16 @@ public class PlayerInfo {
         InventoryUtils.add(inv, "§2" + hackType.getCheck().getName() + " Check", lore, item, slot);
     }
 
-    private static String getDetectionState(SpartanPlayer p, HackType hackType, ResearchEngine.DataType dataType,
-                                            String cancellableCompatibility,
-                                            double delayNumber,
-                                            boolean hasPlayer,
-                                            boolean tpsDropping,
-                                            boolean latencyIncreasing,
-                                            boolean notChecked,
-                                            boolean detectionMissing,
-                                            boolean detectionUnsupported,
-                                            boolean returnNull) {
+    private String getDetectionState(SpartanPlayer player, HackType hackType, ResearchEngine.DataType dataType,
+                                     String cancellableCompatibility,
+                                     double delayNumber,
+                                     boolean hasPlayer,
+                                     boolean tpsDropping,
+                                     boolean latencyIncreasing,
+                                     boolean notChecked,
+                                     boolean detectionMissing,
+                                     boolean detectionUnsupported,
+                                     boolean returnNull) {
         if (IDs.isPreview()) {
             return "Preview Mode";
         }
@@ -251,16 +251,16 @@ public class PlayerInfo {
         if (detectionMissing) {
             return "Detection Missing";
         }
-        String worldName = p.getWorld().getName();
+        String worldName = player.getWorld().getName();
         Check check = hackType.getCheck();
 
         if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
             return returnNull ? null : "Disabled";
         }
-        UUID uuid = p.getUniqueId();
+        UUID uuid = player.getUniqueId();
         String delay = delayNumber == 0.0 ? "" : " (" + (Math.floor(delayNumber) == delayNumber ? String.valueOf((int) delayNumber) : String.valueOf(delayNumber)) + ")";
         CancelCause disabledCause = check.getDisabledCause(uuid);
-        return Permissions.isBypassing(p, hackType) ? "Permission Bypass" :
+        return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
                 cancellableCompatibility != null ? cancellableCompatibility + " Compatibility" :
                         notChecked ? "Temporarily Not Checked" :
                                 tpsDropping ? "Server Lag" + delay :
@@ -269,7 +269,7 @@ public class PlayerInfo {
                                                         (returnNull ? null : (check.isSilent(worldName, uuid) ? "Silent " : "") + "Checking" + delay);
     }
 
-    public static void refresh(UUID uuid) {
+    public void refresh(UUID uuid) {
         SpartanPlayer player = SpartanBukkit.getPlayer(uuid);
 
         if (player != null) {
@@ -277,15 +277,15 @@ public class PlayerInfo {
         }
     }
 
-    public static void refresh(String targetName) {
+    public void refresh(String targetName) {
         String key = "player-info=inventory-menu";
 
         if (Config.settings.getBoolean("Important.refresh_inventory_menu")
-                && CooldownUtils.store.canDo(SpartanBukkit.uuid + "=" + key)) {
-            CooldownUtils.store.add(SpartanBukkit.uuid + "=" + key, 1);
+                && SpartanBukkit.cooldowns.canDo(SpartanBukkit.uuid + "=" + key)) {
+            SpartanBukkit.cooldowns.add(SpartanBukkit.uuid + "=" + key, 1);
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (players.size() > 0) {
+            if (!players.isEmpty()) {
                 for (SpartanPlayer o : players) {
                     Player no = o.getPlayer();
 
@@ -302,7 +302,7 @@ public class PlayerInfo {
                                     break;
                                 }
                             }
-                            open(o, targetName, back);
+                            SpartanMenu.playerInfo.open(o, targetName);
                         }
                     }
                 }
@@ -310,44 +310,42 @@ public class PlayerInfo {
         }
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title, ClickType clickType) {
-        if (!title.contains(menu)) {
-            return false;
-        }
-        String item = i.getItemMeta().getDisplayName();
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
 
         if (item.equals("Debug")) {
-            if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.INFO) && !Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 String playerName = title.substring(menu.length());
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
                 if (t == null) {
-                    p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
+                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
                 } else {
-                    DebugMenu.open(p, t);
+                    SpartanMenu.debugMenu.open(player, t);
                 }
             }
         } else if (item.equals("Spectate")) {
-            if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.INFO) && !Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 String playerName = title.substring(menu.length());
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
                 if (t == null) {
-                    p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
+                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
                 } else {
-                    Spectate.run(p, t);
+                    Spectate.run(player, t);
                 }
             }
         } else if (item.equals("Reset")) {
             String playerName = title.substring(menu.length());
 
-            if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
 
@@ -356,25 +354,25 @@ public class PlayerInfo {
                         t.getViolations(hackType).reset();
                     }
                     String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.getName());
-                    p.sendMessage(message);
+                    player.sendMessage(message);
                 } else {
                     String name = Bukkit.getOfflinePlayer(playerName).getName();
 
                     if (name == null) {
-                        p.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
+                        player.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                     } else {
                         ResearchEngine.resetData(name);
-                        p.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
+                        player.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                     }
                 }
-                p.sendInventoryCloseMessage(null);
+                player.sendInventoryCloseMessage(null);
             }
         } else if (item.equals("Close")) {
-            p.sendInventoryCloseMessage(null);
+            player.sendInventoryCloseMessage(null);
         } else if (item.equals("Back")) {
-            SpartanMenu.open(p);
+            SpartanMenu.mainMenu.open(player);
         } else {
-            p.sendImportantMessage("§7Click to learn more about the detection states§8: \n§a§n" + documentationURL);
+            player.sendImportantMessage("§7Click to learn more about the detection states§8: \n§a§n" + documentationURL);
         }
         return true;
     }

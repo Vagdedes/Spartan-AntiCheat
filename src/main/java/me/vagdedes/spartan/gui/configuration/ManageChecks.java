@@ -1,11 +1,12 @@
 package me.vagdedes.spartan.gui.configuration;
 
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -24,36 +25,66 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManageChecks {
+public class ManageChecks extends InventoryMenu {
 
-    private static final String menu = "§0Manage Checks".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
-
-    public static void open(SpartanPlayer p) {
-        if (!Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            return;
-        }
-        Inventory inv = p.createInventory(54, menu);
-
-        for (HackType check : Enums.HackType.values()) {
-            addCheck(p, inv, check);
-        }
-        InventoryUtils.add(inv, "§cDisable silent checking for all checks", null, new ItemStack(MaterialUtils.get("lead")), 46);
-        InventoryUtils.add(inv, "§cDisable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14), 47);
-
-        InventoryUtils.add(inv, "§4Back", AntiCheatUpdates.getInformation(false),
-                new ItemStack(Material.ARROW), 49);
-
-        InventoryUtils.add(inv, "§aEnable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5), 51);
-        InventoryUtils.add(inv, "§aEnable silent checking for all checks", null, new ItemStack(Material.FEATHER), 52);
-        p.openInventory(inv);
+    public ManageChecks() {
+        super("§0Manage Checks".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0), 54, Permission.MANAGE);
     }
 
-    private static void addCheck(SpartanPlayer p, Inventory inv, HackType hackType) {
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
+        for (HackType check : Enums.HackType.values()) {
+            addCheck(player, inventory, check);
+        }
+        InventoryUtils.add(inventory, "§cDisable silent checking for all checks", null, new ItemStack(MaterialUtils.get("lead")), 46);
+        InventoryUtils.add(inventory, "§cDisable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14), 47);
+
+        InventoryUtils.add(inventory, "§4Back", AntiCheatUpdates.getInformation(false),
+                new ItemStack(Material.ARROW), 49);
+
+        InventoryUtils.add(inventory, "§aEnable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5), 51);
+        InventoryUtils.add(inventory, "§aEnable silent checking for all checks", null, new ItemStack(Material.FEATHER), 52);
+        return true;
+    }
+
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String item = itemStack.getItemMeta().getDisplayName();
+        item = item.startsWith("§") ? item.substring(2) : item;
+
+        if (item.equals("Back")) {
+            SpartanMenu.mainMenu.open(player);
+        } else if (item.equals("Disable all checks")) {
+            Config.disableChecks();
+            open(player);
+        } else if (item.equals("Enable all checks")) {
+            Config.enableChecks();
+            open(player);
+        } else if (item.equals("Disable silent checking for all checks")) {
+            Config.disableSilentChecking();
+            open(player);
+        } else if (item.equals("Enable silent checking for all checks")) {
+            Config.enableSilentChecking();
+            open(player);
+        } else {
+            item = item.split(" ")[0];
+
+            if (clickType == ClickType.LEFT) {
+                setEnable(player, item);
+            } else if (clickType == ClickType.RIGHT) {
+                setSilent(player, item);
+            } else if (clickType.isShiftClick()) {
+                manageOptions(player, item);
+            }
+        }
+        return true;
+    }
+
+    private void addCheck(SpartanPlayer player, Inventory inv, HackType hackType) {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null, null),
                 silent = check.isSilent(null, null),
-                bypassing = Permissions.isBypassing(p, hackType);
+                bypassing = Permissions.isBypassing(player, hackType);
         String[] disabledDetections = CloudFeature.getShownDisabledDetections(hackType);
         int cancelViolation = check.getDefaultCancelViolation();
         int problematicDetections = check.getProblematicDetections();
@@ -193,7 +224,7 @@ public class ManageChecks {
         if (silentOption != null) {
             lore.add(silentOption);
         }
-        if (check.getStoredOptions().size() > 0) {
+        if (!check.getStoredOptions().isEmpty()) {
             lore.add("§7Shift click to §emanage options");
         }
 
@@ -202,49 +233,10 @@ public class ManageChecks {
         if (enabled && silent) {
             item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        InventoryUtils.add(inv, colour + check.getName() + " " + secondColour + check.getCheckType().getName() + " Check", lore, item, -1);
+        InventoryUtils.add(inv, colour + check.getName() + " " + secondColour + check.getCheckType().toString() + " Check", lore, item, -1);
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title, ClickType click) {
-        if (!title.equals(menu)) {
-            return false;
-        }
-        String item = i.getItemMeta().getDisplayName();
-        item = item.startsWith("§") ? item.substring(2) : item;
-
-        if (!Permissions.has(p, Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            return true;
-        }
-        if (item.equals("Back")) {
-            SpartanMenu.open(p);
-        } else if (item.equals("Disable all checks")) {
-            Config.disableChecks();
-            open(p);
-        } else if (item.equals("Enable all checks")) {
-            Config.enableChecks();
-            open(p);
-        } else if (item.equals("Disable silent checking for all checks")) {
-            Config.disableSilentChecking();
-            open(p);
-        } else if (item.equals("Enable silent checking for all checks")) {
-            Config.enableSilentChecking();
-            open(p);
-        } else {
-            item = item.split(" ")[0];
-
-            if (click == ClickType.LEFT) {
-                setEnable(p, item);
-            } else if (click == ClickType.RIGHT) {
-                setSilent(p, item);
-            } else if (click.isShiftClick()) {
-                manageOptions(p, item);
-            }
-        }
-        return true;
-    }
-
-    private static void setEnable(SpartanPlayer p, String item) {
+    private void setEnable(SpartanPlayer player, String item) {
         Check check = Config.getCheckByName(item);
 
         if (check != null) {
@@ -254,10 +246,10 @@ public class ManageChecks {
                 check.setEnabled(null, true);
             }
         }
-        open(p);
+        open(player);
     }
 
-    private static void setSilent(SpartanPlayer p, String item) {
+    private void setSilent(SpartanPlayer player, String item) {
         Check check = Config.getCheckByName(item);
 
         if (check != null) {
@@ -267,14 +259,14 @@ public class ManageChecks {
                 check.setSilent("true");
             }
         }
-        open(p);
+        open(player);
     }
 
-    private static void manageOptions(SpartanPlayer p, String item) {
+    private void manageOptions(SpartanPlayer player, String item) {
         Check check = Config.getCheckByName(item);
 
         if (check != null) {
-            ManageOptions.open(p, check.getHackType());
+            SpartanMenu.manageOptions.open(player, check.getHackType());
         }
     }
 }

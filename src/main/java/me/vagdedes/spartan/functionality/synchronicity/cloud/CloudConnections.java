@@ -1,7 +1,6 @@
 package me.vagdedes.spartan.functionality.synchronicity.cloud;
 
 import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.compatibility.necessary.AntiAltAccount;
 import me.vagdedes.spartan.configuration.Compatibility;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.configuration.Settings;
@@ -326,7 +325,7 @@ public class CloudConnections {
 
     public static void updatePunishedPlayer(UUID uuid, String ipAddress) {
         // Doesn't need ID validation due to its validated method call
-        if (AntiAltAccount.isEnabled()) {
+        if (Compatibility.CompatibilityType.AntiAltAccount.isFunctional()) {
             CloudFeature.updatedPunishedPlayers.addIfAbsent(uuid);
         } else if (!CloudFeature.recentError(System.currentTimeMillis())
 

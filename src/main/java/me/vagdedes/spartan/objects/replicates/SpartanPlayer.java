@@ -39,7 +39,7 @@ import me.vagdedes.spartan.functionality.protections.LagLeniencies;
 import me.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import me.vagdedes.spartan.functionality.protections.Teleport;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Latency;
 import me.vagdedes.spartan.handlers.connection.Piracy;
@@ -585,23 +585,23 @@ public class SpartanPlayer {
     // Separator
 
     public Buffer getBuffer() {
-        return buffer[Enums.hackTypeLength];
+        return buffer[Enums.HackType.values().length];
     }
 
     public Timer getTimer() {
-        return timer[Enums.hackTypeLength];
+        return timer[Enums.HackType.values().length];
     }
 
     public Decimals getDecimals() {
-        return decimals[Enums.hackTypeLength];
+        return decimals[Enums.HackType.values().length];
     }
 
     public Tracker getTracker() {
-        return tracker[Enums.hackTypeLength];
+        return tracker[Enums.HackType.values().length];
     }
 
     public Cooldowns getCooldowns() {
-        return cooldowns[Enums.hackTypeLength];
+        return cooldowns[Enums.HackType.values().length];
     }
 
     public Buffer getBuffer(Enums.HackType hackType) {
@@ -710,7 +710,7 @@ public class SpartanPlayer {
             }
 
             if (success && clicks.canDistributeInformation()) {
-                PlayerInfo.refresh(getName());
+                SpartanMenu.playerInfo.refresh(getName());
             }
         }
     }

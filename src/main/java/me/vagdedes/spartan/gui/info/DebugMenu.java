@@ -1,5 +1,6 @@
 package me.vagdedes.spartan.gui.info;
 
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.important.Permissions;
@@ -12,69 +13,72 @@ import me.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class DebugMenu {
+public class DebugMenu extends InventoryMenu {
 
     private static final String menu = "§0Debug: ".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
 
-    static void open(SpartanPlayer p, SpartanPlayer t) {
-        Inventory inv = p.createInventory(27, menu + t.getName());
+    public DebugMenu() {
+        super(menu, 27, new Permission[]{Permission.INFO, Permission.MANAGE});
+    }
+
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
+        SpartanPlayer target = (SpartanPlayer) object;
+        setTitle(player, menu + target.getName());
 
         // Separator
         ItemStack i = new ItemStack(Material.IRON_SWORD);
 
-        if (Debug.has(p, t, Enums.Debug.COMBAT)) {
+        if (Debug.has(player, target, Enums.Debug.COMBAT)) {
             i.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        InventoryUtils.add(inv, "§7" + Enums.Debug.COMBAT.getString(), null, i, 10);
+        InventoryUtils.add(inventory, "§7" + Enums.Debug.COMBAT.toString(), null, i, 10);
 
         // Separator
         i = new ItemStack(MaterialUtils.get("gold_boots"));
 
-        if (Debug.has(p, t, Enums.Debug.MOVEMENT)) {
+        if (Debug.has(player, target, Enums.Debug.MOVEMENT)) {
             i.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        InventoryUtils.add(inv, "§7" + Enums.Debug.MOVEMENT.getString(), null, i, 12);
+        InventoryUtils.add(inventory, "§7" + Enums.Debug.MOVEMENT.toString(), null, i, 12);
 
         // Separator
         i = new ItemStack(Material.COMPASS);
 
-        if (Debug.has(p, t, Enums.Debug.MISC)) {
+        if (Debug.has(player, target, Enums.Debug.MISC)) {
             i.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        InventoryUtils.add(inv, "§7" + Enums.Debug.MISC.getString(), null, i, 14);
+        InventoryUtils.add(inventory, "§7" + Enums.Debug.MISC.toString(), null, i, 14);
 
         // Separator
-        InventoryUtils.add(inv, "§cDisable", null, new ItemStack(Material.ARROW), 16);
-        p.openInventory(inv);
+        InventoryUtils.add(inventory, "§cDisable", null, new ItemStack(Material.ARROW), 16);
+        return true;
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title) {
-        if (!title.startsWith(menu)) {
-            return false;
-        }
-        String item = i.getItemMeta().getDisplayName();
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
         SpartanPlayer t = SpartanBukkit.getPlayer(title.substring(menu.length()));
 
         if (t == null) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
+            player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
         } else if (item.equals("Disable")) {
-            Debug.remove(p, t);
-            p.sendInventoryCloseMessage(null);
+            Debug.remove(player, t);
+            player.sendInventoryCloseMessage(null);
         } else {
-            if (!Permissions.has(p, Permission.INFO) && !Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.INFO) && !Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 for (Enums.Debug debug : Enums.Debug.values()) {
-                    if (debug.getString().equals(item)) {
-                        Debug.add(p, t, debug);
+                    if (debug.toString().equals(item)) {
+                        Debug.add(player, t, debug);
                         break;
                     }
                 }
-                p.sendInventoryCloseMessage(null);
+                player.sendInventoryCloseMessage(null);
             }
         }
         return true;

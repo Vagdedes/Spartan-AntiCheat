@@ -16,7 +16,6 @@ import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
-import me.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.Material;
 
 import java.io.File;
@@ -154,7 +153,7 @@ public class SQLFeature extends ConfigurationBuilder {
         con = null;
     }
 
-    public static boolean isEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 
@@ -164,16 +163,16 @@ public class SQLFeature extends ConfigurationBuilder {
     public void create(boolean local) {
         file = new File(directory);
         boolean exists = file.exists();
-        ConfigUtils.add(file, "host", "");
-        ConfigUtils.add(file, "user", "");
-        ConfigUtils.add(file, "password", "");
-        ConfigUtils.add(file, "database", "");
-        ConfigUtils.add(file, "table", "spartan_logs");
-        ConfigUtils.add(file, "port", "3306");
-        ConfigUtils.add(file, "driver", "mysql");
-        ConfigUtils.add(file, "tls_Version", "");
-        ConfigUtils.add(file, "use_SSL", true);
-        ConfigUtils.add(file, "escape_special_characters", false);
+        addOption("host", "");
+        addOption("user", "");
+        addOption("password", "");
+        addOption("database", "");
+        addOption("table", "spartan_logs");
+        addOption("port", "3306");
+        addOption("driver", "mysql");
+        addOption("tls_Version", "");
+        addOption("use_SSL", true);
+        addOption("escape_special_characters", false);
         refreshConfiguration();
 
         SpartanBukkit.storageThread.execute(this::connect);
@@ -375,7 +374,7 @@ public class SQLFeature extends ConfigurationBuilder {
         }
     }
 
-    private static String syntaxForColumn(Object obj) {
+    private String syntaxForColumn(Object obj) {
         return "'" + obj.toString() + "'";
     }
 }

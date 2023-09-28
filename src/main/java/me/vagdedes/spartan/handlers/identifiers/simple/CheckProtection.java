@@ -5,7 +5,6 @@ import me.vagdedes.spartan.objects.profiling.PlayerViolation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
-import me.vagdedes.spartan.utils.data.CooldownUtils;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -37,10 +36,10 @@ public class CheckProtection {
     }
 
     public static void cancel(UUID uuid, int ticks, boolean ignoreNumbers) {
-        CooldownUtils.store.add(uuid + "=check=protection", ticks);
+        SpartanBukkit.cooldowns.add(uuid + "=check=protection", ticks);
 
         if (ignoreNumbers) {
-            CooldownUtils.store.add(uuid + "=check=protection=ignore-numbers", ticks);
+            SpartanBukkit.cooldowns.add(uuid + "=check=protection=ignore-numbers", ticks);
         }
     }
 
@@ -54,7 +53,7 @@ public class CheckProtection {
             cooldown = ms + (ticks * 50L);
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (players.size() > 0) {
+            if (!players.isEmpty()) {
                 for (SpartanPlayer p : players) {
                     cancel(p.getUniqueId(), 5, false);
                 }
@@ -63,11 +62,12 @@ public class CheckProtection {
     }
 
     public static boolean hasCooldown(UUID uuid, PlayerViolation playerViolation) {
-        if (cooldown >= System.currentTimeMillis() || !CooldownUtils.store.canDo(uuid + "=check=protection")) { // has cooldown
-            if (CooldownUtils.store.canDo(uuid + "=check=protection=ignore-numbers")) {
+        if (cooldown >= System.currentTimeMillis()
+                || !SpartanBukkit.cooldowns.canDo(uuid + "=check=protection")) { // has cooldown
+            if (SpartanBukkit.cooldowns.canDo(uuid + "=check=protection=ignore-numbers")) {
                 List<Number> numbers = playerViolation.getNumbersList();
 
-                if (numbers.size() > 0) {
+                if (!numbers.isEmpty()) {
                     for (Number number : numbers) {
                         if (number instanceof Double && number.doubleValue() >= 1.0) {
                             return false;

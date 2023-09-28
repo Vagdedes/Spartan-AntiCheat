@@ -1,20 +1,18 @@
 package me.vagdedes.spartan.gui.spartan;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
-import me.vagdedes.spartan.compatibility.necessary.AntiAltAccount;
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.compatibility.necessary.FileGUI;
-import me.vagdedes.spartan.compatibility.necessary.UltimateStatistics;
 import me.vagdedes.spartan.configuration.Compatibility;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.configuration.Settings;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import me.vagdedes.spartan.gui.configuration.ManageChecks;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import me.vagdedes.spartan.gui.helpers.PlayerStateLists;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
 import me.vagdedes.spartan.handlers.connection.DiscordMemberCount;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
@@ -33,7 +31,6 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -41,13 +38,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SpartanMenu {
+public class MainMenu extends InventoryMenu {
 
     private static int ecosystemItem = 1;
+    private static final ResearchEngine.DataType oppositeObject = SpartanEdition.getOppositeVersion();
     private static final String
-            opposite = SpartanEdition.getOppositeVersion().toString(),
-            offer = "§6Get Plugins for FREE§8: §e§nhttps://vagdedes.com/account/viewOffer",
-            oppositeVersion = "Spartan: " + opposite + " Edition";
+            opposite = oppositeObject.toString(),
+            offer = "§6Get Plugins for FREE§8: §e§nhttps://www.vagdedes.com/account/viewOffer",
+            oppositeVersion = "Spartan: " + opposite + " Edition",
+            opposite_1_0_Version = "Spartan 1.0: " + opposite + " Edition",
+            opposite_2_0_Version = "Spartan 2.0: " + opposite + " Edition";
+
+    public MainMenu() {
+        super(getMenuName(), 54, new Permission[]{Permission.MANAGE, Permission.INFO});
+    }
 
     public static void refresh() {
         if (Config.settings.getBoolean("Important.refresh_inventory_menu")) {
@@ -65,9 +69,9 @@ public class SpartanMenu {
                                 String title = n.getOpenInventory().getTitle();
 
                                 if (title.startsWith(menuName)) {
-                                    ManageConfiguration.clear();
+                                    SpartanMenu.manageConfiguration.clear();
                                     DiscordMemberCount.ignore();
-                                    open(p);
+                                    SpartanMenu.mainMenu.open(p);
                                 }
                             }
                         });
@@ -105,29 +109,21 @@ public class SpartanMenu {
         return ("§0" + name + " | Page ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
     }
 
-    public static boolean notify(SpartanPlayer p) {
-        return hasPermission(p) && AntiCheatUpdates.messageWarnings(p);
-    }
-
-    public static boolean hasPermission(SpartanPlayer p) {
-        return Permissions.has(p, Permission.MANAGE) || Permissions.has(p, Permission.INFO);
-    }
-
-    public static boolean open(SpartanPlayer p) {
-        return open(p, true);
-    }
-
-    public static boolean open(SpartanPlayer p, boolean permissionMessage) {
-        if (!hasPermission(p)) {
-            if (permissionMessage) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+    public boolean notify(SpartanPlayer player) {
+        for (Permission permission : permissions) {
+            if (Permissions.has(player, permission)) {
+                return AntiCheatUpdates.messageWarnings(player);
             }
-            return false;
         }
+        return false;
+    }
+
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
-        UUID uuid = p.getUniqueId();
+        UUID uuid = player.getUniqueId();
         int page = PlayerStateLists.getPage(uuid), previousPageSlot = 18, nextPageSlot = 26;
-        Inventory inv = p.createInventory(54, getMenuName() + page);
+        setTitle(player, getMenuName() + page);
 
         // Ecosystem
         if (Config.settings.getBoolean(Settings.showEcosystemOption)) {
@@ -141,7 +137,7 @@ public class SpartanMenu {
             switch (ecosystemItem) {
                 case 1:
                     InventoryUtils.prepareDescription(lore, "Compatible Plugin" + (SpartanBukkit.canAdvertise ? " Offer" : ""));
-                    name = UltimateStatistics.name;
+                    name = Compatibility.CompatibilityType.UltimateStatistics.name();
                     lore.add("§7Get Ultimate Stats to improve");
                     lore.add("§7Spartan's legitimate/hacker");
                     lore.add("§7detection.");
@@ -150,12 +146,12 @@ public class SpartanMenu {
                     break;
                 case 2:
                     InventoryUtils.prepareDescription(lore, "Compatible Plugin" + (SpartanBukkit.canAdvertise ? " Offer" : ""));
-                    name = AntiAltAccount.name;
+                    name = Compatibility.CompatibilityType.AntiAltAccount.name();
                     lore.add("§7Get Anti Alt Account to prevent");
                     lore.add("§7global hackers from joining your");
                     lore.add("§7server.");
                     ecosystemItem = 3;
-                    enabled = AntiAltAccount.isEnabled();
+                    enabled = Compatibility.CompatibilityType.AntiAltAccount.isFunctional();
                     break;
                 case 4:
                     InventoryUtils.prepareDescription(lore, opposite + " Detections");
@@ -168,28 +164,29 @@ public class SpartanMenu {
                     break;
                 default:
                     InventoryUtils.prepareDescription(lore, "Compatible Plugin" + (SpartanBukkit.canAdvertise ? " Offer" : ""));
-                    name = FileGUI.name;
+                    name = Compatibility.CompatibilityType.FileGUI.name();
                     lore.add("§7Get File GUI to replace Spartan's");
                     lore.add("§7simple configuration menu with");
                     lore.add("§7an advanced configuration menu.");
                     ecosystemItem = SpartanBukkit.canAdvertise ? 4 : 1;
-                    enabled = FileGUI.isEnabled();
+                    enabled = Compatibility.CompatibilityType.FileGUI.isFunctional();
                     break;
             }
             lore.add("");
 
-            if (SpartanBukkit.canAdvertise && !name.equals(oppositeVersion)) {
+            if (SpartanBukkit.canAdvertise
+                    && !name.equals(oppositeVersion)) {
                 lore.add("§aGet " + name + " and receive");
 
                 switch (ecosystemItem) {
                     case 2:
-                        lore.add("§a" + AntiAltAccount.name + " & " + FileGUI.name);
+                        lore.add("§a" + Compatibility.CompatibilityType.AntiAltAccount.name() + " & " + Compatibility.CompatibilityType.FileGUI.name());
                         break;
                     case 3:
-                        lore.add("§a" + UltimateStatistics.name + " & " + FileGUI.name);
+                        lore.add("§a" + Compatibility.CompatibilityType.UltimateStatistics.name() + " & " + Compatibility.CompatibilityType.FileGUI.name());
                         break;
                     default:
-                        lore.add("§a" + UltimateStatistics.name + " & " + AntiAltAccount.name);
+                        lore.add("§a" + Compatibility.CompatibilityType.UltimateStatistics.name() + " & " + Compatibility.CompatibilityType.AntiAltAccount.name());
                         break;
                 }
                 lore.add("§acompletely for FREE");
@@ -204,11 +201,11 @@ public class SpartanMenu {
             meta.setLore(lore);
             meta.setDisplayName("§3" + name);
             itemStack.setItemMeta(meta);
-            inv.setItem(49, itemStack);
+            inventory.setItem(49, itemStack);
         }
 
         // AntiCheat Updates
-        InventoryUtils.add(inv, "§a" + AntiCheatUpdates.name,
+        InventoryUtils.add(inventory, "§a" + AntiCheatUpdates.name,
                 AntiCheatUpdates.getInformation(true),
                 new ItemStack(Material.CHEST), 46);
 
@@ -223,14 +220,14 @@ public class SpartanMenu {
         }
         ItemStack supportItem = new ItemStack(Material.EMERALD, Math.max(Math.min(discordMemberCount, 64), 1));
         supportItem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-        InventoryUtils.add(inv, "§aLive Customer Support", lore, supportItem, 47);
+        InventoryUtils.add(inventory, "§aLive Customer Support", lore, supportItem, 47);
 
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
         Runtime runtime = Runtime.getRuntime();
         List<String> warnings = AntiCheatUpdates.getWarnings(true);
 
-        if (warnings.size() > 0) {
+        if (!warnings.isEmpty()) {
             lore.add("§4Warning§8:");
 
             for (String warning : warnings) {
@@ -243,7 +240,7 @@ public class SpartanMenu {
             lore.add("§7Server Information§8: §a" + (MultiVersion.unknownFork ? "Version" : MultiVersion.fork())
                     + (MultiVersion.other ? "" : " " + MultiVersion.versionString()));
         }
-        double tps = TPS.get(p, false);
+        double tps = TPS.get(player, false);
         lore.add("§7" + (MultiVersion.folia ? "Region " : "") + "TPS (Ticks Per Second)§8: §a" + AlgebraUtils.cut(tps, 2)
                 + " - " + (tps >= TPS.excellent ? "Excellent" : tps >= TPS.good ? "Good" : tps >= TPS.minimum ? "Mediocre" : "Unstable"));
         long maxMemory = runtime.maxMemory();
@@ -263,7 +260,7 @@ public class SpartanMenu {
         lore.add("§7Left click to §amanage checks§7.");
         lore.add("§7Right click to §emanage configurations§7.");
         lore.add("§7Shift click to §creload the plugin's memory contents§7.");
-        InventoryUtils.add(inv, "§aConfiguration", lore, new ItemStack(MaterialUtils.get("crafting_table")), 51);
+        InventoryUtils.add(inventory, "§aConfiguration", lore, new ItemStack(MaterialUtils.get("crafting_table")), 51);
 
         // Compatibilities
         InventoryUtils.prepareDescription(lore, "Local Functionality");
@@ -281,87 +278,84 @@ public class SpartanMenu {
                 lore.add("§a" + compatibility.toString());
             }
         }
-        InventoryUtils.add(inv, "§aCompatibilities", lore, new ItemStack(MaterialUtils.get("enchanting_table")), 52);
+        InventoryUtils.add(inventory, "§aCompatibilities", lore, new ItemStack(MaterialUtils.get("enchanting_table")), 52);
 
         // Player List
-        PlayerStateLists.fill(uuid, inv);
+        PlayerStateLists.fill(uuid, inventory);
 
         if (page > 1) {
-            InventoryUtils.add(inv, "§cPage " + (page - 1), null,
+            InventoryUtils.add(inventory, "§cPage " + (page - 1), null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14),
                     previousPageSlot);
         } else {
-            InventoryUtils.add(inv, PlayerStateLists.inactiveColour + "No Previous Page", null,
+            InventoryUtils.add(inventory, PlayerStateLists.inactiveColour + "No Previous Page", null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14),
                     previousPageSlot);
         }
         if (page < Integer.MAX_VALUE) {
-            InventoryUtils.add(inv, "§aPage " + (page + 1), null,
+            InventoryUtils.add(inventory, "§aPage " + (page + 1), null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5),
                     nextPageSlot);
         } else {
-            InventoryUtils.add(inv, PlayerStateLists.inactiveColour + "No Next Page", null,
+            InventoryUtils.add(inventory, PlayerStateLists.inactiveColour + "No Next Page", null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5),
                     nextPageSlot);
         }
-        p.openInventory(inv);
         return true;
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title, ClickType clickType) {
-        if (!title.startsWith(getMenuName())) {
-            return false;
-        }
-        String name = i.getItemMeta().getDisplayName(),
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String name = itemStack.getItemMeta().getDisplayName(),
                 item = (name.startsWith("§") ? name.substring(2) : name);
 
         if (item.equals("Live Customer Support")) {
-            p.sendInventoryCloseMessage("");
-            p.sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
-            p.sendMessage("§6Spartan Tutorial§8: §e§nhttps://bit.ly/3Itw7Fd");
-            p.sendMessage("");
+            player.sendInventoryCloseMessage("");
+            player.sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
+            player.sendMessage("§6Spartan Tutorial§8: §e§nhttps://bit.ly/3Itw7Fd");
+            player.sendMessage("");
 
         } else if (item.equals("Compatibilities")) {
-            if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
-                if (FileGUI.isEnabled()) {
-                    Player n = p.getPlayer();
+                if (Compatibility.CompatibilityType.FileGUI.isFunctional()) {
+                    Player n = player.getPlayer();
 
                     if (n != null && n.isOnline() && n.hasPermission(FileGUI.permission)) {
                         FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                     } else {
-                        ManageConfiguration.openChild(p, ManageConfiguration.compatibilityFileName);
+                        SpartanMenu.manageConfiguration.openChild(player, ManageConfiguration.compatibilityFileName);
                     }
                 } else {
-                    ManageConfiguration.openChild(p, ManageConfiguration.compatibilityFileName);
+                    SpartanMenu.manageConfiguration.openChild(player, ManageConfiguration.compatibilityFileName);
                 }
             }
 
         } else if (item.equals("Configuration")) {
-            if (!Permissions.has(p, Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 if (clickType == ClickType.LEFT) {
-                    ManageChecks.open(p);
+                    SpartanMenu.manageChecks.open(player);
                 } else if (clickType == ClickType.RIGHT) {
-                    ManageConfiguration.open(p);
+                    SpartanMenu.manageConfiguration.open(player);
                 } else if (clickType.isShiftClick()) {
-                    if (!Permissions.has(p, Permission.RELOAD)) {
-                        p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+                    if (!Permissions.has(player, Permission.RELOAD)) {
+                        player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                         return true;
                     } else {
-                        Config.reload(p);
-                        p.sendInventoryCloseMessage(null);
+                        Config.reload(player);
+                        player.sendInventoryCloseMessage(null);
                     }
                 }
             }
 
-        } else if (item.equals(UltimateStatistics.name)
-                || item.equals(AntiAltAccount.name)
-                || item.equals(FileGUI.name)
+        } else if (item.equals(Compatibility.CompatibilityType.UltimateStatistics.name())
+                || item.equals(Compatibility.CompatibilityType.AntiAltAccount.name())
+                || item.equals(Compatibility.CompatibilityType.FileGUI.name())
                 || item.equals(oppositeVersion)) {
-            sendOffer(p);
+            sendOffer(player);
         } else if (item.startsWith("Page")) {
             String[] split = item.split(" ");
 
@@ -369,84 +363,76 @@ public class SpartanMenu {
                 String number = split[1];
 
                 if (AlgebraUtils.validInteger(number)) {
-                    UUID uuid = p.getUniqueId();
+                    UUID uuid = player.getUniqueId();
                     int itemPage = Integer.parseInt(number), currentPage = PlayerStateLists.getPage(uuid);
 
                     if (itemPage < currentPage) {
                         if (PlayerStateLists.previousPage(uuid)) {
                             DiscordMemberCount.ignore();
-                            open(p);
+                            open(player);
                         }
                     } else if (itemPage > currentPage) {
                         if (PlayerStateLists.nextPage(uuid)) {
                             DiscordMemberCount.ignore();
-                            open(p);
+                            open(player);
                         }
                     }
                 }
             }
         } else if (!name.startsWith(PlayerStateLists.inactiveColour)
                 && !item.equals(AntiCheatUpdates.name)) {
-            List<String> lore = i.getItemMeta().getLore();
+            List<String> lore = itemStack.getItemMeta().getLore();
 
             if (lore != null && lore.size() > 1 && lore.get(0).equals(PlayerStateLists.punishedPlayers)) {
                 StringBuilder builder = new StringBuilder();
 
                 for (String line : lore) {
-                    if (line.length() > 0) {
+                    if (!line.isEmpty()) {
                         builder.append(StringUtils.getClearColorString(line));
                     }
                 }
                 String reason = builder.toString();
 
-                if (reason.length() > 0) {
+                if (!reason.isEmpty()) {
                     List<PlayerReport> reports = ResearchEngine.getPlayerProfile(item).getPunishmentHistory().getReports();
 
-                    if (reports.size() > 0) {
+                    if (!reports.isEmpty()) {
                         for (PlayerReport playerReport : reports) {
                             if (!playerReport.isDismissed() && playerReport.getReason().equals(reason)) {
-                                playerReport.dismiss(name, p, true);
-                                open(p);
+                                playerReport.dismiss(name, player, true);
+                                open(player);
                                 break;
                             }
                         }
                     }
                 }
             } else {
-                PlayerInfo.open(p, item, true);
+                SpartanMenu.playerInfo.open(player, false, item);
             }
         }
         return true;
     }
 
-    private static void sendOffer(SpartanPlayer p) {
-        p.sendInventoryCloseMessage("");
+    private void sendOffer(SpartanPlayer player) {
+        player.sendInventoryCloseMessage("");
 
         if (SpartanBukkit.canAdvertise) {
-            ResearchEngine.DataType opposite = SpartanEdition.getOppositeVersion();
-
-            switch (opposite) {
-                case Java:
-                case Bedrock:
-                    p.sendImportantMessage("§6" + oppositeVersion + "§8: §e§nhttps://vagdedes.com/account/viewProduct/?id=" + SpartanEdition.getProductID(opposite));
-                    break;
-                default:
-                    break;
-            }
-            p.sendMessage(offer);
+            player.sendImportantMessage("§6" + opposite_1_0_Version + "§8: §e§nhttps://www.vagdedes.com/account/viewProduct/?id=" + SpartanEdition.get1_0_ProductID(oppositeObject));
+            player.sendImportantMessage("§6" + opposite_2_0_Version + "§8: §e§nhttps://www.vagdedes.com/account/viewProduct/?id=" + SpartanEdition.get2_0_ProductID(oppositeObject));
+            player.sendMessage(offer);
         } else if (IDs.isBuiltByBit()) {
-            p.sendMessage("§6" + UltimateStatistics.name + "§8: §e§nhttps://builtbybit.com/resources/12576/");
-            p.sendMessage("§6" + AntiAltAccount.name + "§8: §e§nhttps://builtbybit.com/resources/20142/");
-            p.sendMessage("§6" + FileGUI.name + "§8: §e§nhttps://builtbybit.com/resources/13185/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.UltimateStatistics.name() + "§8: §e§nhttps://builtbybit.com/resources/12576/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.AntiAltAccount.name() + "§8: §e§nhttps://builtbybit.com/resources/20142/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.FileGUI.name() + "§8: §e§nhttps://builtbybit.com/resources/13185/");
         } else if (IDs.isPolymart()) {
-            p.sendMessage("§6" + UltimateStatistics.name + "§8: §e§nhttps://polymart.org/resource/982/");
-            p.sendMessage("§6" + AntiAltAccount.name + "§8: §e§nhttps://polymart.org/resource/1096/");
-            p.sendMessage("§6" + FileGUI.name + "§8: §e§nhttps://polymart.org/resource/984/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.UltimateStatistics.name() + "§8: §e§nhttps://polymart.org/resource/982/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.AntiAltAccount.name() + "§8: §e§nhttps://polymart.org/resource/1096/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.FileGUI.name() + "§8: §e§nhttps://polymart.org/resource/984/");
         } else {
-            p.sendMessage("§6" + UltimateStatistics.name + "§8: §e§nhttps://www.spigotmc.org/resources/60868/");
-            p.sendMessage("§6" + AntiAltAccount.name + "§8: §e§nhttps://www.spigotmc.org/resources/73105/");
-            p.sendMessage("§6" + FileGUI.name + "§8: §e§nhttps://www.spigotmc.org/resources/73893/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.UltimateStatistics.name() + "§8: §e§nhttps://www.spigotmc.org/resources/60868/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.AntiAltAccount.name() + "§8: §e§nhttps://www.spigotmc.org/resources/73105/");
+            player.sendMessage("§6" + Compatibility.CompatibilityType.FileGUI.name() + "§8: §e§nhttps://www.spigotmc.org/resources/73893/");
         }
-        p.sendMessage("");
+        player.sendMessage("");
     }
 }

@@ -85,7 +85,6 @@ public class EventsHandler2 implements Listener {
             if (p == null) {
                 return;
             }
-            float force = e.getForce();
             Entity projectile = e.getProjectile();
 
             // Detections

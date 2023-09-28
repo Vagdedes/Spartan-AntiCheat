@@ -120,7 +120,7 @@ public class DetectionNotifications {
                 return Enums.MiningOre.ANCIENT_DEBRIS;
             }
             if (material == Material.GILDED_BLACKSTONE || material == Material.NETHER_GOLD_ORE) {
-                return Enums.MiningOre.Gold;
+                return Enums.MiningOre.GOLD;
             }
             if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
                 if (material == Material.DEEPSLATE_DIAMOND_ORE) {
@@ -130,7 +130,7 @@ public class DetectionNotifications {
                     return Enums.MiningOre.EMERALD;
                 }
                 if (material == Material.DEEPSLATE_GOLD_ORE) {
-                    return Enums.MiningOre.Gold;
+                    return Enums.MiningOre.GOLD;
                 }
             }
         }
@@ -140,7 +140,7 @@ public class DetectionNotifications {
             case EMERALD_ORE:
                 return Enums.MiningOre.EMERALD;
             case GOLD_ORE:
-                return Enums.MiningOre.Gold;
+                return Enums.MiningOre.GOLD;
         }
         return null;
     }
@@ -154,7 +154,7 @@ public class DetectionNotifications {
                 SpartanLocation location = player.getLocation();
                 World.Environment environment = location.getWorld().getEnvironment();
                 int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
-                String key = ore.getString(),
+                String key = ore.toString(),
                         log = player.getName() + " found " + amount + " " + key
                                 + " on " + x + ", " + y + ", " + z + ", " + BlockUtils.environmentToString(environment);
 

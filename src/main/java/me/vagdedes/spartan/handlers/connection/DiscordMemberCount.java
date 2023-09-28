@@ -6,7 +6,7 @@ import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 
 public class DiscordMemberCount {
 
-    public static final String discordURL = "https://vagdedes.com/discord";
+    public static final String discordURL = "https://www.vagdedes.com/discord";
     private static int
             count = 0,
             times = 0;

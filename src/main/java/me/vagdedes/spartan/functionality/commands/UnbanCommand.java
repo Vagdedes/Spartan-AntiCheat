@@ -10,7 +10,9 @@ import java.util.List;
 public class UnbanCommand {
 
     public static void run(SpartanPlayer p, String m) {
-        if (Permissions.isStaff(p) && (executed(m, "unban") || executed(m, "pardon"))) {
+        if (Permissions.isStaff(p)
+                && (executed(m, "unban")
+                || executed(m, "pardon"))) {
             List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
             if (!playerProfiles.isEmpty()) {
@@ -29,6 +31,7 @@ public class UnbanCommand {
     }
 
     private static boolean executed(String m, String c) {
-        return m.toLowerCase().startsWith("/" + c + " ") || m.equalsIgnoreCase("/" + c);
+        return m.toLowerCase().startsWith("/" + c + " ")
+                || m.equalsIgnoreCase("/" + c);
     }
 }

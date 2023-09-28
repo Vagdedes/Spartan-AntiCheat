@@ -8,6 +8,7 @@ import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Piracy;
 import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.handlers.stability.TestServer;
+import me.vagdedes.spartan.objects.data.Cooldowns;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.Threads;
 import me.vagdedes.spartan.utils.server.ReflectionUtils;
@@ -24,6 +25,7 @@ public class SpartanBukkit {
             supportedFork = MultiVersion.fork().equals("Spigot") || MultiVersion.fork().equals("Paper"),
             canAdvertise = !Piracy.enabled || IDs.isBuiltByBit() || IDs.isSongoda() || IDs.isPolymart(),
             hasResourcePack;
+    public static Cooldowns cooldowns = new Cooldowns(false);
 
     static {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_18)) {

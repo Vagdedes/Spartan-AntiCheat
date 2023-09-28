@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
-import me.vagdedes.spartan.gui.configuration.ManageConfiguration;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
@@ -50,7 +50,7 @@ public class EventsHandler8 implements Listener {
             p.setInventory(n.getInventory(), null);
 
             // Features
-            ManageConfiguration.save(p, false);
+            SpartanMenu.manageConfiguration.save(p, false);
         }
     }
 

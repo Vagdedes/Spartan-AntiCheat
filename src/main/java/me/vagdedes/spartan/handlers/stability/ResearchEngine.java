@@ -15,8 +15,8 @@ import me.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudConnections;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
+import me.vagdedes.spartan.gui.SpartanMenu;
+import me.vagdedes.spartan.gui.spartan.MainMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.objects.features.StatisticalProgress;
 import me.vagdedes.spartan.objects.profiling.*;
@@ -66,8 +66,8 @@ public class ResearchEngine {
 
     // Averages
     private static final Map<Enums.MiningOre, Double>
-            averageMining = new LinkedHashMap<>(Enums.miningOreLength),
-            defaultAverageMining = new LinkedHashMap<>(Enums.miningOreLength);
+            averageMining = new LinkedHashMap<>(Enums.MiningOre.values().length),
+            defaultAverageMining = new LinkedHashMap<>(Enums.MiningOre.values().length);
     private static final double[]
             reach = new double[3],
             hitTime = new double[3],
@@ -145,7 +145,7 @@ public class ResearchEngine {
                 case ANCIENT_DEBRIS:
                     defaultAverageMining.put(ore, -minimumAverageMining);
                     break;
-                case Gold:
+                case GOLD:
                     defaultAverageMining.put(ore, -64.0);
                     break;
                 default:
@@ -434,7 +434,7 @@ public class ResearchEngine {
         playerFights.add(fight);
 
         if (refreshMenu) {
-            SpartanMenu.refresh();
+            MainMenu.refresh();
         }
     }
 
@@ -620,7 +620,7 @@ public class ResearchEngine {
             }
 
             // Separator
-            SpartanMenu.refresh();
+            MainMenu.refresh();
             ViolationStatistics.remove(hackType);
         });
     }
@@ -699,8 +699,8 @@ public class ResearchEngine {
                     }
                 }
                 enoughData = false;
-                SpartanMenu.refresh();
-                PlayerInfo.refresh(playerName);
+                MainMenu.refresh();
+                SpartanMenu.playerInfo.refresh(playerName);
             }
         }
     }
@@ -1311,7 +1311,7 @@ public class ResearchEngine {
                 }
             }
         }
-        SpartanMenu.refresh();
+        MainMenu.refresh();
     }
 
     private static void updateComprehensionCache() {
@@ -1376,81 +1376,83 @@ public class ResearchEngine {
                 hackType.getCheck().clearMaxCancelledViolations();
 
                 for (DataType dataType : dataTypes) {
-                    boolean bedrock = dataType == DataType.Bedrock;
-                    Map<Long, Collection<PlayerViolation>> orderedMap = new TreeMap<>();
+                    if (hackType.getCheck().isEnabled(dataType, null, null)) {
+                        boolean bedrock = dataType == DataType.Bedrock;
+                        Map<Long, Collection<PlayerViolation>> orderedMap = new TreeMap<>();
 
-                    for (PlayerProfile playerProfile : playerProfiles) {
-                        if (bedrock == playerProfile.isBedrockPlayer()
-                                && playerProfile.isTrustWorthy(false)
-                                && playerProfile.getEvidence().getCount() <= (Check.hackerCheckAmount - 1)) {
-                            List<PlayerViolation> list = playerProfile.getViolationHistory(hackType).getViolationsList();
+                        for (PlayerProfile playerProfile : playerProfiles) {
+                            if (bedrock == playerProfile.isBedrockPlayer()
+                                    && playerProfile.isTrustWorthy(false)
+                                    && playerProfile.getEvidence().getCount() <= (Check.hackerCheckAmount - 1)) {
+                                List<PlayerViolation> list = playerProfile.getViolationHistory(hackType).getViolationsList();
 
-                            if (!list.isEmpty()) {
-                                for (PlayerViolation playerViolation : list) {
-                                    if (playerViolation.isDetectionEnabled()) {
-                                        long time = playerViolation.getTime();
-                                        Collection<PlayerViolation> playerViolations = orderedMap.get(time);
+                                if (!list.isEmpty()) {
+                                    for (PlayerViolation playerViolation : list) {
+                                        if (playerViolation.isDetectionEnabled()) {
+                                            long time = playerViolation.getTime();
+                                            Collection<PlayerViolation> playerViolations = orderedMap.get(time);
 
-                                        if (playerViolations == null) {
-                                            playerViolations = new ArrayList<>();
-                                            playerViolations.add(playerViolation);
-                                            orderedMap.put(time, playerViolations);
-                                        } else {
-                                            playerViolations.add(playerViolation);
+                                            if (playerViolations == null) {
+                                                playerViolations = new ArrayList<>();
+                                                playerViolations.add(playerViolation);
+                                                orderedMap.put(time, playerViolations);
+                                            } else {
+                                                playerViolations.add(playerViolation);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    if (!orderedMap.isEmpty()) {
-                        double duration = 1000.0; // 1 second
-                        Map<Integer, FalsePositiveDetection.TimePeriod> averages = new HashMap<>();
+                        if (!orderedMap.isEmpty()) {
+                            double duration = 1000.0; // 1 second
+                            Map<Integer, FalsePositiveDetection.TimePeriod> averages = new HashMap<>();
 
-                        for (Collection<PlayerViolation> playerViolations : orderedMap.values()) {
-                            for (PlayerViolation playerViolation : playerViolations) {
-                                int timeMoment = AlgebraUtils.integerFloor(playerViolation.getTime() / duration);
-                                FalsePositiveDetection.TimePeriod timePeriod = averages.get(timeMoment);
+                            for (Collection<PlayerViolation> playerViolations : orderedMap.values()) {
+                                for (PlayerViolation playerViolation : playerViolations) {
+                                    int timeMoment = AlgebraUtils.integerFloor(playerViolation.getTime() / duration);
+                                    FalsePositiveDetection.TimePeriod timePeriod = averages.get(timeMoment);
 
-                                if (timePeriod == null) {
-                                    timePeriod = new FalsePositiveDetection.TimePeriod(duration);
-                                    timePeriod.add(playerViolation);
-                                    averages.put(timeMoment, timePeriod);
-                                } else {
-                                    timePeriod.add(playerViolation);
+                                    if (timePeriod == null) {
+                                        timePeriod = new FalsePositiveDetection.TimePeriod(duration);
+                                        timePeriod.add(playerViolation);
+                                        averages.put(timeMoment, timePeriod);
+                                    } else {
+                                        timePeriod.add(playerViolation);
+                                    }
                                 }
                             }
-                        }
 
-                        // Separator
+                            // Separator
 
-                        HashMap<Integer, Double> violationAverages = new HashMap<>();
-                        HashMap<Integer, Integer> violationAveragesDivisor = new HashMap<>();
+                            HashMap<Integer, Double> violationAverages = new HashMap<>();
+                            HashMap<Integer, Integer> violationAveragesDivisor = new HashMap<>();
 
-                        for (FalsePositiveDetection.TimePeriod timePeriod : averages.values()) {
-                            for (Map.Entry<Integer, Double> individualViolationAverages : timePeriod.getAverageViolations().entrySet()) {
-                                int hash = individualViolationAverages.getKey();
-                                violationAverages.put(
-                                        hash,
-                                        violationAverages.getOrDefault(hash, 0.0) + individualViolationAverages.getValue()
-                                );
-                                violationAveragesDivisor.put(
-                                        hash,
-                                        violationAveragesDivisor.getOrDefault(hash, 0) + 1
-                                );
+                            for (FalsePositiveDetection.TimePeriod timePeriod : averages.values()) {
+                                for (Map.Entry<Integer, Double> individualViolationAverages : timePeriod.getAverageViolations().entrySet()) {
+                                    int hash = individualViolationAverages.getKey();
+                                    violationAverages.put(
+                                            hash,
+                                            violationAverages.getOrDefault(hash, 0.0) + individualViolationAverages.getValue()
+                                    );
+                                    violationAveragesDivisor.put(
+                                            hash,
+                                            violationAveragesDivisor.getOrDefault(hash, 0) + 1
+                                    );
+                                }
                             }
-                        }
 
-                        // Separator
-                        duration = Check.violationCycleSeconds / duration;
+                            // Separator
+                            duration = Check.violationCycleSeconds / duration;
 
-                        for (Map.Entry<Integer, Double> entry : violationAverages.entrySet()) {
-                            entry.setValue(entry.getValue() / violationAveragesDivisor.get(entry.getKey()) * duration);
+                            for (Map.Entry<Integer, Double> entry : violationAverages.entrySet()) {
+                                entry.setValue(entry.getValue() / violationAveragesDivisor.get(entry.getKey()) * duration);
+                            }
+                            hackType.getCheck().setMaxCancelledViolations(dataType, violationAverages);
+                        } else {
+                            hackType.getCheck().clearMaxCancelledViolations();
                         }
-                        hackType.getCheck().setMaxCancelledViolations(dataType, violationAverages);
-                    } else {
-                        hackType.getCheck().clearMaxCancelledViolations();
                     }
                 }
             }

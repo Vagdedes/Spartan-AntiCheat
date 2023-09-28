@@ -36,7 +36,7 @@ public class NetworkUtils {
                 if (!isNull) {
                     players.remove(SpartanBukkit.getPlayer(player.getUniqueId()));
                 }
-                if (players.size() > 0) { // 1 because we already know we have one player
+                if (!players.isEmpty()) { // 1 because we already know we have one player
                     for (SpartanPlayer loopPlayer : players) {
                         if (loopPlayer.isOp()) {
                             player = loopPlayer.getPlayer();

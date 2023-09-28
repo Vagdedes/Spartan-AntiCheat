@@ -16,7 +16,6 @@ import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
-import me.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.io.File;
@@ -51,64 +50,64 @@ public class Settings extends ConfigurationBuilder {
         boolean exists = file.exists();
         clear();
 
-        ConfigUtils.add(file, "Punishments.broadcast_on_punishment", false);
-        ConfigUtils.add(file, "Punishments.report_reasons", StringUtils.toString(PlayerReports.reasons, PlayerReports.separator));
+        addOption("Punishments.broadcast_on_punishment", false);
+        addOption("Punishments.report_reasons", StringUtils.toString(PlayerReports.reasons, PlayerReports.separator));
         RawCommands.create();
 
-        ConfigUtils.add(file, "Logs.log_file", true);
-        ConfigUtils.add(file, "Logs.log_console", true);
+        addOption("Logs.log_file", true);
+        addOption("Logs.log_console", true);
 
         if (TestServer.isIdentified()) {
-            ConfigUtils.add(file, "Notifications.individual_only_notifications", false);
+            addOption("Notifications.individual_only_notifications", false);
         }
-        ConfigUtils.add(file, "Notifications.enable_notifications_on_login", true);
-        ConfigUtils.add(file, "Notifications.awareness_notifications", true);
-        ConfigUtils.add(file, "Notifications.message_clickable_command", "/teleport {player}");
+        addOption("Notifications.enable_notifications_on_login", true);
+        addOption("Notifications.awareness_notifications", true);
+        addOption("Notifications.message_clickable_command", "/teleport {player}");
 
-        ConfigUtils.add(file, "Chat.message_cooldown", 0);
-        ConfigUtils.add(file, "Chat.command_cooldown", 0);
-        ConfigUtils.add(file, "Chat.prevent_same_message", false);
-        ConfigUtils.add(file, "Chat.blocked_words", "blockedWord1, blockedWord2");
-        ConfigUtils.add(file, "Chat.blocked_commands", "blockedCommand1, blockedCommand2");
-        ConfigUtils.add(file, "Chat.staff_chat_character", "@");
+        addOption("Chat.message_cooldown", 0);
+        addOption("Chat.command_cooldown", 0);
+        addOption("Chat.prevent_same_message", false);
+        addOption("Chat.blocked_words", "blockedWord1, blockedWord2");
+        addOption("Chat.blocked_commands", "blockedCommand1, blockedCommand2");
+        addOption("Chat.staff_chat_character", "@");
 
-        ConfigUtils.add(file, "Protections.reconnect_cooldown", 1);
-        ConfigUtils.add(file, tpsProtectionOption, true); // test server
-        ConfigUtils.add(file, "Protections.max_supported_player_latency", 500); // test server
-        ConfigUtils.add(file, "Protections.use_teleport_protection", false); // test server
-        ConfigUtils.add(file, "Protections.avoid_self_bow_damage", true);
-        ConfigUtils.add(file, "Protections.player_limit_per_ip", 0);
-        ConfigUtils.add(file, "Protections.interactions_per_tick", 10);
-        ConfigUtils.add(file, "Protections.disallowed_building", true); // test server
+        addOption("Protections.reconnect_cooldown", 1);
+        addOption(tpsProtectionOption, true); // test server
+        addOption("Protections.max_supported_player_latency", 500); // test server
+        addOption("Protections.use_teleport_protection", false); // test server
+        addOption("Protections.avoid_self_bow_damage", true);
+        addOption("Protections.player_limit_per_ip", 0);
+        addOption("Protections.interactions_per_tick", 10);
+        addOption("Protections.disallowed_building", true); // test server
 
-        ConfigUtils.add(file, "Important.op_bypass", false);
-        ConfigUtils.add(file, "Important.enable_permissions", true);
-        ConfigUtils.add(file, "Important.violations_reset_on_kick", false); // test server
-        ConfigUtils.add(file, "Important.modify_server_configuration", false);
-        ConfigUtils.add(file, "Important.refresh_inventory_menu", true);
-        ConfigUtils.add(file, "Important.enable_developer_api", true);
-        ConfigUtils.add(file, showEcosystemOption, true);
-        ConfigUtils.add(file, "Important.bedrock_player_prefix", ".");
-        ConfigUtils.add(file, "Important.inventory_menu_empty_heads", true);
-        ConfigUtils.add(file, "Important.load_player_head_textures", false);
+        addOption("Important.op_bypass", false);
+        addOption("Important.enable_permissions", true);
+        addOption("Important.violations_reset_on_kick", false); // test server
+        addOption("Important.modify_server_configuration", false);
+        addOption("Important.refresh_inventory_menu", true);
+        addOption("Important.enable_developer_api", true);
+        addOption(showEcosystemOption, true);
+        addOption("Important.bedrock_player_prefix", ".");
+        addOption("Important.inventory_menu_empty_heads", true);
+        addOption("Important.load_player_head_textures", false);
 
-        ConfigUtils.add(file, "Cloud.server_name", "specify server name");
-        ConfigUtils.add(file, "Cloud.synchronise_files", true);
+        addOption("Cloud.server_name", "specify server name");
+        addOption("Cloud.synchronise_files", true);
 
-        ConfigUtils.add(file, "Detections.ground_teleport_on_detection", true); // test server
-        ConfigUtils.add(file, "Detections.fall_damage_on_teleport", false); // test server
-        ConfigUtils.add(file, "Detections.allow_cancelled_hit_checking", false); // test server alternative
-        ConfigUtils.add(file, "Detections.update_blocks_upon_violation", false);
+        addOption("Detections.ground_teleport_on_detection", true); // test server
+        addOption("Detections.fall_damage_on_teleport", false); // test server
+        addOption("Detections.allow_cancelled_hit_checking", false); // test server alternative
+        addOption("Detections.update_blocks_upon_violation", false);
 
-        ConfigUtils.add(file, "Performance.enable_false_positive_detection", true); // test server
-        ConfigUtils.add(file, "Performance.use_vanilla_ground_method", false); // test server
-        ConfigUtils.add(file, MaximumCheckedPlayers.option, 100); // test server alternative
+        addOption("Performance.enable_false_positive_detection", true); // test server
+        addOption("Performance.use_vanilla_ground_method", false); // test server
+        addOption(MaximumCheckedPlayers.option, 100); // test server alternative
 
-        ConfigUtils.add(file, DiscordWebhooks.configurationSection + ".webhook_hex_color", "4caf50");
-        ConfigUtils.add(file, DiscordWebhooks.configurationSection + ".checks_webhook_url", "");
-        ConfigUtils.add(file, DiscordWebhooks.configurationSection + ".punishments_webhook_url", "");
-        ConfigUtils.add(file, DiscordWebhooks.configurationSection + ".reports_webhook_url", "");
-        ConfigUtils.add(file, DiscordWebhooks.configurationSection + ".communication_webhook_url", "");
+        addOption(DiscordWebhooks.configurationSection + ".webhook_hex_color", "4caf50");
+        addOption(DiscordWebhooks.configurationSection + ".checks_webhook_url", "");
+        addOption(DiscordWebhooks.configurationSection + ".punishments_webhook_url", "");
+        addOption(DiscordWebhooks.configurationSection + ".reports_webhook_url", "");
+        addOption(DiscordWebhooks.configurationSection + ".communication_webhook_url", "");
 
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);

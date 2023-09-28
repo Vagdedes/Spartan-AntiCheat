@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.gui.helpers;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.functionality.moderation.PlayerReports;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
@@ -138,7 +138,7 @@ public class PlayerStateLists {
                     }
                     break;
                 case punishedPlayers:
-                    List<PlayerReport> playerReports = subList(PlayerReports.getList(), skip, skip + limit);
+                    List<PlayerReport> playerReports = subList(SpartanMenu.playerReports.getList(), skip, skip + limit);
 
                     if ((listSize = playerReports.size()) > 0) {
                         for (PlayerReport playerReport : playerReports) {

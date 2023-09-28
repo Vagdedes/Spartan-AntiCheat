@@ -2,13 +2,15 @@ package me.vagdedes.spartan.gui.configuration;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
 import me.vagdedes.spartan.Register;
+import me.vagdedes.spartan.abstraction.InventoryMenu;
 import me.vagdedes.spartan.compatibility.necessary.FileGUI;
+import me.vagdedes.spartan.configuration.Compatibility;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.configuration.ConfigurationDiagnostics;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.important.Permissions;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
-import me.vagdedes.spartan.gui.spartan.SpartanMenu;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.java.StringUtils;
@@ -20,15 +22,15 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.util.*;
 
-public class ManageConfiguration {
+public class ManageConfiguration extends InventoryMenu {
 
+    private static final int menuSize = 27;
     private static final String menu = "Configurations";
     public static final String
             compatibilityFileName = "compatibility.yml",
@@ -40,12 +42,16 @@ public class ManageConfiguration {
     private static final Map<UUID, Integer> map = new LinkedHashMap<>(Config.getMaxPlayers());
     private static final String documentationURL = "https://docs.google.com/document/d/e/2PACX-1vSu-WfjoyG8ipSI4tw3CqgmYh8gGDriSgD8gZTQ8HqU4k8jq9eYE8gzW3oiuKf6qzuvH7GTxssnMO_5/pub";
 
-    public static void clear() {
+    public ManageConfiguration() {
+        super(menu, menuSize, Enums.Permission.MANAGE);
+    }
+
+    public void clear() {
         map.clear();
     }
 
-    public static void save(SpartanPlayer p, boolean leave) {
-        UUID uuid = p.getUniqueId();
+    public void save(SpartanPlayer player, boolean leave) {
+        UUID uuid = player.getUniqueId();
         Integer number = map.get(uuid);
 
         if (number != null) {
@@ -67,25 +73,19 @@ public class ManageConfiguration {
         }
     }
 
-    public static void open(SpartanPlayer p) {
+    @Override
+    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            p.sendInventoryCloseMessage(ChatColor.RED + "This menu is not available to versions prior to 1.9.");
-            return;
-        }
-        if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            return;
-        }
-        if (FileGUI.isEnabled()) {
-            Player n = p.getPlayer();
+            player.sendInventoryCloseMessage(ChatColor.RED + "This menu is not available to versions prior to 1.9.");
+            return false;
+        } else if (Compatibility.CompatibilityType.FileGUI.isFunctional()) {
+            Player n = player.getPlayer();
 
             if (n != null && n.isOnline() && n.hasPermission(FileGUI.permission)) {
                 FileGUIAPI.openMenu(n, Register.plugin.getDataFolder().getPath(), 1);
-                return;
+                return false;
             }
         }
-        int size = 27;
-        Inventory inv = p.createInventory(size, menu);
         File[] files = Register.plugin.getDataFolder().listFiles();
         int documentationItem;
 
@@ -102,16 +102,16 @@ public class ManageConfiguration {
             lore.add("§cPlease do not use this feature in a server that");
             lore.add("§callows any sort of hacking module. It will possibly");
             lore.add("§capply false changes to the configuration.");
-            InventoryUtils.add(inv, "§aConfiguration Diagnostics", lore, new ItemStack(MaterialUtils.get("redstone_torch")), size - 2);
-            documentationItem = size - 3;
+            InventoryUtils.add(inventory, "§aConfiguration Diagnostics", lore, new ItemStack(MaterialUtils.get("redstone_torch")), menuSize - 2);
+            documentationItem = menuSize - 3;
         } else {
-            documentationItem = size - 2;
+            documentationItem = menuSize - 2;
         }
 
-        InventoryUtils.add(inv, "§aDocumentation", null, new ItemStack(Material.PAPER), documentationItem);
+        InventoryUtils.add(inventory, "§aDocumentation", null, new ItemStack(Material.PAPER), documentationItem);
 
-        InventoryUtils.add(inv, "§4Back", AntiCheatUpdates.getInformation(false),
-                new ItemStack(Material.ARROW), size - 1);
+        InventoryUtils.add(inventory, "§4Back", AntiCheatUpdates.getInformation(false),
+                new ItemStack(Material.ARROW), menuSize - 1);
 
         if (files != null) {
             for (File file : files) {
@@ -120,23 +120,31 @@ public class ManageConfiguration {
                         String name = file.getName();
 
                         if (name.equals(config)) {
-                            InventoryUtils.add(inv, "§c" + name.replace(".yml", ""), null,
+                            InventoryUtils.add(inventory, "§c" + name.replace(".yml", ""), null,
                                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.WRITABLE_BOOK : Material.getMaterial("BOOK_AND_QUILL")), -1);
                         }
                     }
                 }
             }
         }
-        p.openInventory(inv);
+        return true;
     }
 
-    public static void openChild(SpartanPlayer p, String s) {
-        openChild(p, s, -1, null);
+    public void openChild(SpartanPlayer player, String s) {
+        openChild(player, s, -1, null);
     }
 
-    private static void openChild(SpartanPlayer p, String s, int slot, List<String> list) {
-        if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-            p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+    private void openChild(SpartanPlayer player, String s, int slot, List<String> list) {
+        boolean hasPermission = false;
+
+        for (Enums.Permission permission : permissions) {
+            if (Permissions.has(player, permission)) {
+                hasPermission = true;
+                break;
+            }
+        }
+        if (!hasPermission) {
+            player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             return;
         }
         boolean access = false;
@@ -151,8 +159,8 @@ public class ManageConfiguration {
         if (!access) {
             return;
         }
-        Inventory inv = p.createInventory(54, menu + ": " + s);
-        InventoryUtils.add(inv, "§4Back", null, new ItemStack(Material.ARROW), 53);
+        setTitle(player, menu + ": " + s);
+        InventoryUtils.add(inventory, "§4Back", null, new ItemStack(Material.ARROW), 53);
         int counter = 0;
 
         File file = new File(Register.plugin.getDataFolder() + "/" + s + ".yml");
@@ -169,7 +177,7 @@ public class ManageConfiguration {
 
                 if (obj != null && type != null) {
                     if (counter == slot) {
-                        InventoryUtils.add(inv, "§c" + key, list, new ItemStack(Material.PAPER), -1);
+                        InventoryUtils.add(inventory, "§c" + key, list, new ItemStack(Material.PAPER), -1);
                     } else {
                         String value = obj.toString();
                         List<String> lore = new ArrayList<>();
@@ -190,7 +198,7 @@ public class ManageConfiguration {
                         } else {
                             lore.add("§7No modification available. Please use a file explorer.");
                         }
-                        InventoryUtils.add(inv, "§c" + key, lore, new ItemStack(Material.PAPER), -1);
+                        InventoryUtils.add(inventory, "§c" + key, lore, new ItemStack(Material.PAPER), -1);
                     }
                     counter++;
 
@@ -200,43 +208,41 @@ public class ManageConfiguration {
                 }
             }
         }
-        p.openInventory(inv);
+        player.openInventory(inventory);
     }
 
-    public static boolean run(SpartanPlayer p, ItemStack i, String title, ClickType click, int slot) {
-        if (!title.startsWith(menu)) {
-            return false;
-        }
-        String item = i.getItemMeta().getDisplayName();
+    @Override
+    public boolean internalHandle(SpartanPlayer player) {
+        String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
 
         if (item.equals("Back")) {
             if (title.equals(menu)) {
-                SpartanMenu.open(p);
+                SpartanMenu.mainMenu.open(player);
             } else {
-                open(p);
+                open(player);
             }
         } else if (item.equals("Configuration Diagnostics")) {
-            if (!Permissions.has(p, Enums.Permission.MANAGE)) {
-                p.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player, Enums.Permission.MANAGE)) {
+                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                 return true;
             }
-            ConfigurationDiagnostics.execute(p);
-            p.sendInventoryCloseMessage(null);
+            ConfigurationDiagnostics.execute(player);
+            player.sendInventoryCloseMessage(null);
         } else if (item.equals("Documentation")) {
-            p.sendImportantMessage("§7Click to learn more about the configuration§8: \n§a§n" + documentationURL);
+            player.sendImportantMessage("§7Click to learn more about the configuration§8: \n§a§n" + documentationURL);
         } else {
             if (title.equals(menu)) {
-                openChild(p, item);
+                openChild(player, item);
             } else {
-                modify(p, i, title, click, slot);
+                modify(player, itemStack, title, clickType, slot);
             }
         }
         return true;
     }
 
-    private static void modify(SpartanPlayer p, ItemStack item, String title, ClickType click, int slot) {
-        ItemMeta meta = item.getItemMeta();
+    private void modify(SpartanPlayer player, ItemStack itemStack, String title, ClickType clickType, int slot) {
+        ItemMeta meta = itemStack.getItemMeta();
         List<String> list = meta.getLore();
 
         if (list != null) {
@@ -251,11 +257,11 @@ public class ManageConfiguration {
 
                 switch (type) {
                     case "Logical":
-                        if (click.isLeftClick()) {
+                        if (clickType.isLeftClick()) {
                             value = true;
                             ConfigUtils.set(file, path, value);
                             list.set(2, "§7Value§8:§c " + value);
-                        } else if (click.isRightClick()) {
+                        } else if (clickType.isRightClick()) {
                             value = false;
                             ConfigUtils.set(file, path, value);
                             list.set(2, "§7Value§8:§c " + value);
@@ -266,11 +272,11 @@ public class ManageConfiguration {
                     case "Decimal":
                         double dbl = Double.parseDouble(value.toString());
 
-                        if (click.isLeftClick()) {
+                        if (clickType.isLeftClick()) {
                             dbl += 0.1;
                             ConfigUtils.set(file, path, dbl);
                             list.set(2, "§7Value§8:§c " + dbl);
-                        } else if (click.isRightClick()) {
+                        } else if (clickType.isRightClick()) {
                             dbl -= 0.1;
                             ConfigUtils.set(file, path, dbl);
                             list.set(2, "§7Value§8:§c " + dbl);
@@ -281,11 +287,11 @@ public class ManageConfiguration {
                     case "Number":
                         int num = Integer.parseInt(value.toString());
 
-                        if (click.isLeftClick()) {
+                        if (clickType.isLeftClick()) {
                             num += 1;
                             ConfigUtils.set(file, path, num);
                             list.set(2, "§7Value§8:§c " + num);
-                        } else if (click.isRightClick()) {
+                        } else if (clickType.isRightClick()) {
                             num -= 1;
                             ConfigUtils.set(file, path, num);
                             list.set(2, "§7Value§8:§c " + num);
@@ -303,14 +309,14 @@ public class ManageConfiguration {
                     reload(true);
 
                     // Inventory
-                    map.put(p.getUniqueId(), 1);
-                    openChild(p, config, slot, list);
+                    map.put(player.getUniqueId(), 1);
+                    openChild(player, config, slot, list);
                 }
             }
         }
     }
 
-    public static void reload(boolean resetChecks) {
+    public void reload(boolean resetChecks) {
         if (!resetChecks) { // Do not run because their cache will be cleared by the Config method
             for (Enums.HackType hackType : Enums.HackType.values()) {
                 hackType.getCheck().clearConfigurationCache();

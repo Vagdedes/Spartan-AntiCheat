@@ -21,7 +21,7 @@ public class ReflectionUtils {
         return true;
     }
 
-    public static Object getObject(String packages, Class clazz, String path) {
+    public static Object getObject(String packages, Class<?> clazz, String path) {
         if (clazz != null && path != null) {
             try {
                 clazz = Class.forName(packages + clazz.getName());

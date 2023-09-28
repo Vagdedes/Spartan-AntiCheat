@@ -7,7 +7,7 @@ import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import me.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import me.vagdedes.spartan.gui.info.PlayerInfo;
+import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.stability.CancelViolation;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.handlers.stability.TestServer;
@@ -472,7 +472,7 @@ public class Check {
                     try {
                         if (file.exists() || file.createNewFile()) {
                             for (int position = 1; position <= commands.size(); position++) {
-                                ConfigUtils.add(file, hackType + ".punishments." + analysisMultiplierCategory.getString() + "." + position, commands.get(position - 1));
+                                ConfigUtils.add(file, hackType + ".punishments." + analysisMultiplierCategory.toString() + "." + position, commands.get(position - 1));
                             }
                         } else {
                             AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
@@ -705,7 +705,7 @@ public class Check {
             } else if (SpartanBukkit.isPlayer(uuid)) {
                 disabledUsers.put(uuid, new CancelCause(reason, pointer, ticks));
             }
-            PlayerInfo.refresh(uuid);
+            SpartanMenu.playerInfo.refresh(uuid);
         }
     }
 
@@ -716,7 +716,7 @@ public class Check {
     public void removeDisabledUser(UUID uuid) {
         synchronized (disabledUsers) {
             if (disabledUsers.remove(uuid) != null) {
-                PlayerInfo.refresh(uuid);
+                SpartanMenu.playerInfo.refresh(uuid);
             }
         }
     }
@@ -1050,7 +1050,7 @@ public class Check {
             } else if (SpartanBukkit.isPlayer(uuid)) {
                 silentUsers.put(uuid, new CancelCause(reason, pointer, ticks));
             }
-            PlayerInfo.refresh(uuid);
+            SpartanMenu.playerInfo.refresh(uuid);
         }
     }
 
@@ -1061,7 +1061,7 @@ public class Check {
     public void removeSilentUser(UUID uuid) {
         synchronized (silentUsers) {
             if (silentUsers.remove(uuid) != null) {
-                PlayerInfo.refresh(uuid);
+                SpartanMenu.playerInfo.refresh(uuid);
             }
         }
     }
@@ -1283,7 +1283,7 @@ public class Check {
         Set<Enums.PunishmentCategory> categoriesFound = new HashSet<>(categories.length);
 
         for (Enums.PunishmentCategory category : categories) {
-            String loopKey = punishmentKey + category.getString();
+            String loopKey = punishmentKey + category.toString();
 
             if (config.contains(loopKey)) {
                 categoriesFound.add(category);
@@ -1295,7 +1295,7 @@ public class Check {
             int defaultCancelViolation = this.getDefaultCancelViolation();
 
             for (Enums.PunishmentCategory category : categoriesFound) {
-                String string = category.getString();
+                String string = category.toString();
                 int violationModifiable = AlgebraUtils.integerRound(defaultCancelViolation * category.getMultiplier());
 
                 if (!commandsLegacy.containsKey(violationModifiable)) {
