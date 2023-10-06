@@ -205,7 +205,7 @@ public class MainMenu extends InventoryMenu {
         }
 
         // AntiCheat Updates
-        InventoryUtils.add(inventory, "§a" + AntiCheatUpdates.name,
+        add("§a" + AntiCheatUpdates.name,
                 AntiCheatUpdates.getInformation(true),
                 new ItemStack(Material.CHEST), 46);
 
@@ -220,7 +220,7 @@ public class MainMenu extends InventoryMenu {
         }
         ItemStack supportItem = new ItemStack(Material.EMERALD, Math.max(Math.min(discordMemberCount, 64), 1));
         supportItem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-        InventoryUtils.add(inventory, "§aLive Customer Support", lore, supportItem, 47);
+        add("§aLive Customer Support", lore, supportItem, 47);
 
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
@@ -260,7 +260,7 @@ public class MainMenu extends InventoryMenu {
         lore.add("§7Left click to §amanage checks§7.");
         lore.add("§7Right click to §emanage configurations§7.");
         lore.add("§7Shift click to §creload the plugin's memory contents§7.");
-        InventoryUtils.add(inventory, "§aConfiguration", lore, new ItemStack(MaterialUtils.get("crafting_table")), 51);
+        add("§aConfiguration", lore, new ItemStack(MaterialUtils.get("crafting_table")), 51);
 
         // Compatibilities
         InventoryUtils.prepareDescription(lore, "Local Functionality");
@@ -278,26 +278,26 @@ public class MainMenu extends InventoryMenu {
                 lore.add("§a" + compatibility.toString());
             }
         }
-        InventoryUtils.add(inventory, "§aCompatibilities", lore, new ItemStack(MaterialUtils.get("enchanting_table")), 52);
+        add("§aCompatibilities", lore, new ItemStack(MaterialUtils.get("enchanting_table")), 52);
 
         // Player List
         PlayerStateLists.fill(uuid, inventory);
 
         if (page > 1) {
-            InventoryUtils.add(inventory, "§cPage " + (page - 1), null,
+            add("§cPage " + (page - 1), null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14),
                     previousPageSlot);
         } else {
-            InventoryUtils.add(inventory, PlayerStateLists.inactiveColour + "No Previous Page", null,
+            add(PlayerStateLists.inactiveColour + "No Previous Page", null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14),
                     previousPageSlot);
         }
         if (page < Integer.MAX_VALUE) {
-            InventoryUtils.add(inventory, "§aPage " + (page + 1), null,
+            add("§aPage " + (page + 1), null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5),
                     nextPageSlot);
         } else {
-            InventoryUtils.add(inventory, PlayerStateLists.inactiveColour + "No Next Page", null,
+            add(PlayerStateLists.inactiveColour + "No Next Page", null,
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5),
                     nextPageSlot);
         }

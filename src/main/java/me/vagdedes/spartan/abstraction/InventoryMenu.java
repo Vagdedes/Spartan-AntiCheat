@@ -4,9 +4,12 @@ import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
+import me.vagdedes.spartan.utils.server.InventoryUtils;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 public abstract class InventoryMenu {
 
@@ -46,6 +49,10 @@ public abstract class InventoryMenu {
     protected Inventory setTitle(SpartanPlayer player, String title) {
         this.title = title;
         return inventory = player.createInventory(size, title);
+    }
+
+    protected void add(String name, List<String> lore, ItemStack item, int slot) {
+        InventoryUtils.add(inventory, name, lore, item, slot);
     }
 
     public boolean open(SpartanPlayer player, boolean permissionMessage) {

@@ -14,12 +14,10 @@ import me.vagdedes.spartan.objects.system.Check;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
-import me.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -34,16 +32,16 @@ public class ManageChecks extends InventoryMenu {
     @Override
     public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         for (HackType check : Enums.HackType.values()) {
-            addCheck(player, inventory, check);
+            addCheck(player, check);
         }
-        InventoryUtils.add(inventory, "§cDisable silent checking for all checks", null, new ItemStack(MaterialUtils.get("lead")), 46);
-        InventoryUtils.add(inventory, "§cDisable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14), 47);
+        add("§cDisable silent checking for all checks", null, new ItemStack(MaterialUtils.get("lead")), 46);
+        add("§cDisable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 14), 47);
 
-        InventoryUtils.add(inventory, "§4Back", AntiCheatUpdates.getInformation(false),
+        add("§4Back", AntiCheatUpdates.getInformation(false),
                 new ItemStack(Material.ARROW), 49);
 
-        InventoryUtils.add(inventory, "§aEnable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5), 51);
-        InventoryUtils.add(inventory, "§aEnable silent checking for all checks", null, new ItemStack(Material.FEATHER), 52);
+        add("§aEnable all checks", null, new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.LIME_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), 1, (short) 5), 51);
+        add("§aEnable silent checking for all checks", null, new ItemStack(Material.FEATHER), 52);
         return true;
     }
 
@@ -80,7 +78,7 @@ public class ManageChecks extends InventoryMenu {
         return true;
     }
 
-    private void addCheck(SpartanPlayer player, Inventory inv, HackType hackType) {
+    private void addCheck(SpartanPlayer player, HackType hackType) {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null, null),
                 silent = check.isSilent(null, null),
@@ -233,7 +231,7 @@ public class ManageChecks extends InventoryMenu {
         if (enabled && silent) {
             item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        InventoryUtils.add(inv, colour + check.getName() + " " + secondColour + check.getCheckType().toString() + " Check", lore, item, -1);
+        add(colour + check.getName() + " " + secondColour + check.getCheckType().toString() + " Check", lore, item, -1);
     }
 
     private void setEnable(SpartanPlayer player, String item) {

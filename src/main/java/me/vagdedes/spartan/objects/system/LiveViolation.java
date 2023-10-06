@@ -25,7 +25,10 @@ import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LiveViolation {
@@ -86,7 +89,7 @@ public class LiveViolation {
     private final Map<Integer, Long> cancelledLevel;
     private int level, lastCancelledLevel;
     private final LoopLevelCache cancelledLevelCache, maxCancelledLevelCache;
-    private final Collection<HackPrevention> queue;
+    private final Map<Integer, HackPrevention> queue;
 
     public LiveViolation(SpartanPlayer player, ResearchEngine.DataType dataType, Enums.HackType hackType) {
         this.player = player;
@@ -98,7 +101,7 @@ public class LiveViolation {
         this.lastCancelledLevel = 0;
         this.cancelledLevelCache = new LoopLevelCache();
         this.maxCancelledLevelCache = new LoopLevelCache();
-        this.queue = new LinkedList<>();
+        this.queue = new LinkedHashMap<>();
         reset(); // Do not make it local as it takes part in object initiation and is not important
     }
 
@@ -107,7 +110,7 @@ public class LiveViolation {
     void queue(HackPrevention hackPrevention, Check check) {
         if (queue.size() < check.getDefaultCancelViolation()) {
             synchronized (queue) {
-                queue.add(hackPrevention);
+                queue.putIfAbsent(hackPrevention.information.hashCode(), hackPrevention);
             }
         }
     }
@@ -117,7 +120,7 @@ public class LiveViolation {
         boolean processed;
 
         synchronized (queue) {
-            Iterator<HackPrevention> iterator = queue.iterator();
+            Iterator<HackPrevention> iterator = queue.values().iterator();
 
             if (iterator.hasNext()) {
                 hp = iterator.next();

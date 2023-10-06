@@ -79,7 +79,7 @@ public class ViolationHistory {
     }
 
     public int getImportantViolations(boolean def) {
-        if (violationsMap.size() > 0) {
+        if (!violationsMap.isEmpty()) {
             int counter = 0;
 
             for (List<PlayerViolation> list : violationsMap.values()) {

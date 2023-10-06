@@ -2,6 +2,7 @@ package me.vagdedes.spartan.utils.server;
 
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
@@ -14,10 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryUtils {
-
-    public enum ArmorState {
-        Full, Semi, Empty
-    }
 
     public static void prepareDescription(List<String> array, String title) {
         array.clear();
@@ -37,7 +34,7 @@ public class InventoryUtils {
         return hash;
     }
 
-    public static ArmorState getArmorState(SpartanPlayer p) {
+    public static Enums.ArmorState getArmorState(SpartanPlayer p) {
         int counter = 0;
 
         for (ItemStack item : p.getInventory().getArmorContents()) {
@@ -45,7 +42,7 @@ public class InventoryUtils {
                 counter++;
             }
         }
-        return counter == 0 ? ArmorState.Empty : counter == 4 ? ArmorState.Full : ArmorState.Semi;
+        return counter == 0 ? Enums.ArmorState.Empty : counter == 4 ? Enums.ArmorState.Full : Enums.ArmorState.Semi;
     }
 
     public static void add(Inventory inv, String name, List<String> lore, ItemStack item, int slot) {

@@ -15,7 +15,6 @@ import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.utils.server.ConfigUtils;
-import me.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -102,15 +101,15 @@ public class ManageConfiguration extends InventoryMenu {
             lore.add("§cPlease do not use this feature in a server that");
             lore.add("§callows any sort of hacking module. It will possibly");
             lore.add("§capply false changes to the configuration.");
-            InventoryUtils.add(inventory, "§aConfiguration Diagnostics", lore, new ItemStack(MaterialUtils.get("redstone_torch")), menuSize - 2);
+            add("§aConfiguration Diagnostics", lore, new ItemStack(MaterialUtils.get("redstone_torch")), menuSize - 2);
             documentationItem = menuSize - 3;
         } else {
             documentationItem = menuSize - 2;
         }
 
-        InventoryUtils.add(inventory, "§aDocumentation", null, new ItemStack(Material.PAPER), documentationItem);
+        add("§aDocumentation", null, new ItemStack(Material.PAPER), documentationItem);
 
-        InventoryUtils.add(inventory, "§4Back", AntiCheatUpdates.getInformation(false),
+        add("§4Back", AntiCheatUpdates.getInformation(false),
                 new ItemStack(Material.ARROW), menuSize - 1);
 
         if (files != null) {
@@ -120,7 +119,7 @@ public class ManageConfiguration extends InventoryMenu {
                         String name = file.getName();
 
                         if (name.equals(config)) {
-                            InventoryUtils.add(inventory, "§c" + name.replace(".yml", ""), null,
+                            add("§c" + name.replace(".yml", ""), null,
                                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.WRITABLE_BOOK : Material.getMaterial("BOOK_AND_QUILL")), -1);
                         }
                     }
@@ -160,7 +159,7 @@ public class ManageConfiguration extends InventoryMenu {
             return;
         }
         setTitle(player, menu + ": " + s);
-        InventoryUtils.add(inventory, "§4Back", null, new ItemStack(Material.ARROW), 53);
+        add("§4Back", null, new ItemStack(Material.ARROW), 53);
         int counter = 0;
 
         File file = new File(Register.plugin.getDataFolder() + "/" + s + ".yml");
@@ -177,7 +176,7 @@ public class ManageConfiguration extends InventoryMenu {
 
                 if (obj != null && type != null) {
                     if (counter == slot) {
-                        InventoryUtils.add(inventory, "§c" + key, list, new ItemStack(Material.PAPER), -1);
+                        add("§c" + key, list, new ItemStack(Material.PAPER), -1);
                     } else {
                         String value = obj.toString();
                         List<String> lore = new ArrayList<>();
@@ -198,7 +197,7 @@ public class ManageConfiguration extends InventoryMenu {
                         } else {
                             lore.add("§7No modification available. Please use a file explorer.");
                         }
-                        InventoryUtils.add(inventory, "§c" + key, lore, new ItemStack(Material.PAPER), -1);
+                        add("§c" + key, lore, new ItemStack(Material.PAPER), -1);
                     }
                     counter++;
 

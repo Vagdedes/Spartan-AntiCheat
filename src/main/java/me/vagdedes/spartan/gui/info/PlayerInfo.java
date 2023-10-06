@@ -23,12 +23,10 @@ import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.StringUtils;
-import me.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
@@ -63,9 +61,9 @@ public class PlayerInfo extends InventoryMenu {
 
             for (Enums.CheckType checkType : Enums.CheckType.values()) {
                 if (checkType == Enums.CheckType.EXPLOITS) {
-                    addCheck(HackType.Exploits, 15, isOnline, target, inventory, playerProfile, lore);
+                    addCheck(HackType.Exploits, 15, isOnline, target, playerProfile, lore);
                 } else {
-                    addChecks(i, isOnline, target, inventory, playerProfile, lore, checkType);
+                    addChecks(i, isOnline, target, playerProfile, lore, checkType);
                     i++;
                 }
             }
@@ -94,7 +92,7 @@ public class PlayerInfo extends InventoryMenu {
             ItemStack item = miningHistoryMines > 0 ?
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(miningHistoryMines, 64), (short) 14) :
                     new ItemStack(Material.QUARTZ_BLOCK);
-            InventoryUtils.add(inventory, "§2Mining History", lore, item, 16);
+            add("§2Mining History", lore, item, 16);
 
             if (isOnline) {
                 int violations = target.getViolationCount();
@@ -104,35 +102,35 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
                 lore.add("§7Overall Violations§8:§a " + violations);
                 lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + target.getDataType() + ")");
-                InventoryUtils.add(inventory, "§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
+                add("§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
 
                 lore.clear();
                 lore.add("");
                 lore.add("§eLeft click to reset the player's live violations.");
                 lore.add("§cRight click to delete the player's stored data.");
-                InventoryUtils.add(inventory, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
+                add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             } else {
                 lore.clear();
                 lore.add("");
                 lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + playerProfile.getDataType() + ")");
-                InventoryUtils.add(inventory, "§2Information", lore, new ItemStack(Material.BOOK), information);
+                add("§2Information", lore, new ItemStack(Material.BOOK), information);
 
                 lore.clear();
                 lore.add("");
                 lore.add("§cClick to delete the player's stored data.");
-                InventoryUtils.add(inventory, "§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
+                add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             }
-            InventoryUtils.add(inventory, "§2Debug", null, new ItemStack(Material.IRON_SWORD), 28);
-            InventoryUtils.add(inventory, "§2Spectate", null, new ItemStack(MaterialUtils.get("watch")), 29);
+            add("§2Debug", null, new ItemStack(Material.IRON_SWORD), 28);
+            add("§2Spectate", null, new ItemStack(MaterialUtils.get("watch")), 29);
 
-            InventoryUtils.add(inventory, "§c" + (back ? "Back" : "Close"), AntiCheatUpdates.getInformation(false),
+            add("§c" + (back ? "Back" : "Close"), AntiCheatUpdates.getInformation(false),
                     new ItemStack(Material.ARROW), 31);
             return true;
         }
     }
 
     private void addChecks(int slot, boolean isOnline,
-                           SpartanPlayer player, Inventory inv, PlayerProfile playerProfile,
+                           SpartanPlayer player, PlayerProfile playerProfile,
                            List<String> lore, Enums.CheckType checkType) {
         lore.clear();
         lore.add("");
@@ -187,11 +185,11 @@ public class PlayerInfo extends InventoryMenu {
         if (!listedChecks) {
             lore.add("§c" + PlayerStateLists.noDataAvailable);
         }
-        InventoryUtils.add(inv, "§2" + checkType.toString() + " Checks", lore, item, slot);
+        add("§2" + checkType.toString() + " Checks", lore, item, slot);
     }
 
     private void addCheck(HackType hackType, int slot, boolean isOnline,
-                          SpartanPlayer player, Inventory inv, PlayerProfile playerProfile,
+                          SpartanPlayer player, PlayerProfile playerProfile,
                           List<String> lore) {
         lore.clear();
         lore.add("");
@@ -226,7 +224,7 @@ public class PlayerInfo extends InventoryMenu {
         } else {
             lore.add("§c" + PlayerStateLists.noDataAvailable);
         }
-        InventoryUtils.add(inv, "§2" + hackType.getCheck().getName() + " Check", lore, item, slot);
+        add("§2" + hackType.getCheck().getName() + " Check", lore, item, slot);
     }
 
     private String getDetectionState(SpartanPlayer player, HackType hackType, ResearchEngine.DataType dataType,
