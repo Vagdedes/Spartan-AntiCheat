@@ -26,7 +26,7 @@ public class mcMMO {
             Material m = p.getItemInHand().getType();
             return PlayerData.isAxeItem(m)
                     && PlayerData.isInActivePlayerCombat(p)
-                    && PlayerData.getEntitiesNumber(p, CombatUtils.maxHitDistance, false, 1) > 0;
+                    && PlayerData.getEntitiesNumber(p, CombatUtils.maxHitDistance, false) > 0;
         }
         return false;
     }

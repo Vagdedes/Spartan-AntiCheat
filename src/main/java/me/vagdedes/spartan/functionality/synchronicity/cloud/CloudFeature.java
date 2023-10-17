@@ -31,7 +31,7 @@ public class CloudFeature {
     // Cache
     private static final Map<Enums.HackType, String[]>
             disabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
-            hiddenDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
+            specificDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
             allDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
     static final CopyOnWriteArrayList<UUID> punishedPlayers = new CopyOnWriteArrayList<>(),
             updatedPunishedPlayers = new CopyOnWriteArrayList<>();
@@ -145,7 +145,7 @@ public class CloudFeature {
     }
 
     public static boolean isInformationCancelled(Enums.HackType hackType, String info) {
-        return isInformationCancelled(hiddenDisabledDetections.get(hackType), info);
+        return isInformationCancelled(specificDisabledDetections.get(hackType), info);
     }
 
     public static boolean isPublicInformationCancelled(Enums.HackType hackType, String info) {
@@ -179,7 +179,7 @@ public class CloudFeature {
     public static void clear(boolean cache) {
         if (cache) {
             disabledDetections.clear();
-            hiddenDisabledDetections.clear();
+            specificDisabledDetections.clear();
             allDisabledDetections.clear();
             punishedPlayers.clear();
             updatedPunishedPlayers.clear();
@@ -429,13 +429,13 @@ public class CloudFeature {
                             }
                             CloudFeature.disabledDetections.clear();
                             CloudFeature.disabledDetections.putAll(disabledDetections);
-                            CloudFeature.hiddenDisabledDetections.clear();
-                            CloudFeature.hiddenDisabledDetections.putAll(hiddenDisabledDetections);
+                            CloudFeature.specificDisabledDetections.clear();
+                            CloudFeature.specificDisabledDetections.putAll(hiddenDisabledDetections);
                             CloudFeature.allDisabledDetections.clear();
                             CloudFeature.allDisabledDetections.putAll(allDisabledDetections);
                         } else {
                             CloudFeature.disabledDetections.clear();
-                            CloudFeature.hiddenDisabledDetections.clear();
+                            CloudFeature.specificDisabledDetections.clear();
                             CloudFeature.allDisabledDetections.clear();
                         }
                     } catch (Exception e) {

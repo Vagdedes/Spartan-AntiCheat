@@ -18,7 +18,7 @@ public class VehicleAccess {
     public static void run() {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-        if (players.size() > 0) {
+        if (!players.isEmpty()) {
             for (SpartanPlayer p : players) {
                 Entity vehicle = p.getVehicle();
 
@@ -69,13 +69,11 @@ public class VehicleAccess {
     }
 
     public static boolean hasExitCooldown(SpartanPlayer p, Enums.HackType hackType) {
-        return hackType != Enums.HackType.EntityMove
-                && p.getHandlers().has(Handlers.HandlerType.Vehicle, "exit")
+        return p.getHandlers().has(Handlers.HandlerType.Vehicle, "exit")
                 && !p.getProfile().isSuspectedOrHacker(hackType);
     }
 
-    public static boolean hasEnterCooldown(SpartanPlayer p, Enums.HackType hackType) {
-        return hackType != Enums.HackType.EntityMove
-                && p.getHandlers().has(Handlers.HandlerType.Vehicle, "enter");
+    public static boolean hasEnterCooldown(SpartanPlayer p) {
+        return p.getHandlers().has(Handlers.HandlerType.Vehicle, "enter");
     }
 }

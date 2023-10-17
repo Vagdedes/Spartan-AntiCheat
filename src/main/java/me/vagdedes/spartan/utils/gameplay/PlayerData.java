@@ -151,7 +151,7 @@ public class PlayerData {
         boolean damage = false, hit = false;
         List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             double globalAverageReach = ResearchEngine.getReach()[1];
 
             for (PlayerFight fight : fights) {
@@ -188,7 +188,7 @@ public class PlayerData {
     public static boolean receivedPlayerDamage(SpartanPlayer p) {
         List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             for (PlayerFight fight : fights) {
                 if (fight.getOpponent(p)[0].getLastDamage() <= combatTimeRequirement) { // Last-damage double of last-hit due to advantage restrictions
                     return true;
@@ -205,7 +205,7 @@ public class PlayerData {
     public static boolean hitAPlayer(SpartanPlayer p) {
         List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             for (PlayerFight fight : fights) {
                 if (fight.getOpponent(p)[0].getLastHit() <= combatTimeRequirement) {
                     return true;
@@ -288,7 +288,8 @@ public class PlayerData {
             return false;
         }
         int potionLevel = PlayerData.getPotionLevel(p, JUMP);
-        return potionLevel > 0 && potionLevel <= 128 || potionLevel >= 250;
+        return potionLevel > 0 && potionLevel <= 128
+                || potionLevel >= 250;
     }
 
     public static boolean hasHighJumpEffect(SpartanPlayer p) {
@@ -296,25 +297,33 @@ public class PlayerData {
             return false;
         }
         int potionLevel = PlayerData.getPotionLevel(p, JUMP);
-        return potionLevel > 128 && potionLevel < 250;
+        return potionLevel > 128
+                && potionLevel < 250;
     }
 
     // Handled Effects
 
     public static boolean hasConduitPowerEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && p.hasPotionEffect(PotionEffectType.CONDUIT_POWER) && p.wasInLiquids();
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                && p.hasPotionEffect(PotionEffectType.CONDUIT_POWER)
+                && p.wasInLiquids();
     }
 
     public static boolean hasDolphinsGraceEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && p.getVehicle() == null && getPotionLevel(p, PotionEffectType.DOLPHINS_GRACE) > 0;
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                && p.getVehicle() == null
+                && getPotionLevel(p, PotionEffectType.DOLPHINS_GRACE) > 0;
     }
 
     public static boolean hasSlowFallingEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && p.getVehicle() == null && getPotionLevel(p, PotionEffectType.SLOW_FALLING) > 0;
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                && p.getVehicle() == null
+                && getPotionLevel(p, PotionEffectType.SLOW_FALLING) > 0;
     }
 
     public static boolean hasLevitationEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && getPotionLevel(p, PotionEffectType.LEVITATION) > 0;
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                && getPotionLevel(p, PotionEffectType.LEVITATION) > 0;
     }
 
     public static boolean hasBadPotionEffects(SpartanPlayer p) {
@@ -378,33 +387,13 @@ public class PlayerData {
     public static boolean hasItemInHands(SpartanPlayer p, Material Material) {
         ItemStack item = p.getItemInHand();
 
-        if (item != null) {
-            if (item.getType() == Material) {
-                return true;
-            }
-        }
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            ItemStack item_off = p.getInventory().getItemInOffHand();
-
-            if (item_off != null) {
-                if (item_off.getType() == Material) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean hasItemInHands(Player p, Material Material) {
-        ItemStack item = p.getItemInHand();
-
-        if (item != null && item.getType() == Material) {
+        if (item.getType() == Material) {
             return true;
         }
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             ItemStack item_off = p.getInventory().getItemInOffHand();
 
-            if (item_off != null && item_off.getType() == Material) {
+            if (item_off.getType() == Material) {
                 return true;
             }
         }
@@ -432,13 +421,13 @@ public class PlayerData {
         int max = 30;
         List<Entity> entities = p.getNearbyEntities(1.0, 1.0, 1.0);
 
-        if (entities.size() > 0) {
+        if (!entities.isEmpty()) {
             SpartanLocation location = p.getLocation();
             int count = 0;
 
             for (Entity entity : entities) {
                 if (entity instanceof LivingEntity) {
-                    if (CombatUtils.getWidthAndHeight((LivingEntity) entity)[0] >=
+                    if (CombatUtils.getWidthAndHeight(entity)[0] >=
                             AlgebraUtils.getHorizontalDistance(location, entity.getLocation())) {
                         count++;
                     }
@@ -470,7 +459,8 @@ public class PlayerData {
     // Potion Effects
 
     public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
-        String key = "player-data=potion-effect=" + potionEffectType.getName();
+        Entity vehicle = entity.getVehicle();
+        String key = "player-data=potion-effect=" + potionEffectType.getName() + (vehicle != null ? "=" + vehicle.getEntityId() : "");
         int extraTicks = handledPotionEffects.getOrDefault(potionEffectType, 0);
         PotionEffect potionEffect = entity.getPotionEffect(potionEffectType);
 
@@ -498,7 +488,7 @@ public class PlayerData {
 
     // Entities
 
-    public static int getEntitiesNumber(SpartanPlayer p, double distance, boolean findPusher, int limit) {
+    public static int getEntitiesNumber(SpartanPlayer p, double distance, boolean findPusher) {
         int i = 0;
         boolean pusherFound = false;
 

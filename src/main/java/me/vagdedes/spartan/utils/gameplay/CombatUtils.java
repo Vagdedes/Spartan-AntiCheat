@@ -274,7 +274,7 @@ public class CombatUtils {
             double distance = 4.0;
 
             if (entity == null) {
-                return PlayerData.getEntitiesNumber(p, distance, false, 2) > 1;
+                return PlayerData.getEntitiesNumber(p, distance, false) > 1;
             }
             List<Entity> nearbyEntities = entity.getNearbyEntities(distance, (distance / 2), distance);
             nearbyEntities.remove(p.getPlayer());

@@ -173,7 +173,6 @@ public class Check {
             case KillAura:
             case FastClicks:
             case NoFall:
-            case EntityMove:
             case NoSlowdown:
             case HitReach:
                 this.defaultCancelViolation = 3;
@@ -251,11 +250,6 @@ public class Check {
                 this.description = new String[]{"This check will prevent client modules",
                         "that allow a player to break one or multiple",
                         "blocks irregularly fast."};
-                break;
-            case EntityMove:
-                this.description = new String[]{"This check will prevent client modules",
-                        "that allow a player to float, fall slowly,",
-                        "or travel abnormally fast, while riding an entity."};
                 break;
             case FastClicks:
                 this.description = new String[]{"This check will prevent client modules",
@@ -361,7 +355,6 @@ public class Check {
                 this.checkType = Enums.CheckType.PLAYER;
                 break;
             case Speed:
-            case EntityMove:
             case IrregularMovements:
             case MorePackets:
             case NoSlowdown:
@@ -385,7 +378,6 @@ public class Check {
 
         switch (hackType) { // MorePackets: Repeats too much and is not particularly heavy
             case Speed:
-            case EntityMove:
             case IrregularMovements:
             case NoFall:
             case KillAura:

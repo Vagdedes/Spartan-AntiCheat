@@ -18,7 +18,7 @@ public class PlayerOpponent {
     // Separator
 
     public static int getEntities(SpartanPlayer player) {
-        return PlayerData.getEntitiesNumber(player, CombatUtils.maxHitDistance, false, 0);
+        return PlayerData.getEntitiesNumber(player, CombatUtils.maxHitDistance, false);
     }
 
     // Separator

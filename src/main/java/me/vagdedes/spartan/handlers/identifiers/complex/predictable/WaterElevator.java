@@ -24,17 +24,22 @@ public class WaterElevator {
     private static boolean isSoulSand(SpartanLocation location, int blockY, int minY) {
         SpartanLocation locationModified = location.clone();
 
-        for (int i = blockY; i >= minY; i--) {
-            locationModified.setY(i);
+        for (int i = 0; i <= (blockY - minY); i++) {
+            int nonLiquid = 0;
+            SpartanLocation[] locations = locationModified.clone().add(0, -i, 0).getSurroundingLocations(BlockUtils.hitbox, 0, BlockUtils.hitbox);
 
-            for (SpartanLocation loc : locationModified.getSurroundingLocations(BlockUtils.hitbox, 0, BlockUtils.hitbox)) {
+            for (SpartanLocation loc : locations) {
                 SpartanBlock block = loc.getBlock();
                 Material type = block.getType();
 
                 if (type == Material.SOUL_SAND) {
                     return true;
                 } else if (BlockUtils.isSolid(type) && !block.isWaterLogged()) {
-                    break;
+                    nonLiquid++;
+
+                    if (nonLiquid == locations.length) {
+                        break;
+                    }
                 }
             }
         }

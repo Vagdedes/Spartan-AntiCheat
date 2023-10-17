@@ -114,7 +114,8 @@ public class EventsHandler8 implements Listener {
             if (p == null) {
                 return;
             }
-            if (p.getViolations(Enums.HackType.EntityMove).process()) {
+            if (p.getViolations(Enums.HackType.Speed).process()
+                    || p.getViolations(Enums.HackType.IrregularMovements).process()) {
                 e.setCancelled(true);
             } else {
                 // Handlers

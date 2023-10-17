@@ -2,7 +2,6 @@ package me.vagdedes.spartan.interfaces.listeners;
 
 import me.vagdedes.spartan.checks.exploits.Exploits;
 import me.vagdedes.spartan.checks.inventory.ImpossibleInventory;
-import me.vagdedes.spartan.checks.movement.EntityMove;
 import me.vagdedes.spartan.checks.movement.MorePackets;
 import me.vagdedes.spartan.checks.movement.NoFall;
 import me.vagdedes.spartan.checks.movement.NoSlowdown;
@@ -52,7 +51,6 @@ public class EventsHandler7 implements Listener {
             NoFall.check,
             IrregularMovements.check,
             NoSlowdown.check,
-            EntityMove.check,
             Speed.check,
             MorePackets.check,
             ImpossibleInventory.check,
@@ -71,7 +69,6 @@ public class EventsHandler7 implements Listener {
                         NoFall.check,
                         IrregularMovements.check,
                         NoSlowdown.check,
-                        EntityMove.check,
                         Speed.check,
                         MorePackets.check}) {
             if (hackType.getCheck().isEnabled(null, null, null)) {
@@ -245,7 +242,7 @@ public class EventsHandler7 implements Listener {
                     if (!crawling) {
                         p.getExecutor(Enums.HackType.NoFall).run(); // Repetitive (Optimised)
                         p.getExecutor(Enums.HackType.NoSlowdown).run(); // Repetitive (Optimised)
-                        p.getExecutor(Enums.HackType.EntityMove).run(); // Repetitive (Optimised)
+                        //p.getExecutor(Enums.HackType.EntityMove).run(); // Repetitive (Optimised)
                     }
                     p.getExecutor(Enums.HackType.IrregularMovements).run(); // Repetitive (Optimised)
                 }
