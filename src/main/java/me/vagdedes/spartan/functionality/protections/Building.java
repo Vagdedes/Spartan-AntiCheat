@@ -81,6 +81,7 @@ public class Building {
 
         if (cancelled) {
             long ms = timer.get(key);
+            timer.set(key);
 
             if ((ms <= 50L || blockFace == BlockFace.SELF)
                     && (p.getViolations(Enums.HackType.FastPlace).hasLevel()
@@ -88,14 +89,14 @@ public class Building {
                 handlers.remove(Handlers.HandlerType.Building);
                 handlers.add(Handlers.HandlerType.Building, "cooldown", 10);
 
-                if (TestServer.isIdentified() || Config.settings.getBoolean("Protections.disallowed_building")) {
+                if (TestServer.isIdentified()
+                        || Config.settings.getBoolean("Protections.disallowed_building")) {
                     teleport(p, loc);
                     p.groundTeleport(false);
                 }
                 p.getExecutor(Enums.HackType.Exploits).handle(Exploits.BUILDING);
             }
         }
-        timer.set(key);
 
         if (!handlers.has(Handlers.HandlerType.Building, "cooldown")
                 && (!p.isOnGround() || !p.isOnGroundCustom())) {
@@ -115,13 +116,16 @@ public class Building {
             } else {
                 ItemStack item = p.getItemInHand();
 
-                if (item != null && (item.getType() == Material.WATER_BUCKET || item.getType() == Material.LAVA_BUCKET)) {
+                if (item != null
+                        && (item.getType() == Material.WATER_BUCKET
+                        || item.getType() == Material.LAVA_BUCKET)) {
                     cases = 4;
                 }
             }
 
             if (cases == 1 && cancelled) {
-                if (TestServer.isIdentified() || Config.settings.getBoolean("Protections.disallowed_building")) {
+                if (TestServer.isIdentified()
+                        || Config.settings.getBoolean("Protections.disallowed_building")) {
                     handlers.add(Handlers.HandlerType.Building, 10);
                     teleport(p, loc);
                 } else {

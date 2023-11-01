@@ -62,7 +62,7 @@ public class RawCommands {
             if (notificationMessage != null) {
                 List<SpartanPlayer> players = Permissions.getStaff();
 
-                if (players.size() > 0) {
+                if (!players.isEmpty()) {
                     for (SpartanPlayer player : players) {
                         if (AwarenessNotifications.canSend(player.getUniqueId(), "raw-commands")) {
                             player.sendMessage(notificationMessage);
@@ -94,7 +94,8 @@ public class RawCommands {
     }
 
     static boolean runReport(SpartanPlayer p, String cmd) {
-        if (RawCommands.isCommand(cmd, "/" + reportCommand[1]) && Config.settings.getBoolean(reportCommand[0])) {
+        if (RawCommands.isCommand(cmd, "/" + reportCommand[1])
+                && Config.settings.getBoolean(reportCommand[0])) {
             if (!Permissions.has(p, Enums.Permission.REPORT)) {
                 p.sendMessage(Config.messages.getColorfulString("no_permission"));
             } else {

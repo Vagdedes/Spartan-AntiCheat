@@ -25,8 +25,8 @@ public class CloudFeature {
 
     // URLs
     static final String website = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL21pbmVjcmFmdC9jbG91ZC8=",
-            accountWebsite = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL2FjY291bnQvYXBpL3ZlcmlmeURvd25sb2FkLw==";
-    public static final String downloadWebsite = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL2FjY291bnQvZG93bmxvYWRGaWxlLz90b2tlbj0=";
+            accountWebsite = "aHR0cHM6Ly93d3cuaWRlYWxpc3RpYy5haS9hcGkvdjEvcHJvZHVjdC92ZXJpZnlEb3dubG9hZC8=";
+    public static final String downloadWebsite = "aHR0cHM6Ly93d3cuaWRlYWxpc3RpYy5haS9hcGkvdjEvcHJvZHVjdC9kb3dubG9hZEZpbGUvP3Rva2VuPQ==";
 
     // Cache
     private static final Map<Enums.HackType, String[]>

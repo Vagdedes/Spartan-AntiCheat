@@ -996,7 +996,8 @@ public class BlockUtils {
         for (Material m : materials) {
             String s = m.toString();
 
-            if (endsWith(s, "_SIGN") && !contains(s, "_HANGING_")) {
+            if (endsWith(s, "_SIGN") && !contains(s, "_HANGING_")
+                    || endsWith(s, "_CROP")) {
                 helper.add(m);
             }
         }

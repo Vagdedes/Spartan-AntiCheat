@@ -1,7 +1,7 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
 main: me.vagdedes.spartan.Register
-version: Phase 524
+version: Phase 525
 website: https://www.vagdedes.com
 description: Advanced cheat prevention made simple.
 api-version: 1.13

@@ -22,7 +22,6 @@ import org.bukkit.block.data.Waterlogged;
 import org.bukkit.util.Vector;
 
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +39,7 @@ public class SpartanLocation {
         }
     }
 
-    static final Map<Integer, BlockCache> memory = MultiVersion.folia ? new LinkedHashMap<>() : new ConcurrentHashMap<>();
+    static final Map<Integer, BlockCache> memory = new ConcurrentHashMap<>();
     public static final int clearanceTick = 4;
     private static final long clearanceTime = clearanceTick * TPS.tickTime;
     private static final boolean
@@ -52,7 +51,7 @@ public class SpartanLocation {
         if (Register.isPluginLoaded()) {
             // Synchronised due to most calls being on the main thread
             SpartanBukkit.runRepeatingTask(() -> {
-                if (memory.size() > 0) {
+                if (!memory.isEmpty()) {
                     long time = System.currentTimeMillis();
                     Iterator<BlockCache> iterator = memory.values().iterator();
 
