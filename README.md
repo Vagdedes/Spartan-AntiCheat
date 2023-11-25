@@ -3,7 +3,8 @@
 <img src="https://vagdedes.com/.images/spartan/simple.png">
 <img src="https://vagdedes.com/.images/spartan/support.png">
 <img src="https://vagdedes.com/.images/spartan/customization.png">
-<img src="https://vagdedes.com/.images/spartan/long.png?id=1">
+
+<a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long.png?id=1"></a>a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vTw-BJ8cKRPYkWm-xhCyG02pkTK-6TpUuKdaezYGEIsMQiVls_SIHDcVdQMYUrRQkoS7oLKyRpX960s/pub"><img src="https://vagdedes.com/.images/spartan/blocked_hacks.png"></a>
 
