@@ -30,8 +30,7 @@ public class SmashHit implements Listener {
             if (p.getViolations(Enums.HackType.KillAura).process()
                     || p.getViolations(Enums.HackType.Criticals).process()
                     || p.getViolations(Enums.HackType.NoSwing).process()
-                    || p.getViolations(Enums.HackType.FastClicks).process()
-                    || p.getViolations(Enums.HackType.Velocity).process()) {
+                    || p.getViolations(Enums.HackType.FastClicks).process()) {
                 e.setCancelled(true);
             }
         }

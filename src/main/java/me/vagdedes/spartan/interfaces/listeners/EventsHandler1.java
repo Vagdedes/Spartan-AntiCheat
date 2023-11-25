@@ -13,9 +13,9 @@ import me.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import me.vagdedes.spartan.functionality.protections.ReconnectCooldown;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.gui.SpartanMenu;
-import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Velocity;
 import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.DetectionLocation;
+import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.profiling.PlayerCombat;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
@@ -167,8 +167,13 @@ public class EventsHandler1 implements Listener {
 
         // Handlers
         if (!e.isCancelled()) {
-            Velocity.run(p);
+            p.getHandlers().add(Handlers.HandlerType.Velocity, 80);
             Explosion.runVelocity(p);
+        }
+
+        // Detections
+        if (p.getViolations(Enums.HackType.Velocity).process()) {
+            e.setCancelled(true);
         }
     }
 }

@@ -787,19 +787,31 @@ public class SpartanLocation {
         return isBlock(new Material[]{m}, i);
     }
 
-    public boolean areBlocks(Material[] m, double i) {
-        for (SpartanLocation loc : getSurroundingLocations(i, 0, i)) {
-            for (Material material : m) {
-                if (!loc.isType(material)) {
-                    return false;
+    public boolean areBlocks(Material[] m, double i, boolean self) {
+        if (self) {
+            for (SpartanLocation loc : getSurroundingLocations(i, 0, i)) {
+                for (Material material : m) {
+                    if (!loc.isType(material)) {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            SpartanLocation[] surrounding = getSurroundingLocations(i, 0, i);
+
+            for (int x = 1; x < surrounding.length; x++) { // Skip 0
+                for (Material material : m) {
+                    if (!surrounding[x].isType(material)) {
+                        return false;
+                    }
                 }
             }
         }
         return true;
     }
 
-    public boolean areBlocks(Material m, double i) {
-        return areBlocks(new Material[]{m}, i);
+    public boolean areBlocks(Material m, double i, boolean self) {
+        return areBlocks(new Material[]{m}, i, self);
     }
 
     public boolean isBlockInBetween(SpartanLocation from, int limit, boolean protection) {

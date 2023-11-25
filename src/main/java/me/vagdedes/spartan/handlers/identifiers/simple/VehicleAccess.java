@@ -45,14 +45,13 @@ public class VehicleAccess {
 
     public static void runEnter(SpartanPlayer p, Entity entity, boolean enter) {
         // Damage, BouncingBlocks, WaterElevator cover vehicles too
+        // Piston cover players with distance but not via object
         // Velocity is far too important to be manipulated
         // Simple ones do not need to be manipulated here
         // Liquid is based on the past, so it's not counted here
         Handlers handlers = p.getHandlers();
         handlers.remove(Handlers.HandlerType.ElytraUse);
         handlers.remove(Handlers.HandlerType.Trident);
-        handlers.remove(Handlers.HandlerType.Piston);
-        handlers.remove(Handlers.HandlerType.FishingHook);
         handlers.remove(Handlers.HandlerType.ExtremeCollision);
         handlers.remove(Handlers.HandlerType.Floor);
 

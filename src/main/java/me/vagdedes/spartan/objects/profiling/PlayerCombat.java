@@ -34,7 +34,7 @@ public class PlayerCombat {
     }
 
     public void storeFight(PlayerFight fight, boolean refreshMenu) {
-        if (name.length() > 0) { // If length is zero, this means this object is part of a temporary profile
+        if (!name.isEmpty()) { // If length is zero, this means this object is part of a temporary profile
             pastFights.add(fight);
             ResearchEngine.addFight(fight, refreshMenu);
         }
@@ -49,11 +49,11 @@ public class PlayerCombat {
     }
 
     public boolean hasFights() {
-        return pastFights.size() > 0;
+        return !pastFights.isEmpty();
     }
 
     public boolean hasCurrentFight() {
-        return currentFights.size() > 0;
+        return !currentFights.isEmpty();
     }
 
     // Separator
@@ -105,7 +105,7 @@ public class PlayerCombat {
     public void setWinnerAgainst(String opponentName) {
         List<PlayerFight> fights = getCurrentFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             for (PlayerFight fight : fights) {
                 PlayerOpponent opponent1 = fight.getOpponent1();
                 PlayerOpponent opponent2 = fight.getOpponent2();
@@ -125,7 +125,7 @@ public class PlayerCombat {
     public PlayerFight getCurrentFight(SpartanPlayer opponent) {
         List<PlayerFight> fights = getCurrentFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             String opponentName = opponent.getName();
 
             // Cache Component
@@ -144,7 +144,7 @@ public class PlayerCombat {
     // Separator
 
     public void runFights() {
-        if (currentFights.size() > 0) {
+        if (!currentFights.isEmpty()) {
             for (PlayerFight fight : currentFights) {
                 if (fight.hasEnded()) {
                     fight.judge();
@@ -154,7 +154,7 @@ public class PlayerCombat {
     }
 
     public void endFights() {
-        if (currentFights.size() > 0) {
+        if (!currentFights.isEmpty()) {
             for (PlayerFight fight : currentFights) {
                 fight.judge();
             }
@@ -199,7 +199,7 @@ public class PlayerCombat {
     }
 
     public double[] getCPSAverages() { // Attention, added after initial algorithm (1)
-        if (pastFights.size() > 0) {
+        if (!pastFights.isEmpty()) {
             int total = 0;
             double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
 
@@ -222,7 +222,7 @@ public class PlayerCombat {
     }
 
     public double[] getYawRateAverages() { // Attention, added after initial algorithm (3)
-        if (pastFights.size() > 0) {
+        if (!pastFights.isEmpty()) {
             int total = 0;
             double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
 
@@ -245,7 +245,7 @@ public class PlayerCombat {
     }
 
     public double[] getPitchRateAverages() { // Attention, added after initial algorithm (3)
-        if (pastFights.size() > 0) {
+        if (!pastFights.isEmpty()) {
             int total = 0;
             double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
 
@@ -268,7 +268,7 @@ public class PlayerCombat {
     }
 
     public double[] getHitComboAverages() { // Attention, added after initial algorithm (4)
-        if (pastFights.size() > 0) {
+        if (!pastFights.isEmpty()) {
             int total = 0;
             double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
 
@@ -343,7 +343,7 @@ public class PlayerCombat {
     public double getAverageWinLossRatio() {
         List<PlayerFight> fights = getPastFights();
 
-        if (fights.size() > 0) {
+        if (!fights.isEmpty()) {
             int wins = 0, loses = 0;
 
             for (PlayerFight fight : fights) {
@@ -354,51 +354,6 @@ public class PlayerCombat {
                 }
             }
             return loses == 0 ? wins : wins / ((double) loses);
-        }
-        return -1.0;
-    }
-
-    // Separator
-
-    public double getVelocityOccurrences(float desiredValue, int desiredCount, boolean vertical) {
-        int size = pastFights.size();
-
-        if (size > 0) {
-            int valid = 0, total = 0;
-
-            for (PlayerFight fight : pastFights) {
-                for (Float[] collection :
-                        (vertical ? fight.getOpponent(name)[0].getVelocity().getVerticalStorage() :
-                                fight.getOpponent(name)[0].getVelocity().getHorizontalStorage())) {
-                    if (collection.length == desiredCount) {
-                        int individual = 0;
-                        total++;
-
-                        for (float value : collection) {
-                            if (value == desiredValue) {
-                                if (value == 0.0) { // Zero is a special value which we do not interfere with
-                                    valid++;
-                                    break; // Once per cycle
-                                } else {
-                                    individual++;
-
-                                    if (individual > 1) {
-                                        break; // Break loop when more than one occurrence has been identified. (Check * comment for more info)
-                                    }
-                                }
-                            }
-                        }
-
-                        if (individual == 1) { // *Non-zero values can be found once per count, more times raises suspicions and aren't counted
-                            valid++;
-                        }
-                    }
-                }
-            }
-
-            if (total > 0) {
-                return (valid / ((double) total)) * 100.0;
-            }
         }
         return -1.0;
     }

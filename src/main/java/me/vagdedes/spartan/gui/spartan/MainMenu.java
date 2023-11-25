@@ -220,7 +220,7 @@ public class MainMenu extends InventoryMenu {
         }
         ItemStack supportItem = new ItemStack(Material.EMERALD, Math.max(Math.min(discordMemberCount, 64), 1));
         supportItem.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-        add("§aLive Customer Support", lore, supportItem, 47);
+        add("§aDiscord Community", lore, supportItem, 47);
 
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
@@ -309,7 +309,7 @@ public class MainMenu extends InventoryMenu {
         String name = itemStack.getItemMeta().getDisplayName(),
                 item = (name.startsWith("§") ? name.substring(2) : name);
 
-        if (item.equals("Live Customer Support")) {
+        if (item.equals("Discord Community")) {
             player.sendInventoryCloseMessage("");
             player.sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
             player.sendMessage("§6Spartan Tutorial§8: §e§nhttps://bit.ly/3Itw7Fd");

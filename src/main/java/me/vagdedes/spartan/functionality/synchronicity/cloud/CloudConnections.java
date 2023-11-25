@@ -228,6 +228,36 @@ public class CloudConnections {
         return new String[]{};
     }
 
+    public static String[][] getStaffAnnouncements() { // Once
+        if (!CloudFeature.recentError(System.currentTimeMillis())) {
+            try {
+                String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudFeature.website) + "?" + CloudFeature.identification
+                        + "&action=get&data=staffAnnouncements&version=" + CloudFeature.version);
+
+                if (results.length > 0) {
+                    String reply = results[0];
+
+                    if (reply.contains("exception")) {
+                        if (!CloudFeature.hasException()) {
+                            CloudFeature.cloudExceptionCooldown = CloudFeature.exceptionCooldownMinutes;
+                        }
+                    } else {
+                        String[] announcements = reply.split(CloudFeature.separator);
+                        String[][] array = new String[results.length][0];
+
+                        for (int i = 0; i < announcements.length; i++) {
+                            array[i] = StringUtils.decodeBase64(announcements[i]).split(CloudFeature.separator);
+                        }
+                        return array;
+                    }
+                }
+            } catch (Exception e) {
+                CloudFeature.throwError(e, "SA:GET");
+            }
+        }
+        return new String[][]{};
+    }
+
     public static boolean sendCrossServerInformation(String type, String name, String[] array) {
         if (!CloudFeature.recentError(System.currentTimeMillis())) {
             // Doesn't need ID validation due to its validated method call

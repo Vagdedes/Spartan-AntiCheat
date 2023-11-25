@@ -6,10 +6,6 @@ import me.vagdedes.spartan.utils.gameplay.MoveUtils;
 
 public class GroundCollision {
 
-    // Liquid is based on the past, so it's not counted here
-    // Velocity is far too important to be manipulated
-    // Simple ones do not need to be manipulated here
-
     public static boolean run(SpartanPlayer player) {
         if (player.isOnGroundCustom()
                 && player.isOnGround()
@@ -18,18 +14,18 @@ public class GroundCollision {
                 && player.getNmsVerticalDistance() == 0.0
                 && player.getVehicle() == null) {
             Handlers handlers = player.getHandlers();
-            handlers.remove(Handlers.HandlerType.BouncingBlocks);
-            handlers.remove(Handlers.HandlerType.WaterElevator);
 
             if (player.getNmsHorizontalDistance() <= MoveUtils.highPrecision
                     && player.getCustomDistance() <= MoveUtils.lowPrecision) {
-                handlers.remove(Handlers.HandlerType.ElytraUse);
-                handlers.remove(Handlers.HandlerType.Trident);
-                handlers.remove(Handlers.HandlerType.Piston);
-                handlers.remove(Handlers.HandlerType.Damage);
-                handlers.remove(Handlers.HandlerType.FishingHook);
-                handlers.remove(Handlers.HandlerType.ExtremeCollision);
-                handlers.remove(Handlers.HandlerType.Floor);
+                handlers.removeMany(Handlers.HandlerFamily.Motion);
+                handlers.removeMany(Handlers.HandlerFamily.Velocity);
+            } else {
+                handlers.remove(Handlers.HandlerType.BouncingBlocks);
+                handlers.remove(Handlers.HandlerType.WaterElevator);
+            }
+
+            if (!Liquid.isLocation(player, player.getLocation())) {
+                player.removeLastLiquidTime();
             }
             return true;
         }

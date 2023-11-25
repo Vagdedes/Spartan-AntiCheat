@@ -20,7 +20,8 @@ public class Damage {
 
     public static final String
             selfHitKey = "self-hit",
-            knockbackKey = "knockback";
+            knockbackKey = "knockback",
+            fishingHookKey = "fishing-hook";
     private static final int
             blocksOffGround = 4,
             selfHitTicks = 25;
@@ -235,7 +236,7 @@ public class Damage {
 
     // Modification Methods
 
-    private static void addCooldown(SpartanPlayer p, String reason, int time) {
+    public static void addCooldown(SpartanPlayer p, String reason, int time) {
         Handlers handlers = p.getHandlers();
         handlers.add(Handlers.HandlerType.Damage, time);
 

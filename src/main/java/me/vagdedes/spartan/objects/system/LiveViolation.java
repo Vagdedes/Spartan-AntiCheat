@@ -155,7 +155,9 @@ public class LiveViolation {
                     Player realPlayer = player.getPlayer();
                     PlayerProfile playerProfile = player.getProfile();
                     boolean canPrevent, canPreventAlternative, falsePositive,
-                            suspectedOrHacker = playerProfile.isSuspectedOrHacker(hackType),
+                            hacker = playerProfile.isHacker(),
+                            suspected = !hacker && playerProfile.isSuspected(hackType),
+                            suspectedOrHacker = suspected || hacker,
                             enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
                     PlayerViolationEvent playerViolationEvent;
 
@@ -212,7 +214,7 @@ public class LiveViolation {
                     if (playerViolationEvent == null || !playerViolationEvent.isCancelled()) {
                         if (falsePositive) {
                             this.removeMaxLevel(hp.information);
-                            violations = this.increaseCancelledLevel(playerViolation.getSimilarityIdentity());
+                            violations = this.increaseCancelledLevel(playerViolation.getSimilarityIdentity(), hacker ? 2.0 : suspected ? 1.5 : 1.0);
                             Moderation.detection(uuid, player, playerProfile, hackType, check, playerViolation.getDetection(), hp.information, violations, false, true, canPrevent || canPreventAlternative, suspectedOrHacker, dataType);
                         } else {
                             if (processed) {
@@ -346,7 +348,12 @@ public class LiveViolation {
         // Violations
         if (amount < Check.maxViolationsPerCycle) {
             this.level = amount;
-            increaseCancelledLevel(hash); // Increase it in case a player has reached the max level and is still cheating
+            increaseCancelledLevel(
+                    hash,
+                    this.player.getProfile().isHacker() ? 2.0
+                            : this.player.getProfile().isSuspected(hackType) ? 1.5
+                            : 1.0
+            ); // Increase it in case a player has reached the max level and is still cheating
         }
         this.lastCancelledLevel = 0;
         timeReset(); // Always after changing the level
@@ -357,21 +364,21 @@ public class LiveViolation {
         }
     }
 
-    public int increaseCancelledLevel(int hash) {
+    public int increaseCancelledLevel(int hash, double multiplier) {
         this.lastCancelledLevel = hash;
         Long time = cancelledLevel.get(hash);
 
         if (time == null) {
-            cancelledLevel.put(hash, System.currentTimeMillis() + 1_000L);
+            cancelledLevel.put(hash, System.currentTimeMillis() + AlgebraUtils.integerRound(1_000 * multiplier));
             return 1;
         } else {
             long current = System.currentTimeMillis();
 
             if (time < current) {
-                this.cancelledLevel.put(hash, current + 1_000L);
+                this.cancelledLevel.put(hash, current + AlgebraUtils.integerRound(1_000 * multiplier));
                 return 1;
             } else {
-                time += 1_000L;
+                time += AlgebraUtils.integerRound(1_000 * multiplier);
                 this.cancelledLevel.put(hash, time);
                 return AlgebraUtils.integerCeil(time / 1000.0);
             }

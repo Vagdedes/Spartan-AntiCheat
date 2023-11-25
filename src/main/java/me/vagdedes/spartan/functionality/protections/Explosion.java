@@ -94,6 +94,6 @@ public class Explosion {
 
     private static int getTime() {
         return TestServer.isIdentified() ? defaultTicks :
-                (Math.max(Config.settings.getInteger(Config.settings.explosionOption), defaultTicks) * 20);
+                (Math.max(Config.settings.getInteger(Settings.explosionOption), defaultTicks) * 20);
     }
 }

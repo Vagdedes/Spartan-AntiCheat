@@ -23,7 +23,8 @@ public class CombatUtils {
             wood_sword = MaterialUtils.get("wood_sword");
     public static final int defaultFightTicks = 11,
             maximumNoDamageTicks = 20,
-            competitiveCPS = 12;
+            competitiveCPS = 12,
+            maxLegitimateCPS = 19;
     public static final double
             maxHitDistance = 6.0,
             maxLegitimateHitDistance = 3.5,

@@ -1,7 +1,6 @@
 package me.vagdedes.spartan.functionality.performance;
 
 import me.vagdedes.spartan.configuration.Config;
-import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.objects.profiling.PlayerViolation;
 import me.vagdedes.spartan.objects.system.LiveViolation;
 import me.vagdedes.spartan.system.Enums;
@@ -14,12 +13,10 @@ public class FalsePositiveDetection {
 
     public static class TimePeriod {
 
-        private final long ticks;
         private final Set<Integer> players;
         private final Map<Integer, Integer> violations;
 
-        public TimePeriod(double duration) {
-            this.ticks = (int) (duration / TPS.tickTimeDecimal);
+        public TimePeriod() {
             this.players = new HashSet<>();
             this.violations = new HashMap<>();
         }
@@ -40,7 +37,7 @@ public class FalsePositiveDetection {
                 double players = this.players.size();
 
                 for (Map.Entry<Integer, Integer> entry : this.violations.entrySet()) {
-                    violations.put(entry.getKey(), entry.getValue() / players / ticks);
+                    violations.put(entry.getKey(), entry.getValue() / players);
                 }
                 return violations;
             } else {

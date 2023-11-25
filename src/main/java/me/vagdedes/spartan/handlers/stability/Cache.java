@@ -1,6 +1,5 @@
 package me.vagdedes.spartan.handlers.stability;
 
-import me.vagdedes.spartan.checks.combat.VelocityCheck;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.moderation.Debug;
 import me.vagdedes.spartan.functionality.moderation.Spectate;
@@ -118,7 +117,6 @@ public class Cache {
             p.getExecutor(Enums.HackType.KillAura).handle(null);
         }
         p.getExecutor(Enums.HackType.Criticals).handle(leave);
-        p.getExecutor(Enums.HackType.Velocity).handle(VelocityCheck.REFRESH);
     }
 
     public static <K, V> Map<K, V> store(Map<K, V> map) {

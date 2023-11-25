@@ -32,6 +32,11 @@ public class Liquid {
         return false;
     }
 
+    public static void remove(SpartanPlayer p) {
+        p.removeLastLiquidTime();
+        WaterElevator.remove(p);
+    }
+
     private static void add(SpartanPlayer p) {
         p.setLastLiquidTime();
 

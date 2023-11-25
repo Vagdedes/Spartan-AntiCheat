@@ -62,22 +62,14 @@ public class ResearchEngine {
     private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>(Config.getMaxPlayers());
     private static final Map<String, ItemStack> skulls = new ConcurrentHashMap<>(logRequirement);
     // Detections
-    private static final Map<String, Double> globalVelocityOccurrences = new LinkedHashMap<>();
 
     // Averages
     private static final Map<Enums.MiningOre, Double>
             averageMining = new LinkedHashMap<>(Enums.MiningOre.values().length),
             defaultAverageMining = new LinkedHashMap<>(Enums.MiningOre.values().length);
-    private static final double[]
-            reach = new double[3],
-            hitTime = new double[3],
-            yawRate = new double[3],
-            pitchRate = new double[3],
-            cps = new double[3],
-            winsToLosses = new double[3],
-            hitRatio = new double[3],
-            hitCombo = new double[3],
-            duration = new double[3];
+    private static double
+            averageReach = -1.0,
+            averageCPS = -1.0;
 
     // Lists
     private static final List<PlayerProfile>
@@ -91,10 +83,10 @@ public class ResearchEngine {
     private static final Runnable skullsAndFightsRunnable = () -> {
         Collection<PlayerProfile> playerProfiles = ResearchEngine.playerProfiles.values();
 
-        if (playerProfiles.size() > 0) {
+        if (!playerProfiles.isEmpty()) {
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (players.size() > 0) {
+            if (!players.isEmpty()) {
                 boolean added = !Config.settings.getBoolean("Important.load_player_head_textures") || skulls.size() == logRequirement;
                 Inventory inv = Bukkit.createInventory(players.get(0).getPlayer(), 9, "");
 
@@ -125,17 +117,6 @@ public class ResearchEngine {
     private static String date = new Timestamp(System.currentTimeMillis()).toString().substring(0, 10);
 
     static {
-        for (int i = 0; i < 3; i++) {
-            reach[i] = -1.0;
-            hitTime[i] = -1.0;
-            yawRate[i] = -1.0;
-            pitchRate[i] = -1.0;
-            cps[i] = -1.0;
-            winsToLosses[i] = -1.0;
-            hitCombo[i] = -1.0;
-            duration[i] = -1.0;
-            hitRatio[i] = -1.0;
-        }
         for (Enums.MiningOre ore : Enums.MiningOre.values()) {
             switch (ore) {
                 case DIAMOND:
@@ -306,78 +287,17 @@ public class ResearchEngine {
     }
 
     public static boolean hasCompetitiveCPS() {
-        return cps[1] >= CombatUtils.competitiveCPS;
+        return averageCPS >= CombatUtils.competitiveCPS;
     }
 
     // Separator
 
-    public static double[] getCPS() {
-        return cps;
+    public static double getAverageCPS() {
+        return averageCPS;
     }
 
-    public static double[] getReach() {
-        return reach;
-    }
-
-    public static double[] getDuration() {
-        return duration;
-    }
-
-    public static double[] getHitCombo() {
-        return hitCombo;
-    }
-
-    public static double[] getWinsToLosses() {
-        return winsToLosses;
-    }
-
-    public static double[] getHitRatio() {
-        return hitRatio;
-    }
-
-    public static double[] getHitTime() {
-        return hitTime;
-    }
-
-    public static double[] getYawRate() {
-        return yawRate;
-    }
-
-    public static double[] getPitchRate() {
-        return pitchRate;
-    }
-
-    public static double getGlobalVelocityOccurrences(float desiredValue, int desiredCount, boolean vertical) {
-        if (hackerFreePlayerProfiles.size() >= profileRequirement) {
-            String key = desiredValue + (vertical ? "v" : "h") + desiredCount;
-            Double percentage = globalVelocityOccurrences.get(key);
-
-            if (percentage != null) {
-                return percentage;
-            }
-            int valid = 0, total = 0;
-
-            for (PlayerProfile playerProfile : hackerFreePlayerProfiles) { // Include all players including online but not offline players to get an idea of how percentages shift
-                PlayerCombat combat = playerProfile.getCombat();
-
-                if (combat.hasEnoughFights()) {
-                    double occurrences = combat.getVelocityOccurrences(desiredValue, desiredCount, vertical);
-
-                    if (occurrences != -1.0) {
-                        valid += occurrences;
-                        total++;
-                    }
-                }
-            }
-
-            if (total >= profileRequirement) {
-                percentage = valid / ((double) total);
-                globalVelocityOccurrences.put(key, percentage);
-                return percentage;
-            }
-            globalVelocityOccurrences.put(key, -1.0);
-        }
-        return -1.0;
+    public static double getAverageReach() {
+        return averageReach;
     }
 
     public static List<PlayerReport> getReports(Enums.HackType hackType, int days, boolean checkIfDismissed) {
@@ -556,7 +476,7 @@ public class ResearchEngine {
             }
         }
 
-        if (violationsMap.size() == 0) {
+        if (violationsMap.isEmpty()) {
             return null;
         }
         return new ViolationHistory(hackType, dataType, violationsMap, violationsList, Math.max(dates.size(), 1));
@@ -584,7 +504,7 @@ public class ResearchEngine {
 
             Collection<PlayerProfile> playerProfiles = ResearchEngine.playerProfiles.values();
 
-            if (playerProfiles.size() > 0) {
+            if (!playerProfiles.isEmpty()) {
                 for (PlayerProfile playerProfile : playerProfiles) {
                     playerProfile.getViolationHistory(hackType).clear();
                     playerProfile.getEvidence().remove(hackType);
@@ -601,7 +521,7 @@ public class ResearchEngine {
 
             Collection<File> files = getFiles();
 
-            if (files.size() > 0) {
+            if (!files.isEmpty()) {
                 for (File file : files) {
                     YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
@@ -664,7 +584,7 @@ public class ResearchEngine {
                         }
                         Collection<File> files = getFiles();
 
-                        if (files.size() > 0) {
+                        if (!files.isEmpty()) {
                             for (File file : files) {
                                 YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
@@ -803,7 +723,7 @@ public class ResearchEngine {
                         }
                         rs.close();
 
-                        if (cache.size() == 0) {
+                        if (cache.isEmpty()) {
                             continueWithYAML = true;
                         }
                     } else {
@@ -822,7 +742,7 @@ public class ResearchEngine {
         if (!isFull && continueWithYAML) {
             Collection<File> files = getFiles();
 
-            if (files.size() > 0) {
+            if (!files.isEmpty()) {
                 //Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
 
                 for (File file : files) {
@@ -972,11 +892,6 @@ public class ResearchEngine {
                                         double winnerReachAverage = 0.0, loserReachAverage = 0.0;
                                         float winnerYawRateAverage = 0.0f, loserYawRateAverage = 0.0f;
                                         float winnerPitchRateAverage = 0.0f, loserPitchRateAverage = 0.0f;
-                                        Map<Integer, Float[]>
-                                                winnerVerticalVelocity = new LinkedHashMap<>(),
-                                                loserVerticalVelocity = new LinkedHashMap<>(),
-                                                winnerHorizontalVelocity = new LinkedHashMap<>(),
-                                                loserHorizontalVelocity = new LinkedHashMap<>();
 
                                         for (String statistic : statistics) {
                                             String[] subStatistics = statistic.split(PlayerFight.intermediateSeparator[1]);
@@ -1074,46 +989,6 @@ public class ResearchEngine {
                                                             }
                                                         }
                                                         break;
-                                                    case PlayerFight.oldVerticalVelocityKey: // Attention, added after initial algorithm (2)
-                                                    case PlayerFight.verticalVelocityKey: // Attention, added after initial algorithm (3)
-                                                    case PlayerFight.horizontalVelocityKey: // Attention, added after initial algorithm (3)
-                                                        if (subStatisticsLength >= 3) {
-                                                            boolean horizontal = statistic.equals(PlayerFight.horizontalVelocityKey);
-                                                            boolean winnerCalculation = true; // Use to judge which data collection to fulfill
-
-                                                            for (String velocityKeys : new String[]{subStatistics[1], subStatistics[2]}) { // Get both winner & loser velocity data to prevent code repetition
-                                                                String[] velocityStatistics = velocityKeys.split(PlayerFight.velocityMajorSeparator); // Split the data into their respective collections
-
-                                                                if (velocityStatistics.length > 0) { // Check if the split resulted in valid collections
-                                                                    for (String velocityStatistic : velocityStatistics) {
-                                                                        String[] velocitySubStatistics = velocityStatistic.split(PlayerFight.velocityMinorSeparator); // Split the collections into their respective variables
-                                                                        int velocitySubStatisticsSize = velocitySubStatistics.length;
-
-                                                                        if (velocitySubStatisticsSize > 0) { // Check if the split resulted in valid variables
-                                                                            List<Float> floats = new ArrayList<>(velocitySubStatisticsSize);
-
-                                                                            for (String velocitySubStatistic : velocitySubStatistics) {
-                                                                                Float validFloat = AlgebraUtils.returnValidFloat(velocitySubStatistic);
-
-                                                                                if (validFloat != null) { // Check if the variable is a valid decimal
-                                                                                    floats.add(validFloat);
-                                                                                }
-                                                                            }
-
-                                                                            if (winnerCalculation) {
-                                                                                Map<Integer, Float[]> winnerMap = horizontal ? winnerHorizontalVelocity : winnerVerticalVelocity;
-                                                                                winnerMap.put(winnerMap.size(), floats.toArray(new Float[0]));
-                                                                            } else {
-                                                                                Map<Integer, Float[]> loserMap = horizontal ? loserHorizontalVelocity : loserVerticalVelocity;
-                                                                                loserMap.put(loserMap.size(), floats.toArray(new Float[0]));
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                                winnerCalculation = false;
-                                                            }
-                                                        }
-                                                        break;
                                                     case PlayerFight.maxHitComboKey:
                                                         if (subStatisticsLength >= 3) {
                                                             argument1 = subStatistics[1];
@@ -1140,11 +1015,9 @@ public class ResearchEngine {
                                                 && (winnerHitTimeAverage > 0L && loserHitTimeAverage > 0L)
                                                 && (winnerReachAverage > 0.0 && loserReachAverage > 0.0)) {
                                             PlayerOpponent winnerOpponent = new PlayerOpponent(winner, winnerHits, winnerMaxHitCombo, winnerCPS, duration,
-                                                    winnerReachAverage, winnerHitTimeAverage, winnerYawRateAverage, winnerPitchRateAverage,
-                                                    new PlayerVelocity(winnerVerticalVelocity, winnerHorizontalVelocity));
+                                                    winnerReachAverage, winnerHitTimeAverage, winnerYawRateAverage, winnerPitchRateAverage);
                                             PlayerOpponent loserOpponent = new PlayerOpponent(loser, loserHits, loserMaxHitCombo, loserCPS, duration,
-                                                    loserReachAverage, loserHitTimeAverage, loserYawRateAverage, loserPitchRateAverage,
-                                                    new PlayerVelocity(loserVerticalVelocity, loserHorizontalVelocity));
+                                                    loserReachAverage, loserHitTimeAverage, loserYawRateAverage, loserPitchRateAverage);
                                             new PlayerFight(winnerOpponent, loserOpponent, judged);
                                         }
                                     }
@@ -1259,7 +1132,7 @@ public class ResearchEngine {
                         for (String reason : entry.getValue()) {
                             List<PlayerReport> reports = playerProfile.getPunishmentHistory().getReports();
 
-                            if (reports.size() > 0) {
+                            if (!reports.isEmpty()) {
                                 for (PlayerReport playerReport : reports) {
                                     if (playerReport.getReason().equals(reason)
                                             && playerReport.dismiss(name, null, false)) {
@@ -1300,7 +1173,7 @@ public class ResearchEngine {
             date = currentDate;
             Collection<PlayerProfile> playerProfiles = ResearchEngine.playerProfiles.values();
 
-            if (playerProfiles.size() > 0) {
+            if (!playerProfiles.isEmpty()) {
                 for (PlayerProfile playerProfile : playerProfiles) {
                     for (ViolationHistory violationHistory : playerProfile.getViolationHistory()) {
                         violationHistory.clearDays();
@@ -1372,13 +1245,15 @@ public class ResearchEngine {
 
             // Separator (Find False Positives)
 
+            double duration = 1000.0; // 1 second
+
             for (Enums.HackType hackType : hackTypes) {
                 hackType.getCheck().clearMaxCancelledViolations();
 
                 for (DataType dataType : dataTypes) {
                     if (hackType.getCheck().isEnabled(dataType, null, null)) {
                         boolean bedrock = dataType == DataType.Bedrock;
-                        Map<Long, Collection<PlayerViolation>> orderedMap = new TreeMap<>();
+                        Map<Integer, FalsePositiveDetection.TimePeriod> averages = new HashMap<>();
 
                         for (PlayerProfile playerProfile : playerProfiles) {
                             if (bedrock == playerProfile.isBedrockPlayer()
@@ -1386,18 +1261,19 @@ public class ResearchEngine {
                                     && playerProfile.getEvidence().getCount() <= (Check.hackerCheckAmount - 1)) {
                                 List<PlayerViolation> list = playerProfile.getViolationHistory(hackType).getViolationsList();
 
+                                // Organize the violations into time period pieces
                                 if (!list.isEmpty()) {
                                     for (PlayerViolation playerViolation : list) {
                                         if (playerViolation.isDetectionEnabled()) {
-                                            long time = playerViolation.getTime();
-                                            Collection<PlayerViolation> playerViolations = orderedMap.get(time);
+                                            int timeMoment = AlgebraUtils.integerFloor(playerViolation.getTime() / duration);
+                                            FalsePositiveDetection.TimePeriod timePeriod = averages.get(timeMoment);
 
-                                            if (playerViolations == null) {
-                                                playerViolations = new ArrayList<>();
-                                                playerViolations.add(playerViolation);
-                                                orderedMap.put(time, playerViolations);
+                                            if (timePeriod == null) {
+                                                timePeriod = new FalsePositiveDetection.TimePeriod();
+                                                timePeriod.add(playerViolation);
+                                                averages.put(timeMoment, timePeriod);
                                             } else {
-                                                playerViolations.add(playerViolation);
+                                                timePeriod.add(playerViolation);
                                             }
                                         }
                                     }
@@ -1405,30 +1281,11 @@ public class ResearchEngine {
                             }
                         }
 
-                        if (!orderedMap.isEmpty()) {
-                            double duration = 1000.0; // 1 second
-                            Map<Integer, FalsePositiveDetection.TimePeriod> averages = new HashMap<>();
-
-                            for (Collection<PlayerViolation> playerViolations : orderedMap.values()) {
-                                for (PlayerViolation playerViolation : playerViolations) {
-                                    int timeMoment = AlgebraUtils.integerFloor(playerViolation.getTime() / duration);
-                                    FalsePositiveDetection.TimePeriod timePeriod = averages.get(timeMoment);
-
-                                    if (timePeriod == null) {
-                                        timePeriod = new FalsePositiveDetection.TimePeriod(duration);
-                                        timePeriod.add(playerViolation);
-                                        averages.put(timeMoment, timePeriod);
-                                    } else {
-                                        timePeriod.add(playerViolation);
-                                    }
-                                }
-                            }
-
-                            // Separator
-
+                        if (!averages.isEmpty()) {
                             HashMap<Integer, Double> violationAverages = new HashMap<>();
                             HashMap<Integer, Integer> violationAveragesDivisor = new HashMap<>();
 
+                            // Add the average violations for the executed detections based on each time period
                             for (FalsePositiveDetection.TimePeriod timePeriod : averages.values()) {
                                 for (Map.Entry<Integer, Double> individualViolationAverages : timePeriod.getAverageViolations().entrySet()) {
                                     int hash = individualViolationAverages.getKey();
@@ -1443,7 +1300,7 @@ public class ResearchEngine {
                                 }
                             }
 
-                            // Separator
+                            // Calculate the average violations for each executed detection and multiply to get the bigger image
                             duration = Check.violationCycleSeconds / duration;
 
                             for (Map.Entry<Integer, Double> entry : violationAverages.entrySet()) {
@@ -1505,25 +1362,8 @@ public class ResearchEngine {
     }
 
     private static void updateCombatCache() {
-        globalVelocityOccurrences.clear();
-        double
-                averageCPS = 0.0, averageCPSCount = 0.0, minCPS = 0.0, maxCPS = 0.0,
-
-                averageReach = 0.0, averageReachCount = 0.0, minReach = 0.0, maxReach = 0.0,
-
-                averageHitTime = 0.0, averageHitTimeCount = 0.0, minHitTime = 0.0, maxHitTime = 0.0,
-
-                averageYawRate = 0.0, averageYawRateCount = 0.0, minYawRate = 0.0, maxYawRate = 0.0,
-
-                averagePitchRate = 0.0, averagePitchRateCount = 0.0, minPitchRate = 0.0, maxPitchRate = 0.0,
-
-                averageHitCombo = 0.0, averageHitComboCount = 0.0, minHitCombo = 0.0, maxHitCombo = 0.0,
-
-                averageDuration = 0.0, averageDurationCount = 0.0, minDuration = 0.0, maxDuration = 0.0,
-
-                averageHitRatio = 0.0, averageHitRatioCount = 0.0, minHitRatio = 0.0, maxHitRatio = 0.0,
-
-                averageWinsToLosses = 0.0, averageWinsToLossesCount = 0.0, minWinsToLosses = 0.0, maxWinsToLosses = 0.0;
+        double averageCPS = 0.0, averageCPSCount = 0.0,
+                averageReach = 0.0, averageReachCount = 0.0;
 
         if (hackerFreePlayerProfiles.size() >= profileRequirement) {
             List<PlayerFight> playerFights = new LinkedList<>();
@@ -1538,75 +1378,12 @@ public class ResearchEngine {
                     if (list != null) {
                         averageCPSCount += 1.0;
                         averageCPS += list[0];
-                        maxCPS += list[1];
-                        minCPS += list[2];
                     }
                     list = combat.getReachAverages();
 
                     if (list != null) {
                         averageReachCount += 1.0;
                         averageReach += list[0];
-                        maxReach += list[1];
-                        minReach += list[2];
-                    }
-                    list = combat.getHitTimeAverages();
-
-                    if (list != null) {
-                        averageHitTimeCount += 1.0;
-                        averageHitTime += list[0];
-                        maxHitTime += list[1];
-                        minHitTime += list[2];
-                    }
-                    list = combat.getYawRateAverages();
-
-                    if (list != null) {
-                        averageYawRateCount += 1.0;
-                        averageYawRate += list[0];
-                        maxYawRate += list[1];
-                        minYawRate += list[2];
-                    }
-                    list = combat.getPitchRateAverages();
-
-                    if (list != null) {
-                        averagePitchRateCount += 1.0;
-                        averagePitchRate += list[0];
-                        maxPitchRate += list[1];
-                        minPitchRate += list[2];
-                    }
-                    list = combat.getHitComboAverages();
-
-                    if (list != null) {
-                        averageHitComboCount += 1.0;
-                        averageHitCombo += list[0];
-                        maxHitCombo += list[1];
-                        minHitCombo += list[2];
-                    }
-                    list = combat.getDurationAverages();
-
-                    if (list != null) {
-                        averageDurationCount += 1.0;
-                        averageDuration += list[0];
-                        maxDuration += list[1];
-                        minDuration += list[2];
-                    }
-                    list = combat.getHitRatioAverages();
-
-                    if (list != null) {
-                        averageHitRatioCount += 1.0;
-                        averageHitRatio += list[0];
-                        maxHitRatio += list[1];
-                        minHitRatio += list[2];
-                    }
-
-                    // Separator
-
-                    double individual = combat.getAverageWinLossRatio();
-
-                    if (individual != -1.0) {
-                        averageWinsToLossesCount += 1.0;
-                        averageWinsToLosses += individual;
-                        maxWinsToLosses = Math.max(maxWinsToLosses, individual);
-                        minWinsToLosses = Math.min(minWinsToLosses, individual);
                     }
                 }
             }
@@ -1615,96 +1392,16 @@ public class ResearchEngine {
 
             // Separator
 
-            if (averageCPSCount > 0.0) {
-                cps[0] = minCPS / averageCPSCount;
-                cps[1] = averageCPS / averageCPSCount;
-                cps[2] = maxCPS / averageCPSCount;
+            if (averageCPSCount > 0.0 && averageCPS <= CombatUtils.maxLegitimateCPS) {
+                ResearchEngine.averageCPS = averageCPS / averageCPSCount;
             } else {
-                cps[0] = -1.0;
-                cps[1] = -1.0;
-                cps[2] = -1.0;
+                ResearchEngine.averageCPS = -1.0;
             }
 
-            if (averageReachCount > 0.0) {
-                reach[0] = minReach / averageReachCount;
-                reach[1] = averageReach / averageReachCount;
-                reach[2] = maxReach / averageReachCount;
+            if (averageReachCount > 0.0 && averageCPS <= CombatUtils.maxHitDistance) {
+                ResearchEngine.averageReach = averageReach / averageReachCount;
             } else {
-                reach[0] = -1.0;
-                reach[1] = -1.0;
-                reach[2] = -1.0;
-            }
-
-            if (averageHitTimeCount > 0.0) {
-                hitTime[0] = minHitTime / averageHitTimeCount;
-                hitTime[1] = averageHitTime / averageHitTimeCount;
-                hitTime[2] = maxHitTime / averageHitTimeCount;
-            } else {
-                hitTime[0] = -1.0;
-                hitTime[1] = -1.0;
-                hitTime[2] = -1.0;
-            }
-
-            if (averageYawRateCount > 0.0) {
-                yawRate[0] = minYawRate / averageYawRateCount;
-                yawRate[1] = averageYawRate / averageYawRateCount;
-                yawRate[2] = maxYawRate / averageYawRateCount;
-            } else {
-                yawRate[0] = -1.0;
-                yawRate[1] = -1.0;
-                yawRate[2] = -1.0;
-            }
-
-            if (averagePitchRateCount > 0.0) {
-                pitchRate[0] = minPitchRate / averagePitchRateCount;
-                pitchRate[1] = averagePitchRate / averagePitchRateCount;
-                pitchRate[2] = maxPitchRate / averagePitchRateCount;
-            } else {
-                pitchRate[0] = -1.0;
-                pitchRate[1] = -1.0;
-                pitchRate[2] = -1.0;
-            }
-
-            if (averageHitComboCount > 0.0) {
-                hitCombo[0] = minHitCombo / averageHitComboCount;
-                hitCombo[1] = averageHitCombo / averageHitComboCount;
-                hitCombo[2] = maxHitCombo / averageHitComboCount;
-            } else {
-                hitCombo[0] = -1.0;
-                hitCombo[1] = -1.0;
-                hitCombo[2] = -1.0;
-            }
-
-            if (averageDurationCount > 0.0) {
-                duration[0] = minDuration / averageDurationCount;
-                duration[1] = averageDuration / averageDurationCount;
-                duration[2] = maxDuration / averageDurationCount;
-            } else {
-                duration[0] = -1.0;
-                duration[1] = -1.0;
-                duration[2] = -1.0;
-            }
-
-            if (averageHitRatioCount > 0.0) {
-                hitRatio[0] = minHitRatio / averageHitRatioCount;
-                hitRatio[1] = averageHitRatio / averageHitRatioCount;
-                hitRatio[2] = maxHitRatio / averageHitRatioCount;
-            } else {
-                hitRatio[0] = -1.0;
-                hitRatio[1] = -1.0;
-                hitRatio[2] = -1.0;
-            }
-
-            // Separator
-
-            if (averageWinsToLossesCount > 0.0) {
-                winsToLosses[0] = minWinsToLosses;
-                winsToLosses[1] = averageWinsToLosses / averageWinsToLossesCount;
-                winsToLosses[2] = maxWinsToLosses;
-            } else {
-                winsToLosses[0] = -1.0;
-                winsToLosses[1] = -1.0;
-                winsToLosses[2] = -1.0;
+                ResearchEngine.averageReach = -1.0;
             }
         } else {
             ResearchEngine.playerFights.clear();

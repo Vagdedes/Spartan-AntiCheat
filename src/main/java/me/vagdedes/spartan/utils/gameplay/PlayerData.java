@@ -17,6 +17,7 @@ import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import me.vagdedes.spartan.utils.server.MaterialUtils;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Boat;
@@ -135,6 +136,15 @@ public class PlayerData {
 
             // Separator
 
+            GameMode current = p.getGameMode();
+
+            if (current == GameMode.CREATIVE
+                    || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8) && current == GameMode.SPECTATOR) {
+                p.getHandlers().add(Handlers.HandlerType.GameMode, 60);
+            }
+
+            // Separator
+
             Entity entity = n.getVehicle();
             p.setVehicle(entity);
 
@@ -152,7 +162,7 @@ public class PlayerData {
         List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
 
         if (!fights.isEmpty()) {
-            double globalAverageReach = ResearchEngine.getReach()[1];
+            double globalAverageReach = ResearchEngine.getAverageReach();
 
             for (PlayerFight fight : fights) {
                 PlayerOpponent[] opponents = fight.getOpponent(p);

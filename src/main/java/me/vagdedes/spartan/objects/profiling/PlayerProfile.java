@@ -464,23 +464,33 @@ public class PlayerProfile {
         return !evidence.has(PlayerEvidence.EvidenceType.Suspected).isEmpty();
     }
 
-    public boolean isSuspectedOrHacker() {
-        return isSuspected() || isHacker();
-    }
-
-    public boolean isSuspectedOrHacker(Enums.HackType[] hackTypes) {
+    public boolean isSuspected(Enums.HackType[] hackTypes) {
         Collection<Enums.HackType> evidence = this.evidence.has(PlayerEvidence.EvidenceType.Suspected);
 
-        for (Enums.HackType hackType : hackTypes) {
-            if (evidence.contains(hackType)) {
-                return true;
+        if (!evidence.isEmpty()) {
+            for (Enums.HackType hackType : hackTypes) {
+                if (evidence.contains(hackType)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
+    public boolean isSuspected(Enums.HackType hackType) {
+        return evidence.has(PlayerEvidence.EvidenceType.Suspected).contains(hackType);
+    }
+
+    public boolean isSuspectedOrHacker() {
+        return isSuspected() || isHacker();
+    }
+
+    public boolean isSuspectedOrHacker(Enums.HackType[] hackTypes) {
+        return isHacker() || isSuspected(hackTypes);
+    }
+
     public boolean isSuspectedOrHacker(Enums.HackType hackType) {
-        return evidence.has(PlayerEvidence.EvidenceType.Suspected).contains(hackType) || isHacker();
+        return isHacker() || isSuspected(hackType);
     }
 
     // Separator

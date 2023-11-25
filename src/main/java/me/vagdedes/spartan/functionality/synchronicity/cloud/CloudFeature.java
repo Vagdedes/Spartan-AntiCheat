@@ -3,12 +3,14 @@ package me.vagdedes.spartan.functionality.synchronicity.cloud;
 import me.vagdedes.spartan.Register;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.functionality.important.Permissions;
 import me.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import me.vagdedes.spartan.functionality.synchronicity.AutoUpdater;
 import me.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Piracy;
+import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.java.RequestUtils;
@@ -57,7 +59,7 @@ public class CloudFeature {
     public static final String separator = ">@#&!%<;=";
 
     static {
-         clear(false);
+        clear(false);
 
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
@@ -447,6 +449,29 @@ public class CloudFeature {
                     runnable.run();
                 } else {
                     SpartanBukkit.connectionThread.execute(runnable);
+                }
+            }
+
+            // Separator
+            if (independent && validIDs) {
+                String[][] announcements = CloudConnections.getStaffAnnouncements();
+
+                if (announcements.length > 0) {
+                    List<SpartanPlayer> players = Permissions.getStaff();
+
+                    if (!players.isEmpty()) {
+                        for (String[] announcement : announcements) {
+                            for (SpartanPlayer p : players) {
+                                if (AwarenessNotifications.canSend(
+                                        p.getUniqueId(),
+                                        "staff-announcement-" + announcement[0],
+                                        Integer.parseInt(announcement[2])
+                                )) {
+                                    p.sendMessage(AwarenessNotifications.getNotification(announcement[1]));
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } else {

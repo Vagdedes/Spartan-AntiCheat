@@ -21,6 +21,10 @@ public class WaterElevator {
         }
     }
 
+    static void remove(SpartanPlayer p) {
+        p.getHandlers().remove(Handlers.HandlerType.WaterElevator);
+    }
+
     private static boolean isSoulSand(SpartanLocation location, int blockY, int minY) {
         SpartanLocation locationModified = location.clone();
 

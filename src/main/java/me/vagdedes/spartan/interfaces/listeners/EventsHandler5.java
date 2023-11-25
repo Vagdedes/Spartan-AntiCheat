@@ -6,8 +6,7 @@ import me.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import me.vagdedes.spartan.functionality.protections.Building;
 import me.vagdedes.spartan.functionality.protections.Explosion;
 import me.vagdedes.spartan.handlers.identifiers.complex.predictable.BouncingBlocks;
-import me.vagdedes.spartan.handlers.identifiers.simple.BlockBreak;
-import me.vagdedes.spartan.handlers.identifiers.simple.BlockPlace;
+import me.vagdedes.spartan.handlers.identifiers.simple.SensitiveBlockBreak;
 import me.vagdedes.spartan.objects.replicates.SpartanBlock;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
@@ -129,7 +128,7 @@ public class EventsHandler5 implements Listener {
         }
 
         // Protections
-        BlockBreak.run(p, cancelled, b);
+        SensitiveBlockBreak.run(p, cancelled, b);
 
         // Detections
         p.getExecutor(Enums.HackType.MorePackets).handle(e);
@@ -156,7 +155,6 @@ public class EventsHandler5 implements Listener {
 
         // Protections
         Building.runPlace(p, b, blockFace, cancelled);
-        BlockPlace.runPlace(p, cancelled);
         BouncingBlocks.judge(p, p.getLocation());
 
         if (!cancelled) {

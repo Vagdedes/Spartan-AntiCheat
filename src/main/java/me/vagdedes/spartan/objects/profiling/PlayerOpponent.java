@@ -13,7 +13,6 @@ public class PlayerOpponent {
     private double reachAverage;
     private final long start;
     private float yawRateAverage, pitchRateAverage;
-    private final PlayerVelocity playerVelocity;
 
     // Separator
 
@@ -24,7 +23,7 @@ public class PlayerOpponent {
     // Separator
 
     public PlayerOpponent(String name, int hits, int maxHitCombo, int maxCPS, long duration, double reachAverage, long hitAverage,
-                          float yawRateAverage, float pitchRateAverage, PlayerVelocity playerVelocity) { // Used for logs
+                          float yawRateAverage, float pitchRateAverage) { // Used for logs
         this.name = name;
         this.hits = hits;
         this.maxCPS = maxCPS;
@@ -41,8 +40,6 @@ public class PlayerOpponent {
         this.previousLastHit = 0L;
         this.start = 0L;
         this.duration = duration;
-
-        this.playerVelocity = playerVelocity;
     }
 
     PlayerOpponent(String name) { // Used for memory
@@ -64,8 +61,6 @@ public class PlayerOpponent {
         this.previousLastHit = time;
         this.start = time;
         this.duration = 0L;
-
-        this.playerVelocity = new PlayerVelocity(false);
     }
 
     public PlayerOpponent(SpartanPlayer player) { // Used for memory
@@ -88,10 +83,6 @@ public class PlayerOpponent {
 
     public long getDuration() {
         return duration;
-    }
-
-    public PlayerVelocity getVelocity() {
-        return playerVelocity;
     }
 
     public int getMaxHitCombo() {
@@ -142,7 +133,6 @@ public class PlayerOpponent {
             this.lastDamage = System.currentTimeMillis();
             this.hitCombo = 0;
         }
-        this.playerVelocity.allowCollection(p, entities);
     }
 
     public void updateData(SpartanPlayer p, int entities) {
@@ -195,7 +185,6 @@ public class PlayerOpponent {
 
     void end(long time) {
         this.duration = time - start;
-        this.playerVelocity.reset(null, false);
     }
 
 }

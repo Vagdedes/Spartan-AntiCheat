@@ -8,10 +8,28 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Handlers {
 
+    public enum HandlerFamily {
+        Velocity, Constant, Environment, Motion, Part
+    }
+
     public enum HandlerType {
-        BlockBreak, BlockPlace, BouncingBlocks, Teleport, Damage, FishingHook,
-        GameMode, Floor, Piston, Vehicle, Velocity, WaterElevator, Building, Explosion,
-        ElytraUse, ElytraWear, Trident, ExtremeCollision
+        SensitiveBlockBreak(HandlerFamily.Environment), TowerBuilding(HandlerFamily.Environment),
+
+        Velocity(HandlerFamily.Velocity), BouncingBlocks(HandlerFamily.Velocity), Floor(HandlerFamily.Velocity),
+        Piston(HandlerFamily.Velocity), WaterElevator(HandlerFamily.Velocity), Damage(HandlerFamily.Velocity),
+        Explosion(HandlerFamily.Velocity), ExtremeCollision(HandlerFamily.Velocity),
+
+        ElytraWear(HandlerFamily.Part), Vehicle(HandlerFamily.Part), GameMode(HandlerFamily.Part), Teleport(HandlerFamily.Part),
+
+        ElytraUse(HandlerFamily.Motion), Trident(HandlerFamily.Motion);
+
+        // Separator
+
+        public final HandlerFamily family;
+
+        HandlerType(HandlerFamily family) {
+            this.family = family;
+        }
     }
 
     private final Map<HandlerType, Long> enable, disable;
@@ -64,6 +82,14 @@ public class Handlers {
         disable.put(handlerType, Math.max(disable.getOrDefault(handlerType, 0L), System.currentTimeMillis() + (ticks * 50L)));
     }
 
+    public void removeMany(HandlerFamily handlerFamily) {
+        for (HandlerType handlerType : HandlerType.values()) {
+            if (handlerType.family == handlerFamily) {
+                remove(handlerType);
+            }
+        }
+    }
+
     public void remove(HandlerType handlerType) {
         enable.remove(handlerType);
         child.remove(handlerType);
@@ -74,7 +100,7 @@ public class Handlers {
 
         if (map != null
                 && map.remove(key) != null
-                && map.size() == 0) {
+                && map.isEmpty()) {
             child.remove(handlerType);
         }
     }

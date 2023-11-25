@@ -20,8 +20,8 @@ public class Piston {
     public static void run(Block block, List<Block> blocks) {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-        if (players.size() > 0) {
-            boolean runBlocks = blocks.size() > 0;
+        if (!players.isEmpty()) {
+            boolean runBlocks = !blocks.isEmpty();
             World world = block.getWorld();
 
             for (SpartanPlayer p : players) {

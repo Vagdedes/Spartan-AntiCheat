@@ -10,7 +10,6 @@ import me.vagdedes.spartan.checks.movement.speed.Speed;
 import me.vagdedes.spartan.functionality.chat.ChatProtection;
 import me.vagdedes.spartan.functionality.moderation.Debug;
 import me.vagdedes.spartan.functionality.protections.ServerFlying;
-import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
 import me.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
 import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.tracking.CombatProcessing;
@@ -18,9 +17,6 @@ import me.vagdedes.spartan.handlers.tracking.MovementProcessing;
 import me.vagdedes.spartan.objects.data.Buffer;
 import me.vagdedes.spartan.objects.data.Cooldowns;
 import me.vagdedes.spartan.objects.data.Decimals;
-import me.vagdedes.spartan.objects.profiling.PlayerFight;
-import me.vagdedes.spartan.objects.profiling.PlayerOpponent;
-import me.vagdedes.spartan.objects.profiling.PlayerVelocity;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
@@ -36,7 +32,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -45,7 +40,6 @@ import org.bukkit.event.server.ServerCommandEvent;
 
 public class EventsHandler7 implements Listener {
 
-    private static final long damageTime = PlayerVelocity.maximumCollection * 50L;
     private static boolean heavyMovementChecks = false;
     public static final Enums.HackType[] handledChecks = new Enums.HackType[]{
             NoFall.check,
@@ -177,21 +171,6 @@ public class EventsHandler7 implements Listener {
         // Handlers
         Cooldowns cooldowns = p.getCooldowns();
         CombatProcessing.runMove(p, to, cooldowns, decimals);
-
-        // Objects
-        PlayerFight playerFight = p.getProfile().getCombat().getCurrentFightByCache();
-
-        if (playerFight != null) {
-            PlayerOpponent[] playerOpponents = playerFight.getOpponent(p);
-            PlayerOpponent self = playerOpponents[0];
-
-            if (self.getLastDamage() <= damageTime && playerOpponents[1].getLastHit() <= damageTime) { // Make sure the player collecting the velocity from was recently hit
-                self.getVelocity().collect(p, to);
-            }
-        } else if (Damage.getLastReceived(p) <= damageTime
-                && p.getLastDamageCause().getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-            p.getExecutor(Enums.HackType.Velocity).handle(to);
-        }
 
         // Detections
         if (checkPlayer && !crawling) {

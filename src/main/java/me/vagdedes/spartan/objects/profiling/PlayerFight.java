@@ -8,8 +8,6 @@ import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 
-import java.util.Collection;
-
 public class PlayerFight extends PlayerProfile {
 
     // Properties
@@ -26,8 +24,6 @@ public class PlayerFight extends PlayerProfile {
             hitTimeAverageKey = "hit-time-average",
             reachAverageKey = "reach-average",
             maxCpsKey = "max-cps",
-            verticalVelocityKey = "vertical-velocity",
-            horizontalVelocityKey = "horizontal-velocity",
             yawRateKey = "yaw-rate",
             pitchRateKey = "pitch-rate",
             maxHitComboKey = "max-hit-combo";
@@ -40,11 +36,6 @@ public class PlayerFight extends PlayerProfile {
             introductorySeparator = ":",
             majorSeparator = ", ";
     public static final String[] intermediateSeparator = new String[]{"|", "\\|"}; // One for logs, the other for the code
-
-    // Custom Separators
-    public static final String
-            velocityMajorSeparator = "/1",
-            velocityMinorSeparator = "/2";
 
     // Separator
 
@@ -210,88 +201,25 @@ public class PlayerFight extends PlayerProfile {
     }
 
     private void store() {
-        StringBuilder winnerVerticalVelocity = new StringBuilder(),
-                winnerHorizontalVelocity = new StringBuilder();
-        StringBuilder loserVerticalVelocity = new StringBuilder(),
-                loserHorizontalVelocity = new StringBuilder();
-
         // Memory
         for (PlayerOpponent opponent : new PlayerOpponent[]{opponent1, opponent2}) {
-            boolean isWinner = opponent == this.winner;
             String name = opponent.getName();
             ResearchEngine.getPlayerProfile(name).getCombat().removeFight(this, true);
-
-            // Separator
-            for (int i = 0; i < 2; i++) {
-                boolean horizontal = i == 1;
-                Collection<Float[]> collections = horizontal ?
-                        opponent.getVelocity().getHorizontalStorage() :
-                        opponent.getVelocity().getVerticalStorage();
-                int loopSize = collections.size();
-
-                if (loopSize > 0) {
-                    int loopCounter = 0;
-
-                    for (Float[] collection : collections) {
-                        loopCounter++;
-                        StringBuilder velocity = new StringBuilder();
-                        int collectionSize = collection.length;
-                        int collectionCounter = 0;
-
-                        for (float value : collection) {
-                            collectionCounter++;
-
-                            if (collectionCounter == collectionSize) { // Do not add separator when inside loop is about to naturally break
-                                velocity.append(value);
-                            } else {
-                                velocity.append(value).append(velocityMinorSeparator);
-                            }
-                        }
-
-                        // Add data to the correct opponent
-                        StringBuilder stringBuilder = isWinner ?
-                                (horizontal ? winnerHorizontalVelocity : winnerVerticalVelocity) :
-                                (horizontal ? loserHorizontalVelocity : loserVerticalVelocity);
-
-                        if (loopCounter == loopSize) {
-                            stringBuilder.append(velocity);
-                        } else {
-                            stringBuilder.append(velocity).append(velocityMajorSeparator);
-                        }
-                    }
-                } else { // Append both string builders for potential debug purposes where the algorithm wasn't accessed
-                    if (horizontal) {
-                        if (isWinner) {
-                            winnerHorizontalVelocity.append(" ");
-                        } else {
-                            loserHorizontalVelocity.append(" ");
-                        }
-                    } else {
-                        if (isWinner) {
-                            winnerVerticalVelocity.append(" ");
-                        } else {
-                            loserVerticalVelocity.append(" ");
-                        }
-                    }
-                }
-            }
         }
 
         // Logs (DO NOT FORGET THE MAJOR KEYS)
-        String intermediateSeparator = PlayerFight.intermediateSeparator[0];
-        String basic = Config.getConstruct() + winner.getName() + finderKey + loser.getName();
-        String advanced = introductorySeparator + " "
-                + outcomeKey + intermediateSeparator + (judged ? outcome[0] : outcome[1]) + majorSeparator
-                + durationKey + intermediateSeparator + getDuration() + majorSeparator
-                + hitsKey + intermediateSeparator + winner.getHits() + intermediateSeparator + loser.getHits() + majorSeparator
-                + hitTimeAverageKey + intermediateSeparator + winner.getHitTimeAverage() + intermediateSeparator + loser.getHitTimeAverage() + majorSeparator
-                + reachAverageKey + intermediateSeparator + winner.getReachAverage() + intermediateSeparator + loser.getReachAverage() + majorSeparator
-                + maxCpsKey + intermediateSeparator + winner.getMaxCPS() + intermediateSeparator + loser.getMaxCPS() + majorSeparator
-                + yawRateKey + intermediateSeparator + winner.getYawRateAverage() + intermediateSeparator + loser.getYawRateAverage() + majorSeparator
-                + pitchRateKey + intermediateSeparator + winner.getPitchRateAverage() + intermediateSeparator + loser.getPitchRateAverage() + majorSeparator
-                + verticalVelocityKey + intermediateSeparator + winnerVerticalVelocity + intermediateSeparator + loserVerticalVelocity + majorSeparator
-                + horizontalVelocityKey + intermediateSeparator + winnerHorizontalVelocity + intermediateSeparator + loserHorizontalVelocity
-                + maxHitComboKey + intermediateSeparator + winner.getMaxHitCombo() + intermediateSeparator + loser.getMaxHitCombo();
+        String intermediateSeparator = PlayerFight.intermediateSeparator[0],
+                basic = Config.getConstruct() + winner.getName() + finderKey + loser.getName(),
+                advanced = introductorySeparator + " "
+                        + outcomeKey + intermediateSeparator + (judged ? outcome[0] : outcome[1]) + majorSeparator
+                        + durationKey + intermediateSeparator + getDuration() + majorSeparator
+                        + hitsKey + intermediateSeparator + winner.getHits() + intermediateSeparator + loser.getHits() + majorSeparator
+                        + hitTimeAverageKey + intermediateSeparator + winner.getHitTimeAverage() + intermediateSeparator + loser.getHitTimeAverage() + majorSeparator
+                        + reachAverageKey + intermediateSeparator + winner.getReachAverage() + intermediateSeparator + loser.getReachAverage() + majorSeparator
+                        + maxCpsKey + intermediateSeparator + winner.getMaxCPS() + intermediateSeparator + loser.getMaxCPS() + majorSeparator
+                        + yawRateKey + intermediateSeparator + winner.getYawRateAverage() + intermediateSeparator + loser.getYawRateAverage() + majorSeparator
+                        + pitchRateKey + intermediateSeparator + winner.getPitchRateAverage() + intermediateSeparator + loser.getPitchRateAverage() + majorSeparator
+                        + maxHitComboKey + intermediateSeparator + winner.getMaxHitCombo() + intermediateSeparator + loser.getMaxHitCombo();
 
         // Storage
         AntiCheatLogs.silentLogInfo(basic + advanced);

@@ -1,6 +1,5 @@
 package me.vagdedes.spartan.interfaces.listeners;
 
-import me.vagdedes.spartan.checks.combat.VelocityCheck;
 import me.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import me.vagdedes.spartan.compatibility.manual.abilities.mcmmo.mcMMO;
 import me.vagdedes.spartan.compatibility.manual.building.MythicMobs;
@@ -22,7 +21,6 @@ import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.objects.data.Cooldowns;
 import me.vagdedes.spartan.objects.profiling.PlayerFight;
 import me.vagdedes.spartan.objects.profiling.PlayerOpponent;
-import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
@@ -120,7 +118,6 @@ public class EventsHandler6 implements Listener {
             player.calculateClickData(null, true);
 
             double distance = utility[2];
-            SpartanLocation loc = player.getLocation();
 
             if (!cancelled) {
                 SpartanPlayer targetPlayer = entity instanceof Player ? SpartanBukkit.getPlayer((Player) entity) : null;
@@ -166,6 +163,7 @@ public class EventsHandler6 implements Listener {
                 }
 
                 // Detections
+                player.getExecutor(Enums.HackType.Velocity).handle(event);
                 player.getExecutor(Enums.HackType.NoSwing).handle(event);
                 player.getExecutor(Enums.HackType.Criticals).handle(new Object[]{damage, entity});
                 runDealDamageChild(player, cooldowns, entity, utility, false);
@@ -219,8 +217,7 @@ public class EventsHandler6 implements Listener {
                 if (p.getViolations(Enums.HackType.KillAura).process()
                         || p.getViolations(Enums.HackType.Criticals).process()
                         || p.getViolations(Enums.HackType.NoSwing).process()
-                        || p.getViolations(Enums.HackType.FastClicks).process()
-                        || p.getViolations(Enums.HackType.Velocity).process()) {
+                        || p.getViolations(Enums.HackType.FastClicks).process()) {
                     e.setCancelled(true);
                 }
             }
@@ -249,11 +246,6 @@ public class EventsHandler6 implements Listener {
 
                 if (MythicMobs.is(damager) || ItemsAdder.is(damager)) {
                     Damage.addCooldown(p, 40);
-                }
-
-                // Detections
-                if (!(damager instanceof Player)) {
-                    p.getExecutor(Enums.HackType.Velocity).handle(VelocityCheck.REFRESH);
                 }
             } else {
                 Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? entity.getPassengers().toArray(new Entity[0]) : new Entity[]{entity.getPassenger()};

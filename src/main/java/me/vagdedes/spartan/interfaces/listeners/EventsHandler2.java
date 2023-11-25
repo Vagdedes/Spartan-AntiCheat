@@ -3,20 +3,17 @@ package me.vagdedes.spartan.interfaces.listeners;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.functionality.protections.Teleport;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
-import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.FishingHook;
-import me.vagdedes.spartan.handlers.identifiers.simple.GameModeProtection;
 import me.vagdedes.spartan.handlers.stability.Cache;
 import me.vagdedes.spartan.handlers.stability.Moderation;
 import me.vagdedes.spartan.handlers.tracking.CombatProcessing;
-import me.vagdedes.spartan.objects.data.Handlers;
 import me.vagdedes.spartan.objects.replicates.SpartanLocation;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.utils.gameplay.MoveUtils;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -107,17 +104,36 @@ public class EventsHandler2 implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Fish(PlayerFishEvent e) {
         Entity entity = e.getCaught();
+        SpartanPlayer t = SpartanBukkit.getPlayer(e.getPlayer());
 
+        if (t == null) {
+            return;
+        }
         if (entity instanceof Player) {
             SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
-            SpartanPlayer t = SpartanBukkit.getPlayer(e.getPlayer());
 
-            if (p == null || t == null) {
+            if (p == null) {
                 return;
             }
+
             // Protections
-            p.getHandlers().disable(Handlers.HandlerType.Velocity, 10);
-            FishingHook.run(p, t);
+            Damage.addCooldown(p, p.equals(t) ? Damage.selfHitKey : Damage.fishingHookKey, 30);
+        } else if (entity instanceof LivingEntity) {
+            Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? entity.getPassengers().toArray(new Entity[0]) : new Entity[]{entity.getPassenger()};
+
+            if (passengers.length > 0) {
+                for (Entity passenger : passengers) {
+                    if (passenger instanceof Player) {
+                        Player n = (Player) passenger;
+                        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+                        if (p != null) {
+                            // Protections
+                            Damage.addCooldown(p, p.equals(t) ? Damage.selfHitKey : Damage.fishingHookKey, 30);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -129,24 +145,9 @@ public class EventsHandler2 implements Listener {
         if (p == null) {
             return;
         }
-        if (e.isCancelled()) {
-            p.setGameMode(n.getGameMode());
-        } else {
-            GameMode old = p.getGameMode();
-
-            if (old != null) {
-                // Protections
-                if (old != GameMode.SURVIVAL && old != GameMode.ADVENTURE) {
-                    GameMode current = e.getNewGameMode();
-
-                    if (current == GameMode.CREATIVE || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8) && current == GameMode.SPECTATOR) {
-                        GameModeProtection.run(p);
-                    }
-                }
-
-                // Objects
-                p.setGameMode(e.getNewGameMode());
-            }
+        if (!e.isCancelled()) {
+            // Objects
+            p.setGameMode(e.getNewGameMode());
         }
 
         // Objects

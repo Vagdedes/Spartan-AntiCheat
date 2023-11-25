@@ -42,6 +42,7 @@ import me.vagdedes.spartan.gui.SpartanMenu;
 import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.connection.Latency;
 import me.vagdedes.spartan.handlers.connection.Piracy;
+import me.vagdedes.spartan.handlers.identifiers.complex.predictable.Liquid;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.ElytraUse;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Velocity;
@@ -974,16 +975,16 @@ public class SpartanPlayer {
         return isFlying() || flyingTime >= System.currentTimeMillis();
     }
 
-    public long getLastLiquidTime() {
-        return lastLiquidTime;
-    }
-
     public boolean wasInLiquids() {
-        return System.currentTimeMillis() - lastLiquidTime <= 750L;
+        return System.currentTimeMillis() - lastLiquidTime <= 755L;
     }
 
     public synchronized void setLastLiquidTime() {
         lastLiquidTime = System.currentTimeMillis();
+    }
+
+    public synchronized void removeLastLiquidTime() {
+        lastLiquidTime = 0L;
     }
 
     public synchronized void setFlying(boolean flying, boolean allowFlight) {
@@ -994,9 +995,6 @@ public class SpartanPlayer {
         this.allowFlight = allowFlight;
 
         if (flying) {
-            if (gameMode == GameMode.CREATIVE) {
-                handlers.add(Handlers.HandlerType.GameMode, 20);
-            }
             this.flyingTime = System.currentTimeMillis() + 3_000L;
         }
     }
@@ -1079,8 +1077,7 @@ public class SpartanPlayer {
         if (!TestServer.isIdentified() && this.isOnGround()
 
                 && (Config.settings.getBoolean("Performance.use_vanilla_ground_method")
-                || Compatibility.CompatibilityType.MajorIncompatibility.isFunctional()
-                || LagLeniencies.hasInconsistencies(this, "tps"))) {
+                || Compatibility.CompatibilityType.MajorIncompatibility.isFunctional())) {
             this.onGroundCustom = true; // Vanilla On-Ground When Necessary
         } else if (PlayerData.isOnGround(this, this.getLocation(), 0.0)) {
             this.onGroundCustom = true; // Server Current Location
@@ -1363,6 +1360,7 @@ public class SpartanPlayer {
         setSneaking(false);
         setSwimming(false, 0);
         setGliding(false, false);
+        removeLastLiquidTime();
     }
 
     public boolean teleport(SpartanLocation location) {
@@ -1778,6 +1776,10 @@ public class SpartanPlayer {
         return isOnGroundCustom() != isOnGround();
     }
 
+    public boolean isAnyOnGround() {
+        return isOnGroundCustom() || isOnGround();
+    }
+
     // Jumping
 
     public boolean isJumping(double d) {
@@ -1795,6 +1797,12 @@ public class SpartanPlayer {
 
     public synchronized void setLastJump() {
         this.lastJump = System.currentTimeMillis();
+        removeLastLiquidTime();
+        handlers.removeMany(Handlers.HandlerFamily.Velocity);
+
+        if (!Liquid.isLocation(this, this.getLocation())) {
+            this.removeLastLiquidTime();
+        }
     }
 
     public boolean isFalling(double dy) {
@@ -2143,6 +2151,15 @@ public class SpartanPlayer {
 
     public synchronized void setSprinting(int ticks) {
         this.sprintingTime = System.currentTimeMillis() + (ticks * 50L);
+
+        if (ticks > 0) {
+            removeLastLiquidTime();
+            handlers.removeMany(Handlers.HandlerFamily.Velocity);
+
+            if (!Liquid.isLocation(this, this.getLocation())) {
+                this.removeLastLiquidTime();
+            }
+        }
     }
 
     public boolean isWalking() {
@@ -2151,6 +2168,15 @@ public class SpartanPlayer {
 
     public synchronized void setWalking(int ticks) {
         this.walking = System.currentTimeMillis() + (ticks * 50L);
+
+        if (ticks > 0) {
+            removeLastLiquidTime();
+            handlers.removeMany(Handlers.HandlerFamily.Velocity);
+
+            if (!Liquid.isLocation(this, this.getLocation())) {
+                this.removeLastLiquidTime();
+            }
+        }
     }
 
     public boolean isWalkJumping() {
@@ -2159,6 +2185,15 @@ public class SpartanPlayer {
 
     public synchronized void setJumpWalking(int ticks) {
         this.jumpWalking = System.currentTimeMillis() + (ticks * 50L);
+
+        if (ticks > 0) {
+            removeLastLiquidTime();
+            handlers.removeMany(Handlers.HandlerFamily.Velocity);
+
+            if (!Liquid.isLocation(this, this.getLocation())) {
+                this.removeLastLiquidTime();
+            }
+        }
     }
 
     public boolean isSprintJumping() {
@@ -2167,6 +2202,15 @@ public class SpartanPlayer {
 
     public synchronized void setJumpSprinting(int ticks) {
         this.jumpSprinting = System.currentTimeMillis() + (ticks * 50L);
+
+        if (ticks > 0) {
+            removeLastLiquidTime();
+            handlers.removeMany(Handlers.HandlerFamily.Velocity);
+
+            if (!Liquid.isLocation(this, this.getLocation())) {
+                this.removeLastLiquidTime();
+            }
+        }
     }
 
     public boolean isCrawling() {

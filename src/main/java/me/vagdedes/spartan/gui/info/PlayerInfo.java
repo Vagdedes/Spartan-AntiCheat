@@ -15,6 +15,7 @@ import me.vagdedes.spartan.handlers.connection.IDs;
 import me.vagdedes.spartan.handlers.stability.ResearchEngine;
 import me.vagdedes.spartan.objects.profiling.MiningHistory;
 import me.vagdedes.spartan.objects.profiling.PlayerProfile;
+import me.vagdedes.spartan.objects.profiling.PunishmentHistory;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.objects.system.CancelCause;
 import me.vagdedes.spartan.objects.system.Check;
@@ -94,10 +95,16 @@ public class PlayerInfo extends InventoryMenu {
                     new ItemStack(Material.QUARTZ_BLOCK);
             add("§2Mining History", lore, item, 16);
 
+            PunishmentHistory punishmentHistory = playerProfile.getPunishmentHistory();
+            lore.clear();
+            lore.add("");
+            lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
+            lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
+            lore.add("§7Bans§8:§c " + punishmentHistory.getBans());
+            lore.add("§7Reports§8:§c " + punishmentHistory.getReports().size());
+
             if (isOnline) {
                 int violations = target.getViolationCount();
-                lore.clear();
-                lore.add("");
                 lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
                 lore.add("§7Overall Violations§8:§a " + violations);
@@ -110,8 +117,6 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§cRight click to delete the player's stored data.");
                 add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             } else {
-                lore.clear();
-                lore.add("");
                 lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + playerProfile.getDataType() + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK), information);
 

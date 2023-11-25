@@ -203,7 +203,6 @@ public class EventsHandler3 implements Listener {
                         p.getExecutor(Enums.HackType.GhostHand).handle(e);
                         Liquid.runInteract(p, action);
                     }
-                    Building.runInteract(p, b, action);
                 }
             } else {
                 // Detections
