@@ -11,23 +11,27 @@ public class GroundCollision {
                 && player.isOnGround()
                 && player.getTicksOnAir() == 0
                 && player.getTicksOnGround() > 0
-                && player.getNmsVerticalDistance() == 0.0
                 && player.getVehicle() == null) {
-            Handlers handlers = player.getHandlers();
+            Double nmsVerticalDistance = player.getNmsVerticalDistance();
 
-            if (player.getNmsHorizontalDistance() <= MoveUtils.highPrecision
-                    && player.getCustomDistance() <= MoveUtils.lowPrecision) {
-                handlers.removeMany(Handlers.HandlerFamily.Motion);
-                handlers.removeMany(Handlers.HandlerFamily.Velocity);
-            } else {
-                handlers.remove(Handlers.HandlerType.BouncingBlocks);
-                handlers.remove(Handlers.HandlerType.WaterElevator);
-            }
+            if (nmsVerticalDistance != null && nmsVerticalDistance == 0.0) {
+                Double nmsHorizontalDistance = player.getNmsHorizontalDistance();
+                Handlers handlers = player.getHandlers();
 
-            if (!Liquid.isLocation(player, player.getLocation())) {
-                player.removeLastLiquidTime();
+                if (nmsHorizontalDistance != null && nmsHorizontalDistance <= MoveUtils.highPrecision
+                        && player.getCustomDistance() <= MoveUtils.lowPrecision) {
+                    handlers.removeMany(Handlers.HandlerFamily.Motion);
+                    handlers.removeMany(Handlers.HandlerFamily.Velocity);
+                } else {
+                    handlers.remove(Handlers.HandlerType.BouncingBlocks);
+                    handlers.remove(Handlers.HandlerType.WaterElevator);
+                }
+
+                if (!Liquid.isLocation(player, player.getLocation())) {
+                    player.removeLastLiquidTime();
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }

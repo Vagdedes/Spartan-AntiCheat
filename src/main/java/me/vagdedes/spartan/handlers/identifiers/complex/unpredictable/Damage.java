@@ -45,7 +45,7 @@ public class Damage {
             result = true;
         } else if (p.getVehicle() == null && !p.getHandlers().has(Handlers.HandlerType.ElytraUse)) {
             if (Damage.hasCooldown(p)
-                    || Math.max(p.getCustomDistance(), p.getNmsDistance()) >= 0.18
+                    || Math.max(p.getCustomDistance(), p.getValueOrDefault(p.getNmsDistance(), 0.0)) >= 0.18
                     || !p.getHandlers().has(Handlers.HandlerType.Damage, selfHitKey + "=" + e.getUniqueId())
                     || p.getItemInHand().containsEnchantment(Enchantment.ARROW_KNOCKBACK)) {
                 result = true;
@@ -219,9 +219,9 @@ public class Damage {
                     || PlayerData.hasLevitationEffect(p)) {
                 return true;
             }
-            double vertical = p.getNmsVerticalDistance();
+            Double vertical = p.getNmsVerticalDistance();
 
-            if (p.isFalling(vertical) || p.isJumping(vertical)) {
+            if (vertical != null && (p.isFalling(vertical) || p.isJumping(vertical))) {
                 return true;
             }
             int limit = NoHitDelay.hasCooldown(p) ? (blocksOffGround * 2) : blocksOffGround;

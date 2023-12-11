@@ -27,8 +27,10 @@ public class ServerFlying {
                 && !LagLeniencies.hasInconsistencies(p, "tps")
                 && !Attributes.has(p, Attributes.GENERIC_FLYING_SPEED)) {
             double limit = (p.getFlySpeed() * 10.0) + 1.0;
+            Double nmsDistance = p.getNmsDistance();
 
-            if (p.getCustomDistance() >= limit || p.getNmsDistance() >= limit) {
+            if (nmsDistance != null && nmsDistance >= limit
+                    || p.getCustomDistance() >= limit) {
                 p.safeTeleport(DetectionLocation.get(p, true));
             }
         }

@@ -105,9 +105,11 @@ public class MoveUtils {
                 from = p.getFromLocation();
 
         if (from != null) {
-            p.setCustomDistance(to.distance(from));
-            p.setCustomHorizontalDistance(AlgebraUtils.getHorizontalDistance(to, from));
-            p.setCustomVerticalDistance(to.getY() - from.getY());
+            p.setCustomDistance(
+                    to.distance(from),
+                    AlgebraUtils.getHorizontalDistance(to, from),
+                    to.getY() - from.getY()
+            );
         }
         p.setFromLocation(to); // Always last
         return to;

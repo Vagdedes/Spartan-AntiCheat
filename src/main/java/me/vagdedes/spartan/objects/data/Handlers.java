@@ -14,6 +14,7 @@ public class Handlers {
 
     public enum HandlerType {
         SensitiveBlockBreak(HandlerFamily.Environment), TowerBuilding(HandlerFamily.Environment),
+        BridgeBuilding(HandlerFamily.Environment),
 
         Velocity(HandlerFamily.Velocity), BouncingBlocks(HandlerFamily.Velocity), Floor(HandlerFamily.Velocity),
         Piston(HandlerFamily.Velocity), WaterElevator(HandlerFamily.Velocity), Damage(HandlerFamily.Velocity),

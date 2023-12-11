@@ -223,7 +223,7 @@ public class Clicks {
     }
 
     private LinkedList<SingleClickData> getRecentData() {
-        if (storage.size() > 0) {
+        if (!storage.isEmpty()) {
             LinkedList<SingleClickData> data = new LinkedList<>();
             long time = System.currentTimeMillis();
             boolean add = false;

@@ -69,13 +69,14 @@ public class Floodgate {
     }
 
     public static boolean isBedrockPlayer(UUID uuid, String name) {
-        return Compatibility.CompatibilityType.Floodgate.isFunctional() ?
-                FloodgateApi.getInstance().isFloodgatePlayer(uuid)
-                : name != null && isBedrockPlayer(name);
+        return Compatibility.CompatibilityType.Floodgate.isFunctional()
+                && FloodgateApi.getInstance().isFloodgatePlayer(uuid)
+
+                || name != null && isBedrockPlayer(name);
     }
 
     public static boolean isBedrockPlayer(String name) {
         String prefix = Config.settings.getString("Important.bedrock_player_prefix");
-        return prefix.length() > 0 && name.startsWith(prefix);
+        return !prefix.isEmpty() && name.startsWith(prefix);
     }
 }

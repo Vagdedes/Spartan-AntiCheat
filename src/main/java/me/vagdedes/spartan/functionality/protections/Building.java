@@ -32,8 +32,7 @@ public class Building {
                     || blockFace == BlockFace.SELF)
                     && (p.getViolations(Enums.HackType.FastPlace).hasLevel()
                     || p.getBuffer().start("building=protection=attempts", 20) >= 5)) {
-                handlers.remove(Handlers.HandlerType.TowerBuilding);
-                handlers.add(Handlers.HandlerType.TowerBuilding, "cooldown", 10);
+                handlers.disable(Handlers.HandlerType.TowerBuilding, 10);
 
                 if (TestServer.isIdentified()
                         || Config.settings.getBoolean("Protections.disallowed_building")) {
@@ -45,25 +44,35 @@ public class Building {
             }
         }
 
-        if (!handlers.has(Handlers.HandlerType.TowerBuilding, "cooldown")
-                && (!p.isOnGround() || !p.isOnGroundCustom() || p.getTicksOnAir() > 0)) {
-            SpartanLocation loc = p.getLocation();
-            SpartanLocation bloc = b.getLocation();
+        SpartanLocation loc = p.getLocation(), bloc = b.getLocation();
 
-            if (Math.abs(loc.getBlockX() - bloc.getBlockX()) <= 1
-                    && bloc.getBlockY() <= loc.getBlockY()
-                    && Math.abs(loc.getBlockZ() - bloc.getBlockZ()) <= 1) {
-                if (cancelled) {
-                    if (TestServer.isIdentified()
-                            || Config.settings.getBoolean("Protections.disallowed_building")) {
-                        handlers.add(Handlers.HandlerType.TowerBuilding, 10);
+        if (Math.abs(loc.getBlockX() - bloc.getBlockX()) <= 1
+                && bloc.getBlockY() <= loc.getBlockY()
+                && Math.abs(loc.getBlockZ() - bloc.getBlockZ()) <= 1) {
+            boolean offGround = !p.isOnGround() || !p.isOnGroundCustom() || p.getTicksOnAir() > 0;
+
+            if (cancelled) {
+                if (TestServer.isIdentified()
+                        || Config.settings.getBoolean("Protections.disallowed_building")) {
+                    handlers.add(
+                            offGround ? Handlers.HandlerType.TowerBuilding : Handlers.HandlerType.BridgeBuilding,
+                            10
+                    );
+
+                    if (offGround) {
                         teleport(p, loc);
-                    } else {
-                        handlers.add(Handlers.HandlerType.TowerBuilding, 40);
                     }
                 } else {
-                    handlers.add(Handlers.HandlerType.TowerBuilding, 40);
+                    handlers.add(
+                            offGround ? Handlers.HandlerType.TowerBuilding : Handlers.HandlerType.BridgeBuilding,
+                            10
+                    );
                 }
+            } else {
+                handlers.add(
+                        offGround ? Handlers.HandlerType.TowerBuilding : Handlers.HandlerType.BridgeBuilding,
+                        10
+                );
             }
         }
     }

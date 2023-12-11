@@ -1,7 +1,9 @@
 package me.vagdedes.spartan.objects.data;
 
 import me.vagdedes.spartan.functionality.important.MultiVersion;
+import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.utils.java.StringUtils;
+import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,7 +29,8 @@ public class Cooldowns {
 
     public int get(String name) {
         Long object = hm.get(name);
-        return object == null ? 0 : (int) Math.max(0, (object - System.currentTimeMillis()) / 50L);
+        return object == null ? 0 :
+                Math.max(AlgebraUtils.integerCeil((object - System.currentTimeMillis()) / TPS.tickTimeDecimal), 0);
     }
 
     public boolean canDo(String name) {
@@ -65,7 +68,7 @@ public class Cooldowns {
     }
 
     public void clear(String[] ignore) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
@@ -78,7 +81,7 @@ public class Cooldowns {
     }
 
     public void clear(String s) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {

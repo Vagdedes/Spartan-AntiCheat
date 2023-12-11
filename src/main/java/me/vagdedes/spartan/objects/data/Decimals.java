@@ -170,7 +170,7 @@ public class Decimals {
     public void remove(String name, double value) {
         List<Double> list = hm.get(name);
 
-        if (list != null && list.remove(value) && list.size() == 0) {
+        if (list != null && list.remove(value) && list.isEmpty()) {
             hm.remove(name);
         }
     }
@@ -186,7 +186,7 @@ public class Decimals {
     }
 
     public void clear(String[] ignore) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
@@ -199,7 +199,7 @@ public class Decimals {
     }
 
     public void clear(String s) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {

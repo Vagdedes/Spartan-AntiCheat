@@ -20,7 +20,8 @@ public class MovementProcessing {
             walkingMaxSpeed = 0.2203;
     private static final int ticks = 2;
 
-    public static void run(SpartanPlayer p, SpartanLocation to, Entity vehicle, Buffer buffer, Cooldowns cooldowns, Decimals decimals,
+    public static void run(SpartanPlayer p, SpartanLocation to, Entity vehicle,
+                           Buffer buffer, Cooldowns cooldowns, Decimals decimals,
                            double dis, double hor, double ver, double box, boolean groundGliding) {
         if (p.canRunChecks(false)) {
             // Damage
@@ -32,10 +33,7 @@ public class MovementProcessing {
             }
 
             // NMS Distance Caching
-            p.setNmsDistance(dis);
-            p.setNmsHorizontalDistance(hor);
-            p.setNmsVerticalDistance(ver);
-            p.setNmsBox(box);
+            p.setNmsDistance(dis, hor, ver, box);
 
             if (!groundGliding) {
                 // Jump/Fall Identifier

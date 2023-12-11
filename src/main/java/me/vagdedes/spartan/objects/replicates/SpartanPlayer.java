@@ -161,10 +161,10 @@ public class SpartanPlayer {
 
     // Custom
 
-    private double
+    private Map<Long, Double>
             nmsDistance, nmsHorizontalDistance, nmsVerticalDistance,
-            nmsBox, oldNmsBox,
-            oldNmsDistance, oldNmsHorizontalDistance, oldNmsVerticalDistance,
+            nmsBox;
+    private double
             customDistance, customHorizontalDistance, customVerticalDistance;
     private long
             lastOffSprint,
@@ -274,9 +274,7 @@ public class SpartanPlayer {
                     if (clearCache) {
                         Cache.clearCheckCache(p);
                     }
-                    synchronized (nearbyEntitiesLock) {
-                        p.nearbyEntities = null;
-                    }
+                    p.nearbyEntitiesDistance = 0;
                     p.locationTime = 0L;
                     p.runCheck.clear();
                     p.runCheckAccountLag.clear();
@@ -385,7 +383,7 @@ public class SpartanPlayer {
         this.eventTo = this.location;
         this.eventFrom = this.location;
         this.locationTime = 0L;
-        this.nearbyEntities = null;
+        this.nearbyEntities = new CopyOnWriteArrayList<>();
         this.nearbyEntitiesDistance = 0;
         this.runChecks = new boolean[]{false, false};
         this.runCheck = new LinkedHashMap<>(hackTypes.length);
@@ -425,14 +423,10 @@ public class SpartanPlayer {
         this.customDistance = 0.0;
         this.customHorizontalDistance = 0.0;
         this.customVerticalDistance = 0.0;
-        this.nmsDistance = 0.0;
-        this.oldNmsDistance = 0.0;
-        this.nmsHorizontalDistance = 0.0;
-        this.oldNmsHorizontalDistance = 0.0;
-        this.nmsVerticalDistance = 0.0;
-        this.oldNmsVerticalDistance = 0.0;
-        this.nmsBox = 0.0;
-        this.oldNmsBox = 0.0;
+        this.nmsDistance = new LinkedHashMap<>();
+        this.nmsHorizontalDistance = new LinkedHashMap<>();
+        this.nmsVerticalDistance = new LinkedHashMap<>();
+        this.nmsBox = new LinkedHashMap<>();
         this.lastFall = 0L;
         this.lastOffSprint = 0L;
         this.lastJump = 0L;
@@ -1030,12 +1024,16 @@ public class SpartanPlayer {
     }
 
     public boolean isMoving(boolean head) {
-        return (!head || getLastHeadMovement() <= 2_500L)
-                && (getNmsDistance() >= 0.1
-                || getCustomDistance() >= 0.1
-                || isSprinting() || isWalking()
-                || isSprintJumping() || isWalkJumping()
-                || Damage.getLastReceived(this) <= 100L);
+        if (!head || getLastHeadMovement() <= 2_500L) {
+            Double nmsDistance = getNmsDistance();
+            return nmsDistance != null && nmsDistance >= 0.1
+                    || getCustomDistance() >= 0.1
+                    || isSprinting() || isWalking()
+                    || isSprintJumping() || isWalkJumping()
+                    || Damage.getLastReceived(this) <= 100L;
+        } else {
+            return false;
+        }
     }
 
     public boolean isVanillaSprinting() {
@@ -1560,10 +1558,7 @@ public class SpartanPlayer {
         x = Math.max(Math.max(x, y), z);
 
         synchronized (nearbyEntitiesLock) {
-            boolean isNull = nearbyEntities == null;
-
-            // Caching
-            if (isNull || x > nearbyEntitiesDistance) {
+            if (x > nearbyEntitiesDistance) {
                 Player p = this.getPlayer();
 
                 if (p != null) {
@@ -1573,19 +1568,15 @@ public class SpartanPlayer {
                         double finalX = x;
 
                         SpartanBukkit.runTask(this, () -> {
-                            if (isNull) {
-                                nearbyEntities = new CopyOnWriteArrayList<>(p.getNearbyEntities(finalX, finalX, finalX));
-                            } else {
-                                nearbyEntities.clear();
-                                nearbyEntities.addAll(p.getNearbyEntities(finalX, finalX, finalX));
-                            }
+                            nearbyEntities.clear();
+                            nearbyEntities.addAll(p.getNearbyEntities(finalX, finalX, finalX));
                         });
-                        return nearbyEntities;
                     } else {
                         SpartanLocation loc = this.getLocation();
-                        List<Entity> entities = new ArrayList<>(worldEntities.getOrDefault(loc.getWorld(), new ArrayList<>(0)));
+                        List<Entity> entities = worldEntities.get(loc.getWorld());
 
-                        if (!entities.isEmpty()) {
+                        if (entities != null && !entities.isEmpty()) {
+                            entities = new ArrayList<>(entities);
                             Entity vehicle = this.getVehicle();
 
                             if (vehicle != null) {
@@ -1602,17 +1593,14 @@ public class SpartanPlayer {
                                     iterator.remove();
                                 }
                             }
-                        }
-                        if (isNull) {
-                            return nearbyEntities = new CopyOnWriteArrayList<>(entities);
-                        } else {
                             nearbyEntities.clear();
                             nearbyEntities.addAll(entities);
-                            return nearbyEntities;
+                        } else {
+                            nearbyEntities.clear();
                         }
                     }
                 } else {
-                    return new ArrayList<>(0);
+                    nearbyEntities.clear();
                 }
             } else if (!nearbyEntities.isEmpty()) {
                 SpartanLocation loc = this.getLocation();
@@ -1634,10 +1622,8 @@ public class SpartanPlayer {
                 }
                 nearbyEntities.clear();
                 nearbyEntities.addAll(entities);
-                return nearbyEntities;
-            } else {
-                return nearbyEntities;
             }
+            return nearbyEntities;
         }
     }
 
@@ -1958,76 +1944,86 @@ public class SpartanPlayer {
         return customDistance;
     }
 
-    public synchronized void setCustomDistance(double distance) {
+    public synchronized void setCustomDistance(double distance,
+                                               double horizontal,
+                                               double vertical) {
         this.customDistance = distance;
+        this.customHorizontalDistance = horizontal;
+        this.customVerticalDistance = vertical;
     }
 
     public double getCustomHorizontalDistance() {
         return customHorizontalDistance;
     }
 
-    public synchronized void setCustomHorizontalDistance(double distance) {
-        this.customHorizontalDistance = distance;
-    }
-
     public double getCustomVerticalDistance() {
         return customVerticalDistance;
     }
 
-    public synchronized void setCustomVerticalDistance(double distance) {
-        this.customVerticalDistance = distance;
+    private void clearNmsDistance(Map<Long, Double> map) {
+        int size = map.size();
+
+        if (size > 2) {
+            size = size - 2;
+            Iterator<Double> iterator = map.values().iterator();
+
+            while (size > 0 && iterator.hasNext()) {
+                size--;
+                iterator.next();
+                iterator.remove();
+            }
+        }
     }
 
-    public double getNmsDistance() {
-        return nmsDistance;
+    public synchronized void setNmsDistance(double distance,
+                                            double horizontal,
+                                            double vertical,
+                                            double box) {
+        long tick = TPS.getTick(this);
+        this.nmsDistance.put(tick, distance);
+        this.nmsHorizontalDistance.put(tick, horizontal);
+        this.nmsVerticalDistance.put(tick, vertical);
+        this.nmsBox.put(tick, box);
+        clearNmsDistance(nmsDistance);
+        clearNmsDistance(nmsHorizontalDistance);
+        clearNmsDistance(nmsVerticalDistance);
+        clearNmsDistance(nmsBox);
     }
 
-    public synchronized void setNmsDistance(double distance) {
-        this.oldNmsDistance = this.nmsDistance;
-        this.nmsDistance = distance;
+    public double getValueOrDefault(Double value, double def) {
+        return value == null ? def : value;
     }
 
-    public double getOld_NmsDistance() {
-        return oldNmsDistance;
+    public synchronized Double getNmsDistance() {
+        return nmsDistance.get(TPS.getTick(this));
     }
 
-    public double getNmsHorizontalDistance() {
-        return nmsHorizontalDistance;
+    public synchronized Double getOld_NmsDistance() {
+        return nmsDistance.get(TPS.getTick(this) - 1L);
     }
 
-    public double getOld_NmsHorizontalDistance() {
-        return oldNmsHorizontalDistance;
+    public synchronized Double getNmsHorizontalDistance() {
+        return nmsHorizontalDistance.get(TPS.getTick(this));
     }
 
-    public synchronized void setNmsHorizontalDistance(double distance) {
-        this.oldNmsHorizontalDistance = this.nmsHorizontalDistance;
-        this.nmsHorizontalDistance = distance;
+    public synchronized Double getOld_NmsHorizontalDistance() {
+        return nmsHorizontalDistance.get(TPS.getTick(this) - 1L);
     }
 
-    public double getNmsVerticalDistance() {
-        return nmsVerticalDistance;
+    public synchronized Double getNmsVerticalDistance() {
+        return nmsVerticalDistance.get(TPS.getTick(this));
     }
 
-    public synchronized void setNmsVerticalDistance(double distance) {
-        this.oldNmsVerticalDistance = this.nmsVerticalDistance;
-        this.nmsVerticalDistance = distance;
+    public synchronized Double getOld_NmsVerticalDistance() {
+        return nmsVerticalDistance.get(TPS.getTick(this) - 1L);
     }
 
-    public double getOld_NmsVerticalDistance() {
-        return oldNmsVerticalDistance;
+    public synchronized Double getNmsBox() {
+        return nmsBox.get(TPS.getTick(this));
     }
 
-    public double getNmsBox() {
-        return nmsBox;
-    }
-
-    public synchronized void setNmsBox(double box) {
-        this.oldNmsBox = this.nmsBox;
-        this.nmsBox = box;
-    }
-
-    public double getOld_NmsBox() {
-        return oldNmsBox;
+    public synchronized Double getOld_NmsBox() {
+        return nmsBox.get(TPS.getTick(this) - 1L);
     }
 
     // Direction

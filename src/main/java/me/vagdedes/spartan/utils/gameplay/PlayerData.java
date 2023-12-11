@@ -81,8 +81,12 @@ public class PlayerData {
             } else {
                 p.setGroundTicks(0);
                 p.setAirTicks(p.getTicksOnAir() + 1);
+                Double nmsVerticalDistance = p.getNmsVerticalDistance(),
+                        old_NmsVerticalDistance = p.getOld_NmsVerticalDistance();
 
-                if (p.getNmsVerticalDistance() < p.getOld_NmsVerticalDistance()) {
+                if (nmsVerticalDistance != null
+                        && old_NmsVerticalDistance != null
+                        && nmsVerticalDistance < old_NmsVerticalDistance) {
                     p.setFallingTicks(p.getFallingTicks() + 1);
                 } else {
                     p.setFallingTicks(0);

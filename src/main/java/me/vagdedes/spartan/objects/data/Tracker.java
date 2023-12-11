@@ -61,7 +61,7 @@ public class Tracker {
     public void remove(String name, String content) {
         List<String> array = hm.get(name);
 
-        if (array != null && array.remove(content) && array.size() == 0) {
+        if (array != null && array.remove(content) && array.isEmpty()) {
             hm.remove(name);
         }
     }
@@ -95,7 +95,7 @@ public class Tracker {
     }
 
     public void clear(String[] ignore) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
@@ -108,7 +108,7 @@ public class Tracker {
     }
 
     public void clear(String s) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {

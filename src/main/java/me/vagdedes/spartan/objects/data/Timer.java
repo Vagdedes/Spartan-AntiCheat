@@ -57,7 +57,7 @@ public class Timer {
     }
 
     public void clear(String[] ignore) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
@@ -70,7 +70,7 @@ public class Timer {
     }
 
     public void clear(String s) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {

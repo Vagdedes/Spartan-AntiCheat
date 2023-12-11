@@ -91,7 +91,7 @@ public class EventsHandler6 implements Listener {
     // Separator
 
     public static void runDealDamage(Event event,
-            SpartanPlayer player,
+                                     SpartanPlayer player,
                                      Entity defaultEntity,
                                      double damage,
                                      EntityDamageEvent.DamageCause dmg,
@@ -208,8 +208,10 @@ public class EventsHandler6 implements Listener {
                     return;
                 }
                 double distance = MoveUtils.chunk / 2;
+                Double nmsDistance = p.getNmsDistance();
 
-                if (p.getNmsDistance() <= distance || p.getCustomDistance() <= distance) {
+                if (nmsDistance != null && nmsDistance <= distance
+                        || p.getCustomDistance() <= distance) {
                     // Detections
                     runDealDamage(e, p, e.getEntity(), e.getDamage(), e.getCause(), e.isCancelled());
                 }

@@ -3,12 +3,14 @@ package me.vagdedes.spartan.objects.data;
 import me.vagdedes.spartan.configuration.Config;
 import me.vagdedes.spartan.functionality.important.MultiVersion;
 import me.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
+import me.vagdedes.spartan.handlers.stability.TPS;
 import me.vagdedes.spartan.handlers.stability.TestServer;
 import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.utils.gameplay.CombatUtils;
 import me.vagdedes.spartan.utils.gameplay.PlayerData;
 import me.vagdedes.spartan.utils.java.StringUtils;
+import me.vagdedes.spartan.utils.java.math.AlgebraUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -141,11 +143,12 @@ public class Buffer {
             obj = new BufferChild(0, type);
             hm.put(name, obj);
         }
-        long ms = 0L; // Remove 5 milliseconds for inaccuracy
         boolean combat = type == BufferType.Combat;
 
-        if (combat ? (obj.ticks == ms) : (obj.ticks - 5L) <= (ms = System.currentTimeMillis())) {
-            obj.ticks = combat ? (CombatUtils.newPvPMechanicsEnabled() ? time * 2L : time) : (ms + (time * 50L));
+        if (this.getRemainingTicks(obj) == 0) {
+            obj.ticks = combat
+                    ? (CombatUtils.newPvPMechanicsEnabled() ? time * 2L : time)
+                    : (System.currentTimeMillis() + (time * 50L));
 
             if (obj.count >= 0) {
                 return obj.count = 1;
@@ -159,10 +162,13 @@ public class Buffer {
         return start(BufferType.Default, name, time);
     }
 
-    public int getRemainingTicks(String name) {
-        BufferChild object = hm.get(name);
+    private int getRemainingTicks(BufferChild object) {
         return object == null ? 0 : object.type == BufferType.Combat ? (int) object.ticks :
-                (int) Math.max((object.ticks - System.currentTimeMillis()) / 50L, 0);
+                Math.max(AlgebraUtils.integerCeil((object.ticks - System.currentTimeMillis()) / TPS.tickTimeDecimal), 0);
+    }
+
+    public int getRemainingTicks(String name) {
+        return this.getRemainingTicks(hm.get(name));
     }
 
     public void setRemainingTicks(String name, int ticks) {
@@ -188,7 +194,7 @@ public class Buffer {
     }
 
     public void clear(String[] ignore) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
@@ -201,7 +207,7 @@ public class Buffer {
     }
 
     public void clear(String s) {
-        if (hm.size() > 0) {
+        if (!hm.isEmpty()) {
             List<String> internal = new ArrayList<>();
 
             for (String name : hm.keySet()) {
