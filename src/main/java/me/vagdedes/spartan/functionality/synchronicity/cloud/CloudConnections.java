@@ -303,7 +303,7 @@ public class CloudConnections {
             StringBuilder value = new StringBuilder();
 
             for (PlayerProfile playerProfile : ResearchEngine.getHackers()) {
-                if (!playerProfile.wasStaff() && !playerProfile.wasTesting() && playerProfile.isHacker()) {
+                if (!playerProfile.wasStaff() && !playerProfile.wasTesting()) {
                     SpartanPlayer player = playerProfile.getSpartanPlayer();
                     boolean isNull = player == null;
 
@@ -474,7 +474,7 @@ public class CloudConnections {
                 if (!local && !Check.hasPunishCapabilities(hackType)) {
                     return "This check cannot punish players, therefore we cannot accept a report about it";
                 }
-                ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, ResearchEngine.DataType.Universal, true);
+                ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, ResearchEngine.DataType.Universal, ResearchEngine.getLegitimatePlayers());
 
                 if (violationHistory == null) {
                     violationHistory = new ViolationHistory(hackType, ResearchEngine.DataType.Universal, new HashMap<>(0), new ArrayList<>(0), 1);

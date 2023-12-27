@@ -91,7 +91,7 @@ public class AntiCheatLogs {
         if (console != null
                 && Config.settings.getBoolean("Logs.log_console")
                 && (!playerRelated
-                || DetectionNotifications.getPlayers(true).size() == 0)) {
+                || DetectionNotifications.getPlayers(true).isEmpty())) {
             Bukkit.getConsoleSender().sendMessage(console);
         }
         if (Config.settings.getBoolean("Logs.log_file")) {

@@ -79,7 +79,7 @@ public class BanManagement {
                         "primary key (id));");
 
                 try {
-                    ResultSet rs = Config.sql.query("SELECT * FROM " + table + " ORDER BY id DESC LIMIT " + ResearchEngine.maxSize + ";");
+                    ResultSet rs = Config.sql.query("SELECT * FROM " + table + " ORDER BY id DESC LIMIT " + ResearchEngine.maxCacheSize + ";");
 
                     if (rs != null) {
                         while (rs.next()) {
@@ -215,7 +215,7 @@ public class BanManagement {
         } else {
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (players.size() > 0) {
+            if (!players.isEmpty()) {
                 for (SpartanPlayer o : players) {
                     if (DetectionNotifications.hasPermission(o)) {
                         o.sendMessage(message);
@@ -257,8 +257,11 @@ public class BanManagement {
         // Separator
 
         String name = p.getName();
-        AntiCheatLogs.logInfo(Config.getConstruct() + name + BanManagement.message + reason);
 
+        if (name == null) {
+            return;
+        }
+        AntiCheatLogs.logInfo(Config.getConstruct() + name + BanManagement.message + reason);
         ResearchEngine.getPlayerProfile(name).getPunishmentHistory().increaseBans();
     }
 

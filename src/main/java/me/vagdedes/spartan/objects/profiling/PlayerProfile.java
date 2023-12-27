@@ -29,7 +29,9 @@ public class PlayerProfile {
     private final ViolationHistory[] violationHistory;
     private final MiningHistory[] miningHistory;
     private final PunishmentHistory punishmentHistory;
-    private final PlayerEvidence evidence;
+    private final PlayerEvidence
+            liveEvidence,
+            historicalEvidence;
     private boolean
             bedrockPlayer,
             bedrockPlayerCheck,
@@ -51,7 +53,8 @@ public class PlayerProfile {
         this.name = name;
         this.punishmentHistory = new PunishmentHistory();
         this.playerCombat = new PlayerCombat(isNull ? "" : name);
-        this.evidence = new PlayerEvidence();
+        this.liveEvidence = new PlayerEvidence();
+        this.historicalEvidence = new PlayerEvidence();
         this.skull = null;
         this.offlinePlayer = null;
 
@@ -96,7 +99,8 @@ public class PlayerProfile {
         this.offlinePlayer = player.getPlayer(); // Attention
         this.punishmentHistory = new PunishmentHistory();
         this.playerCombat = new PlayerCombat(name);
-        this.evidence = new PlayerEvidence();
+        this.liveEvidence = new PlayerEvidence();
+        this.historicalEvidence = new PlayerEvidence();
         this.skull = null;
         this.offlinePlayer = null;
         this.bedrockPlayer = player.isBedrockPlayer(); // Attention
@@ -113,10 +117,6 @@ public class PlayerProfile {
         for (Enums.MiningOre ore : Enums.MiningOre.values()) {
             this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0, 1);
         }
-    }
-
-    public PlayerProfile() {
-        this((String) null);
     }
 
     // Separator
@@ -252,8 +252,7 @@ public class PlayerProfile {
     // Separator
 
     public void calculateHistoricalEvidence() {
-        if (evidence.startCalculation(shouldCalculateEvidence())) {
-            ResearchEngine.DataType dataType = getDataType();
+        if (historicalEvidence.startCalculation(shouldCalculateEvidence())) {
             boolean hasStatistics = ViolationStatistics.has();
 
             for (ViolationHistory violationHistory : violationHistory) {
@@ -282,11 +281,11 @@ public class PlayerProfile {
 
                     if (!suspectedOres.isEmpty()) {
                         String separator = "§l/§r";
-                        evidence.add(hackType,
+                        historicalEvidence.add(hackType,
                                 StringUtils.toString(suspectedOres.keySet().toArray(new Enums.MiningOre[0]), separator)
                                         + ": " + StringUtils.toString(suspectedOres.values().toArray(new Integer[0]), separator));
                     } else {
-                        evidence.remove(hackType);
+                        historicalEvidence.remove(hackType);
                     }
                 } else if (hasStatistics) {
                     ViolationStatistics.GlobalWarmup globalStatistics = ViolationStatistics.get(hackType); // Already checked check & detections
@@ -343,37 +342,38 @@ public class PlayerProfile {
                                     timeAverage = (globalTimeAverage / globalCount) / (timeAverage / count); // Greater is less time between violations per day compared to others
 
                                     if (timeAverage > 1.5) {
-                                        evidence.add(hackType,
+                                        historicalEvidence.add(hackType,
                                                 "suspicion: " + AlgebraUtils.integerRound(thresholdSurpassing * 100.0) + "%"
                                                         + "§l/§r" + AlgebraUtils.integerRound(timeAverage * 100.0) + "%"
                                         );
                                     } else {
-                                        evidence.remove(hackType);
+                                        historicalEvidence.remove(hackType);
                                     }
                                 } else {
-                                    evidence.remove(hackType);
+                                    historicalEvidence.remove(hackType);
                                 }
                             } else {
-                                evidence.remove(hackType);
+                                historicalEvidence.remove(hackType);
                             }
                         } else {
-                            evidence.remove(hackType);
+                            historicalEvidence.remove(hackType);
                         }
                     } else {
-                        evidence.remove(hackType);
+                        historicalEvidence.remove(hackType);
                     }
                 } else {
-                    evidence.remove(hackType);
+                    historicalEvidence.remove(hackType);
                 }
             }
-            judgeEvidence();
+            historicalEvidence.judge(liveEvidence);
         }
     }
 
     public boolean calculateLiveEvidence(SpartanPlayer player, Enums.HackType hackType, ResearchEngine.DataType dataType) {
-        if (evidence.has(hackType)) {
+        if (historicalEvidence.has(hackType) || liveEvidence.has(hackType)) {
             return true;
         }
+
         if (hackType != Enums.HackType.XRay) {
             int violationCount = player.getViolations(hackType).getLevel() - hackType.getCheck().getCancelViolation();
 
@@ -383,10 +383,10 @@ public class PlayerProfile {
                         thresholdSurpassing = violationRatio / Check.analysisMultiplier;
 
                 if (thresholdSurpassing >= 1.0) {
-                    evidence.add(hackType,
+                    liveEvidence.add(hackType,
                             "suspicion: " + AlgebraUtils.integerRound(thresholdSurpassing * 100.0) + "%"
                     );
-                    judgeEvidence();
+                    liveEvidence.judge(historicalEvidence);
                     SpartanMenu.playerInfo.refresh(player.getName());
                     MainMenu.refresh();
                     return true;
@@ -397,37 +397,48 @@ public class PlayerProfile {
     }
 
     public void resetLiveEvidence(Enums.HackType hackType) {
-        if (!ViolationStatistics.has(hackType, 0)) {
-            evidence.clear();
-        }
+        liveEvidence.remove(hackType);
     }
 
     public PlayerEvidence getEvidence() {
-        return evidence;
+        return getEvidence(false);
     }
 
-    private void judgeEvidence() {
-        switch (evidence.judge()) {
-            case Suspected:
-                ResearchEngine.addSuspected(this);
-                break;
-            case Hacker:
-                ResearchEngine.addHacker(this);
-                break;
-            default:
-                ResearchEngine.addLegitimate(this);
-                break;
+    private PlayerEvidence getEvidence(boolean quick) {
+        if (quick) {
+            if (!historicalEvidence.has(PlayerEvidence.EvidenceType.Hacker).isEmpty()) {
+                return historicalEvidence;
+            } else if (!liveEvidence.has(PlayerEvidence.EvidenceType.Hacker).isEmpty()) {
+                return liveEvidence;
+            }
+        }
+        if (historicalEvidence.has()) {
+            PlayerEvidence evidence = new PlayerEvidence(historicalEvidence);
+
+            if (liveEvidence.has()) {
+                boolean judge = false;
+
+                for (Map.Entry<Enums.HackType, String> entry : liveEvidence.getKnowledgeEntry()) {
+                    if (evidence.addIfAbsent(entry.getKey(), entry.getValue())) {
+                        judge = true;
+                    }
+                }
+                if (judge) {
+                    evidence.judge(null);
+                }
+            }
+            return evidence;
+        } else {
+            return liveEvidence;
         }
     }
 
-    boolean shouldCalculateEvidence() {
-        return (staff || evidence.noCalculations() || wasRecentlyOnline()) && getUsefulLogs() > 0;
+    public PlayerEvidence getLiveEvidence() {
+        return liveEvidence;
     }
 
-    public boolean isTrustWorthy(boolean history) {
-        return !wasStaff()
-                && !wasTesting()
-                && (!history || punishmentHistory.getOverall(true) == 0);
+    boolean shouldCalculateEvidence() {
+        return (staff || historicalEvidence.noCalculations() || wasRecentlyOnline()) && getUsefulLogs() > 0;
     }
 
     // Separator
@@ -453,19 +464,19 @@ public class PlayerProfile {
     // Separator
 
     public boolean isLegitimate() {
-        return evidence.has(PlayerEvidence.EvidenceType.Legitimate) != null;
+        return getEvidence(true).has(PlayerEvidence.EvidenceType.Legitimate).isEmpty();
     }
 
     public boolean isHacker() {
-        return !evidence.has(PlayerEvidence.EvidenceType.Hacker).isEmpty();
+        return !getEvidence(true).has(PlayerEvidence.EvidenceType.Hacker).isEmpty();
     }
 
     public boolean isSuspected() {
-        return !evidence.has(PlayerEvidence.EvidenceType.Suspected).isEmpty();
+        return !getEvidence(true).has(PlayerEvidence.EvidenceType.Suspected).isEmpty();
     }
 
     public boolean isSuspected(Enums.HackType[] hackTypes) {
-        Collection<Enums.HackType> evidence = this.evidence.has(PlayerEvidence.EvidenceType.Suspected);
+        Collection<Enums.HackType> evidence = getEvidence().has(PlayerEvidence.EvidenceType.Suspected);
 
         if (!evidence.isEmpty()) {
             for (Enums.HackType hackType : hackTypes) {
@@ -478,7 +489,8 @@ public class PlayerProfile {
     }
 
     public boolean isSuspected(Enums.HackType hackType) {
-        return evidence.has(PlayerEvidence.EvidenceType.Suspected).contains(hackType);
+        return historicalEvidence.has(PlayerEvidence.EvidenceType.Suspected).contains(hackType)
+                || liveEvidence.has(PlayerEvidence.EvidenceType.Suspected).contains(hackType);
     }
 
     public boolean isSuspectedOrHacker() {

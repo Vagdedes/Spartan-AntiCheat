@@ -1,5 +1,6 @@
 package me.vagdedes.spartan.objects.profiling;
 
+import me.vagdedes.spartan.objects.system.Check;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
@@ -14,7 +15,7 @@ public class PlayerEvidence {
         EvidenceType() {
             switch (this.ordinal()) {
                 case 0:
-                    count = 3;
+                    count = Check.hackerCheckAmount;
                     break;
                 case 1:
                     count = 1;
@@ -36,6 +37,12 @@ public class PlayerEvidence {
         this.type = EvidenceType.Legitimate;
         this.evidence = new LinkedHashMap<>(Enums.HackType.values().length);
         this.noCalculations = true;
+    }
+
+    PlayerEvidence(PlayerEvidence evidence) {
+        this.type = evidence.type;
+        this.evidence = new LinkedHashMap<>(evidence.evidence);
+        this.noCalculations = evidence.noCalculations;
     }
 
     // Separator
@@ -75,6 +82,10 @@ public class PlayerEvidence {
 
     // Separator
 
+    public boolean has() {
+        return !evidence.isEmpty();
+    }
+
     Collection<Enums.HackType> has(EvidenceType type) {
         return this.type == type ? evidence.keySet() : new ArrayList<>(0);
     }
@@ -97,6 +108,10 @@ public class PlayerEvidence {
         this.evidence.put(hackType, reason);
     }
 
+    boolean addIfAbsent(Enums.HackType hackType, String reason) {
+        return this.evidence.putIfAbsent(hackType, reason) == null;
+    }
+
     public void remove(Enums.HackType hackType) {
         this.evidence.remove(hackType);
     }
@@ -106,15 +121,27 @@ public class PlayerEvidence {
         this.type = EvidenceType.Legitimate;
     }
 
-    EvidenceType judge() {
-        int count = evidence.size();
+    void judge(PlayerEvidence evidence) {
+        int count = this.evidence.size();
 
-        for (EvidenceType evidenceType : EvidenceType.values()) {
-            if (count >= evidenceType.count) {
-                this.type = evidenceType;
-                return evidenceType;
+        if (evidence != null && evidence.has()) {
+            for (Enums.HackType hackType : evidence.getKnowledgeList()) {
+                if (!has(hackType)) {
+                    count++;
+                }
             }
         }
-        return EvidenceType.Legitimate;
+        this.type = EvidenceType.Legitimate;
+
+        for (EvidenceType evidenceType : EvidenceType.values()) {
+            if (count >= evidenceType.count
+                    && this.type.count < evidenceType.count) {
+                this.type = evidenceType;
+
+                if (evidenceType == EvidenceType.Hacker) {
+                    break;
+                }
+            }
+        }
     }
 }

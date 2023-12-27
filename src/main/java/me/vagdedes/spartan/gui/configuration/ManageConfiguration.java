@@ -158,7 +158,7 @@ public class ManageConfiguration extends InventoryMenu {
         if (!access) {
             return;
         }
-        setTitle(player, menu + ": " + s);
+        setInventory(player, menu + ": " + s, 54);
         add("§4Back", null, new ItemStack(Material.ARROW), 53);
         int counter = 0;
 

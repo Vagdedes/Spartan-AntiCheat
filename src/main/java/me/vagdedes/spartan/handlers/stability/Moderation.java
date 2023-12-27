@@ -295,7 +295,7 @@ public class Moderation {
                     } else {
                         Collection<HackType> detectedHacks = Config.getPunishableHackModules(p, hackType, violation, dataType);
 
-                        if (detectedHacks.size() > 0) {
+                        if (!detectedHacks.isEmpty()) {
                             boolean enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
                             HackType[] hackTypes = detectedHacks.toArray(new HackType[0]);
                             StringBuilder stringBuilder = new StringBuilder();

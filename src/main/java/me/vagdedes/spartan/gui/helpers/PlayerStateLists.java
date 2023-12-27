@@ -111,7 +111,7 @@ public class PlayerStateLists {
                         for (PlayerProfile playerProfile : playerProfiles) {
                             Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidence().getKnowledgeList();
 
-                            if (evidenceDetails.size() > 0) {
+                            if (!evidenceDetails.isEmpty()) {
                                 lore.clear();
                                 lore.add("§7Detected for§8:");
 

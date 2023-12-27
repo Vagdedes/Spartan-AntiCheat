@@ -8,7 +8,7 @@ import me.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.SpartanBukkit;
 
-public class PlayerFight extends PlayerProfile {
+public class PlayerFight {
 
     // Properties
     public static final long maxFightTime = 20_000L;
@@ -203,8 +203,7 @@ public class PlayerFight extends PlayerProfile {
     private void store() {
         // Memory
         for (PlayerOpponent opponent : new PlayerOpponent[]{opponent1, opponent2}) {
-            String name = opponent.getName();
-            ResearchEngine.getPlayerProfile(name).getCombat().removeFight(this, true);
+            ResearchEngine.getPlayerProfile(opponent.getName()).getCombat().removeFight(this, true);
         }
 
         // Logs (DO NOT FORGET THE MAJOR KEYS)
