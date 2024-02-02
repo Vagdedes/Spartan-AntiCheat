@@ -1,8 +1,12 @@
-<img src="https://vagdedes.com/.images/spartan/banner.png">
-<img src="https://vagdedes.com/.images/spartan/what.png">
-<img src="https://vagdedes.com/.images/spartan/simple.png">
-<img src="https://vagdedes.com/.images/spartan/support.png">
-<img src="https://vagdedes.com/.images/spartan/customization.png">
+<a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/banner.png"></a>
+
+<a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/what.png"></a>
+
+<a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple.png"></a>
+
+<a href="https://www.idealistic.ai/disocrd"><img src="https://vagdedes.com/.images/spartan/support.png"></a>
+
+<a href="https://docs.google.com/document/d/e/2PACX-1vSu-WfjoyG8ipSI4tw3CqgmYh8gGDriSgD8gZTQ8HqU4k8jq9eYE8gzW3oiuKf6qzuvH7GTxssnMO_5/pub"><img src="https://vagdedes.com/.images/spartan/customization.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long.png?id=1"></a>
 
