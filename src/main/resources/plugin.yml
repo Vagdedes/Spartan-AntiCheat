@@ -1,9 +1,9 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
-main: me.vagdedes.spartan.Register
-version: Phase 529
-website: https://www.vagdedes.com
-description: Advanced cheat prevention made simple.
+main: com.vagdedes.spartan.Register
+version: Phase 530
+website: https://www.idealistic.ai
+description: Machine Learning cheat prevention made simple.
 api-version: 1.13
 softdepend: [ProtocolLib, UltimateStatistics, FileGUI, MinigameMaker, AntiAltAccount,
              mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,

@@ -1,8 +1,8 @@
 package me.vagdedes.spartan.system;
 
-import me.vagdedes.spartan.Register;
-import me.vagdedes.spartan.objects.system.CancelCause;
-import me.vagdedes.spartan.objects.system.Check;
+import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.objects.system.CancelCause;
+import com.vagdedes.spartan.objects.system.Check;
 
 import java.util.Map;
 import java.util.UUID;

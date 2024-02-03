@@ -1,7 +1,7 @@
-package me.vagdedes.spartan.api;
+package com.vagdedes.spartan.api;
 
-import me.vagdedes.spartan.system.Enums.HackType;
-import me.vagdedes.spartan.system.Enums.Permission;
+import com.vagdedes.spartan.system.Enums.HackType;
+import com.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
