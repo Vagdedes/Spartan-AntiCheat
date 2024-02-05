@@ -236,15 +236,16 @@ public class SQLFeature extends ConfigurationBuilder {
                 String driver = getDriver();
 
                 try {
-                    if (driver.length() == 0) {
+                    if (driver.isEmpty()) {
                         AwarenessNotifications.forcefullySend("SQL Configuration Error: Driver is blank");
                     } else {
                         String tlsVersion = getTLSVersion();
                         con = DriverManager.getConnection("jdbc:" + driver + "://" + host + ":" + port + "/" + database + "?" +
                                         "autoReconnect=true" +
                                         "&maxReconnects=10" +
-                                        (tlsVersion != null && tlsVersion.length() > 0 ? "&enabledTLSProtocols=TLSv" + tlsVersion : "") +
-                                        "&useSSL=" + getSSL(),
+                                        (tlsVersion != null && !tlsVersion.isEmpty() ? "&enabledTLSProtocols=TLSv" + tlsVersion : "") +
+                                        "&useSSL=" + getSSL() +
+                                        (!getSSL() ? "&allowPublicKeyRetrieval=true" : ""),
                                 user, password);
                         createTable(table);
                     }
