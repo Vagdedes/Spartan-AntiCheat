@@ -6,33 +6,32 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 
 public class Chunks {
 
-    private static final Map<World, CopyOnWriteArrayList<Integer>> loadedChunks = MultiVersion.folia ? null : new ConcurrentHashMap<>();
+    private static final Map<World, List<Integer>> loadedChunks
+            = Collections.synchronizedMap(new LinkedHashMap<>());
     private static boolean looping = false;
 
     public static void reload(boolean enabledPlugin) {
         if (enabledPlugin && !MultiVersion.folia && !looping) {
             looping = true;
             SpartanBukkit.chunkThread.pause();
-            Map<World, CopyOnWriteArrayList<Integer>> map = new LinkedHashMap<>();
+            Map<World, List<Integer>> map = new LinkedHashMap<>();
 
             for (World world : Bukkit.getWorlds()) {
-                CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+                List<Integer> list = new ArrayList<>();
 
                 for (Chunk chunk : world.getLoadedChunks()) {
                     list.add(chunkIdentifier(chunk.getX(), chunk.getZ()));
                 }
                 map.put(world, list);
             }
-            loadedChunks.clear();
-            loadedChunks.putAll(map);
+            synchronized (loadedChunks) {
+                loadedChunks.clear();
+                loadedChunks.putAll(map);
+            }
             looping = false;
             SpartanBukkit.chunkThread.resume();
         }
@@ -59,16 +58,20 @@ public class Chunks {
     // Separator
 
     public static boolean isLoaded(World world, int x, int z) {
-        CopyOnWriteArrayList<Integer> list = loadedChunks.computeIfAbsent(world, k -> new CopyOnWriteArrayList<>());
-        int hash = chunkIdentifier(x, z);
+        synchronized (loadedChunks) {
+            List<Integer> list = loadedChunks.computeIfAbsent(world, k -> new ArrayList<>());
+            int hash = chunkIdentifier(x, z);
 
-        if (list.contains(hash)) {
-            return true;
-        }
-        for (Chunk chunk : world.getLoadedChunks()) {
-            if (chunk.getX() == x && chunk.getZ() == z) {
-                list.addIfAbsent(hash);
+            if (list.contains(hash)) {
                 return true;
+            }
+            for (Chunk chunk : world.getLoadedChunks()) {
+                if (chunk.getX() == x && chunk.getZ() == z) {
+                    if (!list.contains(hash)) {
+                        list.add(hash);
+                    }
+                    return true;
+                }
             }
         }
         return false;
@@ -77,20 +80,32 @@ public class Chunks {
     // Separator
 
     public static void load(World world, Chunk chunk) {
-        CopyOnWriteArrayList<Integer> list = loadedChunks.computeIfAbsent(world, k -> new CopyOnWriteArrayList<>());
-        list.addIfAbsent(chunkIdentifier(chunk.getX(), chunk.getZ()));
+        synchronized (loadedChunks) {
+            List<Integer> list = loadedChunks.computeIfAbsent(world, k -> new ArrayList<>());
+            int hash = chunkIdentifier(chunk.getX(), chunk.getZ());
+
+            if (!list.contains(hash)) {
+                list.add(hash);
+            }
+        }
     }
 
     public static void unload(World world, Chunk chunk) {
-        List<Integer> list = loadedChunks.get(world);
+        synchronized (loadedChunks) {
+            List<Integer> list = loadedChunks.get(world);
 
-        if (list != null) {
-            list.remove((Object) chunkIdentifier(chunk.getX(), chunk.getZ()));
+            if (list != null) {
+                list.remove((Object) chunkIdentifier(chunk.getX(), chunk.getZ()));
+            }
         }
     }
 
     public static void unload(World world) {
-        Runnable runnable = () -> loadedChunks.remove(world);
+        Runnable runnable = () -> {
+            synchronized (loadedChunks) {
+                loadedChunks.remove(world);
+            }
+        };
 
         if (looping) {
             SpartanBukkit.chunkThread.execute(() -> SpartanBukkit.transferTask(runnable));

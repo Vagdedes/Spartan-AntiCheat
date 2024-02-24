@@ -2,10 +2,6 @@ package com.vagdedes.spartan.handlers.stability;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import com.vagdedes.spartan.objects.profiling.PlayerProfile;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -161,24 +157,5 @@ public class TestServer {
             }
             b.append("-");
         }
-    }
-
-    public static boolean isTester(SpartanPlayer p) {
-        if (isIdentified()
-                || CloudFeature.hasException()
-                || p.isOp()
-                || Permissions.isStaff(p)
-                || DetectionNotifications.hasPermission(p)) {
-            p.getProfile().setTester(true);
-            return true;
-        } else {
-            PlayerProfile profile = p.getProfile();
-
-            if (profile.wasStaff()) {
-                profile.setTester(true);
-                return true;
-            }
-        }
-        return false;
     }
 }

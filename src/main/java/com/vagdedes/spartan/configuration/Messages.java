@@ -42,7 +42,7 @@ public class Messages extends ConfigurationBuilder {
         addOption("player_violation_reset_message", "&8[&2" + prefix + "&8]&a Violations successfully reset for player&8: &2{player}");
         addOption("player_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for player&8: &2{player}");
         addOption("detection_notification", "&8[&2" + prefix + "&8] "
-                + "&4{player} &cis &4{detection:category:adverb} &cusing &4{detection} x{vls:detection} "
+                + "&4{player} &cis using &4{detection} x{vls:detection} "
                 + "&8&b| &r&f{ping}ms &8&b| &r&f{tps} TPS &8&b| &r&fsilent: {silent:detection}, {info}");
 
         // Chat Protection
@@ -62,14 +62,6 @@ public class Messages extends ConfigurationBuilder {
         addOption("warning_message", "&c {reason}");
         addOption("warning_feedback_message", "&8[&2" + prefix + "&8]&7 You warned &c{player} &7for&8: &4{reason}");
 
-        // Bans
-        addOption("ban_message", "&8[&2" + prefix + "&8]&7 You banned &c{player} &7for &4{reason}");
-        addOption("unban_message", "&8[&2" + prefix + "&8]&7 You unbanned &c{player}");
-        addOption("player_not_banned", "&8[&2" + prefix + "&8]&c This player is not banned.");
-        addOption("ban_broadcast_message", "&8[&2" + prefix + "&8]&c {player}&7 was banned for&4 {reason}");
-        addOption("ban_reason", "&c {reason}");
-        addOption("empty_ban_list", "&8[&2" + prefix + "&8]&c There are currently no banned players.");
-
         // Notifications
         addOption("notifications_enable", "&8[&2" + prefix + "&8] &aYou enabled notifications.");
         addOption("notifications_modified", "&8[&2" + prefix + "&8] &eYou modified notifications.");
@@ -87,25 +79,11 @@ public class Messages extends ConfigurationBuilder {
         addOption("full_wave_list", "&8[&2" + prefix + "&8]&c The wave list is full.");
         addOption("wave_not_added_message", "&8[&2" + prefix + "&8]&c {player} is not added to the wave.");
 
-        // Reports
-        addOption("report_message", "&8[&2" + prefix + "&8] &a{player} &7reported &c{reported} &7for&8: &4{reason}");
-        addOption("self_report_message", "&8[&2" + prefix + "&8]&c You can't report yourself.");
-
-        // Debug
-        addOption("debug_player_message", "&8[&2" + prefix + "&8]&7 Debugging &6{player}&7's &e{type}&8: &f{info}");
-        addOption("debug_enable_message", "&8[&2" + prefix + "&8]&7 Enabled debugging for &6{player}&7's &e{type}");
-        addOption("debug_disable_message", "&8[&2" + prefix + "&8]&7 Disabled debugging for &6{player}&7's &e{type}");
-        addOption("debug_disable_all_message", "&8[&2" + prefix + "&8]&7 Disabled debugging for &6{player}");
-
         // Commands
         addOption("unknown_command", "&fUnknown command. Please type \"/help\" for help.");
         addOption("failed_command", "&8[&2" + prefix + "&8]&c Command failed. Please check your arguments and try again.");
         addOption("successful_command", "&8[&2" + prefix + "&8]&a Command successful.");
         addOption("massive_command_reason", "&8[&2" + prefix + "&8]&c The length of the reason is too big.");
-
-        // Spectating
-        addOption("spectating_player", "&8[&2" + prefix + "&8]&a You are now spectating {player}, type '/spectate' to exit.");
-        addOption("spectating_ended", "&8[&2" + prefix + "&8]&c You are no longer spectating someone.");
 
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);

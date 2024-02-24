@@ -6,6 +6,8 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import java.util.Collection;
+
 public class PlayerViolationCommandEvent extends Event implements Cancellable {
 
     private final Player p;
@@ -14,10 +16,18 @@ public class PlayerViolationCommandEvent extends Event implements Cancellable {
     private final String c;
     private boolean cancelled;
 
-    public PlayerViolationCommandEvent(Player player, HackType HackType, HackType[] HackTypes, String command) {
+    public PlayerViolationCommandEvent(Player player, HackType HackType, String command) {
         p = player;
         h = HackType;
-        hs = HackTypes;
+        hs = new HackType[]{h};
+        c = command;
+        cancelled = false;
+    }
+
+    public PlayerViolationCommandEvent(Player player, HackType HackType, Collection<HackType> HackTypes, String command) {
+        p = player;
+        h = HackType;
+        hs = HackTypes.toArray(new HackType[0]);
         c = command;
         cancelled = false;
     }

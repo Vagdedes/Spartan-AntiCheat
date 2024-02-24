@@ -1,13 +1,9 @@
 package com.vagdedes.spartan.gui.helpers;
 
 import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.objects.profiling.PlayerProfile;
-import com.vagdedes.spartan.objects.profiling.PlayerReport;
-import com.vagdedes.spartan.objects.profiling.PunishmentHistory;
-import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
@@ -20,17 +16,19 @@ public class PlayerStateLists {
 
     private static final int maxPages = 999;
 
-    public static final String playerStates = "Player State",
-            hackerFinder = "Identified Hackers",
+    public static final String
+            hackerPlayers = "Identified Hackers",
             suspectedPlayers = "Suspected Players",
             legitimatePlayers = "Legitimate Players",
-            punishedPlayers = "Punished Players",
             inactiveColour = "§8",
 
     noDataAvailable = "No data available at this time",
-            calculatingData = "Calculating available data...",
             viewData = "§7Click this item to §eview the player's information§7.";
-    public static final String[] menuList = new String[]{playerStates, legitimatePlayers, punishedPlayers};
+    public static final String[] menuList = new String[]{
+            hackerPlayers,
+            suspectedPlayers,
+            legitimatePlayers
+    };
     private static final int[] ignoredSlots = new int[]{
             0, 1, 2, 3, 4, 5, 6, 7, 8,
             9, 17,
@@ -58,7 +56,7 @@ public class PlayerStateLists {
         List<String> lore = new ArrayList<>(description.size() + 10);
         InventoryUtils.prepareDescription(lore, title);
 
-        if (description.size() > 0) {
+        if (!description.isEmpty()) {
             lore.addAll(description);
             lore.add("");
         }
@@ -102,10 +100,8 @@ public class PlayerStateLists {
             int listSize, page = getPage(uuid), skip = ((page - 1) * limit);
 
             switch (title) {
-                case playerStates:
-                    List<PlayerProfile> playerProfiles = ResearchEngine.getHackers();
-                    playerProfiles.addAll(ResearchEngine.getSuspectedPlayers());
-                    playerProfiles = subList(playerProfiles, skip, skip + limit);
+                case hackerPlayers:
+                    List<PlayerProfile> playerProfiles = subList(ResearchEngine.getHackers(), skip, skip + limit);
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
@@ -118,7 +114,29 @@ public class PlayerStateLists {
                                 for (Enums.HackType hackType : evidenceDetails) {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
-                                fill(playerProfile.isHacker() ? hackerFinder : suspectedPlayers, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
+                                fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
+                                slotPosition++;
+                            } else {
+                                listSize--;
+                            }
+                        }
+                    }
+                    break;
+                case suspectedPlayers:
+                    playerProfiles = subList(ResearchEngine.getSuspectedPlayers(), skip, skip + limit);
+
+                    if ((listSize = playerProfiles.size()) > 0) {
+                        for (PlayerProfile playerProfile : playerProfiles) {
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidence().getKnowledgeList();
+
+                            if (!evidenceDetails.isEmpty()) {
+                                lore.clear();
+                                lore.add("§7Detected for§8:");
+
+                                for (Enums.HackType hackType : evidenceDetails) {
+                                    lore.add("§4" + hackType.getCheck().getName());
+                                }
+                                fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
                                 slotPosition++;
                             } else {
                                 listSize--;
@@ -137,38 +155,6 @@ public class PlayerStateLists {
                         }
                     }
                     break;
-                case punishedPlayers:
-                    List<PlayerReport> playerReports = subList(SpartanMenu.playerReports.getList(), skip, skip + limit);
-
-                    if ((listSize = playerReports.size()) > 0) {
-                        for (PlayerReport playerReport : playerReports) {
-                            lore.clear();
-                            lore.add("§7Reported for§8:");
-                            StringUtils.constructDescription("§7" + playerReport.getReason(), lore, true);
-                            fill(title, inventory, playerReport.getReported(), lore, freeSlots[slotPosition]);
-                            slotPosition++;
-                        }
-                    }
-                    if (listSize < limit) {
-                        int oldListSize = listSize,
-                                newLimit = limit - listSize;
-                        playerProfiles = subList(ResearchEngine.getPunishedProfiles(false), skip, skip + newLimit);
-
-                        if ((listSize = playerProfiles.size()) > 0) {
-                            for (PlayerProfile playerProfile : playerProfiles) {
-                                PunishmentHistory punishmentHistory = playerProfile.getPunishmentHistory();
-                                lore.clear();
-                                lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
-                                lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
-                                lore.add("§7Bans§8:§c " + punishmentHistory.getBans());
-                                lore.add("§7Reports§8:§c " + punishmentHistory.getReports().size());
-                                fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
-                                slotPosition++;
-                            }
-                        }
-                        listSize += oldListSize;
-                    }
-                    break;
                 default:
                     listSize = 0;
                     break;
@@ -179,13 +165,7 @@ public class PlayerStateLists {
 
                 if (option) {
                     InventoryUtils.prepareDescription(lore, title);
-
-                    if (ResearchEngine.isCaching()) {
-                        lore.add("§7" + calculatingData);
-                    } else {
-                        lore.add("§7" + noDataAvailable);
-                    }
-                    // do not translate or make it modifiable
+                    lore.add("§7" + noDataAvailable);
                     lore.add("");
                     lore.add("§cEmpty items like this will be filled with");
                     lore.add("§cuseful information about your players");

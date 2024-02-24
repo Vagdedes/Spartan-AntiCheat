@@ -7,7 +7,6 @@ import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.PluginUtils;
-import com.vagdedes.spartan.utils.server.ReflectionUtils;
 import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.List;
@@ -18,17 +17,8 @@ public class Floodgate {
     public static void reload() {
         String message;
 
-        if (PluginUtils.contains("floodgate")) {
-            if (ReflectionUtils.classExists("org.geysermc.floodgate.api.FloodgateApi")) {
-                message = null;
-            } else {
-                Compatibility.CompatibilityType.Floodgate.setFunctional(false);
-                message = AwarenessNotifications.getNotification(
-                        "You are using an outdated version of 'Floodgate', please update to the latest so the anti-cheat"
-                                + " can accurately identify who is a bedrock player."
-                );
-            }
-        } else if (PluginUtils.contains("geyser")) {
+        if (PluginUtils.contains("geyser")
+                && !PluginUtils.contains("floodgate")) {
             message = AwarenessNotifications.getOptionalNotification(
                     "'Geyser' plugin allows Bedrock players to join your Java Minecraft server. "
                             + "In order for the Bedrock compatibility to enable, you must also install a plugin named 'Floodgate', which will allow Spartan to identify who is a bedrock player.");
@@ -39,7 +29,7 @@ public class Floodgate {
         if (message != null) {
             List<SpartanPlayer> players = Permissions.getStaff();
 
-            if (players.size() > 0) {
+            if (!players.isEmpty()) {
                 for (SpartanPlayer p : players) {
                     if (AwarenessNotifications.canSend(p.getUniqueId(), "floodgate")) {
                         p.sendMessage(message);

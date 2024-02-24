@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.important;
 
 import com.vagdedes.spartan.configuration.Config;
+import com.vagdedes.spartan.configuration.Settings;
 import com.vagdedes.spartan.handlers.stability.TestServer;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
@@ -20,11 +21,10 @@ public class Permissions {
             Enums.Permission.STAFF_CHAT, Enums.Permission.WAVE, Enums.Permission.WARN,
             Enums.Permission.ADMIN, Enums.Permission.KICK, Enums.Permission.NOTIFICATIONS,
             Enums.Permission.USE_BYPASS, Enums.Permission.MANAGE, Enums.Permission.INFO,
-            Enums.Permission.UNBAN, Enums.Permission.BAN
     };
 
     public static boolean isCacheEnabled() {
-        return Config.settings.getBoolean("Important.use_permission_cache");
+        return Config.settings.getBoolean(Settings.permissionOption);
     }
 
     public static void clear() {
@@ -96,7 +96,6 @@ public class Permissions {
 
         if (TestServer.isIdentified() || !isCacheEnabled()) {
             if (p.hasPermission(permission.getKey())) {
-                setStaff(p, permission);
                 return true;
             }
             if (API) {
@@ -107,14 +106,12 @@ public class Permissions {
                     Boolean bool = map.get(permission);
 
                     if (bool != null && bool) {
-                        setStaff(uuid, permission);
                         return true;
                     }
                 }
             }
             if (permission != admin ? p.hasPermission(Enums.Permission.ADMIN.getKey()) || p.hasPermission(alternativeAdminKey) :
                     p.hasPermission(alternativeAdminKey)) { // If it's the admin permission and it's false (at this stage it is), then we check the other admin permission
-                setStaff(p, permission);
                 return true;
             }
             return false;
@@ -126,9 +123,6 @@ public class Permissions {
             Boolean bool = map.get(permission);
 
             if (bool != null) {
-                if (bool) {
-                    setStaff(uuid, permission);
-                }
                 return bool;
             }
         } else {
@@ -153,10 +147,6 @@ public class Permissions {
             }
         }
         map.put(permission, hasPermission);
-
-        if (hasPermission) {
-            setStaff(uuid, permission);
-        }
         return hasPermission;
     }
 
@@ -216,25 +206,6 @@ public class Permissions {
     public static void remove(UUID uuid) {
         perm.remove(uuid);
         bypass.remove(uuid);
-    }
-
-    // Separator
-
-    private static void setStaff(UUID uuid, Enums.Permission permission) {
-        for (Enums.Permission staffPermission : staffPermissions) {
-            if (staffPermission == permission) {
-                SpartanPlayer spartanPlayer = SpartanBukkit.getPlayer(uuid);
-
-                if (spartanPlayer != null) {
-                    spartanPlayer.getProfile().setStaff(true);
-                }
-                break;
-            }
-        }
-    }
-
-    private static void setStaff(Player player, Enums.Permission permission) {
-        setStaff(player.getUniqueId(), permission);
     }
 
     // Separator

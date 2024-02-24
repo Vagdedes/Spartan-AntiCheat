@@ -3,17 +3,14 @@ package com.vagdedes.spartan.configuration;
 import com.vagdedes.spartan.abstraction.ConfigurationBuilder;
 import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.functionality.moderation.BanManagement;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.handlers.stability.TPS;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
@@ -22,9 +19,10 @@ import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SQLFeature extends ConfigurationBuilder {
 
@@ -35,7 +33,7 @@ public class SQLFeature extends ConfigurationBuilder {
     private static boolean enabled = false;
 
     private static Connection con = null;
-    private static final List<String> list = new CopyOnWriteArrayList<>();
+    private static final List<String> list = Collections.synchronizedList(new ArrayList<>());
 
     // Separator
 
@@ -122,6 +120,10 @@ public class SQLFeature extends ConfigurationBuilder {
         return getBoolean("use_SSL");
     }
 
+    public boolean getPublicKeyRetrieval() {
+        return getBoolean("allow_public_key_retrieval");
+    }
+
     // Separator
 
     public void refreshConfiguration() {
@@ -138,10 +140,12 @@ public class SQLFeature extends ConfigurationBuilder {
     public void refreshDatabase() {
         // Queries
         if (!list.isEmpty()) {
-            for (String insert : list) {
-                update(insert);
+            synchronized (list) {
+                for (String insert : list) {
+                    update(insert);
+                }
+                list.clear();
             }
-            list.clear();
         }
 
         if (isConnected(false)) {
@@ -172,6 +176,7 @@ public class SQLFeature extends ConfigurationBuilder {
         addOption("driver", "mysql");
         addOption("tls_Version", "");
         addOption("use_SSL", true);
+        addOption("allow_public_key_retrieval", false);
         addOption("escape_special_characters", false);
         refreshConfiguration();
 
@@ -223,28 +228,26 @@ public class SQLFeature extends ConfigurationBuilder {
             } else if (databaseLength == 0) {
                 enabled = false;
                 AwarenessNotifications.forcefullySend("SQL Configuration Error: Database is blank");
-            } else if (table.length() == 0) {
+            } else if (table.isEmpty()) {
                 enabled = false;
                 AwarenessNotifications.forcefullySend("SQL Configuration Error: Table is blank");
             } else if (!AlgebraUtils.validInteger(port) && !AlgebraUtils.validDecimal(port)) {
                 enabled = false;
                 AwarenessNotifications.forcefullySend("SQL Configuration Error: Port is not a valid number");
-            } else if (table.equalsIgnoreCase(BanManagement.table)) {
-                enabled = false;
-                AwarenessNotifications.forcefullySend("SQL Configuration Error: Table cannot have the name: " + BanManagement.table);
             } else if (!isConnected(true)) {
                 String driver = getDriver();
 
                 try {
-                    if (driver.length() == 0) {
+                    if (driver.isEmpty()) {
                         AwarenessNotifications.forcefullySend("SQL Configuration Error: Driver is blank");
                     } else {
                         String tlsVersion = getTLSVersion();
                         con = DriverManager.getConnection("jdbc:" + driver + "://" + host + ":" + port + "/" + database + "?" +
                                         "autoReconnect=true" +
                                         "&maxReconnects=10" +
-                                        (tlsVersion != null && tlsVersion.length() > 0 ? "&enabledTLSProtocols=TLSv" + tlsVersion : "") +
-                                        "&useSSL=" + getSSL(),
+                                        (tlsVersion != null && !tlsVersion.isEmpty() ? "&enabledTLSProtocols=TLSv" + tlsVersion : "") +
+                                        "&useSSL=" + getSSL() +
+                                        "&allowPublicKeyRetrieval=" + getPublicKeyRetrieval(),
                                 user, password);
                         createTable(table);
                     }
@@ -305,7 +308,7 @@ public class SQLFeature extends ConfigurationBuilder {
                         "online_players INT(11), " +
 
                         "type VARCHAR(32), " +
-                        "information VARCHAR(" + ResearchEngine.maxDataLength + "), " +
+                        "information VARCHAR(4096), " +
 
                         "player_uuid VARCHAR(36), " +
                         "player_latency INT(11), " +
@@ -315,7 +318,6 @@ public class SQLFeature extends ConfigurationBuilder {
 
                         "functionality VARCHAR(32), " +
                         "violation_level INT(3), " +
-                        "cancel_violation INT(3), " +
 
                         "primary key (id));"
         );
@@ -323,10 +325,12 @@ public class SQLFeature extends ConfigurationBuilder {
 
     // Separator
 
-    public void logInfo(SpartanPlayer p, String information,
-                        Material material, Enums.HackType hackType,
-                        boolean falsePositive, boolean miningNotification,
-                        int violations, int cancelViolation) {
+    public void logInfo(SpartanPlayer p,
+                        String information,
+                        Material material,
+                        Enums.HackType hackType,
+                        boolean miningNotification,
+                        int violations) {
         if (enabled) {
             String table = getTable();
             boolean hasPlayer = p != null;
@@ -334,35 +338,43 @@ public class SQLFeature extends ConfigurationBuilder {
             UUID uuid = hasPlayer ? p.getUniqueId() : null;
             SpartanLocation location = hasPlayer ? p.getLocation() : null;
 
-            list.add("INSERT INTO " + table
-                    + " (creation_date"
-                    + ", plugin_version, server_version, server_tps, online_players"
-                    + ", type, information"
-                    + ", player_uuid, player_latency, player_x, player_y, player_z"
-                    + ", functionality, violation_level, cancel_violation) "
-                    + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(LocalDateTime.now()))
-                    + ", " + syntaxForColumn(API.getVersion())
-                    + ", " + syntaxForColumn(MultiVersion.versionString())
-                    + ", " + syntaxForColumn(TPS.get(p, false))
-                    + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
-                    + ", " + syntaxForColumn(hasCheck ? (falsePositive ? "false-positive" : "violation") : miningNotification ? "mining" : "other")
-                    + ", " + syntaxForColumn(information)
-                    + ", " + (hasPlayer ? syntaxForColumn(uuid) : "NULL")
-                    + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
-                    + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
-                    + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
-                    + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
-                    + ", " + (hasCheck ? syntaxForColumn(hackType) : miningNotification ? syntaxForColumn(material) : "NULL")
-                    + ", " + (violations > -1 ? syntaxForColumn(violations) : "NULL")
-                    + ", " + (cancelViolation > -1 && hasCheck && !hackType.getCheck().isSilent(hasPlayer ? location.getWorld().getName() : null, uuid) ? syntaxForColumn(cancelViolation) : "NULL")
-                    + ");");
+            synchronized (list) {
+                list.add(
+                        "INSERT INTO " + table
+                                + " (creation_date"
+                                + ", plugin_version, server_version, server_tps, online_players"
+                                + ", type, information"
+                                + ", player_uuid, player_latency, player_x, player_y, player_z"
+                                + ", functionality, violation_level) "
+                                + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(LocalDateTime.now()))
+                                + ", " + syntaxForColumn(API.getVersion())
+                                + ", " + syntaxForColumn(MultiVersion.versionString())
+                                + ", " + syntaxForColumn(TPS.get(p, false))
+                                + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
+                                + ", " + syntaxForColumn(miningNotification ? "mining" : hasCheck ? "violation" : "other")
+                                + ", " + syntaxForColumn(information)
+                                + ", " + (hasPlayer ? syntaxForColumn(uuid) : "NULL")
+                                + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
+                                + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
+                                + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
+                                + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
+                                + ", " + (hasCheck ? syntaxForColumn(hackType) : miningNotification ? syntaxForColumn(material) : "NULL")
+                                + ", " + (violations > -1 ? syntaxForColumn(violations) : "NULL")
+                                + ");"
+                );
+            }
 
-            if (list.size() >= Check.sufficientViolations) {
+            if (list.size() >= 10) {
                 Runnable runnable = () -> {
-                    for (String insert : list) {
+                    List<String> newList;
+
+                    synchronized (list) {
+                        newList = new ArrayList<>(list);
+                        list.clear();
+                    }
+                    for (String insert : newList) {
                         update(insert);
                     }
-                    list.clear();
                 };
 
                 if (SpartanBukkit.isSynchronised()) {

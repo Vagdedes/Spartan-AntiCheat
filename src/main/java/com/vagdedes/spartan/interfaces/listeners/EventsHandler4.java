@@ -2,7 +2,6 @@ package com.vagdedes.spartan.interfaces.listeners;
 
 import com.vagdedes.spartan.abstraction.InventoryMenu;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.functionality.moderation.Spectate;
 import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Piston;
 import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
@@ -38,19 +37,18 @@ public class EventsHandler4 implements Listener {
         if (p == null) {
             return;
         }
-        if (!e.isCancelled()) {
+        boolean cancelled = e.isCancelled();
+
+        if (!cancelled) {
             // Objects
             p.setInventory(n.getInventory(), n.getOpenInventory());
+        }
 
-            // Detections
-            p.getExecutor(Enums.HackType.ItemDrops).run();
+        // Detections
+        p.getExecutor(Enums.HackType.ItemDrops).run(cancelled);
 
-            if (p.getViolations(Enums.HackType.ItemDrops).process()) {
-                e.setCancelled(true);
-            }
-        } else {
-            // Detections
-            p.getExecutor(Enums.HackType.ItemDrops).run();
+        if (p.getViolations(Enums.HackType.ItemDrops).process()) {
+            e.setCancelled(true);
         }
     }
 
@@ -62,12 +60,8 @@ public class EventsHandler4 implements Listener {
         if (p == null) {
             return;
         }
-        if (Spectate.isUsing(p)) {
-            e.setCancelled(true);
-        } else {
-            // Objects
-            p.setInventory(n.getInventory(), n.getOpenInventory());
-        }
+        // Objects
+        p.setInventory(n.getInventory(), n.getOpenInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -87,18 +81,17 @@ public class EventsHandler4 implements Listener {
             if (p == null) {
                 return;
             }
+            boolean cancelled = e.isCancelled();
             ClickType click = e.getClick();
             String title = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? StringUtils.getClearColorString(n.getOpenInventory().getTitle()) : n.getOpenInventory().getTitle();
             int slot = e.getSlot();
 
             // Objects
-            if (!e.isCancelled()) {
+            if (!cancelled) {
                 p.setInventory(n.getInventory(), n.getOpenInventory());
-
-                // Detections
-                p.getExecutor(Enums.HackType.ImpossibleInventory).handle(e);
-                p.getExecutor(Enums.HackType.InventoryClicks).handle(e);
             }
+            p.getExecutor(Enums.HackType.ImpossibleInventory).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.InventoryClicks).handle(cancelled, e);
 
             // GUIs
             if (p.getViolations(Enums.HackType.ImpossibleInventory).process()

@@ -5,7 +5,7 @@ import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.important.Permissions;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.command.CommandSender;

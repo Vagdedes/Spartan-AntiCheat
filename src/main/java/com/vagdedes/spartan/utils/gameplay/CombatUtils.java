@@ -4,9 +4,8 @@ import com.vagdedes.spartan.configuration.Compatibility;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.java.math.TrigonometryUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.TrigonometryUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,13 +17,13 @@ import java.util.List;
 
 public class CombatUtils {
 
+    public static final long combatTimeRequirement = 2_500L;
+
     private static final Material
             gold_sword = MaterialUtils.get("gold_sword"),
             wood_sword = MaterialUtils.get("wood_sword");
     public static final int defaultFightTicks = 11,
-            maximumNoDamageTicks = 20,
-            competitiveCPS = 12,
-            maxLegitimateCPS = 19;
+            maximumNoDamageTicks = 20;
     public static final double
             maxHitDistance = 6.0,
             maxLegitimateHitDistance = 3.5,
@@ -273,15 +272,11 @@ public class CombatUtils {
     public static boolean isNewPvPMechanic(SpartanPlayer p, Entity entity) {
         if (newPvPMechanicsEnabled() && !p.hasAttackCooldown() && isSword(p.getItemInHand().getType())) {
             double distance = 4.0;
-
-            if (entity == null) {
-                return PlayerData.getEntitiesNumber(p, distance, false) > 1;
-            }
-            List<Entity> nearbyEntities = entity.getNearbyEntities(distance, (distance / 2), distance);
+            List<Entity> nearbyEntities = entity.getNearbyEntities(distance, distance, distance);
             nearbyEntities.remove(p.getPlayer());
             int i = 0;
 
-            for (Entity e : entity.getNearbyEntities(distance, (distance / 2), distance)) {
+            for (Entity e : nearbyEntities) {
                 if (e instanceof LivingEntity) {
                     i++;
                 }
@@ -289,25 +284,5 @@ public class CombatUtils {
             return i > 0;
         }
         return false;
-    }
-
-    public static int getEnemiesNumber(SpartanPlayer p, double distance, boolean includeRest, int limit) {
-        int i = 0;
-        boolean hitAnEntity = PlayerData.hitAPlayer(p);
-
-        for (Entity e : p.getNearbyEntities(distance, distance, distance)) {
-            if (e instanceof Monster) {
-                i++;
-            } else if (e instanceof Player) {
-                SpartanPlayer ep = SpartanBukkit.getPlayer((Player) e);
-
-                if (ep != null && PlayerData.receivedPlayerDamage(ep) || hitAnEntity) {
-                    i++;
-                }
-            } else if (includeRest && e instanceof LivingEntity) {
-                i++;
-            }
-        }
-        return i;
     }
 }

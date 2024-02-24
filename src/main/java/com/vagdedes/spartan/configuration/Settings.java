@@ -2,24 +2,22 @@ package com.vagdedes.spartan.configuration;
 
 import com.vagdedes.spartan.abstraction.ConfigurationBuilder;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.commands.RawCommands;
-import com.vagdedes.spartan.functionality.moderation.PlayerReports;
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import com.vagdedes.spartan.functionality.synchronicity.DiscordWebhooks;
 import com.vagdedes.spartan.handlers.stability.TestServer;
-import com.vagdedes.spartan.interfaces.commands.CommandExecution;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
-import me.vagdedes.spartan.system.Enums;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -32,12 +30,24 @@ public class Settings extends ConfigurationBuilder {
     public static final String explosionOption = "Protections.explosion_detection_cooldown",
             permissionOption = "Important.use_permission_cache", // test server
             showEcosystemOption = "Important.show_ecosystem",
-            tpsProtectionOption = "Protections.use_tps_protection";
-    private static int usingCustomPunishmentCommands = 0;
+            tpsProtectionOption = "Protections.use_tps_protection",
+            maxSupportedLatencyOption = "Protections.max_supported_player_latency",
+            cloudServerNameOption = "Cloud.server_name",
+            cloudSynchroniseFilesOption = "Cloud.synchronise_files";
+    private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
+    private Collection<String> punishments = null;
+
+    static {
+        defaultPunishments.add("spartan kick {player} {detections}");
+
+        for (int position = (defaultPunishments.size() + 1); position <= Check.maxCommands; position++) {
+            defaultPunishments.add("");
+        }
+    }
 
     @Override
     public void clear() {
-        usingCustomPunishmentCommands = 0;
+        punishments = null;
         internalClear();
 
         // Systems based in this configuration
@@ -51,8 +61,6 @@ public class Settings extends ConfigurationBuilder {
         clear();
 
         addOption("Punishments.broadcast_on_punishment", true);
-        addOption("Punishments.report_reasons", StringUtils.toString(PlayerReports.reasons, PlayerReports.separator));
-        RawCommands.create();
 
         addOption("Logs.log_file", true);
         addOption("Logs.log_console", true);
@@ -73,11 +81,9 @@ public class Settings extends ConfigurationBuilder {
 
         addOption("Protections.reconnect_cooldown", 1);
         addOption(tpsProtectionOption, true); // test server
-        addOption("Protections.max_supported_player_latency", 500); // test server
-        addOption("Protections.use_teleport_protection", false); // test server
+        addOption(maxSupportedLatencyOption, 500); // test server
         addOption("Protections.avoid_self_bow_damage", true);
         addOption("Protections.player_limit_per_ip", 0);
-        addOption("Protections.interactions_per_tick", 10);
         addOption("Protections.disallowed_building", true); // test server
 
         addOption("Important.op_bypass", false);
@@ -89,14 +95,12 @@ public class Settings extends ConfigurationBuilder {
         addOption(showEcosystemOption, true);
         addOption("Important.bedrock_player_prefix", ".");
         addOption("Important.inventory_menu_empty_heads", true);
-        addOption("Important.load_player_head_textures", false);
 
-        addOption("Cloud.server_name", "specify server name");
-        addOption("Cloud.synchronise_files", true);
+        addOption(cloudServerNameOption, "specify server name");
+        addOption(cloudSynchroniseFilesOption, true);
 
         addOption("Detections.ground_teleport_on_detection", true); // test server
         addOption("Detections.fall_damage_on_teleport", false); // test server
-        addOption("Detections.allow_cancelled_hit_checking", false); // test server alternative
         addOption("Detections.update_blocks_upon_violation", false);
 
         addOption("Performance.enable_false_positive_detection", true); // test server
@@ -106,7 +110,6 @@ public class Settings extends ConfigurationBuilder {
         addOption(DiscordWebhooks.configurationSection + ".webhook_hex_color", "4caf50");
         addOption(DiscordWebhooks.configurationSection + ".checks_webhook_url", "");
         addOption(DiscordWebhooks.configurationSection + ".punishments_webhook_url", "");
-        addOption(DiscordWebhooks.configurationSection + ".reports_webhook_url", "");
         addOption(DiscordWebhooks.configurationSection + ".communication_webhook_url", "");
 
         if (!local && exists) {
@@ -131,72 +134,54 @@ public class Settings extends ConfigurationBuilder {
         }
     }
 
-    public List<String> getPunishments() {
-        String sectionString = "Punishments.Commands";
-        ConfigurationSection section = getPath().getConfigurationSection(sectionString);
-
-        if (section != null) {
-            List<String> list = new LinkedList<>();
-            Set<String> keys = section.getKeys(true);
-
-            if (!keys.isEmpty()) {
-                sectionString += ".";
-
-                for (String key : keys) {
-                    if (AlgebraUtils.validInteger(key)) {
-                        int number = Integer.parseInt(key);
-
-                        if (number >= 1 && number <= Check.maxCommands) {
-                            String command = getString(sectionString + number);
-
-                            if (command != null && command.length() > 0) {
-                                list.add(command);
-                            }
-                        }
-                    }
-                }
-            }
-            return list;
-        }
-        return new LinkedList<>();
+    public List<String> getDefaultPunishmentCommands() {
+        return defaultPunishments;
     }
 
-    public boolean isUsingCustomPunishmentCommands() {
-        if (usingCustomPunishmentCommands != 0) {
-            return usingCustomPunishmentCommands == 1;
-        }
-        if (Config.isLegacy()) {
-            for (Enums.HackType hackType : Enums.HackType.values()) {
-                Check check = hackType.getCheck();
+    public Collection<String> getPunishmentCommands() {
+        if (punishments != null) {
+            return punishments;
+        } else {
+            String sectionString = "Punishments.Commands";
 
-                for (int i = 1; i < Check.maxViolationsPerCycle; i++) {
-                    String[] commands = check.getLegacyCommands(i);
+            try {
+                if (file.exists() || file.createNewFile()) {
+                    for (int position = 0; position < defaultPunishments.size(); position++) {
+                        ConfigUtils.add(file, sectionString + "." + (position + 1), defaultPunishments.get(position));
+                    }
+                } else {
+                    AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
+                }
+            } catch (Exception ex) {
+                AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
+            }
+            ConfigurationSection section = getPath().getConfigurationSection(sectionString);
 
-                    if (commands.length > 0) {
-                        for (String command : commands) {
-                            if (CommandExecution.isCustomCommand(command)) {
-                                usingCustomPunishmentCommands = 1;
-                                return true;
+            if (section != null) {
+                Collection<String> list = new ArrayList<>();
+                Set<String> keys = section.getKeys(true);
+
+                if (!keys.isEmpty()) {
+                    sectionString += ".";
+
+                    for (String key : keys) {
+                        if (AlgebraUtils.validInteger(key)) {
+                            int number = Integer.parseInt(key);
+
+                            if (number >= 1 && number <= Check.maxCommands) {
+                                String command = getString(sectionString + number);
+
+                                if (command != null && !command.isEmpty()) {
+                                    list.add(command);
+                                }
                             }
                         }
                     }
                 }
-            }
-        } else {
-            for (Enums.HackType hackType : Enums.HackType.values()) {
-                String[] commands = hackType.getCheck().getCommands();
-
-                if (commands.length > 0) {
-                    for (String command : commands) {
-                        if (CommandExecution.isCustomCommand(command)) {
-                            usingCustomPunishmentCommands = 1;
-                            return true;
-                        }
-                    }
-                }
+                return punishments = list;
+            } else {
+                return punishments = new ArrayList<>(0);
             }
         }
-        usingCustomPunishmentCommands = -1;
-        return false;
     }
 }

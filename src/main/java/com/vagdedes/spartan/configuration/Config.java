@@ -2,21 +2,17 @@ package com.vagdedes.spartan.configuration;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.functionality.moderation.BanManagement;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.functionality.synchronicity.DiscordWebhooks;
 import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.connection.IDs;
-import com.vagdedes.spartan.handlers.connection.Piracy;
 import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.handlers.stability.Chunks;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.interfaces.listeners.EventsHandler7;
-import com.vagdedes.spartan.objects.profiling.PlayerProfile;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
@@ -31,16 +27,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
 
 public class Config {
 
     public static final String
             legacyFileName = "config.yml",
-            fileName = "checks.yml",
-            defaultConstruct = "[Spartan " + API.getVersion() + "] ";
+            fileName = "checks.yml";
     private static YamlConfiguration configuration = null;
-    private static String construct = defaultConstruct;
+    private static String construct = null;
     private static boolean legacyFile = false;
     private static int maxPlayers = 20;
     public static Settings settings = new Settings();
@@ -97,40 +92,6 @@ public class Config {
 
     // Separator
 
-    public static int getMaxPunishmentViolation(HackType hackType, ResearchEngine.DataType dataType) {
-        if (!Config.isLegacy()) {
-            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.ABSOLUTE);
-        }
-        Check check = hackType.getCheck();
-
-        for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
-            for (String s : check.getLegacyCommands(i)) {
-                if (s != null) {
-                    return i;
-                }
-            }
-        }
-        return 0;
-    }
-
-    public static int getMinPunishmentViolation(HackType hackType, ResearchEngine.DataType dataType) {
-        if (!Config.isLegacy()) {
-            return Check.getCategoryPunishment(hackType, dataType, Enums.PunishmentCategory.UNLIKE);
-        }
-        Check check = hackType.getCheck();
-
-        for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
-            for (String s : check.getLegacyCommands(i)) {
-                if (s != null) {
-                    return i;
-                }
-            }
-        }
-        return 0;
-    }
-
-    // Separator
-
     public static Check getCheckByName(String s) {
         for (HackType hackType : Enums.HackType.values()) {
             Check check = hackType.getCheck();
@@ -181,13 +142,7 @@ public class Config {
         }
 
         // Identification & Labelling
-        if (Piracy.enabled) {
-            construct = "[Spartan " + API.getVersion() + "/" + IDs.hide(IDs.user()) + "/" + IDs.hide(IDs.nonce()) + "] ";
-        } else if (IDs.isValid()) {
-            construct = "[Spartan " + API.getVersion() + "/" + IDs.hide(IDs.user()) + "] ";
-        } else {
-            construct = defaultConstruct;
-        }
+        construct = "[Spartan " + API.getVersion() + "/" + IDs.hide(IDs.user()) + "/" + IDs.hide(IDs.nonce()) + "] ";
         CloudFeature.clear(false);
         CrossServerInformation.refresh();
 
@@ -227,7 +182,6 @@ public class Config {
         sql.create(local); // Always Third (Research Engine SQL Logs)
         messages.create(local);
         Compatibility.create(local);
-        BanManagement.create(local);
         Wave.create(local);
     }
 
@@ -247,7 +201,6 @@ public class Config {
             sql.refreshConfiguration();
             messages.clear();
             compatibility.clear();
-            BanManagement.clear();
             Wave.clearCache();
         }
 
@@ -271,37 +224,6 @@ public class Config {
 
         // Listeners
         EventsHandler7.refresh();
-
-        // Notifications (Always Last)
-        if (enabledPlugin && AwarenessNotifications.areEnabled()) {
-            boolean legacy = isLegacy(),
-                    discord = DiscordWebhooks.isUsing() && !ResearchEngine.enoughData();
-
-            if (legacy || discord) {
-                String legacyConfigurationMessage = AwarenessNotifications.getNotification(
-                        "You are using the '" + legacyFileName + "' file, which is a legacy configuration that can cause detection instabilities. " +
-                                "Unless you know what you are doing, it's recommended to revert to the new one by deleting '" + legacyFileName + "' and running the command '/spartan reload'.",
-                        true
-                ), discordWebhooksMessage = AwarenessNotifications.getOptionalNotification(
-                        "The Discord Webhooks feature is enabled but needs significant data to function. " +
-                                "Please be patient while this data is collected by the anti-cheat."
-                );
-                List<SpartanPlayer> players = Permissions.getStaff();
-
-                if (players.size() > 0) {
-                    for (SpartanPlayer p : players) {
-                        UUID uuid = p.getUniqueId();
-
-                        if (legacy && AwarenessNotifications.canSend(uuid, "config")) {
-                            p.sendMessage(legacyConfigurationMessage);
-                        }
-                        if (discord && AwarenessNotifications.canSend(uuid, "discord")) {
-                            p.sendMessage(discordWebhooksMessage);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public static void reload(Object sender) {
@@ -323,43 +245,6 @@ public class Config {
             }
         }
         create();
-    }
-
-    // Separator
-
-    public static boolean hasCancelAfterViolationOption() {
-        boolean cancelAfterViolation = false;
-
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            if (hackType.getCheck().hasCancelViolation()) {
-                cancelAfterViolation = true;
-                break;
-            }
-        }
-        return cancelAfterViolation;
-    }
-
-    // Separator
-
-    public static Collection<HackType> getPunishableHackModules(SpartanPlayer p, HackType hackType, int violation, ResearchEngine.DataType dataType) {
-        if (violation % hackType.getCheck().getDefaultCancelViolation() == 0) {
-            PlayerProfile profile = p.getProfile();
-
-            if (profile.calculateLiveEvidence(p, hackType, dataType)) {
-                Collection<HackType> evidence = profile.getEvidence().getKnowledgeList();
-                Iterator<HackType> iterator = evidence.iterator();
-
-                while (iterator.hasNext()) { // Check for punishment allowance
-                    HackType loopHackType = iterator.next();
-
-                    if (!loopHackType.getCheck().canPunish()) {
-                        iterator.remove();
-                    }
-                }
-                return evidence;
-            }
-        }
-        return new ArrayList<>(0);
     }
 
     // Separator
@@ -386,7 +271,7 @@ public class Config {
         CheckProtection.cancel(20, 0);
 
         for (HackType hackType : Enums.HackType.values()) {
-            hackType.getCheck().setSilent("true");
+            hackType.getCheck().setSilent(true);
         }
     }
 
@@ -394,7 +279,7 @@ public class Config {
         CheckProtection.cancel(20, 0);
 
         for (HackType hackType : Enums.HackType.values()) {
-            hackType.getCheck().setSilent("false");
+            hackType.getCheck().setSilent(false);
         }
     }
 }

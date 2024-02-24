@@ -20,7 +20,6 @@ import com.vagdedes.spartan.compatibility.necessary.bedrock.plugins.Floodgate;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
 import com.vagdedes.spartan.gui.spartan.MainMenu;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import com.vagdedes.spartan.utils.server.PluginUtils;
@@ -101,7 +100,7 @@ public class Compatibility {
         }
 
         public boolean isFunctional() {
-            return enabled && functional && !CloudFeature.hasException();
+            return enabled && functional;
         }
 
         // Separator

@@ -3,6 +3,9 @@ package com.vagdedes.spartan.compatibility.manual.essential;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.configuration.Compatibility;
 import com.vagdedes.spartan.objects.features.IncompatibleItem;
+import com.vagdedes.spartan.objects.replicates.SpartanInventory;
+import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import io.signality.api.MinigameExecutionEvent;
@@ -16,14 +19,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class MinigameMaker implements Listener {
 
@@ -163,40 +164,42 @@ public class MinigameMaker implements Listener {
             OfflinePlayer offlinePlayer = e.getPlayer();
 
             if (offlinePlayer != null && offlinePlayer.isOnline()) {
-                Player onlinePlayer = (Player) offlinePlayer;
+                SpartanPlayer player = SpartanBukkit.getPlayer((Player) offlinePlayer);
 
-                PlayerInventory inventory = onlinePlayer.getInventory();
-                Events.EventType eventType = e.getEventType();
-                boolean exit = false;
+                if (player != null) {
+                    SpartanInventory inventory = player.getInventory();
+                    Events.EventType eventType = e.getEventType();
+                    boolean exit = false;
 
-                for (IncompatibleItem incompatibleItem : set) {
-                    if (eventType == incompatibleItem.getEventType()) {
-                        for (ItemStack itemStack : new ItemStack[]{
-                                inventory.getItemInHand(),
-                                inventory.getHelmet(),
-                                inventory.getChestplate(),
-                                inventory.getLeggings(),
-                                inventory.getBoots()}) {
-                            if (itemStack != null && itemStack.getType() == incompatibleItem.getMaterial()) {
-                                String name = incompatibleItem.getName();
-                                ItemMeta meta;
+                    for (IncompatibleItem incompatibleItem : set) {
+                        if (eventType == incompatibleItem.getEventType()) {
+                            for (ItemStack itemStack : new ItemStack[]{
+                                    inventory.getItemInHand(),
+                                    inventory.getHelmet(),
+                                    inventory.getChestplate(),
+                                    inventory.getLeggings(),
+                                    inventory.getBoots()}) {
+                                if (itemStack != null && itemStack.getType() == incompatibleItem.getMaterial()) {
+                                    String name = incompatibleItem.getName();
+                                    ItemMeta meta;
 
-                                if (name == null || (meta = itemStack.getItemMeta()) != null && StringUtils.getClearColorString(meta.getDisplayName()).equals(name)) {
-                                    UUID uuid = onlinePlayer.getUniqueId();
-                                    int seconds = incompatibleItem.getSeconds();
+                                    if (name == null || (meta = itemStack.getItemMeta()) != null && StringUtils.getClearColorString(meta.getDisplayName()).equals(name)) {
+                                        int seconds = incompatibleItem.getSeconds();
 
-                                    for (Enums.HackType hackType : incompatibleItem.getHackTypes()) {
-                                        hackType.getCheck().addDisabledUser(uuid,
-                                                compatibilityType + "-" + name,
-                                                seconds * 20);
+                                        for (Enums.HackType hackType : incompatibleItem.getHackTypes()) {
+                                            player.getViolations(hackType).addDisableCause(
+                                                    compatibilityType + "-" + name,
+                                                    null,
+                                                    seconds * 20);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    if (exit) {
-                        break;
+                        if (exit) {
+                            break;
+                        }
                     }
                 }
             }

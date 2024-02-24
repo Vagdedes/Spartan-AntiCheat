@@ -1,10 +1,9 @@
 package com.vagdedes.spartan.utils.gameplay;
 
-import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -13,7 +12,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class MoveUtils {
 
@@ -40,7 +38,6 @@ public class MoveUtils {
             chunkInt = AlgebraUtils.integerRound(chunk),
             jumpingMotions = 5;
 
-    private static final Map<UUID, SpartanLocation> loc = new ConcurrentHashMap<>(Config.getMaxPlayers());
     private static final Set<Double> jumps = new HashSet<>(jumpingMotions);
     private static final Map<Integer, Double> gravity = new LinkedHashMap<>();
 

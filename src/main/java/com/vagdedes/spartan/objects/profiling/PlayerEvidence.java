@@ -1,38 +1,42 @@
 package com.vagdedes.spartan.objects.profiling;
 
+import com.vagdedes.spartan.functionality.protections.Latency;
+import com.vagdedes.spartan.gui.SpartanMenu;
+import com.vagdedes.spartan.gui.spartan.MainMenu;
+import com.vagdedes.spartan.handlers.stability.CancelViolation;
+import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.objects.statistics.PatternStorage;
 import com.vagdedes.spartan.objects.system.Check;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
 
 public class PlayerEvidence {
 
+    public static final double standardRatio = 3.5;
+
     enum EvidenceType {
-        Hacker, Suspected, Legitimate;
+        Hacker(2),
+        Suspected(1),
+        Legitimate(0);
 
-        private final int count;
+        private final int requirement;
 
-        EvidenceType() {
-            switch (this.ordinal()) {
-                case 0:
-                    count = Check.hackerCheckAmount;
-                    break;
-                case 1:
-                    count = 1;
-                    break;
-                default:
-                    count = 0;
-                    break;
-            }
+        EvidenceType(int requirement) {
+            this.requirement = requirement;
         }
     }
 
     // Object
 
+    private final PlayerProfile profile;
     private EvidenceType type;
-    final Map<Enums.HackType, String> live, historical;
+    final Map<Enums.HackType, String> live; // Live object is used for synchronization
+    public final Map<Enums.HackType, String> historical; // Live object is used for synchronization
 
-    PlayerEvidence() {
+    PlayerEvidence(PlayerProfile profile) {
+        this.profile = profile;
         this.type = EvidenceType.Legitimate;
         this.live = Collections.synchronizedMap(new LinkedHashMap<>(Enums.HackType.values().length));
         this.historical = new LinkedHashMap<>(Enums.HackType.values().length);
@@ -46,11 +50,45 @@ public class PlayerEvidence {
 
     // Separator
 
-    void clear() {
+    public void clear(boolean live, boolean historical, boolean judge) {
         synchronized (this.live) {
-            this.live.clear();
-            this.historical.clear();
-            this.type = EvidenceType.Legitimate;
+            if (live) {
+                this.live.clear();
+            }
+            if (historical) {
+                this.historical.clear();
+            }
+            if (judge) {
+                judgeLocal();
+            }
+        }
+    }
+
+    public void remove(Enums.HackType hackType, boolean live, boolean historical, boolean judge) {
+        synchronized (this.live) {
+            if (live) {
+                this.live.remove(hackType);
+            }
+            if (historical) {
+                this.historical.remove(hackType);
+            }
+            if (judge) {
+                judgeLocal();
+            }
+        }
+    }
+
+    public void add(Enums.HackType hackType, String info, boolean live, boolean historical, boolean judge) {
+        synchronized (this.live) {
+            if (live) {
+                this.live.put(hackType, info);
+            }
+            if (historical) {
+                this.historical.put(hackType, info);
+            }
+            if (judge) {
+                judgeLocal();
+            }
         }
     }
 
@@ -87,12 +125,6 @@ public class PlayerEvidence {
 
     // Separator
 
-    public int getCount() {
-        return this.getKnowledgeList().size();
-    }
-
-    // Separator
-
     boolean has(EvidenceType type) {
         return this.type == type;
     }
@@ -105,22 +137,61 @@ public class PlayerEvidence {
 
     // Separator
 
-    public void judge() {
+    public Collection<Enums.HackType> calculate(SpartanPlayer player, Enums.HackType hackType) {
         synchronized (this.live) {
-            int count = this.getRawKnowledgeList().size();
-            EvidenceType type = this.type;
+            if (this.live.containsKey(hackType)
+                    || this.historical.containsKey(hackType)) {
+                return getRawKnowledgeList();
+            } else {
+                Check check = hackType.getCheck();
 
-            for (EvidenceType evidenceType : EvidenceType.values()) {
-                if (count >= evidenceType.count
-                        && this.type.count < evidenceType.count) {
-                    type = evidenceType;
+                if (check.supportsLiveEvidence()) {
+                    int violationCount = player.getViolations(hackType).getLevel()
+                            - CancelViolation.get(hackType, profile.getDataType())
+                            - AlgebraUtils.integerCeil(Latency.getDelay(player));
 
-                    if (evidenceType == EvidenceType.Hacker) {
-                        break;
+                    if (violationCount > 0) {
+                        double ratio = (violationCount / ((double) CancelViolation.get(hackType, profile.getDataType())));
+
+                        if (ratio >= standardRatio) {
+                            this.live.put(hackType,
+                                    "Ratio: " + AlgebraUtils.cut(ratio, 2) + "%"
+                            );
+                            this.judgeLocal();
+                            SpartanMenu.playerInfo.refresh(player.getName());
+                            MainMenu.refresh();
+                            return getRawKnowledgeList();
+                        }
                     }
                 }
+                return new ArrayList<>(0);
             }
-            this.type = type;
+        }
+    }
+
+    // Separator
+
+    void judgeLocal() {
+        int count = this.getRawKnowledgeList().size();
+        EvidenceType type = this.type;
+
+        for (EvidenceType evidenceType : EvidenceType.values()) {
+            if (count >= evidenceType.requirement) {
+                type = evidenceType;
+
+                if (evidenceType != EvidenceType.Legitimate) {
+                    PatternStorage.block(this.profile);
+                    break;
+                }
+            }
+        }
+        PatternStorage.consider(this.profile);
+        this.type = type;
+    }
+
+    public void judge() {
+        synchronized (this.live) {
+            judgeLocal();
         }
     }
 }

@@ -1,13 +1,10 @@
 package com.vagdedes.spartan.utils.java;
 
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.ChatColor;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 public class StringUtils {
 
@@ -114,6 +111,27 @@ public class StringUtils {
             }
             b.append(separator);
         }
+    }
+
+    public static String toString(Collection<?> a, String separator) {
+        int iMax = a.size() - 1;
+
+        if (iMax == -1) {
+            return "";
+        }
+        StringBuilder b = new StringBuilder();
+        int i = 0;
+
+       for (Object o : a) {
+            b.append(o);
+
+            if (i == iMax) {
+                break;
+            }
+            b.append(separator);
+            i++;
+        }
+        return b.toString();
     }
 
     public static String toString(Object[] a) {

@@ -22,7 +22,7 @@ public class ElytraUse {
                 if (i.getType() == Material.ELYTRA) {
                     if (i.getDurability() < 432) {
                         if (!event
-                                || !p.getExecutor(Enums.HackType.Exploits).handle(Exploits.ELYTRA_GLIDE_SPAM)) {
+                                || !p.getExecutor(Enums.HackType.Exploits).handle(false, Exploits.ELYTRA_GLIDE_SPAM)) {
                             p.setGliding(gliding, false);
                             Handlers handlers = p.getHandlers();
                             handlers.add(Handlers.HandlerType.ElytraWear, 2);
@@ -35,7 +35,7 @@ public class ElytraUse {
                         p.setGliding(false, gliding);
 
                         if (gliding) {
-                            p.getExecutor(Enums.HackType.Exploits).handle(new int[]{2, 2});
+                            p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{2, 2});
                         }
                     }
                 } else {
@@ -45,14 +45,14 @@ public class ElytraUse {
                 p.setGliding(false, gliding);
 
                 if (gliding && !p.getHandlers().has(Handlers.HandlerType.ElytraWear)) {
-                    p.getExecutor(Enums.HackType.Exploits).handle(new int[]{3, 2});
+                    p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{3, 2});
                 }
             }
         } else {
             p.setGliding(false, gliding);
 
             if (gliding) {
-                p.getExecutor(Enums.HackType.Exploits).handle(new int[]{1, 0});
+                p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{1, 0});
             }
         }
     }

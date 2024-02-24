@@ -2,7 +2,7 @@ package com.vagdedes.spartan.handlers.connection;
 
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.RequestUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 public class DiscordMemberCount {
 

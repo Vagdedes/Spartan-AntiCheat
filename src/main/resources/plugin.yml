@@ -1,7 +1,7 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
 main: com.vagdedes.spartan.Register
-version: Phase 530
+version: Phase 532
 website: https://www.idealistic.ai
 description: Machine Learning cheat prevention made simple.
 api-version: 1.13

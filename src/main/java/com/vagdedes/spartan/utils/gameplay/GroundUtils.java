@@ -6,6 +6,7 @@ import com.vagdedes.spartan.objects.data.Handlers;
 import com.vagdedes.spartan.objects.replicates.SpartanBlock;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.utils.java.HashHelper;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
@@ -19,6 +20,7 @@ public class GroundUtils {
 
     private static final Set<Double> heights = new HashSet<>();
     private static final Map<Material, double[]> specificHeights = new LinkedHashMap<>();
+    private static final Map<Material, Integer> specificHeightsHashes = new LinkedHashMap<>();
 
     private static final boolean
             v1_9 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9),
@@ -30,6 +32,7 @@ public class GroundUtils {
             maxPossibleStep = 0.9375, // Attention, serious usage
             minPossibleStep = 0.015625,  // Attention, serious usage
             maxPlayerStep = bedStep + 0.1;
+    public static final int maxHeightLength;
 
     static final String
             inaccuracyKey = "ground-utils=utility-inaccuracy";
@@ -81,7 +84,7 @@ public class GroundUtils {
             } else if (BlockUtils.areFlowerPots(m) || BlockUtils.areCandles(m)) {
                 specificHeights.put(m, new double[]{0.0, 0.375});
             } else if (BlockUtils.areCarpets(m)) {
-                specificHeights.put(m, new double[]{0.0625, 0.99999999});
+                specificHeights.put(m, new double[]{0.0625});
             } else if (m == MaterialUtils.get("repeater_on") || m == MaterialUtils.get("repeater_off") || m == MaterialUtils.get("comparator_on") || m == MaterialUtils.get("comparator_off")) {
                 specificHeights.put(m, new double[]{0.125});
             } else if (BlockUtils.areBeds(m)) {
@@ -160,6 +163,18 @@ public class GroundUtils {
                     break;
             }
         }
+        int maxHeightLengthLocal = 0;
+
+        for (Map.Entry<Material, double[]> entry : specificHeights.entrySet()) {
+            int hash = 1;
+
+            for (double d : entry.getValue()) {
+                maxHeightLengthLocal = Math.max(maxHeightLengthLocal, Double.toString(d).length() - 2); // 0.XXXXX
+                hash = HashHelper.extendInt(hash, Double.hashCode(d));
+            }
+            specificHeightsHashes.put(entry.getKey(), hash);
+        }
+        maxHeightLength = maxHeightLengthLocal;
     }
 
     // Method
@@ -270,8 +285,21 @@ public class GroundUtils {
         }
     }
 
+    public static double[] getHeightsRaw(Material m) {
+        return specificHeights.getOrDefault(m, new double[]{0.0});
+    }
+
+    public static int getHeightsHash(Material m, int defaultValue) {
+        return specificHeightsHashes.getOrDefault(m, defaultValue);
+    }
+
+    public static long getHeightsHashLong(Material m, long defaultValue) {
+        Integer hash = specificHeightsHashes.get(m);
+        return hash != null ? hash : defaultValue;
+    }
+
     public static double getMaxHeight(Material m) {
-        double[] heights = specificHeights.getOrDefault(m, new double[]{0.0});
+        double[] heights = getHeightsRaw(m);
 
         if (heights.length == 1) {
             return heights[0];

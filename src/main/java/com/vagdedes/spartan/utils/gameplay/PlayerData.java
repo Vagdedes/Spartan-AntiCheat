@@ -7,20 +7,16 @@ import com.vagdedes.spartan.handlers.identifiers.complex.predictable.Liquid;
 import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
 import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.ExtremeCollision;
 import com.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.objects.data.Buffer;
 import com.vagdedes.spartan.objects.data.Cooldowns;
 import com.vagdedes.spartan.objects.data.Handlers;
-import com.vagdedes.spartan.objects.profiling.PlayerFight;
-import com.vagdedes.spartan.objects.profiling.PlayerOpponent;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -161,76 +157,19 @@ public class PlayerData {
 
     // Combat
 
-    public static boolean isInActivePlayerCombat(SpartanPlayer p) {
-        boolean damage = false, hit = false;
-        List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
-
-        if (!fights.isEmpty()) {
-            double globalAverageReach = ResearchEngine.getAverageReach();
-
-            for (PlayerFight fight : fights) {
-                PlayerOpponent[] opponents = fight.getOpponent(p);
-
-                if (!damage && opponents[0].getLastDamage() <= combatTimeRequirement) { // Last-damage double of last-hit due to advantage restrictions
-                    if (hit) {
-                        return true;
-                    } else {
-                        damage = true;
-                    }
-                }
-                if (!hit && (opponents[0].getLastHit() <= combatTimeRequirement
-                        || globalAverageReach != -1.0 && opponents[1].getReachAverage() > globalAverageReach)) {
-                    if (damage) {
-                        return true;
-                    } else {
-                        hit = true;
-                    }
-                }
-            }
-        }
-        return false;
+    public static boolean isActivelyFighting(SpartanPlayer self, long hit, long damage, boolean both) {
+        boolean hitB = Damage.getLastDealt(self) <= hit,
+                damageB = Damage.getLastReceived(self) <= damage;
+        return both ? hitB && damageB : hitB || damageB;
     }
 
-    public static boolean isInActiveEntityCombat(SpartanPlayer p) {
-        return receivedEntityDamage(p) && hitAnEntity(p);
-    }
-
-    public static boolean isFightParticipant(SpartanPlayer p) {
-        return p.getProfile().getCombat().hasCurrentFight();
-    }
-
-    public static boolean receivedPlayerDamage(SpartanPlayer p) {
-        List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
-
-        if (!fights.isEmpty()) {
-            for (PlayerFight fight : fights) {
-                if (fight.getOpponent(p)[0].getLastDamage() <= combatTimeRequirement) { // Last-damage double of last-hit due to advantage restrictions
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean receivedEntityDamage(SpartanPlayer p) {
-        return Damage.getLastReceived(p) <= combatTimeRequirement;
-    }
-
-    public static boolean hitAPlayer(SpartanPlayer p) {
-        List<PlayerFight> fights = p.getProfile().getCombat().getCurrentFights();
-
-        if (!fights.isEmpty()) {
-            for (PlayerFight fight : fights) {
-                if (fight.getOpponent(p)[0].getLastHit() <= combatTimeRequirement) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean hitAnEntity(SpartanPlayer p) {
-        return Damage.getLastDealt(p) <= combatTimeRequirement;
+    public static boolean isActivelyFightingEntities(SpartanPlayer self, boolean hit, boolean damage, boolean both) {
+        return isActivelyFighting(
+                self,
+                hit ? combatTimeRequirement : -1L,
+                damage ? combatTimeRequirement : -1L,
+                both
+        );
     }
 
     // Enchantments
@@ -498,26 +437,6 @@ public class PlayerData {
             return buffer.getRemainingTicks(key) > 0 ? buffer.get(key, 0) : 0;
         }
         return 0;
-    }
-
-    // Entities
-
-    public static int getEntitiesNumber(SpartanPlayer p, double distance, boolean findPusher) {
-        int i = 0;
-        boolean pusherFound = false;
-
-        for (Entity e : p.getNearbyEntities(distance, distance, distance)) {
-            if (e instanceof LivingEntity && (!(e instanceof Player) || p.canSee((Player) e))) {
-                if (findPusher && (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && e.getPassengers().size() > 0 || !MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && e.getPassenger() != null)) {
-                    pusherFound = true;
-                } else {
-                    i++;
-                }
-            } else if (e instanceof Boat) {
-                i++;
-            }
-        }
-        return pusherFound ? Integer.MAX_VALUE : i;
     }
 
     // Ground

@@ -1,24 +1,21 @@
 package com.vagdedes.spartan.objects.data;
 
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.utils.java.StringUtils;
-
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Timer {
 
-    private final Map<String, Long> hm;
+    private final Map<String, Long> storage;
 
-    public Timer(boolean async) {
-        hm = (async && !MultiVersion.folia ? new ConcurrentHashMap<>() : new LinkedHashMap<>());
+    public Timer() {
+        storage = Collections.synchronizedMap(new LinkedHashMap<>());
     }
 
     public void clear() {
-        hm.clear();
+        synchronized (storage) {
+            storage.clear();
+        }
     }
 
     public boolean has(long l) {
@@ -26,11 +23,17 @@ public class Timer {
     }
 
     public boolean has(String name) {
-        return hm.get(name) != null;
+        synchronized (storage) {
+            return storage.get(name) != null;
+        }
     }
 
     public long get(String name, long def) {
-        Long ms = hm.get(name);
+        Long ms;
+
+        synchronized (storage) {
+            ms = storage.get(name);
+        }
         return ms != null ? System.currentTimeMillis() - ms : def;
     }
 
@@ -39,46 +42,22 @@ public class Timer {
     }
 
     public void set(String name) {
-        hm.put(name, System.currentTimeMillis());
-    }
-
-    public void set(String name, long ms, boolean future) {
-        hm.put(name, System.currentTimeMillis() + (future ? ms : -ms));
+        synchronized (storage) {
+            storage.put(name, System.currentTimeMillis());
+        }
     }
 
     public void remove(String name) {
-        hm.remove(name);
+        synchronized (storage) {
+            storage.remove(name);
+        }
     }
 
     public void remove(String[] names) {
-        for (String name : names) {
-            remove(name);
-        }
-    }
-
-    public void clear(String[] ignore) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (!StringUtils.stringContainsPartOfArray(ignore, name)) {
-                    internal.add(name);
-                }
+        synchronized (storage) {
+            for (String name : names) {
+                storage.remove(name);
             }
-            remove(internal.toArray(new String[0]));
-        }
-    }
-
-    public void clear(String s) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (name.contains(s)) {
-                    internal.add(name);
-                }
-            }
-            remove(internal.toArray(new String[0]));
         }
     }
 }

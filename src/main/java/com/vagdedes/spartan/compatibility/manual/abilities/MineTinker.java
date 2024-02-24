@@ -2,6 +2,8 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.vagdedes.spartan.configuration.Compatibility;
 import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
+import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.system.SpartanBukkit;
 import de.flo56958.minetinker.events.MTPlayerInteractEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
@@ -12,10 +14,15 @@ public class MineTinker implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(MTPlayerInteractEvent e) {
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+        if (p == null) {
+            return;
+        }
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.MineTinker;
 
         if (compatibilityType.isFunctional()) {
-            CheckProtection.evadeCommonFalsePositives(e.getPlayer(), compatibilityType,
+            CheckProtection.evadeCommonFalsePositives(p, compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,
                             Enums.HackType.FastClicks,

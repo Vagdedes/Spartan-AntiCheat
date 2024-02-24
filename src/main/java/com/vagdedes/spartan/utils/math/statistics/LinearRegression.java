@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.java.math;
+package com.vagdedes.spartan.utils.math.statistics;
 
 
 import java.util.Collection;

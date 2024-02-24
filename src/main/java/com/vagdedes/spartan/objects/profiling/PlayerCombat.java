@@ -1,370 +1,153 @@
 package com.vagdedes.spartan.objects.profiling;
 
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.utils.gameplay.CombatUtils;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class PlayerCombat {
 
     // Separator
 
-    private final String name;
+    private final PlayerProfile profile;
 
     // Use of memory based lists to help save performance when iterating in the object (no advantage when iterating globally)
-    private final List<PlayerFight>
-            currentFights = new CopyOnWriteArrayList<>(),
-            pastFights = new CopyOnWriteArrayList<>();
-    private PlayerFight currentFightCache;
+    final Collection<PlayerFight> fights;
 
-    PlayerCombat(String name) {
-        this.name = name;
-        this.currentFightCache = null;
+    PlayerCombat(PlayerProfile profile) {
+        this.profile = profile;
+        this.fights = Collections.synchronizedList(new ArrayList<>());
     }
 
-    // Separator
-
-    public void removeFight(PlayerFight fight, boolean store) {
-        if (store) {
-            storeFight(fight, true);
-        }
-        currentFights.remove(fight);
-    }
-
-    public void storeFight(PlayerFight fight, boolean refreshMenu) {
-        if (!name.isEmpty()) { // If length is zero, this means this object is part of a temporary profile
-            pastFights.add(fight);
-            ResearchEngine.addFight(fight, refreshMenu);
-        }
-    }
-
-    public void createFight(PlayerFight fight) {
-        currentFights.add(fight);
-    }
-
-    public boolean hasEnoughFights() {
-        return pastFights.size() >= 5;
-    }
-
-    public boolean hasFights() {
-        return !pastFights.isEmpty();
-    }
-
-    public boolean hasCurrentFight() {
-        return !currentFights.isEmpty();
-    }
-
-    // Separator
-
-    public List<PlayerFight> getWins() {
-        int size = pastFights.size();
+    public boolean isFighting() {
+        int size = fights.size();
 
         if (size > 0) {
-            List<PlayerFight> fights = new ArrayList<>(size);
+            synchronized (fights) {
+                Iterator<PlayerFight> iterator = fights.iterator();
 
-            for (PlayerFight fight : pastFights) {
-                if (fight.getWinner().getName().equals(name)) {
-                    fights.add(fight);
+                while (iterator.hasNext()) {
+                    PlayerFight fight1 = iterator.next();
+
+                    if (fight1.expired()) {
+                        iterator.remove();
+                        removeFightCopy(fight1);
+                        size--;
+                    }
                 }
+                return size > 0;
             }
-            return fights;
+        } else {
+            return false;
         }
-        return new ArrayList<>(0);
     }
 
-    public List<PlayerFight> getLoses() {
-        int size = pastFights.size();
-
-        if (size > 0) {
-            List<PlayerFight> fights = new ArrayList<>(size);
-
-            for (PlayerFight fight : pastFights) {
-                if (fight.getLoser().getName().equals(name)) {
-                    fights.add(fight);
-                }
-            }
-            return fights;
-        }
-        return new ArrayList<>(0);
-    }
-
-    // Separator
-
-    public List<PlayerFight> getPastFights() {
-        return new ArrayList<>(pastFights);
-    }
-
-    public List<PlayerFight> getCurrentFights() {
-        return new ArrayList<>(currentFights);
-    }
-
-    // Separator
-
-    public void setWinnerAgainst(String opponentName) {
-        List<PlayerFight> fights = getCurrentFights();
-
+    public boolean isActivelyFighting(SpartanPlayer target, long hit, long damage, boolean both) {
         if (!fights.isEmpty()) {
-            for (PlayerFight fight : fights) {
-                PlayerOpponent opponent1 = fight.getOpponent1();
-                PlayerOpponent opponent2 = fight.getOpponent2();
+            boolean hitB = false,
+                    damageB = false,
+                    hasTarget = target != null;
 
-                if (opponent1.getName().equals(opponentName) || opponent2.getName().equals(opponentName)) {
-                    fight.setWinner(name);
-                    break;
+            for (PlayerFight fight : fights) {
+                PlayerOpponent[] opponents = fight.getOpponent(profile);
+
+                if (!hasTarget || opponents[1].player.equals(target)) {
+                    if (!damageB && opponents[0].getLastDamage(true) <= damage) {
+                        if (both) {
+                            damageB = true;
+
+                            if (hitB) {
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    }
+                    if (!hitB && opponents[0].getLastHit(true) <= hit) {
+                        if (both) {
+                            hitB = true;
+
+                            if (damageB) {
+                                return true;
+                            }
+                        } else {
+                            return true;
+                        }
+                    }
                 }
             }
         }
+        return false;
     }
 
-    public PlayerFight getCurrentFightByCache() {
-        return currentFightCache != null && !currentFightCache.hasEnded() ? currentFightCache : null;
+    public boolean isActivelyFighting(SpartanPlayer target, boolean hit, boolean damage, boolean both) {
+        return isActivelyFighting(
+                target,
+                hit ? CombatUtils.combatTimeRequirement : -1L,
+                damage ? 2_500L : -1L,
+                both
+        );
     }
 
-    public PlayerFight getCurrentFight(SpartanPlayer opponent) {
-        List<PlayerFight> fights = getCurrentFights();
-
+    public PlayerFight getFight(SpartanPlayer opponent) {
         if (!fights.isEmpty()) {
-            String opponentName = opponent.getName();
+            synchronized (fights) {
+                Iterator<PlayerFight> iterator = fights.iterator();
 
-            // Cache Component
-            for (PlayerFight fight : fights) {
-                if (fight.getOpponent1().getName().equals(opponentName)
-                        || fight.getOpponent2().getName().equals(opponentName)) {
-                    return currentFightCache = fight;
+                while (iterator.hasNext()) {
+                    PlayerFight fight = iterator.next();
+
+                    if (fight.expired()) {
+                        iterator.remove();
+                        removeFightCopy(fight);
+                    } else if (fight.opponent1.player.equals(opponent)
+                            || fight.opponent2.player.equals(opponent)) {
+                        return fight;
+                    }
                 }
             }
         }
-
-        // Live Component
-        return currentFightCache = new PlayerFight(new PlayerOpponent(name), new PlayerOpponent(opponent));
+        PlayerFight fight = new PlayerFight(
+                new PlayerOpponent(profile.getSpartanPlayer()),
+                new PlayerOpponent(opponent)
+        );
+        synchronized (fights) {
+            fights.add(fight);
+            return fight;
+        }
     }
 
-    // Separator
+    public void track() {
+        if (!fights.isEmpty()) {
+            synchronized (fights) {
+                Iterator<PlayerFight> iterator = fights.iterator();
 
-    public void runFights() {
-        if (!currentFights.isEmpty()) {
-            for (PlayerFight fight : currentFights) {
-                if (fight.hasEnded()) {
-                    fight.judge();
+                while (iterator.hasNext()) {
+                    PlayerFight fight = iterator.next();
+
+                    if (fight.expired()) {
+                        iterator.remove();
+                        removeFightCopy(fight);
+                    }
                 }
             }
         }
     }
 
-    public void endFights() {
-        if (!currentFights.isEmpty()) {
-            for (PlayerFight fight : currentFights) {
-                fight.judge();
-            }
+    void removeFight(PlayerFight fight) {
+        synchronized (fights) {
+            fights.remove(fight);
         }
     }
 
-    // Separator
+    private void removeFightCopy(PlayerFight fight) {
+        PlayerCombat combat = fight.getOpponent(profile.getSpartanPlayer())[1].player.getProfile().getCombat();
 
-    public double[] getHitRatioAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getHitRatio(fight.getOpponent(name));
-                average += value;
-                min = Math.min(min, value);
-                max = Math.max(max, value);
-            }
-            return new double[]{min, average / ((double) total), max};
+        synchronized (combat.fights) {
+            combat.fights.remove(fight);
         }
-        return null;
-    }
-
-    public double[] getReachAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getReachAverage();
-                average += value;
-                min = Math.min(min, value);
-                max = Math.max(max, value);
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getMaxCPSAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getMaxCPS();
-
-                if (value > 0) {
-                    total++;
-                    average += value;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                }
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getCPSAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getCPSAverage();
-
-                if (value > 0) {
-                    total++;
-                    average += value;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                }
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getYawRateAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getYawRateAverage();
-
-                if (value > 0.0f) {
-                    total++;
-                    average += value;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                }
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getPitchRateAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getPitchRateAverage();
-
-                if (value > 0.0f) {
-                    total++;
-                    average += value;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                }
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getHitComboAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                int value = fight.getOpponent(name)[0].getMaxHitCombo();
-
-                if (value > 0) {
-                    total++;
-                    average += value;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                }
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getHitTimeAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getHitTimeAverage();
-                average += value;
-                min = Math.min(min, value);
-                max = Math.max(max, value);
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double[] getDurationAverages() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            double average = 0.0, min = Double.MAX_VALUE, max = 0.0;
-
-            for (PlayerFight fight : pastFights) {
-                double value = fight.getOpponent(name)[0].getDuration();
-                average += value;
-                min = Math.min(min, value);
-                max = Math.max(max, value);
-            }
-            return new double[]{min, average / ((double) total), max};
-        }
-        return null;
-    }
-
-    public double getAverageKills() {
-        int total = pastFights.size();
-
-        if (total > 0) {
-            int count = 0;
-
-            for (PlayerFight fight : pastFights) {
-                if (fight.isKill()) {
-                    count++;
-                }
-            }
-            return count / ((double) total);
-        }
-        return -1.0;
-    }
-
-    public double getAverageWinLossRatio() {
-        if (!pastFights.isEmpty()) {
-            int wins = 0, loses = 0;
-
-            for (PlayerFight fight : pastFights) {
-                if (fight.getWinner().getName().equals(name)) {
-                    wins++;
-                } else {
-                    loses++;
-                }
-            }
-            return loses == 0 ? wins : wins / ((double) loses);
-        }
-        return -1.0;
     }
 }

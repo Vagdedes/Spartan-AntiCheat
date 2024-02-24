@@ -1,12 +1,8 @@
 package com.vagdedes.spartan.objects.data;
 
-import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.utils.java.MemoryUtils;
-import com.vagdedes.spartan.utils.java.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Decimals {
 
@@ -15,87 +11,83 @@ public class Decimals {
             CALCULATE_MAX = -3,
             CALCULATE_MIN = -4,
             CALCULATE_REMAINING = -5;
-    private final Map<String, List<Double>> hm;
-    private final boolean async;
+    private final Map<String, List<Double>> storage;
 
-    public Decimals(boolean async) {
-        this.hm = (async && !MultiVersion.folia ? new ConcurrentHashMap<>() : new LinkedHashMap<>());
-        this.async = async;
+    public Decimals() {
+        this.storage = Collections.synchronizedMap(new LinkedHashMap<>());
     }
 
     public void clear() {
-        hm.clear();
+        synchronized (storage) {
+            storage.clear();
+        }
     }
 
     public double get(String name, double def, int newestToOldestIndex) {
-        List<Double> list;
-
-        if (async) {
-            list = new ArrayList<>(hm.getOrDefault(name, new ArrayList<>()));
-        } else {
-            list = hm.get(name);
+        synchronized (storage) {
+            List<Double> list = storage.get(name);
 
             if (list == null) {
                 return def;
             }
-        }
-        int size = list.size();
+            int size = list.size();
 
-        if (size == 0) {
-            return def;
-        }
-        switch (newestToOldestIndex) {
-            case CALCULATE_AVERAGE:
-                double sum = 0.0;
+            if (size == 0) {
+                return def;
+            }
+            switch (newestToOldestIndex) {
+                case CALCULATE_AVERAGE:
+                    double sum = 0.0;
 
-                for (double dbl : list) {
-                    sum += dbl;
-                }
-                return sum / ((double) size);
-            case CALCULATE_SUMMARY:
-                sum = 0.0;
+                    for (double dbl : list) {
+                        sum += dbl;
+                    }
+                    return sum / ((double) size);
+                case CALCULATE_SUMMARY:
+                    sum = 0.0;
 
-                for (double dbl : list) {
-                    sum += dbl;
-                }
-                return sum;
-            case CALCULATE_MAX:
-                sum = 0.0;
+                    for (double dbl : list) {
+                        sum += dbl;
+                    }
+                    return sum;
+                case CALCULATE_MAX:
+                    sum = 0.0;
 
-                for (double dbl : list) {
-                    sum = Math.max(sum, dbl);
-                }
-                return sum;
-            case CALCULATE_MIN:
-                sum = Double.MAX_VALUE;
+                    for (double dbl : list) {
+                        sum = Math.max(sum, dbl);
+                    }
+                    return sum;
+                case CALCULATE_MIN:
+                    sum = Double.MAX_VALUE;
 
-                for (double dbl : list) {
-                    sum = Math.min(sum, dbl);
-                }
-                return sum;
-            case CALCULATE_REMAINING:
-                if (size == 1) {
-                    return def;
-                }
-                sum = 0.0;
-                double previous = 0.0;
-                Iterator<Double> iterator = list.iterator();
+                    for (double dbl : list) {
+                        sum = Math.min(sum, dbl);
+                    }
+                    return sum;
+                case CALCULATE_REMAINING:
+                    if (size == 1) {
+                        return def;
+                    }
+                    sum = 0.0;
+                    double previous = 0.0;
+                    Iterator<Double> iterator = list.iterator();
 
-                if (iterator.hasNext()) {
-                    previous = iterator.next();
-                }
-                while (iterator.hasNext()) {
-                    double dbl = iterator.next();
-                    sum += Math.abs(dbl - previous);
-                    previous = dbl;
-                }
-                return sum;
-            default:
-                if (newestToOldestIndex >= size) {
-                    return def;
-                } else {
-                    return list.get(MemoryUtils.getNewestToOldestPosition(size, newestToOldestIndex));
-                }
+                    if (iterator.hasNext()) {
+                        previous = iterator.next();
+                    }
+                    while (iterator.hasNext()) {
+                        double dbl = iterator.next();
+                        sum += Math.abs(dbl - previous);
+                        previous = dbl;
+                    }
+                    return sum;
+                default:
+                    if (newestToOldestIndex >= size) {
+                        return def;
+                    } else {
+                        return list.get(MemoryUtils.getNewestToOldestPosition(size, newestToOldestIndex));
+                    }
+            }
         }
     }
 
@@ -116,58 +108,59 @@ public class Decimals {
     }
 
     public boolean has(String name) {
-        return hm.get(name) != null;
+        synchronized (storage) {
+            return storage.get(name) != null;
+        }
     }
 
     public void set(String name, double value) {
-        List<Double> list = hm.get(name);
+        synchronized (storage) {
+            List<Double> list = storage.get(name);
 
-        if (list != null) {
-            list.clear();
-            list.add(value);
-        } else {
-            list = async ? new CopyOnWriteArrayList<>() : new LinkedList<>();
-            list.add(value);
-            hm.put(name, list);
+            if (list != null) {
+                list.clear();
+                list.add(value);
+            } else {
+                list = new LinkedList<>();
+                list.add(value);
+                storage.put(name, list);
+            }
         }
     }
 
     public double add(String name, double value, int maxSize) {
-        List<Double> list = hm.get(name);
+        synchronized (storage) {
+            List<Double> list = storage.get(name);
 
-        if (list != null) {
-            list.add(value);
+            if (list != null) {
+                list.add(value);
 
-            if (maxSize > 0) {
-                int size = list.size();
+                if (maxSize > 0) {
+                    int size = list.size();
 
-                if (size > maxSize) {
-                    size -= maxSize;
-                    Iterator<Double> iterator = list.iterator();
+                    if (size > maxSize) {
+                        size -= maxSize;
+                        Iterator<Double> iterator = list.iterator();
 
-                    while (iterator.hasNext() && size > 0) {
-                        if (async) {
-                            double dbl = iterator.next();
-                            list.remove(dbl);
-                        } else {
+                        while (iterator.hasNext() && size > 0) {
                             iterator.next();
                             iterator.remove();
+                            size--;
                         }
-                        size--;
                     }
                 }
-            }
-            double sum = 0.0;
+                double sum = 0.0;
 
-            for (double dbl : list) {
-                sum += dbl;
+                for (double dbl : list) {
+                    sum += dbl;
+                }
+                return sum;
+            } else {
+                list = new LinkedList<>();
+                list.add(value);
+                storage.put(name, list);
+                return value;
             }
-            return sum;
-        } else {
-            list = async ? new CopyOnWriteArrayList<>() : new LinkedList<>();
-            list.add(value);
-            hm.put(name, list);
-            return value;
         }
     }
 
@@ -176,56 +169,44 @@ public class Decimals {
     }
 
     public void remove(String name) {
-        hm.remove(name);
+        synchronized (storage) {
+            storage.remove(name);
+        }
     }
 
     public void remove(String[] names) {
-        for (String name : names) {
-            remove(name);
+        synchronized (storage) {
+            for (String name : names) {
+                storage.remove(name);
+            }
         }
     }
 
     public void remove(String name, double value) {
-        List<Double> list = hm.get(name);
+        synchronized (storage) {
+            List<Double> list = storage.get(name);
 
-        if (list != null && list.remove(value) && list.isEmpty()) {
-            hm.remove(name);
+            if (list != null && list.remove(value) && list.isEmpty()) {
+                storage.remove(name);
+            }
         }
     }
 
     public int getCount(String name) {
-        List<Double> list = hm.get(name);
+        List<Double> list;
+
+        synchronized (storage) {
+            list = storage.get(name);
+        }
         return list == null ? 0 : list.size();
     }
 
     public List<Double> getOldestToNewestList(String name) {
-        List<Double> list = hm.get(name);
+        List<Double> list;
+
+        synchronized (storage) {
+            list = storage.get(name);
+        }
         return list == null ? new ArrayList<>(0) : list;
-    }
-
-    public void clear(String[] ignore) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (!StringUtils.stringContainsPartOfArray(ignore, name)) {
-                    internal.add(name);
-                }
-            }
-            remove(internal.toArray(new String[0]));
-        }
-    }
-
-    public void clear(String s) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (name.contains(s)) {
-                    internal.add(name);
-                }
-            }
-            remove(internal.toArray(new String[0]));
-        }
     }
 }

@@ -1,7 +1,7 @@
-package com.vagdedes.spartan.api;
+package me.vagdedes.spartan.api;
 
-import com.vagdedes.spartan.system.Enums.HackType;
-import com.vagdedes.spartan.system.Enums.Permission;
+import me.vagdedes.spartan.system.Enums.HackType;
+import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -27,6 +27,7 @@ public class API {
         return BackgroundAPI.getSetting(path);
     }
 
+    @Deprecated
     public static String getCategory(Player p, HackType hackType) {
         return BackgroundAPI.getCategory(p, hackType);
     }
@@ -40,6 +41,7 @@ public class API {
         return BackgroundAPI.hasNotificationsEnabled(p);
     }
 
+    @Deprecated
     public static int getViolationResetTime() {
         return BackgroundAPI.getViolationResetTime();
     }
@@ -109,6 +111,7 @@ public class API {
         return BackgroundAPI.getCancelViolation(hackType);
     }
 
+    @Deprecated
     public static int getViolationDivisor(Player p, HackType hackType) {
         return BackgroundAPI.getViolationDivisor(p, hackType);
     }
@@ -181,22 +184,27 @@ public class API {
         return BackgroundAPI.isBypassing(p, HackType);
     }
 
+    @Deprecated
     public static void banPlayer(UUID uuid, String reason) {
         BackgroundAPI.banPlayer(uuid, reason);
     }
 
+    @Deprecated
     public static boolean isBanned(UUID uuid) {
         return BackgroundAPI.isBanned(uuid);
     }
 
+    @Deprecated
     public static void unbanPlayer(UUID uuid) {
         BackgroundAPI.unbanPlayer(uuid);
     }
 
+    @Deprecated
     public static String getBanReason(UUID uuid) {
         return BackgroundAPI.getBanReason(uuid);
     }
 
+    @Deprecated
     public static String getBanPunisher(UUID uuid) {
         return BackgroundAPI.getBanPunisher(uuid);
     }
@@ -223,6 +231,7 @@ public class API {
         return BackgroundAPI.getCPS(p);
     }
 
+    @Deprecated
     public static UUID[] getBanList() {
         return BackgroundAPI.getBanList();
     }

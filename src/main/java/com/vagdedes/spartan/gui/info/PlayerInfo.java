@@ -4,15 +4,15 @@ import com.vagdedes.spartan.abstraction.InventoryMenu;
 import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.functionality.moderation.Spectate;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
-import com.vagdedes.spartan.functionality.protections.LagLeniencies;
+import com.vagdedes.spartan.functionality.protections.Latency;
 import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import com.vagdedes.spartan.gui.helpers.PlayerStateLists;
 import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
+import com.vagdedes.spartan.handlers.stability.TPS;
 import com.vagdedes.spartan.objects.profiling.MiningHistory;
 import com.vagdedes.spartan.objects.profiling.PlayerProfile;
 import com.vagdedes.spartan.objects.profiling.PunishmentHistory;
@@ -21,7 +21,7 @@ import com.vagdedes.spartan.objects.system.CancelCause;
 import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -78,7 +78,7 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (mines > 0) {
                     added = true;
-                    String ore = history.getOre().toString();
+                    String ore = history.ore.toString();
                     int days = history.getDays();
                     lore.add("§c" + mines + " §7" + ore + (mines == 1 ? "" : (ore.endsWith("s") ? "es" : "s"))
                             + " in §c" + days + " §7" + (days == 1 ? "day" : "days"));
@@ -88,8 +88,8 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§c" + PlayerStateLists.noDataAvailable);
             }
             int miningHistoryMines = playerProfile.getOverallMiningHistory().getMines(),
-                    information = 33,
-                    reset = 34;
+                    information = 29,
+                    reset = 33;
             ItemStack item = miningHistoryMines > 0 ?
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(miningHistoryMines, 64), (short) 14) :
                     new ItemStack(Material.QUARTZ_BLOCK);
@@ -100,8 +100,6 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("");
             lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
             lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
-            lore.add("§7Bans§8:§c " + punishmentHistory.getBans());
-            lore.add("§7Reports§8:§c " + punishmentHistory.getReports().size());
 
             if (isOnline) {
                 int violations = target.getViolationCount();
@@ -125,9 +123,6 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§cClick to delete the player's stored data.");
                 add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             }
-            add("§2Debug", null, new ItemStack(Material.IRON_SWORD), 28);
-            add("§2Spectate", null, new ItemStack(MaterialUtils.get("watch")), 29);
-
             add("§c" + (back ? "Back" : "Close"), AntiCheatUpdates.getInformation(false),
                     new ItemStack(Material.ARROW), 31);
             return true;
@@ -158,10 +153,9 @@ public class PlayerInfo extends InventoryMenu {
 
         // Separator
 
-        double delayNumber = isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(player)) : 0.0; // Base
+        double delayNumber = isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0; // Base
         ResearchEngine.DataType dataType = isOnline ? player.getDataType() : playerProfile.getDataType();
-        boolean tpsDropping = isOnline && LagLeniencies.hasInconsistencies(player, "tps"),
-                latencyLag = isOnline && LagLeniencies.hasInconsistencies(player, "ping"),
+        boolean tpsDropping = isOnline && TPS.areLow(player),
                 notChecked = isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
                 detectionsNotAvailable = SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 listedChecks = false;
@@ -174,7 +168,7 @@ public class PlayerInfo extends InventoryMenu {
                         hasData = playerProfile.getEvidence().has(hackType);
 
                 String state = getDetectionState(player, hackType, dataType, cancellableCompatibility, delayNumber, isOnline,
-                        tpsDropping, latencyLag, notChecked, detectionsNotAvailable, !SpartanEdition.supportsCheck(dataType, hackType),
+                        tpsDropping, notChecked, detectionsNotAvailable, !SpartanEdition.supportsCheck(dataType, hackType),
                         !hasViolations && !hasData);
 
                 if (hasViolations || hasData || state != null) {
@@ -209,10 +203,9 @@ public class PlayerInfo extends InventoryMenu {
                 hackType,
                 dataType,
                 isOnline ? player.getCancellableCompatibility() : null,
-                isOnline ? LagLeniencies.getDelaySimplified(LagLeniencies.getDelay(player)) : 0.0,
+                isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0,
                 isOnline,
-                isOnline && LagLeniencies.hasInconsistencies(player, "tps"),
-                isOnline && LagLeniencies.hasInconsistencies(player, "ping"),
+                isOnline && TPS.areLow(player),
                 isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
                 SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 !SpartanEdition.supportsCheck(dataType, hackType),
@@ -237,7 +230,6 @@ public class PlayerInfo extends InventoryMenu {
                                      double delayNumber,
                                      boolean hasPlayer,
                                      boolean tpsDropping,
-                                     boolean latencyIncreasing,
                                      boolean notChecked,
                                      boolean detectionMissing,
                                      boolean detectionUnsupported,
@@ -262,22 +254,13 @@ public class PlayerInfo extends InventoryMenu {
         }
         UUID uuid = player.getUniqueId();
         String delay = delayNumber == 0.0 ? "" : " (" + (Math.floor(delayNumber) == delayNumber ? String.valueOf((int) delayNumber) : String.valueOf(delayNumber)) + ")";
-        CancelCause disabledCause = check.getDisabledCause(uuid);
+        CancelCause disabledCause = player.getViolations(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
                 cancellableCompatibility != null ? cancellableCompatibility + " Compatibility" :
                         notChecked ? "Temporarily Not Checked" :
                                 tpsDropping ? "Server Lag" + delay :
-                                        latencyIncreasing ? "Latency Lag" + delay :
-                                                disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
-                                                        (returnNull ? null : (check.isSilent(worldName, uuid) ? "Silent " : "") + "Checking" + delay);
-    }
-
-    public void refresh(UUID uuid) {
-        SpartanPlayer player = SpartanBukkit.getPlayer(uuid);
-
-        if (player != null) {
-            refresh(player.getName());
-        }
+                                        disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
+                                                (returnNull ? null : (check.isSilent(worldName) ? "Silent " : "") + "Checking" + delay);
     }
 
     public void refresh(String targetName) {
@@ -318,33 +301,7 @@ public class PlayerInfo extends InventoryMenu {
         String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
 
-        if (item.equals("Debug")) {
-            if (!Permissions.has(player, Permission.INFO) && !Permissions.has(player, Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            } else {
-                String playerName = title.substring(menu.length());
-                SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
-
-                if (t == null) {
-                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
-                } else {
-                    SpartanMenu.debugMenu.open(player, t);
-                }
-            }
-        } else if (item.equals("Spectate")) {
-            if (!Permissions.has(player, Permission.INFO) && !Permissions.has(player, Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            } else {
-                String playerName = title.substring(menu.length());
-                SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
-
-                if (t == null) {
-                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
-                } else {
-                    Spectate.run(player, t);
-                }
-            }
-        } else if (item.equals("Reset")) {
+        if (item.equals("Reset")) {
             String playerName = title.substring(menu.length());
 
             if (!Permissions.has(player, Permission.MANAGE)) {

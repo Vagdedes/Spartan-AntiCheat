@@ -27,7 +27,7 @@ public class ViolationResetEvent extends Event implements Cancellable {
     }
 
     public int getTime() {
-        return com.vagdedes.spartan.api.API.getViolationResetTime();
+        return me.vagdedes.spartan.api.API.getViolationResetTime();
     }
 
     public boolean isCancelled() {

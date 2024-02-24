@@ -6,7 +6,6 @@ import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.handlers.stability.CancelViolation;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.handlers.stability.TestServer;
 import com.vagdedes.spartan.objects.profiling.MiningHistory;
@@ -35,10 +34,6 @@ public class DetectionNotifications {
     }
 
     // General
-
-    public static int getPlayersRawSize() {
-        return notifications.size();
-    }
 
     public static List<SpartanPlayer> getPlayers(boolean all) {
         int size = notifications.size();
@@ -79,7 +74,6 @@ public class DetectionNotifications {
 
                 || (all
                 || TestServer.isIdentified()
-                || !SpartanBukkit.isProductionServer()
                 || !ResearchEngine.enoughData()
                 || divisor >= 1
                 || Config.settings.getBoolean("Notifications.individual_only_notifications"))
@@ -145,7 +139,7 @@ public class DetectionNotifications {
         return null;
     }
 
-    public static void runMining(SpartanPlayer player, SpartanBlock block) {
+    public static void runMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
         if (player.getGameMode() == GameMode.SURVIVAL && PlayerData.isPickaxeItem(player.getItemInHand().getType())) {
             Material material = block.getType();
             Enums.MiningOre ore = getMiningOre(material);
@@ -175,21 +169,17 @@ public class DetectionNotifications {
                             null,
                             material,
                             XRay.check,
-                            false,
                             true,
-                            player.getViolations(XRay.check).getLevel(),
-                            CancelViolation.get(XRay.check, player.getDataType()));
+                            player.getViolations(XRay.check).getLevel()
+                    );
+                    MiningHistory miningHistory = player.getProfile().getMiningHistory(ore);
 
-
-                    if (!ResearchEngine.isCaching()) {
-                        MiningHistory miningHistory = player.getProfile().getMiningHistory(ore);
-
-                        if (miningHistory != null) {
-                            String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
-                            miningHistory.increaseMines(environment, amount);
-                            player.getExecutor(Enums.HackType.XRay).handle(
-                                    new Object[]{environment, miningHistory, ore, pluralKey});
-                        }
+                    if (miningHistory != null) {
+                        String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
+                        miningHistory.increaseMines(environment, amount);
+                        player.getExecutor(Enums.HackType.XRay).handle(
+                                cancelled,
+                                new Object[]{environment, miningHistory, ore, pluralKey});
                     }
                 }
             }

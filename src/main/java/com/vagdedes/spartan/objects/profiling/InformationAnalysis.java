@@ -3,20 +3,19 @@ package com.vagdedes.spartan.objects.profiling;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.CharUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class InformationAnalysis {
 
     // Structure
 
     private static final Map<Integer, Map<Integer, Set<Integer>>>
-            numbers = Cache.store(new ConcurrentHashMap<>());
+            numbers = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>()));
     private static final Map<Integer, Boolean>
-            detectionHasOption = Cache.store(new ConcurrentHashMap<>());
+            detectionHasOption = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>()));
 
     public static String[] getHeadArray(String information, int limit) {
         return information.split(" ", limit);
@@ -85,32 +84,35 @@ public class InformationAnalysis {
     }
 
     boolean isOption(Enums.HackType hackType) {
-        Set<String> configKeys = hackType.getCheck().getOptionKeys();
+        Collection<String> configKeys = hackType.getCheck().getOptionKeys();
         int configKeyCount = configKeys.size();
 
         if (configKeyCount > 0) {
             int hash = (key * SpartanBukkit.hashCodeMultiplier) + configKeyCount;
-            Boolean cachedDetection = detectionHasOption.get(hash);
 
-            if (cachedDetection != null) {
-                return cachedDetection;
-            } else {
-                List<String> foundDetections = new ArrayList<>(configKeyCount);
+            synchronized (detectionHasOption) {
+                Boolean cachedDetection = detectionHasOption.get(hash);
 
-                for (String keyword : removeDetectionDetails(detection).split("-")) {
-                    for (String configKey : configKeys) {
-                        if (containsDetection(configKey, keyword)) {
-                            foundDetections.add(configKey);
+                if (cachedDetection != null) {
+                    return cachedDetection;
+                } else {
+                    List<String> foundDetections = new ArrayList<>(configKeyCount);
+
+                    for (String keyword : removeDetectionDetails(detection).split("-")) {
+                        for (String configKey : configKeys) {
+                            if (containsDetection(configKey, keyword)) {
+                                foundDetections.add(configKey);
+                            }
                         }
                     }
-                }
 
-                // Use the config key instead to cover all the sub-detections
-                if (foundDetections.size() == 1) {
-                    detectionHasOption.put(hash, true);
-                    return true;
-                } else {
-                    detectionHasOption.put(hash, false);
+                    // Use the config key instead to cover all the sub-detections
+                    if (foundDetections.size() == 1) {
+                        detectionHasOption.put(hash, true);
+                        return true;
+                    } else {
+                        detectionHasOption.put(hash, false);
+                    }
                 }
             }
         }
@@ -121,23 +123,25 @@ public class InformationAnalysis {
         int size = array.length;
 
         if (size >= 2) {
-            Map<Integer, Set<Integer>> childMap = numbers.get(key);
+            synchronized (numbers) {
+                Map<Integer, Set<Integer>> childMap = numbers.get(key);
 
-            if (childMap == null) {
-                childMap = new ConcurrentHashMap<>();
-                Map<Integer, Number> positionsAndNumbers = identifyAndShowNumbers(array, size);
-                childMap.put(size, positionsAndNumbers.keySet());
-                numbers.put(key, childMap);
-                return positionsAndNumbers.values();
-            } else {
-                Set<Integer> positions = childMap.get(size);
-
-                if (positions != null) {
-                    return showNumbers(array, size, positions);
-                } else {
+                if (childMap == null) {
+                    childMap = new LinkedHashMap<>();
                     Map<Integer, Number> positionsAndNumbers = identifyAndShowNumbers(array, size);
                     childMap.put(size, positionsAndNumbers.keySet());
+                    numbers.put(key, childMap);
                     return positionsAndNumbers.values();
+                } else {
+                    Set<Integer> positions = childMap.get(size);
+
+                    if (positions != null) {
+                        return showNumbers(array, size, positions);
+                    } else {
+                        Map<Integer, Number> positionsAndNumbers = identifyAndShowNumbers(array, size);
+                        childMap.put(size, positionsAndNumbers.keySet());
+                        return positionsAndNumbers.values();
+                    }
                 }
             }
         } else {

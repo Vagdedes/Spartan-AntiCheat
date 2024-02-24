@@ -5,7 +5,6 @@ import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -48,11 +47,15 @@ public class AntiCheatLogs {
     // Separator
 
     private static void save() {
-        if (savedFile != null && fileConfiguration != null) {
-            try {
-                fileConfiguration.save(savedFile);
-            } catch (Exception ignored) {
-            }
+        if (savedFile != null) {
+            saveRaw();
+        }
+    }
+
+    private static void saveRaw() {
+        try {
+            fileConfiguration.save(savedFile);
+        } catch (Exception ignored) {
         }
     }
 
@@ -63,29 +66,28 @@ public class AntiCheatLogs {
                 information
         );
 
-        if (!playerRelated || (id % Check.sufficientViolations) == 0) {
+        if (!playerRelated || (id % 10) == 0) {
             if (SpartanBukkit.isSynchronised()) {
-                SpartanBukkit.storageThread.executeIfFreeElseHere(AntiCheatLogs::save);
+                SpartanBukkit.storageThread.executeIfFreeElseHere(AntiCheatLogs::saveRaw);
             } else {
-                save();
+                saveRaw();
             }
         }
     }
 
     // Separator
 
-    public static void silentLogInfo(String info) {
-        logInfo(null, info, null, null, null, false, true, -1, -1);
+    public static void logInfo(String info, boolean console) {
+        logInfo(null, info, console ? info : null, null, null, true, -1);
     }
 
-    public static void logInfo(String info) {
-        logInfo(null, info, info, null, null, false, true, -1, -1);
-    }
-
-    public static void logInfo(SpartanPlayer p, String information, String console,
-                               Material material, Enums.HackType hackType,
-                               boolean falsePositive, boolean cloudFeature,
-                               int violations, int cancelViolation) {
+    public static void logInfo(SpartanPlayer p,
+                               String information,
+                               String console,
+                               Material material,
+                               Enums.HackType hackType,
+                               boolean cloudFeature,
+                               int violations) {
         boolean playerRelated = p != null;
 
         if (console != null
@@ -97,14 +99,19 @@ public class AntiCheatLogs {
         if (Config.settings.getBoolean("Logs.log_file")) {
             Timestamp now = new Timestamp(System.currentTimeMillis());
 
-            if (savedFile == null || fileConfiguration == null || time.getDay() != now.getDay()) {
+            if (savedFile == null
+                    || time.getDay() != now.getDay()) {
                 save();
                 id = 1;
                 time = now;
                 savedFile = new File(logsFolder);
 
                 if (savedFile.exists() && savedFile.isDirectory() || savedFile.mkdirs()) {
-                    savedFile = new File(logsFolder + "/log" + TimeUtils.getYearMonthDay(time).replace(TimeUtils.dateSeparator, "") + ".yml");
+                    savedFile = new File(
+                            logsFolder + "/log"
+                                    + TimeUtils.getYearMonthDay(time).replace(TimeUtils.dateSeparator, "")
+                                    + ".yml"
+                    );
 
                     try {
                         if (savedFile.createNewFile()) {
@@ -129,7 +136,7 @@ public class AntiCheatLogs {
         if (cloudFeature) { // When the Cloud feature is not used, it's when incoming Cloud data is locally stored, so we don't send it to the Cloud or to the SQL database to avoid redundancy
             if (Config.sql.isEnabled()) {
                 boolean miningNotification = playerRelated && material != null;
-                Config.sql.logInfo(p, information, material, hackType, falsePositive, miningNotification, violations, cancelViolation);
+                Config.sql.logInfo(p, information, material, hackType, miningNotification, violations);
             }
             CrossServerInformation.queueLog(information);
         }

@@ -3,8 +3,6 @@ package com.vagdedes.spartan.handlers.stability;
 import com.vagdedes.spartan.compatibility.necessary.UltimateStatistics;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
-import com.vagdedes.spartan.objects.system.LiveViolation;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.LinkedHashMap;
@@ -31,40 +29,27 @@ public class CancelViolation {
             Check check = hackType.getCheck();
 
             for (ResearchEngine.DataType dataType : ResearchEngine.getDynamicUsableDataTypes(true)) {
-                int key = ResearchEngine.getStorageKey(hackType, dataType);
-
-                if (check.hasCancelViolation()) {
-                    memory.put(key, check.getCancelViolation());
-                } else {
-                    int defaultCancelViolation = check.getDefaultCancelViolation();
-                    memory.put(key, defaultCancelViolation + (defaultCancelViolation * check.getProblematicDetections()));
-                }
+                memory.put(
+                        ResearchEngine.getStorageKey(hackType, dataType),
+                        check.getCancelViolation() + (check.getCancelViolation() * check.getProblematicDetections())
+                );
             }
         }
     }
 
     // Separator
 
-    public static boolean isForced(SpartanPlayer player, Enums.HackType hackType,
-                                   LiveViolation liveViolation, int hash) {
-        return liveViolation.hasMaxCancelledLevel(hash)
-                || !player.getCooldowns().canDo(masterKey + hackType.ordinal())
+    public static boolean isForced(SpartanPlayer player, Enums.HackType hackType) {
+        return !player.getCooldowns().canDo(masterKey + hackType.ordinal())
                 || UltimateStatistics.isSuspected(player.getUniqueId());
     }
 
     public static void force(SpartanPlayer player, Enums.HackType hackType) {
-        Check check = hackType.getCheck();
-
-        if (check.isUsingCancelViolation(
-                get(hackType, player.getDataType()),
-                AlgebraUtils.integerRound(check.getDefaultCancelViolation() / 2.0)
-        )) {
-            player.getCooldowns().add(masterKey + hackType.ordinal(), cooldown);
-        }
+        player.getCooldowns().add(masterKey + hackType.ordinal(), cooldown);
     }
 
     public static int get(Enums.HackType hackType, ResearchEngine.DataType dataType) {
         return TestServer.isIdentified() ? Check.minimumDefaultCancelViolation :
-                memory.getOrDefault(ResearchEngine.getStorageKey(hackType, dataType), hackType.getCheck().getDefaultCancelViolation());
+                memory.getOrDefault(ResearchEngine.getStorageKey(hackType, dataType), hackType.getCheck().getCancelViolation());
     }
 }

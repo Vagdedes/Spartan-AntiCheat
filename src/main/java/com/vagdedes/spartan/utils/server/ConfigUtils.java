@@ -11,12 +11,10 @@ import com.vagdedes.spartan.objects.profiling.PunishmentHistory;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
-import com.vagdedes.spartan.objects.system.LiveViolation;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.TimeUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
-import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,36 +26,42 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigUtils {
 
-    private static final Map<String, Map<String, Boolean>> map = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Boolean>> map
+            = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public static void clear() {
-        map.clear();
+        synchronized (map) {
+            map.clear();
+        }
     }
 
     public static boolean contains(String message, String index) {
-        Map<String, Boolean> childMap = map.get(message);
+        synchronized (map) {
+            Map<String, Boolean> childMap = map.get(message);
 
-        if (childMap != null) {
-            Boolean contains = childMap.get(index);
+            if (childMap != null) {
+                Boolean contains = childMap.get(index);
 
-            if (contains != null) {
+                if (contains != null) {
+                    return contains;
+                }
+                contains = message.contains(index);
+                childMap.put(index, contains);
+                return contains;
+            } else {
+                childMap = new LinkedHashMap<>();
+                boolean contains = message.contains(index);
+                childMap.put(index, contains);
+                map.put(message, childMap);
                 return contains;
             }
-            contains = message.contains(index);
-            childMap.put(index, contains);
-            return contains;
-        } else {
-            childMap = new ConcurrentHashMap<>();
-            boolean contains = message.contains(index);
-            childMap.put(index, contains);
-            map.put(message, childMap);
-            return contains;
         }
     }
 
@@ -122,20 +126,11 @@ public class ConfigUtils {
 
         PunishmentHistory punishmentHistory = p.getProfile().getPunishmentHistory();
         message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
-        message = replace(message, "{bans}", String.valueOf(punishmentHistory.getBans()));
         message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
-        message = replace(message, "{reports}", String.valueOf(punishmentHistory.getReports().size()));
 
         if (hackType != null) {
-            LiveViolation liveViolation = p.getViolations(hackType);
-            int lastLevel = liveViolation.getLastCancelledLevel();
-            boolean cancelled = lastLevel != 0;
-            int violations = cancelled ? liveViolation.getCancelledLevel(lastLevel) : liveViolation.getLevel();
-            String category = cancelled ? Enums.PunishmentCategory.UNLIKE.toString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).toString();
-            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName, uuid)));
-            message = replace(message, "{vls:detection}", String.valueOf(violations));
-            message = replace(message, "{category:detection}", category);
-            message = replace(message, "{detection:category:adverb}", (category.endsWith("ly") ? category : category + "ly"));
+            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName)));
+            message = replace(message, "{vls:detection}", String.valueOf(p.getViolations(hackType).getLevel()));
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }
@@ -172,22 +167,13 @@ public class ConfigUtils {
                 message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.getLastPlayed()), 1000)));
                 message = replace(message, "{moving}", String.valueOf(p.getCustomDistance() > 0.0));
 
-                PunishmentHistory punishmentHistory = ResearchEngine.getPlayerProfile(name).getPunishmentHistory();
+                PunishmentHistory punishmentHistory = p.getProfile().getPunishmentHistory();
                 message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
-                message = replace(message, "{bans}", String.valueOf(punishmentHistory.getBans()));
                 message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
-                message = replace(message, "{reports}", String.valueOf(punishmentHistory.getReports().size()));
 
                 if (hasHackType) {
-                    LiveViolation liveViolation = p.getViolations(hackType);
-                    int lastLevel = liveViolation.getLastCancelledLevel();
-                    boolean cancelled = lastLevel != 0;
-                    int violations = cancelled ? liveViolation.getCancelledLevel(lastLevel) : liveViolation.getLevel();
-                    String category = cancelled ? Enums.PunishmentCategory.UNLIKE.toString() : Check.getCategoryFromViolations(violations, hackType, p.getProfile().isSuspectedOrHacker(hackType)).toString();
-                    message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName, uuid)));
-                    message = replace(message, "{vls:detection}", String.valueOf(violations));
-                    message = replace(message, "{category:detection}", category);
-                    message = replace(message, "{detection:category:adverb}", (category.endsWith("ly") ? category : category + "ly"));
+                    message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName)));
+                    message = replace(message, "{vls:detection}", String.valueOf(p.getViolations(hackType).getLevel()));
                 }
             } else if (hasHackType) {
                 PlayerProfile profile = ResearchEngine.getPlayerProfileAdvanced(name, false);
@@ -195,10 +181,10 @@ public class ConfigUtils {
                 if (profile != null) {
                     message = replace(message, "{player:type}", profile.getDataType().lowerCase);
                 }
-                message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null, null)));
+                message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null)));
             }
         } else if (hasHackType) {
-            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null, null)));
+            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null)));
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }

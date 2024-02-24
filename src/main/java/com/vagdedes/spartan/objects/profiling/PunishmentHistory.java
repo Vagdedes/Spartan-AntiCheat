@@ -1,94 +1,97 @@
 package com.vagdedes.spartan.objects.profiling;
 
+import com.vagdedes.spartan.configuration.Config;
+import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
+import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
+import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import me.vagdedes.spartan.system.Enums;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class PunishmentHistory {
 
-    private int bans, kicks, warnings;
-    private final LinkedList<PlayerReport> reports;
+    public static final String
+            punishmentMessage = " was punished with the commands: ",
+            warningMessage = " was warned for ",
+            kickMessage = " was kicked for ";
 
-    PunishmentHistory() {
-        this.bans = 0;
+    private final PlayerProfile profile;
+    private int kicks, warnings, punishments;
+
+    PunishmentHistory(PlayerProfile profile) {
+        this.profile = profile;
         this.kicks = 0;
         this.warnings = 0;
-        this.reports = new LinkedList<>();
+        this.punishments = 0;
     }
 
-    public int getOverall(boolean reports) {
-        return bans + kicks + warnings + (reports ? this.reports.size() : 0);
-    }
-
-    public int getBans() {
-        return bans;
-    }
-
-    public void increaseBans() {
-        bans += 1;
+    public int getOverall() {
+        return kicks + warnings + punishments;
     }
 
     public int getKicks() {
         return kicks;
     }
 
-    public void increaseKicks() {
-        kicks += 1;
+    public void increaseKicks(SpartanPlayer player, String reason) {
+        kicks++;
+
+        if (reason != null) {
+            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + kickMessage + reason, true);
+            SpartanLocation location = player.getLocation();
+            CrossServerInformation.queueNotificationWithWebhook(
+                    player.getUniqueId(),
+                    player.getName(),
+                    location.getBlockX(),
+                    location.getBlockY(),
+                    location.getBlockZ(),
+                    "Kick",
+                    reason,
+                    true
+            );
+        }
+    }
+
+    public int getPunishments() {
+        return punishments;
     }
 
     public int getWarnings() {
         return warnings;
     }
 
-    public void increaseWarnings() {
-        warnings += 1;
-    }
+    public void increaseWarnings(SpartanPlayer player, String reason) {
+        warnings++;
 
-    public List<PlayerReport> getReports() {
-        return new LinkedList<>(reports);
-    }
-
-    public int getReportCount() {
-        return reports.size();
-    }
-
-    public List<PlayerReport> getReports(Enums.HackType hackType, int days) {
-        if (reports.size() > 0) {
-            List<PlayerReport> recentReports = new LinkedList<>();
-            boolean hasDays = days > 0,
-                    hasHackType = hackType != null;
-            long time = hasDays ? System.currentTimeMillis() : 0L,
-                    timeRequirement = hasDays ? days * (86_400L * 1_000L) : 0L;
-
-            for (PlayerReport playerReport : getReports()) {
-                if ((!hasDays || (time - playerReport.getDate().getTime()) <= timeRequirement)
-                        && (!hasHackType || playerReport.isRelated(hackType))) {
-                    recentReports.add(playerReport);
-                }
-            }
-            return recentReports;
+        if (reason != null) {
+            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + warningMessage + reason, true);
+            SpartanLocation location = player.getLocation();
+            CrossServerInformation.queueNotificationWithWebhook(
+                    player.getUniqueId(),
+                    player.getName(),
+                    location.getBlockX(),
+                    location.getBlockY(),
+                    location.getBlockZ(),
+                    "Warning",
+                    reason,
+                    true
+            );
         }
-        return new ArrayList<>(0);
     }
 
-    public int getReportCount(Enums.HackType hackType, int days) {
-        return getReports(hackType, days).size();
-    }
+    public void increasePunishments(SpartanPlayer player, String commands) {
+        punishments++;
 
-    public PlayerReport getReport(String reason, boolean checkIfDismissed) {
-        for (PlayerReport playerReport : getReports()) {
-            if ((!checkIfDismissed || !playerReport.isDismissed()) && playerReport.getReason().equals(reason)) {
-                return playerReport;
-            }
+        if (commands != null) {
+            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + punishmentMessage + commands, true);
+            SpartanLocation location = player.getLocation();
+            CrossServerInformation.queueWebhook(
+                    player.getUniqueId(),
+                    player.getName(),
+                    location.getBlockX(),
+                    location.getBlockY(),
+                    location.getBlockZ(),
+                    "Punishment",
+                    commands
+            );
         }
-        return null;
-    }
-
-    public void increaseReports(SpartanPlayer reportedPlayer, String reportedName, String reason, Timestamp date, boolean dismissed) {
-        reports.add(new PlayerReport(reportedPlayer, reportedName, reason, date, dismissed));
     }
 }

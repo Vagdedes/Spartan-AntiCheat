@@ -1,11 +1,7 @@
 package me.vagdedes.spartan.system;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.objects.system.CancelCause;
 import com.vagdedes.spartan.objects.system.Check;
-
-import java.util.Map;
-import java.util.UUID;
 
 public class Enums {
 
@@ -27,11 +23,12 @@ public class Enums {
 
         public void resetCheck() {
             if (this.check != null) {
-                Map<UUID, CancelCause> disabledUsers = this.check.copyDisabledUsers();
-                Map<UUID, CancelCause> silentUsers = this.check.copySilentUsers();
-                Map<Integer, Integer> maxCancelledViolations = this.check.copyMaxCancelledViolations();
-                this.check.clearCache();
-                this.check = new Check(this, disabledUsers, silentUsers, maxCancelledViolations);
+                this.check.clearConfigurationCache();
+                this.check = new Check(
+                        this,
+                        this.check.copyMaxCancelledViolations(),
+                        true
+                );
             }
         }
     }
@@ -51,48 +48,10 @@ public class Enums {
         }
     }
 
-    public enum PunishmentCategory {
-        UNLIKE, POTENTIAL, CERTAIN, DEFINITE, ABSOLUTE;
-
-        private final String string;
-        private final double multiplier;
-
-        PunishmentCategory() {
-            string = this.name().toLowerCase();
-
-            switch (this.ordinal()) {
-                case 0:
-                    multiplier = 1.0;
-                    break;
-                case 1:
-                    multiplier = 2.0;
-                    break;
-                case 2:
-                    multiplier = 3.5;
-                    break;
-                case 3:
-                    multiplier = 5.5;
-                    break;
-                default:
-                    multiplier = 8.0;
-                    break;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return string;
-        }
-
-        public double getMultiplier() {
-            return multiplier;
-        }
-    }
-
     public enum Permission {
-        CONDITION, REPORT, STAFF_CHAT, WAVE, RECONNECT, ADMIN, RELOAD,
+        CONDITION, STAFF_CHAT, WAVE, RECONNECT, ADMIN, RELOAD,
         KICK, BYPASS, MANAGE, INFO, CHAT_PROTECTION, WARN, USE_BYPASS,
-        BAN, UNBAN, NOTIFICATIONS;
+        NOTIFICATIONS;
 
         private final String key;
 

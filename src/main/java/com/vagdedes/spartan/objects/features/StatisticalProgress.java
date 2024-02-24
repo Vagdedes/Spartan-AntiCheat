@@ -2,55 +2,30 @@ package com.vagdedes.spartan.objects.features;
 
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class StatisticalProgress {
 
-    private final int mines, logs, reports, bans, kicks, warnings, staffOffline;
-    private final SpartanPlayer[] staffOnline;
+    public final int mines, logs, kicks, warnings, punishments;
+    private final Collection<SpartanPlayer> staffOnline;
 
-    public StatisticalProgress(int mines, int logs, int reports, int bans, int kicks, int warnings, int staffOffline, SpartanPlayer[] staffOnline) {
+    public StatisticalProgress(int mines, int logs,
+                               int kicks, int warnings, int punishments,
+                               Collection<SpartanPlayer> staffOnline) {
         this.mines = mines;
         this.logs = logs;
-        this.reports = reports;
-        this.bans = bans;
         this.kicks = kicks;
+        this.punishments = punishments;
         this.warnings = warnings;
-        this.staffOffline = staffOffline;
         this.staffOnline = staffOnline;
     }
 
     public StatisticalProgress() {
-        this(0, 0, 0, 0, 0, 0, 0, new SpartanPlayer[]{});
+        this(0, 0, 0, 0, 0, new ArrayList<>(0));
     }
 
-    public int getMines() {
-        return mines;
-    }
-
-    public int getLogs() {
-        return logs;
-    }
-
-    public int getReports() {
-        return reports;
-    }
-
-    public int getBans() {
-        return bans;
-    }
-
-    public int getKicks() {
-        return kicks;
-    }
-
-    public int getWarnings() {
-        return warnings;
-    }
-
-    public int getStaffOffline() {
-        return staffOffline;
-    }
-
-    public SpartanPlayer[] getStaffOnline() {
-        return staffOnline;
+    public Collection<SpartanPlayer> getStaffOnline() {
+        return new ArrayList<>(staffOnline);
     }
 }

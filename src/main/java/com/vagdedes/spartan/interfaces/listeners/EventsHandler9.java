@@ -3,7 +3,6 @@ package com.vagdedes.spartan.interfaces.listeners;
 import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudConnections;
-import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
@@ -27,7 +26,7 @@ public class EventsHandler9 implements Listener {
     @EventHandler
     private void PreLoginEvent(AsyncPlayerPreLoginEvent e) {
         // Features
-        if (IDs.isValid() && e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+        if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             InetAddress address = e.getAddress();
             String ipAddress = address != null ? PlayerLimitPerIP.get(address) : null;
             CloudConnections.updatePunishedPlayer(e.getUniqueId(), ipAddress);

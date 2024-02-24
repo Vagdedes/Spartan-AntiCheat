@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.java.math;
+package com.vagdedes.spartan.utils.math;
 
 import java.util.Objects;
 
@@ -141,37 +141,6 @@ public class TrigonometryUtils {
                             + AlgebraUtils.getPreDistance(this.side2, triangle.side2)
                             + AlgebraUtils.getPreDistance(this.side3, triangle.side3)
             );
-        }
-
-        public TriangleProperties getProperties() {
-            return new TriangleProperties(this);
-        }
-    }
-
-    public static class TriangleProperties {
-
-        public final double[] ratios;
-        public final int[] teams;
-
-        private TriangleProperties(Triangle triangle) {
-            double[] degrees = triangle.angleDegrees();
-
-            if (triangle.isEuclidean(degrees)) {
-                this.ratios = new double[3];
-                this.teams = new int[3];
-                double angleDegrees1 = degrees[0],
-                        angleDegrees2 = degrees[1],
-                        angleDegrees3 = degrees[2];
-                ratios[0] = angleDegrees1 < angleDegrees2 ? angleDegrees1 / angleDegrees2 : angleDegrees2 / angleDegrees1;
-                ratios[1] = angleDegrees1 < angleDegrees3 ? angleDegrees1 / angleDegrees3 : angleDegrees3 / angleDegrees1;
-                ratios[2] = angleDegrees2 < angleDegrees3 ? angleDegrees2 / angleDegrees3 : angleDegrees3 / angleDegrees2;
-                this.teams[0] = AlgebraUtils.floorToNearest(angleDegrees1, triangleTeamDivision);
-                this.teams[1] = AlgebraUtils.floorToNearest(angleDegrees2, triangleTeamDivision);
-                this.teams[2] = AlgebraUtils.floorToNearest(angleDegrees3, triangleTeamDivision);
-            } else {
-                this.ratios = new double[0];
-                this.teams = new int[0];
-            }
         }
     }
 }

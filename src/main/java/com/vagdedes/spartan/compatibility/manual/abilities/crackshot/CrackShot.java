@@ -43,14 +43,24 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponPreShoot(WeaponPreShootEvent e) {
         if (Compatibility.CompatibilityType.CrackShot.isFunctional()) {
-            CheckProtection.evadeStandardCombatFPs(e.getPlayer(), Compatibility.CompatibilityType.CrackShot, 40);
+            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+            if (p == null) {
+                return;
+            }
+            CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
         }
     }
 
     @EventHandler
     private void WeaponShoot(WeaponShootEvent e) {
         if (Compatibility.CompatibilityType.CrackShot.isFunctional()) {
-            CheckProtection.evadeStandardCombatFPs(e.getPlayer(), Compatibility.CompatibilityType.CrackShot, 40);
+            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+            if (p == null) {
+                return;
+            }
+            CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
         }
     }
 

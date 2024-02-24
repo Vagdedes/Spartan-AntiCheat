@@ -6,7 +6,6 @@ import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.CommonsStringUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,26 +16,24 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Wave {
 
     private static File file = new File(Register.plugin.getDataFolder() + "/storage.yml");
     private static final String section = "Wave";
-    private static final ConcurrentHashMap<UUID, String> commands = new ConcurrentHashMap<>(Config.getMaxPlayers());
-    private static boolean run = false, pause = false;
+    private static final Map<UUID, String> commands
+            = Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
 
     public static void clearCache() {
-        run = false;
-        pause = false;
-        commands.clear();
+        synchronized (commands) {
+            commands.clear();
+        }
     }
 
     static {
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
-                if (run) {
-                    run = false;
+                synchronized (commands) {
                     int size = commands.size();
 
                     if (size > 0) {
@@ -46,12 +43,11 @@ public class Wave {
                         while (iterator.hasNext()) {
                             Map.Entry<UUID, String> entry = iterator.next();
                             iterator.remove();
-                            Bukkit.dispatchCommand(sender, entry.getValue());
                             remove(entry.getKey());
+                            Bukkit.dispatchCommand(sender, entry.getValue());
                         }
                         end(Config.settings.getBoolean("Punishments.broadcast_on_punishment"), size);
                     }
-                    pause = false;
                 }
             }, 1L, 1L);
         }
@@ -79,8 +75,9 @@ public class Wave {
             List<UUID> list = new LinkedList<>();
 
             for (String key : configurationSection.getKeys(false)) {
-                if (key.length() == 36 && CommonsStringUtils.countMatches(key, "-") == 4) {
+                try {
                     list.add(UUID.fromString(key));
+                } catch (Exception ignored) {
                 }
             }
             return list.toArray(new UUID[0]);
@@ -106,6 +103,10 @@ public class Wave {
         return list.toString();
     }
 
+    public static String getCommand(UUID uuid) {
+        return YamlConfiguration.loadConfiguration(file).getString(section + "." + uuid + ".command");
+    }
+
     // Separator
 
     public static void add(UUID uuid, String command) {
@@ -115,8 +116,6 @@ public class Wave {
             start();
         }
     }
-
-    // Separator
 
     public static void remove(UUID uuid) {
         String id = section + "." + uuid;
@@ -130,36 +129,32 @@ public class Wave {
         }
     }
 
-    public static String getCommand(UUID uuid) {
-        YamlConfiguration filea = YamlConfiguration.loadConfiguration(file);
-        return filea.getString(section + "." + uuid + ".command");
-    }
+    // Separator
 
     public static boolean start() {
-        if (!pause) {
-            pause = true;
-            boolean broadcast = Config.settings.getBoolean("Punishments.broadcast_on_punishment");
+        UUID[] uuids = getWaveList();
 
-            if (broadcast) {
-                Bukkit.broadcastMessage(Config.messages.getColorfulString("wave_start_message"));
-            } else {
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        if (uuids.length > 0) {
+            synchronized (commands) {
+                boolean broadcast = Config.settings.getBoolean("Punishments.broadcast_on_punishment");
 
-                if (!players.isEmpty()) {
-                    String message = Config.messages.getColorfulString("wave_start_message");
+                if (broadcast) {
+                    Bukkit.broadcastMessage(Config.messages.getColorfulString("wave_start_message"));
+                } else {
+                    List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-                    for (SpartanPlayer o : players) {
-                        if (DetectionNotifications.hasPermission(o)) {
-                            o.sendMessage(message);
+                    if (!players.isEmpty()) {
+                        String message = Config.messages.getColorfulString("wave_start_message");
+
+                        for (SpartanPlayer o : players) {
+                            if (DetectionNotifications.hasPermission(o)) {
+                                o.sendMessage(message);
+                            }
                         }
                     }
                 }
-            }
 
-            SpartanBukkit.storageThread.executeIfFreeElseHere(() -> {
-                UUID[] uuids = getWaveList();
-
-                if (uuids.length > 0) {
+                SpartanBukkit.storageThread.executeIfFreeElseHere(() -> {
                     for (UUID uuid : uuids) {
                         try {
                             String command = getCommand(uuid);
@@ -170,15 +165,12 @@ public class Wave {
                         } catch (Exception ignored) {
                         }
                     }
-                    run = true;
-                } else {
-                    end(broadcast, 0);
-                    pause = false;
-                }
-            });
+                });
+            }
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     private static void end(boolean broadcast, int total) {
@@ -192,9 +184,9 @@ public class Wave {
             if (!players.isEmpty()) {
                 String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
 
-                for (SpartanPlayer o : players) {
-                    if (DetectionNotifications.hasPermission(o)) {
-                        o.sendMessage(message);
+                for (SpartanPlayer p : players) {
+                    if (DetectionNotifications.hasPermission(p)) {
+                        p.sendMessage(message);
                     }
                 }
             }

@@ -1,11 +1,12 @@
 package com.vagdedes.spartan.objects.data;
 
 import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class Clicks {
 
@@ -13,7 +14,7 @@ public class Clicks {
 
     public static final int pastStoredTicks = 20;
     public static final long pastStoredTime = pastStoredTicks * TPS.tickTime;
-    private final LinkedHashMap<Long, SingleClickData> storage;
+    private final Map<Long, SingleClickData> storage;
 
     // Object
     private long time, update;

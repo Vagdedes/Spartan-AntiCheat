@@ -39,7 +39,7 @@ public class Building {
                     teleport(p, p.getLocation());
                     p.groundTeleport(false);
                 }
-                p.getExecutor(Enums.HackType.Exploits).handle(Exploits.BUILDING);
+                p.getExecutor(Enums.HackType.Exploits).handle(true, Exploits.BUILDING);
                 return;
             }
         }
@@ -78,7 +78,6 @@ public class Building {
     }
 
     private static void teleport(SpartanPlayer p, SpartanLocation loc) {
-        p.getHandlers().disable(Handlers.HandlerType.Teleport, 1);
         p.teleport(new SpartanLocation(p, loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), 0.0f, loc));
     }
 }

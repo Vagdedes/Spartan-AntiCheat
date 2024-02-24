@@ -30,7 +30,7 @@ public class BlockUtils {
             door, entity_blocks, trap_door, liquid, banner, carpet, bed, shulker_box, stairs, fence, fence_gate, heads, leaves, egg,
             coral_fan, pot, anvil, cobble_walls, terracotta, concrete, candle, candleCake, dripleaf, ores, wood, wool, wire,
             semi_solid, changeable, walls, interactive_bushes, scaffolding, interactive_snow, interactive_and_passable,
-            honey_block, web;
+            honey_block, slime_block, web;
 
     public static final double
             hitbox_extra = 0.35,
@@ -782,7 +782,6 @@ public class BlockUtils {
             helper.add(Material.IRON_BARS);
             helper.add(Material.PISTON);
             helper.add(Material.STICKY_PISTON);
-            helper.add(Material.COBWEB);
             helper.add(Material.FARMLAND);
             helper.add(Material.TURTLE_EGG);
             helper.add(Material.CONDUIT);
@@ -800,7 +799,6 @@ public class BlockUtils {
             helper.add(Material.getMaterial("SOIL"));
             helper.add(Material.getMaterial("PISTON_BASE"));
             helper.add(Material.getMaterial("PISTON_STICKY_BASE"));
-            helper.add(Material.getMaterial("WEB"));
         }
 
         for (Material m : materials) {
@@ -810,6 +808,7 @@ public class BlockUtils {
                 helper.add(m);
             }
         }
+        helper.add(MaterialUtils.get("web"));
         helper.add(Material.COCOA);
         helper.add(Material.DRAGON_EGG);
         helper.add(Material.HOPPER);
@@ -961,7 +960,6 @@ public class BlockUtils {
             helper.add(Material.BLUE_ORCHID);
             helper.add(Material.LILAC);
             helper.add(Material.PEONY);
-            helper.add(Material.COBWEB);
 
             for (Material m : materials) {
                 String s = m.toString();
@@ -991,7 +989,6 @@ public class BlockUtils {
             helper.add(Material.getMaterial("NETHER_WARTS"));
             helper.add(Material.getMaterial("WOOD_BUTTON"));
             helper.add(Material.STONE_BUTTON);
-            helper.add(Material.getMaterial("WEB"));
         }
         for (Material m : materials) {
             String s = m.toString();
@@ -1219,6 +1216,15 @@ public class BlockUtils {
         // Separator
 
         builder.clear();
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
+            builder.add(Material.SLIME_BLOCK);
+        }
+
+        slime_block = new HashSet<>(builder);
+
+        // Separator
+
+        builder.clear();
         helper.clear();
     }
 
@@ -1412,6 +1418,16 @@ public class BlockUtils {
 
     public static boolean areHoneyBlocks(Material m) {
         return honey_block.contains(m);
+    }
+
+    public static boolean areSlimeBlocks(Material m) {
+        return slime_block.contains(m);
+    }
+
+    public static boolean areBouncingBlocks(Material material) {
+        return honey_block.contains(material)
+                || slime_block.contains(material)
+                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_12) && bed.contains(material);
     }
 
     public static boolean areInteractiveBushes(Material m) {
@@ -1612,6 +1628,10 @@ public class BlockUtils {
 
     public static boolean areHoneyBlocks(SpartanLocation loc) {
         return areHoneyBlocks(loc.getBlock().getType());
+    }
+
+    public static boolean areSlimeBlocks(SpartanLocation loc) {
+        return areSlimeBlocks(loc.getBlock().getType());
     }
 
     public static boolean isSensitive(SpartanLocation loc, long time) {

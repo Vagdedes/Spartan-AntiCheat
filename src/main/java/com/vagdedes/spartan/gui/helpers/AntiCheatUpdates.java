@@ -1,53 +1,41 @@
 package com.vagdedes.spartan.gui.helpers;
 
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import com.vagdedes.spartan.handlers.connection.DiscordMemberCount;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.objects.features.StatisticalProgress;
 import com.vagdedes.spartan.objects.profiling.PlayerProfile;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 public class AntiCheatUpdates {
 
-    public static final String name = "AntiCheat Updates",
-            communicationDetails = "§5Official Discord§8: §d§n" + DiscordMemberCount.discordURL + "§r §8§l| §r§2Business Email§8: §acontact@vagdedes.com";
+    public static final String name = "AntiCheat Updates";
 
     public static List<String> getInformation(boolean showStatistics) {
         int arraySize = 20;
         double players;
         List<String> array = new ArrayList<>(arraySize),
                 statisticsArray = showStatistics ? new ArrayList<>(arraySize) : null;
-        boolean caching = ResearchEngine.isCaching();
 
-        if (!showStatistics || caching) {
+        if (!showStatistics) {
             players = 0.0;
         } else {
             StatisticalProgress object = ResearchEngine.getProgress();
-            int amount = object.getLogs();
 
-            if (amount > 0) {
+            if (object.logs > 0) {
                 List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
                 players = playerProfiles.size(); // purposely double to help with the divisions
 
                 if (players > 0) {
-                    SpartanPlayer[] staffOnline = object.getStaffOnline();
+                    Collection<SpartanPlayer> staffOnline = object.getStaffOnline();
                     int hackers = ResearchEngine.getHackers().size(),
                             suspectedPlayers = ResearchEngine.getSuspectedPlayers().size(),
                             legitimates = ResearchEngine.getLegitimatePlayers().size(),
-                            activeReports = ResearchEngine.getReports(null, 0, true).size(),
-                            allReports = ResearchEngine.getReports(null, 0, false).size(),
-                            bans = object.getBans(), kicks = object.getKicks(), warnings = object.getWarnings(),
-                            mines = object.getMines(),
-                            staffOffline = object.getStaffOffline(), staffOnlineAmount = staffOnline.length;
+                            staffOnlineAmount = staffOnline.size();
 
                     // Separator
 
@@ -60,25 +48,21 @@ public class AntiCheatUpdates {
                     if (legitimates > 0) {
                         statisticsArray.add("§c" + Math.max(AlgebraUtils.cut((legitimates / players) * 100.0, 2), 0.01) + "§r§c% §7of players are §clegitimate");
                     }
-                    if (allReports > 0) {
-                        statisticsArray.add("§c" + Math.max(AlgebraUtils.cut(((allReports - activeReports) / ((double) allReports)) * 100.0, 2), 0.01) + "§r§c% §7of reports have been §chandled");
-                    }
-                    if (bans > 0 || kicks > 0 || warnings > 0) {
-                        statisticsArray.add("§c" + bans + " " + (bans == 1 ? "ban" : "§r§cbans")
-                                + "§7, §c" + kicks + " " + (kicks == 1 ? "kick" : "§r§ckicks")
-                                + " §7& §c" + warnings + " " + (warnings == 1 ? "warning" : "§r§cwarnings")
+                    if (object.kicks > 0
+                            || object.warnings > 0
+                            || object.punishments > 0) {
+                        statisticsArray.add("§c" + object.kicks + " §r§c" + (object.kicks == 1 ? "kick" : "kicks")
+                                + "§7, §c" + object.warnings + " §r§c" + (object.warnings == 1 ? "warning" : "warnings")
+                                + " §7& §c" + object.punishments + " §r§c" + (object.punishments == 1 ? "punishment" : "punishments")
                                 + " §7executed");
                     }
-                    if (mines > 0) {
-                        statisticsArray.add("§c" + mines + " ore " + (mines == 1 ? "block" : "§r§cblocks") + " have been §cmined");
-                    }
-                    if (staffOffline > 0) {
-                        statisticsArray.add("§c" + staffOffline + " §7staff " + (staffOffline == 1 ? "player is" : "players are") + " §coffline");
+                    if (object.mines > 0) {
+                        statisticsArray.add("§c" + object.mines + " ore " + (object.mines == 1 ? "block" : "§r§cblocks") + " have been §cmined");
                     }
                     if (staffOnlineAmount > 0) {
                         int counter = 10;
 
-                        if (statisticsArray.size() > 0) {
+                        if (!statisticsArray.isEmpty()) {
                             statisticsArray.add("");
                         }
                         statisticsArray.add("§c" + staffOnlineAmount + " §7staff " + (staffOnlineAmount == 1 ? "player is" : "players are") + " §conline§8:");
@@ -107,21 +91,7 @@ public class AntiCheatUpdates {
         }
 
         // Separator
-        List<String> warnings = getWarnings(true);
-
-        if (warnings.size() > 0) {
-            if (showStatistics) {
-                InventoryUtils.prepareDescription(array, "Important Information");
-            } else {
-                array.add("");
-            }
-            array.add("§4Warning§8:");
-
-            for (String warning : warnings) {
-                array.add("§c" + warning);
-            }
-            array.add("");
-        } else if (showStatistics) {
+        if (showStatistics) {
             InventoryUtils.prepareDescription(array, "Important Information");
         }
 
@@ -133,64 +103,12 @@ public class AntiCheatUpdates {
                 array.add("§7Data from §4stored players§8:");
             }
 
-            if (statisticsArray.size() > 0) {
+            if (!statisticsArray.isEmpty()) {
                 array.addAll(statisticsArray);
-            } else if (caching) {
-                array.add("§7" + PlayerStateLists.calculatingData);
             } else {
                 array.add("§7" + PlayerStateLists.noDataAvailable);
             }
         }
-
-        // Separator
         return array;
-    }
-
-    // Separator
-
-    public static List<String> getWarnings(boolean menu) {
-        List<String> warnings = new LinkedList<>();
-
-        if (CloudFeature.isServerLimited()) {
-            warnings.add(menu ? prepareLore(CloudFeature.getMaximumServerLimitMessage()) : CloudFeature.getMaximumServerLimitMessage());
-        }
-        return warnings;
-    }
-
-    public static boolean messageWarnings(SpartanPlayer p) {
-        List<String> messages = new LinkedList<>(),
-                warnings = getWarnings(false);
-        int warningsCount = warnings.size();
-
-        if (warningsCount > 0) {
-            messages.add("");
-
-            for (int position = 0; position < warningsCount; position++) {
-                String color = (position + 1) % 2 == 0 ? "§7" : "§c";
-                messages.add(color + prepareMessage(warnings.get(position), color));
-            }
-            messages.add(communicationDetails);
-
-            // Separator
-            String message = StringUtils.toString(messages.toArray(new String[0]), "\n");
-            String hash = String.valueOf(Objects.hash(message));
-            message = AwarenessNotifications.getNotification(message);
-
-            if (AwarenessNotifications.canSend(p.getUniqueId(), hash)) {
-                p.sendImportantMessage(message);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // Separator
-
-    private static String prepareMessage(String s, String color) {
-        return s.replace("§r", "§r" + color);
-    }
-
-    private static String prepareLore(String s) {
-        return s.length() > StringUtils.idealDescriptionLimit ? s.substring(0, StringUtils.idealDescriptionLimit - 3) + "..." : s;
     }
 }

@@ -65,7 +65,7 @@ public class EventsHandler_1_13 implements Listener {
 
                 // Detections
                 if (!e.isCancelled()) {
-                    p.getExecutor(Enums.HackType.NoSlowdown).handle(e);
+                    p.getExecutor(Enums.HackType.NoSlowdown).handle(e.isCancelled(), e);
                 }
             }
         }

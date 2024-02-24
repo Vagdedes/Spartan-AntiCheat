@@ -93,11 +93,6 @@ public class EventsHandler8 implements Listener {
         } else {
             boolean sneaking = e.isSneaking();
 
-            // Utils
-            if (sneaking) {
-                p.getBuffer().start("sneaking-counter", 5);
-            }
-
             // Objects
             p.setSneaking(sneaking);
             p.setEyeHeight(n.getEyeHeight());

@@ -5,10 +5,8 @@ import com.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
 import com.vagdedes.spartan.configuration.Config;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.functionality.notifications.SuspicionNotifications;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.protections.Explosion;
-import com.vagdedes.spartan.functionality.protections.LagLeniencies;
 import com.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.protections.ReconnectCooldown;
 import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
@@ -17,7 +15,7 @@ import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.handlers.stability.DetectionLocation;
 import com.vagdedes.spartan.objects.data.Handlers;
-import com.vagdedes.spartan.objects.profiling.PlayerCombat;
+import com.vagdedes.spartan.objects.profiling.PlayerFight;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -47,26 +45,14 @@ public class EventsHandler1 implements Listener {
         if (p == null) {
             return;
         }
-        // Object
-        p.getProfile().setOnline(p);
-
-        // Protections
-        LagLeniencies.add(p);
-
         // System
         MaximumCheckedPlayers.add(p);
         SpartanEdition.attemptNotification(p);
 
         SpartanBukkit.runDelayedTask(p, () -> {
             if (p != null) {
-                // Configuration
                 Config.settings.runOnLogin(p);
-
-                // Features
-                if (!SpartanMenu.mainMenu.notify(p)
-                        && !CloudFeature.announce(p)) {
-                    SuspicionNotifications.run(p);
-                }
+                CloudFeature.announce(p);
             }
         }, 10);
     }
@@ -92,11 +78,10 @@ public class EventsHandler1 implements Listener {
         ChatProtection.remove(p);
 
         // System
-        LagLeniencies.remove(p);
-        Cache.clear(p, n, true, true, false, null);
+        Cache.clear(p, n, true, true, true, false, null);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void Death(PlayerDeathEvent e) {
         Player n = e.getEntity();
         SpartanPlayer p = SpartanBukkit.getPlayer(n);
@@ -106,10 +91,10 @@ public class EventsHandler1 implements Listener {
         }
         // Detections
         Cache.clearCheckCache(p);
-        p.getExecutor(Enums.HackType.KillAura).handle(null);
-        p.getExecutor(Enums.HackType.ImpossibleActions).run();
-        p.getExecutor(Enums.HackType.AutoRespawn).run();
-        p.getExecutor(Enums.HackType.ImpossibleInventory).handle(ImpossibleInventory.DEATH);
+        p.getExecutor(Enums.HackType.KillAura).handle(false, null);
+        p.getExecutor(Enums.HackType.ImpossibleActions).run(false);
+        p.getExecutor(Enums.HackType.AutoRespawn).run(false);
+        p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, ImpossibleInventory.DEATH);
 
         // Protections
         p.resetHandlers(); // Always First
@@ -121,8 +106,15 @@ public class EventsHandler1 implements Listener {
         Player killer = n.getKiller();
 
         if (killer != null && killer.isOnline()) {
-            PlayerCombat combat = p.getProfile().getCombat();
-            combat.setWinnerAgainst(killer.getName());
+            SpartanPlayer p2 = SpartanBukkit.getPlayer(killer);
+
+            if (p2 != null) {
+                PlayerFight fight = p.getProfile().getCombat().getFight(p2);
+
+                if (fight != null) {
+                    fight.setWinner(p2);
+                }
+            }
         }
         p.resetLocationData();
         p.setDead(true);
@@ -130,7 +122,7 @@ public class EventsHandler1 implements Listener {
         p.setHealth(n.getHealth());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void Respawn(PlayerRespawnEvent e) {
         Player n = e.getPlayer();
         SpartanPlayer p = SpartanBukkit.getPlayer(n);
@@ -140,8 +132,8 @@ public class EventsHandler1 implements Listener {
         }
         // Detections
         Cache.clearCheckCache(p);
-        p.getExecutor(Enums.HackType.KillAura).handle(null);
-        p.getExecutor(Enums.HackType.IrregularMovements).handle(null);
+        p.getExecutor(Enums.HackType.KillAura).handle(false, null);
+        p.getExecutor(Enums.HackType.IrregularMovements).handle(false, null);
 
         // Utils
         DetectionLocation.update(p, p.getLocation(), true);
@@ -157,7 +149,6 @@ public class EventsHandler1 implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-
     private void Velocity(PlayerVelocityEvent e) {
         SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 

@@ -17,11 +17,9 @@ import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.handlers.stability.TPS;
 import com.vagdedes.spartan.handlers.stability.TestServer;
-import com.vagdedes.spartan.objects.profiling.PlayerReport;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -97,15 +95,6 @@ public class MainMenu extends InventoryMenu {
         return ("§0" + name + " | Page ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
     }
 
-    public boolean notify(SpartanPlayer player) {
-        for (Permission permission : permissions) {
-            if (Permissions.has(player, permission)) {
-                return AntiCheatUpdates.messageWarnings(player);
-            }
-        }
-        return false;
-    }
-
     @Override
     public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
@@ -138,17 +127,7 @@ public class MainMenu extends InventoryMenu {
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
         Runtime runtime = Runtime.getRuntime();
-        List<String> warnings = AntiCheatUpdates.getWarnings(true);
-
-        if (!warnings.isEmpty()) {
-            lore.add("§4Warning§8:");
-
-            for (String warning : warnings) {
-                lore.add("§c" + warning);
-            }
-            lore.add("");
-        }
-        lore.add("§7Server Type§8: §a" + (TestServer.isIdentified() ? "Testing (" + TestServer.getIdentification() + ")" : SpartanBukkit.isProductionServer() ? "Production" : "Vanilla"));
+        lore.add("§7Server Type§8: §a" + (TestServer.isIdentified() ? "Testing (" + TestServer.getIdentification() + ")" : "Production"));
         if (!MultiVersion.unknownFork || !MultiVersion.other) {
             lore.add("§7Server Information§8: §a" + (MultiVersion.unknownFork ? "Version" : MultiVersion.fork())
                     + (MultiVersion.other ? "" : " " + MultiVersion.versionString()));
@@ -158,9 +137,7 @@ public class MainMenu extends InventoryMenu {
                 + " - " + (tps >= TPS.excellent ? "Excellent" : tps >= TPS.good ? "Good" : tps >= TPS.minimum ? "Mediocre" : "Unstable"));
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
-        lore.add("§7Research Engine§8: §a" +
-                (ResearchEngine.isCaching() ? "Calculating Data..." :
-                        ResearchEngine.getProgress().getLogs() + " Logs §8/ §a" + ResearchEngine.getFights().size() + " Fights") + (ResearchEngine.isFull() ? " §c(Maxed Out)" : ""));
+        lore.add("§7Research Engine§8: §a" + ResearchEngine.getProgress().logs + " Logs" + (ResearchEngine.isFull() ? " §c(Maxed Out)" : ""));
 
         if (SpartanBukkit.canAdvertise) {
             boolean preview = IDs.isPreview();
@@ -289,34 +266,7 @@ public class MainMenu extends InventoryMenu {
             }
         } else if (!name.startsWith(PlayerStateLists.inactiveColour)
                 && !item.equals(AntiCheatUpdates.name)) {
-            List<String> lore = itemStack.getItemMeta().getLore();
-
-            if (lore != null && lore.size() > 1 && lore.get(0).equals(PlayerStateLists.punishedPlayers)) {
-                StringBuilder builder = new StringBuilder();
-
-                for (String line : lore) {
-                    if (!line.isEmpty()) {
-                        builder.append(StringUtils.getClearColorString(line));
-                    }
-                }
-                String reason = builder.toString();
-
-                if (!reason.isEmpty()) {
-                    List<PlayerReport> reports = ResearchEngine.getPlayerProfile(item).getPunishmentHistory().getReports();
-
-                    if (!reports.isEmpty()) {
-                        for (PlayerReport playerReport : reports) {
-                            if (!playerReport.isDismissed() && playerReport.getReason().equals(reason)) {
-                                playerReport.dismiss(name, player, true);
-                                open(player);
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                SpartanMenu.playerInfo.open(player, false, item);
-            }
+            SpartanMenu.playerInfo.open(player, false, item);
         }
         return true;
     }

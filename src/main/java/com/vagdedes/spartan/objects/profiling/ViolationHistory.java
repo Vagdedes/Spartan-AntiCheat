@@ -1,131 +1,87 @@
 package com.vagdedes.spartan.objects.profiling;
 
-import com.vagdedes.spartan.handlers.stability.CancelViolation;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
-import me.vagdedes.spartan.system.Enums;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ViolationHistory {
 
-    private final ResearchEngine.DataType dataType;
-    private final Enums.HackType hackType;
+    private final Collection<PlayerViolation> memory;
+    private final boolean sync;
 
-    private final Map<Integer, List<PlayerViolation>> violationsMap;
-    private final List<PlayerViolation> violationsList;
-
-    // Base of all object initiations
-    public ViolationHistory(Enums.HackType hackType,
-                            ResearchEngine.DataType dataType,
-                            Map<Integer, List<PlayerViolation>> violationsData,
-                            List<PlayerViolation> violationsMap,
-                            int days) { // Constructor
-        this.hackType = hackType;
-        this.dataType = dataType;
-        this.violationsMap = violationsData;
-        this.violationsList = violationsMap;
+    public ViolationHistory(Collection<PlayerViolation> list, boolean sync) { // Constructor
+        this.memory = sync ? Collections.synchronizedCollection(list) : list;
+        this.sync = sync;
     }
 
-    // Used for object initiation in the player-profile object
-    ViolationHistory(Enums.HackType hackType, ResearchEngine.DataType dataType) { // Local
-        this(hackType, dataType, new ConcurrentHashMap<>(), new CopyOnWriteArrayList<>(), -1);
+    ViolationHistory() { // Local
+        this(new ArrayList<>(), true);
     }
-
-    // Separator
 
     public void clear() {
-        violationsMap.clear();
-        violationsList.clear();
-    }
-
-    public Enums.HackType getHackType() {
-        return hackType;
-    }
-
-    private boolean isViolationDefaultImportant(int level, boolean def) {
-        return def ? level >= hackType.getCheck().getDefaultCancelViolation() :
-                level >= CancelViolation.get(hackType, dataType);
-    }
-
-    // Separator
-
-    public void increaseViolations(PlayerViolation playerViolation) {
-        int identity = playerViolation.divisionIdentity;
-        List<PlayerViolation> list = violationsMap.get(identity);
-
-        if (list == null) {
-            list = new CopyOnWriteArrayList<>();
-            list.add(playerViolation);
-            violationsMap.put(identity, list);
+        if (sync) {
+            synchronized (memory) {
+                memory.clear();
+            }
         } else {
-            list.add(playerViolation);
+            memory.clear();
         }
-        violationsList.add(playerViolation);
     }
 
-    // Separator
-
-    public int getAllViolations() {
-        return violationsList.size();
+    public void store(PlayerViolation playerViolation) {
+        if (sync) {
+            synchronized (memory) {
+                memory.add(playerViolation);
+            }
+        } else {
+            memory.add(playerViolation);
+        }
     }
 
-    public int getImportantViolations(boolean def) {
-        if (!violationsMap.isEmpty()) {
-            int counter = 0;
+    public int getCount() {
+        return memory.size();
+    }
 
-            for (List<PlayerViolation> list : violationsMap.values()) {
-                if (isViolationDefaultImportant(list.get(0).getLevel(), def)) {
-                    counter += list.size();
+    public Collection<PlayerViolation> getCollection() {
+        if (sync) {
+            synchronized (memory) {
+                if (!memory.isEmpty()) {
+                    Collection<PlayerViolation> collection = new ArrayList<>(memory.size());
+
+                    for (PlayerViolation playerViolation : memory) {
+                        if (playerViolation.isDetectionEnabled()) {
+                            collection.add(playerViolation);
+                        }
+                    }
+                    return collection;
+                } else {
+                    return new ArrayList<>(0);
                 }
             }
-            return counter;
-        }
-        return 0;
-    }
+        } else {
+            if (!memory.isEmpty()) {
+                Collection<PlayerViolation> collection = new ArrayList<>(memory.size());
 
-    public int getUniqueViolations() {
-        return violationsMap.size();
-    }
-
-    // Separator
-
-    public Collection<Map.Entry<PlayerViolation, Integer>> getViolationCounts() {
-        int violationsSize = violationsMap.size();
-
-        if (violationsSize > 0) {
-            Map<PlayerViolation, Integer> map = new LinkedHashMap<>(violationsSize);
-
-            for (List<PlayerViolation> list : violationsMap.values()) {
-                map.put(list.get(0), list.size());
+                for (PlayerViolation playerViolation : memory) {
+                    if (playerViolation.isDetectionEnabled()) {
+                        collection.add(playerViolation);
+                    }
+                }
+                return collection;
+            } else {
+                return new ArrayList<>(0);
             }
-            return map.entrySet();
         }
-        return new ArrayList<>(0);
     }
 
-    public List<PlayerViolation> getViolationsList() {
-        return new ArrayList<>(violationsList);
-    }
-
-    public Map<Integer, List<PlayerViolation>> getViolationsMap() {
-        return new LinkedHashMap<>(violationsMap);
-    }
-
-    // Separator
-
-    public Set<String> getDates() {
-        int violationsSize = violationsMap.size();
-
-        if (violationsSize > 0) {
-            Set<String> dates = new HashSet<>(violationsSize);
-
-            for (PlayerViolation playerViolation : violationsList) {
-                dates.add(playerViolation.getDate());
+    public Collection<PlayerViolation> getRawCollection() {
+        if (sync) {
+            synchronized (memory) {
+                return new ArrayList<>(memory);
             }
-            return dates;
+        } else {
+            return memory;
         }
-        return new HashSet<>(0);
     }
+
 }

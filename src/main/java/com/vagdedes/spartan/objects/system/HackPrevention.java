@@ -1,15 +1,14 @@
 package com.vagdedes.spartan.objects.system;
 
 import com.vagdedes.spartan.checks.movement.speed.Speed;
-import com.vagdedes.spartan.functionality.protections.Teleport;
 import com.vagdedes.spartan.handlers.identifiers.simple.VehicleAccess;
-import com.vagdedes.spartan.handlers.stability.DetectionLocation;
+import com.vagdedes.spartan.handlers.stability.TPS;
 import com.vagdedes.spartan.objects.data.Cooldowns;
 import com.vagdedes.spartan.objects.data.Handlers;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.utils.gameplay.MoveUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 public class HackPrevention {
@@ -20,9 +19,9 @@ public class HackPrevention {
     final boolean groundTeleport;
     boolean processed;
     final double damage;
-    final long time, expiration;
+    final long time, tick, expiration;
 
-    private static final Cooldowns cooldowns = new Cooldowns(false);
+    private static final Cooldowns cooldowns = new Cooldowns(null);
 
     // Separator
 
@@ -31,7 +30,8 @@ public class HackPrevention {
                           double damage, int violation) {
         // Object Data
         this.time = System.currentTimeMillis();
-        this.expiration = cancelTicks == 0 ? 0L : this.time + (cancelTicks * 50L);
+        this.tick = TPS.getTick(player);
+        this.expiration = cancelTicks == 0 ? 0L : this.tick + cancelTicks;
         this.information = verbose;
         this.location = location;
         this.groundTeleport = groundTeleport;
@@ -45,13 +45,7 @@ public class HackPrevention {
             if (VehicleAccess.hasExitCooldown(player, hackType)) {
                 this.violation = 0;
             } else {
-                CancelCause silentCause = hackType.getCheck().getSilentCause(player.getUniqueId());
-
-                if (silentCause != null && silentCause.getReason().equals(Teleport.reason)) {
-                    this.violation = 0;
-                } else {
-                    this.violation = violation;
-                }
+                this.violation = violation;
             }
         } else {
             this.violation = violation;
@@ -61,18 +55,9 @@ public class HackPrevention {
 
     void handle(SpartanPlayer player, Enums.HackType hackType) {
         SpartanLocation preventionFrom = this.location;
-        boolean teleported = false;
+        boolean teleported = preventionFrom != null
+                && player.safeTeleport(preventionFrom);
 
-        if (preventionFrom != null) {
-            SpartanLocation fromLocation = DetectionLocation.get(player, false);
-
-            if (fromLocation != null) {
-                preventionFrom = fromLocation;
-            }
-            if (player.safeTeleport(preventionFrom)) { // Attention First
-                teleported = true;
-            }
-        }
         if (this.groundTeleport
                 && player.groundTeleport(true)) {
             teleported = true;

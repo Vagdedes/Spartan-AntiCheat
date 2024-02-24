@@ -24,7 +24,6 @@ public class ServerFlying {
                 && !p.isSwimming() && !p.getHandlers().has(Handlers.HandlerType.WaterElevator)
                 && !p.getHandlers().has(Handlers.HandlerType.Trident)
                 && !p.getHandlers().has(Handlers.HandlerType.ExtremeCollision)
-                && !LagLeniencies.hasInconsistencies(p, "tps")
                 && !Attributes.has(p, Attributes.GENERIC_FLYING_SPEED)) {
             double limit = (p.getFlySpeed() * 10.0) + 1.0;
             Double nmsDistance = p.getNmsDistance();

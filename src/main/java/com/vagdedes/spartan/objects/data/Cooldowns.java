@@ -1,95 +1,89 @@
 package com.vagdedes.spartan.objects.data;
 
-import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
+import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Cooldowns {
 
-    private final Map<String, Long> hm;
+    private final Map<String, Long> storage;
+    private final SpartanPlayer player;
 
-    public Cooldowns(boolean async) {
-        hm = (async && !MultiVersion.folia ? new ConcurrentHashMap<>() : new LinkedHashMap<>());
+    public Cooldowns(SpartanPlayer player) {
+        this.storage = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.player = player;
     }
 
     public void clear() {
-        hm.clear();
-    }
-
-    public boolean has(String name) {
-        return hm.containsKey(name);
+        synchronized (storage) {
+            storage.clear();
+        }
     }
 
     public int get(String name) {
-        Long object = hm.get(name);
-        return object == null ? 0 :
-                Math.max(AlgebraUtils.integerCeil((object - System.currentTimeMillis()) / TPS.tickTimeDecimal), 0);
+        Long object;
+
+        synchronized (storage) {
+            object = storage.get(name);
+        }
+        if (object == null) {
+            return 0;
+        } else {
+            if (player == null) {
+                object -= System.currentTimeMillis();
+            } else {
+                object -= TPS.getTick(player);
+            }
+            return object < 0L ? 0 : object.intValue();
+        }
     }
 
     public boolean canDo(String name) {
         return get(name) == 0;
     }
 
-    public void add(String name, int amount) {
-        if (amount > 0) {
-            hm.put(name, System.currentTimeMillis() + (amount * 50L));
+    public void add(String name, int ticks) {
+        if (player == null) {
+            synchronized (storage) {
+                storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
+            }
         } else {
-            hm.remove(name);
+            synchronized (storage) {
+                storage.put(name, TPS.getTick(player) + ticks);
+            }
         }
     }
 
-    public void add(String[] names, int amount) {
-        if (amount > 0) {
-            for (String name : names) {
-                hm.put(name, System.currentTimeMillis() + (amount * 50L));
+    public void add(String[] names, int ticks) {
+        if (player == null) {
+            synchronized (storage) {
+                for (String name : names) {
+                    storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
+                }
             }
         } else {
-            for (String name : names) {
-                hm.remove(name);
+            synchronized (storage) {
+                for (String name : names) {
+                    storage.put(name, TPS.getTick(player) + ticks);
+                }
             }
         }
     }
 
     public void remove(String name) {
-        hm.remove(name);
+        synchronized (storage) {
+            storage.remove(name);
+        }
     }
 
     public void remove(String[] names) {
-        for (String name : names) {
-            remove(name);
-        }
-    }
-
-    public void clear(String[] ignore) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (!StringUtils.stringContainsPartOfArray(ignore, name)) {
-                    internal.add(name);
-                }
+        synchronized (storage) {
+            for (String name : names) {
+                storage.remove(name);
             }
-            remove(internal.toArray(new String[0]));
-        }
-    }
-
-    public void clear(String s) {
-        if (!hm.isEmpty()) {
-            List<String> internal = new ArrayList<>();
-
-            for (String name : hm.keySet()) {
-                if (name.contains(s)) {
-                    internal.add(name);
-                }
-            }
-            remove(internal.toArray(new String[0]));
         }
     }
 }

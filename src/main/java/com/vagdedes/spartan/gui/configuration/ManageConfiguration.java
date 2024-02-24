@@ -6,7 +6,6 @@ import com.vagdedes.spartan.abstraction.InventoryMenu;
 import com.vagdedes.spartan.compatibility.necessary.FileGUI;
 import com.vagdedes.spartan.configuration.Compatibility;
 import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.functionality.configuration.ConfigurationDiagnostics;
 import com.vagdedes.spartan.functionality.important.MultiVersion;
 import com.vagdedes.spartan.functionality.important.Permissions;
 import com.vagdedes.spartan.gui.SpartanMenu;
@@ -14,7 +13,6 @@ import com.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -86,28 +84,8 @@ public class ManageConfiguration extends InventoryMenu {
             }
         }
         File[] files = Register.plugin.getDataFolder().listFiles();
-        int documentationItem;
 
-        if (Config.hasCancelAfterViolationOption()) {
-            List<String> lore = new ArrayList<>(20);
-            lore.add("");
-            lore.add("§7This feature is a semi-permanent solution to");
-            lore.add("§7solve unwanted low-violation false positives.");
-            lore.add("§7It will study your local or database logs, based");
-            lore.add("§7on your configuration preferences, and will");
-            lore.add("§7automatically adjust your config.yml configuration");
-            lore.add("§7for a better and more stable checking performance.");
-            lore.add("");
-            lore.add("§cPlease do not use this feature in a server that");
-            lore.add("§callows any sort of hacking module. It will possibly");
-            lore.add("§capply false changes to the configuration.");
-            add("§aConfiguration Diagnostics", lore, new ItemStack(MaterialUtils.get("redstone_torch")), menuSize - 2);
-            documentationItem = menuSize - 3;
-        } else {
-            documentationItem = menuSize - 2;
-        }
-
-        add("§aDocumentation", null, new ItemStack(Material.PAPER), documentationItem);
+        add("§aDocumentation", null, new ItemStack(Material.PAPER), menuSize - 2);
 
         add("§4Back", AntiCheatUpdates.getInformation(false),
                 new ItemStack(Material.ARROW), menuSize - 1);
@@ -221,13 +199,6 @@ public class ManageConfiguration extends InventoryMenu {
             } else {
                 open(player);
             }
-        } else if (item.equals("Configuration Diagnostics")) {
-            if (!Permissions.has(player, Enums.Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-                return true;
-            }
-            ConfigurationDiagnostics.execute(player);
-            player.sendInventoryCloseMessage(null);
         } else if (item.equals("Documentation")) {
             player.sendImportantMessage("§7Click to learn more about the configuration§8: \n§a§n" + documentationURL);
         } else {
@@ -298,7 +269,6 @@ public class ManageConfiguration extends InventoryMenu {
                             refresh = false;
                         }
                         break;
-                    case "Text":
                     default:
                         refresh = false;
                         break;

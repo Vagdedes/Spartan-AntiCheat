@@ -28,15 +28,11 @@ public class CommandTab implements TabCompleter {
         commands.put("kick", new Enums.Permission[]{Enums.Permission.KICK});
         commands.put("warn", new Enums.Permission[]{Enums.Permission.WARN});
         commands.put("bypass", new Enums.Permission[]{Enums.Permission.USE_BYPASS});
-        commands.put("ban", new Enums.Permission[]{Enums.Permission.BAN});
-        commands.put("unban", new Enums.Permission[]{Enums.Permission.UNBAN});
-        commands.put("ban-info", new Enums.Permission[]{Enums.Permission.BAN, Enums.Permission.UNBAN});
         commands.put("wave add", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave remove", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave clear", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave run", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave list", new Enums.Permission[]{Enums.Permission.WAVE});
-        commands.put("report", new Enums.Permission[]{Enums.Permission.REPORT});
         commands.put("customer-support", new Enums.Permission[]{Enums.Permission.ADMIN});
     }
 

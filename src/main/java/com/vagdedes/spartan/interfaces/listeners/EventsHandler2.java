@@ -1,10 +1,8 @@
 package com.vagdedes.spartan.interfaces.listeners;
 
 import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.functionality.protections.Teleport;
 import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
 import com.vagdedes.spartan.handlers.stability.Cache;
-import com.vagdedes.spartan.handlers.stability.Moderation;
 import com.vagdedes.spartan.handlers.tracking.CombatProcessing;
 import com.vagdedes.spartan.objects.replicates.SpartanLocation;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -26,7 +24,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class EventsHandler2 implements Listener {
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void Teleport(PlayerTeleportEvent e) {
         Location nto = e.getTo();
 
@@ -39,24 +37,29 @@ public class EventsHandler2 implements Listener {
         if (p == null) {
             return;
         }
+        boolean cancelled = e.isCancelled();
         SpartanLocation to = new SpartanLocation(p, nto);
 
         // Object
-        p.resetLocationData();
+        if (!cancelled) {
+            p.resetLocationData();
+        }
 
         // System
+        boolean distance = to.distance(e.getFrom()) >= MoveUtils.chunk && !p.wasDetected(true);
         Cache.clear(p, n,
                 false,
-                to.distance(e.getFrom()) >= MoveUtils.chunk && !Moderation.isDetectedAndPrevented(p),
-                !Moderation.wasDetected(p),
+                distance,
+                distance,
+                cancelled,
                 to);
-        CombatProcessing.runTeleport(p);
 
-        // Protections
-        Teleport.run(p);
+        if (!cancelled) {
+            CombatProcessing.runTeleport(p);
+        }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void ItemChange(PlayerItemHeldEvent e) {
         Player n = e.getPlayer();
         SpartanPlayer p = SpartanBukkit.getPlayer(n);
@@ -64,12 +67,16 @@ public class EventsHandler2 implements Listener {
         if (p == null) {
             return;
         }
+        boolean cancelled = e.isCancelled();
+
         // Objects
-        p.setInventory(n.getInventory(), n.getOpenInventory());
+        if (!cancelled) {
+            p.setInventory(n.getInventory(), n.getOpenInventory());
+        }
 
         // Detections
-        p.getExecutor(Enums.HackType.NoSlowdown).handle(e);
-        p.getExecutor(Enums.HackType.NoSwing).handle(e);
+        p.getExecutor(Enums.HackType.NoSlowdown).handle(cancelled, e);
+        p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -82,17 +89,20 @@ public class EventsHandler2 implements Listener {
             if (p == null) {
                 return;
             }
+            boolean cancelled = e.isCancelled();
             Entity projectile = e.getProjectile();
 
             // Detections
-            if (p.getExecutor(Enums.HackType.NoSlowdown).handle(e)) {
+            if (p.getExecutor(Enums.HackType.NoSlowdown).handle(cancelled, e)) {
                 e.setCancelled(true);
             } else {
                 // Detections
-                p.getExecutor(Enums.HackType.FastBow).handle(e);
+                p.getExecutor(Enums.HackType.FastBow).handle(cancelled, e);
 
                 // Protections
-                Damage.runBow(entity, projectile);
+                if (!cancelled) {
+                    Damage.runBow(entity, projectile);
+                }
 
                 if (p.getViolations(Enums.HackType.FastBow).process()) {
                     e.setCancelled(true);
@@ -151,6 +161,6 @@ public class EventsHandler2 implements Listener {
         }
 
         // Objects
-        p.setFlying(n.isFlying(), n.getAllowFlight());
+        p.setFlying(n.isFlying());
     }
 }

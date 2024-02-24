@@ -1,5 +1,6 @@
 package me.vagdedes.spartan.api;
 
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
@@ -48,10 +49,10 @@ public class PlayerViolationEvent extends Event implements Cancellable {
         return fp;
     }
 
+    @Deprecated
     public String getCategory() {
-        SpartanPlayer player = SpartanBukkit.getPlayer(p);
-        return player == null ? Enums.PunishmentCategory.UNLIKE.toString() :
-                Check.getCategoryFromViolations(v, h, player.getProfile().isSuspectedOrHacker(h)).toString();
+        AwarenessNotifications.forcefullySend("The Event API method 'getCategory' has been removed.");
+        return null;
     }
 
     public boolean isCancelled() {

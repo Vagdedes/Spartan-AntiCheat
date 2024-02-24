@@ -1,17 +1,9 @@
 package com.vagdedes.spartan.objects.profiling;
 
 import com.vagdedes.spartan.compatibility.necessary.bedrock.BedrockCompatibility;
-import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.gui.SpartanMenu;
-import com.vagdedes.spartan.gui.spartan.MainMenu;
-import com.vagdedes.spartan.handlers.stability.CancelViolation;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
-import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.handlers.stability.TestServer;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.system.Check;
 import com.vagdedes.spartan.system.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
@@ -28,51 +20,34 @@ public class PlayerProfile {
     private final MiningHistory[] miningHistory;
     private final PunishmentHistory punishmentHistory;
     private final PlayerEvidence evidence;
-    private boolean
-            bedrockPlayer,
-            bedrockPlayerCheck,
-            staff,
-            tester;
+    private boolean bedrockPlayer, bedrockPlayerCheck;
     private ItemStack skull;
     private OfflinePlayer offlinePlayer;
     private final PlayerCombat playerCombat;
-    private long lastPlayed;
 
     // Separator
 
     public PlayerProfile(String name) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        boolean isNull = name == null;
 
         // Separator
-        this.uuid = isNull ? SpartanBukkit.uuid : null;
+        this.uuid = null;
         this.name = name;
-        this.punishmentHistory = new PunishmentHistory();
-        this.playerCombat = new PlayerCombat(isNull ? "" : name);
-        this.evidence = new PlayerEvidence();
+        this.punishmentHistory = new PunishmentHistory(this);
+        this.playerCombat = new PlayerCombat(this);
+        this.evidence = new PlayerEvidence(this);
         this.skull = null;
         this.offlinePlayer = null;
 
         // Separator
-        if (isNull) {
-            this.staff = false;
-            this.bedrockPlayer = false;
-            this.bedrockPlayerCheck = true;
-            this.lastPlayed = 0L;
-        } else {
-            SpartanPlayer player = this.getSpartanPlayer();
+        SpartanPlayer player = this.getSpartanPlayer();
 
-            if (player != null) {
-                this.staff = Permissions.isStaff(player);
-                this.bedrockPlayer = player.isBedrockPlayer();
-                this.bedrockPlayerCheck = true;
-                this.lastPlayed = player.getLastPlayed();
-            } else {
-                this.staff = false;
-                this.bedrockPlayer = BedrockCompatibility.isPlayer(name);
-                this.bedrockPlayerCheck = bedrockPlayer;
-                this.lastPlayed = 0L;
-            }
+        if (player != null) {
+            this.bedrockPlayer = player.isBedrockPlayer();
+            this.bedrockPlayerCheck = true;
+        } else {
+            this.bedrockPlayer = BedrockCompatibility.isPlayer(name);
+            this.bedrockPlayerCheck = bedrockPlayer;
         }
 
         // Separator
@@ -80,10 +55,10 @@ public class PlayerProfile {
         this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
-            this.violationHistory[hackType.ordinal()] = new ViolationHistory(hackType, getDataType());
+            this.violationHistory[hackType.ordinal()] = new ViolationHistory();
         }
         for (Enums.MiningOre ore : Enums.MiningOre.values()) {
-            this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0, 1);
+            this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0);
         }
     }
 
@@ -92,24 +67,22 @@ public class PlayerProfile {
         this.uuid = player.getUniqueId();
         this.name = player.getName();
         this.offlinePlayer = player.getPlayer(); // Attention
-        this.punishmentHistory = new PunishmentHistory();
-        this.playerCombat = new PlayerCombat(name);
-        this.evidence = new PlayerEvidence();
+        this.punishmentHistory = new PunishmentHistory(this);
+        this.playerCombat = new PlayerCombat(this);
+        this.evidence = new PlayerEvidence(this);
         this.skull = null;
         this.offlinePlayer = null;
         this.bedrockPlayer = player.isBedrockPlayer(); // Attention
-        this.staff = Permissions.isStaff(player);
         this.bedrockPlayerCheck = true;
-        this.lastPlayed = player.getLastPlayed();
 
         this.violationHistory = new ViolationHistory[hackTypes.length];
         this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
-            this.violationHistory[hackType.ordinal()] = new ViolationHistory(hackType, getDataType());
+            this.violationHistory[hackType.ordinal()] = new ViolationHistory();
         }
         for (Enums.MiningOre ore : Enums.MiningOre.values()) {
-            this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0, 1);
+            this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0);
         }
     }
 
@@ -176,26 +149,6 @@ public class PlayerProfile {
         return false;
     }
 
-    public boolean wasStaff() {
-        return staff;
-    }
-
-    public void setStaff(boolean bool) {
-        this.staff = bool;
-    }
-
-    public boolean wasTesting() {
-        if (tester) {
-            return true;
-        }
-        SpartanPlayer player = getSpartanPlayer();
-        return player != null && TestServer.isTester(player);
-    }
-
-    public void setTester(boolean bool) {
-        this.tester = bool;
-    }
-
     public OfflinePlayer getOfflinePlayer() {
         if (offlinePlayer == null && name != null) {
             if (this.uuid == null) {
@@ -219,18 +172,8 @@ public class PlayerProfile {
                         null;
     }
 
-    // Separator
-
     public boolean isOnline() {
         return getSpartanPlayer() != null;
-    }
-
-    public boolean wasRecentlyOnline() {
-        return isOnline() || (System.currentTimeMillis() - lastPlayed) <= (ResearchEngine.cacheRefreshTicks * TPS.tickTime);
-    }
-
-    public void setOnline(SpartanPlayer player) {
-        this.lastPlayed = player.getLastPlayed();
     }
 
     // Separator
@@ -244,58 +187,6 @@ public class PlayerProfile {
     }
 
     // Separator
-
-    public boolean calculateLiveEvidence(SpartanPlayer player, Enums.HackType hackType, ResearchEngine.DataType dataType) {
-        synchronized (evidence.live) {
-            if (evidence.live.containsKey(hackType) || evidence.historical.containsKey(hackType)) {
-                return true;
-            }
-            Check check = hackType.getCheck();
-
-            if (check.supportsLiveEvidence()) {
-                int violationCount = player.getViolations(hackType).getLevel() - check.getCancelViolation();
-
-                if (violationCount > 0) {
-                    violationCount += punishmentHistory.getReportCount(hackType, 0);
-                    double violationRatio = (violationCount / ((double) CancelViolation.get(hackType, dataType))),
-                            thresholdSurpassing = violationRatio / Check.analysisMultiplier;
-
-                    if (thresholdSurpassing >= 1.0) {
-                        evidence.live.put(hackType,
-                                "Average: " + AlgebraUtils.integerRound(thresholdSurpassing * 100.0) + "%"
-                        );
-                        evidence.judge();
-                        SpartanMenu.playerInfo.refresh(player.getName());
-                        MainMenu.refresh();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    }
-
-    public void removeFromLiveEvidence(Enums.HackType hackType) {
-        synchronized (evidence.live) {
-            evidence.live.remove(hackType);
-            evidence.judge();
-        }
-    }
-
-    public void removeFromHistoricalEvidence(Enums.HackType hackType) {
-        synchronized (evidence.live) {
-            evidence.historical.remove(hackType);
-            evidence.judge();
-        }
-    }
-
-    public void removeFromAllEvidence(Enums.HackType hackType) {
-        synchronized (evidence.live) {
-            evidence.live.remove(hackType);
-            evidence.historical.remove(hackType);
-            evidence.judge();
-        }
-    }
 
     public PlayerEvidence getEvidence() {
         return evidence;
@@ -312,9 +203,9 @@ public class PlayerProfile {
 
         for (MiningHistory miningHistory : getMiningHistory()) {
             mines += miningHistory.getMines();
-            days += miningHistory.getDays();
+            days = Math.max(miningHistory.getDays(), days);
         }
-        return new MiningHistory(null, mines, Math.max(days, 1));
+        return new MiningHistory(null, mines);
     }
 
     public MiningHistory getMiningHistory(Enums.MiningOre ore) {
@@ -371,17 +262,13 @@ public class PlayerProfile {
 
     // Separator
 
-    public int getUsefulLogs(ViolationHistory violationHistory) {
-        return violationHistory.getAllViolations()
-                + getOverallMiningHistory().getMines()
-                + getPunishmentHistory().getOverall(true);
-    }
-
     public int getUsefulLogs() {
         int sum = 0;
 
         for (ViolationHistory violationHistory : getViolationHistory()) {
-            sum += getUsefulLogs(violationHistory);
+            sum += (violationHistory.getCount()
+                    + getOverallMiningHistory().getMines()
+                    + getPunishmentHistory().getOverall());
         }
         return sum;
     }
@@ -389,8 +276,6 @@ public class PlayerProfile {
     public PunishmentHistory getPunishmentHistory() {
         return punishmentHistory;
     }
-
-    // Separator
 
     public PlayerCombat getCombat() {
         return playerCombat;

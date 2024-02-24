@@ -23,10 +23,18 @@ public abstract class CheckExecutor extends DetectionExecutor {
     }
 
     // Run detections when no parameters are needed
-    abstract public boolean run();
+    public boolean run(boolean cancelled) {
+        return (!cancelled || hackType.getCheck().canHandleCancelledEvents()) && runInternal(cancelled);
+    }
+
+    protected abstract boolean runInternal(boolean cancelled);
 
     // Run handlers or detections when parameters are needed
-    abstract public boolean handle(Object object);
+    public boolean handle(boolean cancelled, Object object) {
+        return (!cancelled || hackType.getCheck().canHandleCancelledEvents()) && handleInternal(cancelled, object);
+    }
+
+    protected abstract boolean handleInternal(boolean cancelled, Object object);
 
     abstract protected boolean canDo();
 }

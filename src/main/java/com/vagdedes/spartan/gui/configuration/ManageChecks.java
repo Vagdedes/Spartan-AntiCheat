@@ -81,10 +81,10 @@ public class ManageChecks extends InventoryMenu {
     private void addCheck(SpartanPlayer player, HackType hackType) {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null, null),
-                silent = check.isSilent(null, null),
+                silent = check.isSilent(null),
                 bypassing = Permissions.isBypassing(player, hackType);
         String[] disabledDetections = CloudFeature.getShownDisabledDetections(hackType);
-        int cancelViolation = check.getDefaultCancelViolation();
+        int cancelViolation = check.getCancelViolation();
         int problematicDetections = check.getProblematicDetections();
 
         String enabledOption;
@@ -92,7 +92,7 @@ public class ManageChecks extends InventoryMenu {
         String colour, secondColour;
         ItemStack item;
 
-        if (check.canBeSilent()) {
+        if (check.supportsSilent()) {
             if (silent) {
                 silentOption = "§7Right click to §cdisable §7silent checking.";
             } else {
@@ -145,37 +145,11 @@ public class ManageChecks extends InventoryMenu {
         }
 
         // Separator
-        if (Config.isLegacy()) {
-            lore.add("");
-            lore.add("§7Punishment Categories§8:");
-
-            for (Enums.PunishmentCategory category : Enums.PunishmentCategory.values()) {
-                int violations = Check.getCategoryPunishment(hackType, ResearchEngine.DataType.Universal, category);
-
-                if (violations == 1) {
-                    lore.add("§4" + category + " §c" + violations + " Violation");
-                } else {
-                    lore.add("§4" + category + " §c" + violations + " Violations");
-                }
-            }
-        }
-
-        // Separator
         lore.add("");
         lore.add((enabled ? "§a" : "§c") + "Enabled §8/ "
                 + (silent ? "§a" : "§c") + "Silent §8/ "
                 + (check.canPunish() ? "§a" : "§c") + "Punishments §8/ "
                 + (bypassing ? "§a" : "§c") + "Bypassing");
-
-        /*int violationDivisor = ViolationDivisor.get(p, null, HackType);
-        int defaultViolationDivisor = DefaultConfiguration.getViolationDivisor(HackType);
-        lore.add("§7Violation Divisor§8: §4" + violationDivisor + (violationDivisor != defaultViolationDivisor ? " (Default: " + defaultViolationDivisor + ")" : ""));
-
-        if (Config.canBeSilent(HackType)) {
-            int cancelViolation = CancelViolation.getPreferred(HackType, world);
-            int defaultCancelDivisor = DefaultConfiguration.getCancelAfterViolation(HackType) + 1;
-            lore.add("§7Cancel Violation§8: §4" + cancelViolation + (cancelViolation != defaultCancelDivisor ? " (Default: " + defaultViolationDivisor + ")" : ""));
-        }*/
 
         if (Config.isLegacy()) {
             for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
@@ -201,7 +175,7 @@ public class ManageChecks extends InventoryMenu {
         } else {
             int counter = 0;
 
-            for (String s : check.getCommands()) {
+            for (String s : Config.settings.getPunishmentCommands()) {
                 if (s != null) {
                     counter++;
                     String base = "§7" + counter + "§8:§f ";
@@ -251,10 +225,10 @@ public class ManageChecks extends InventoryMenu {
         Check check = Config.getCheckByName(item);
 
         if (check != null) {
-            if (check.isSilent(null, null)) {
-                check.setSilent("false");
+            if (check.isSilent(null)) {
+                check.setSilent(false);
             } else {
-                check.setSilent("true");
+                check.setSilent(true);
             }
         }
         open(player);
