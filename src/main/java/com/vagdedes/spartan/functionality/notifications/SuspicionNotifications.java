@@ -51,7 +51,7 @@ public class SuspicionNotifications {
                 } else if (profile.isSuspected()) {
                     shouldList = false;
 
-                    for (Enums.HackType hackType : profile.getEvidence().getKnowledgeList()) {
+                    for (Enums.HackType hackType : profile.evidence.getKnowledgeList()) {
                         if (player.getViolations(hackType).hasLevel()) {
                             shouldList = true;
                             break;
@@ -63,11 +63,11 @@ public class SuspicionNotifications {
 
                 if (shouldList) {
                     StringBuilder evidence = new StringBuilder();
-                    Collection<Enums.HackType> evidenceDetails = profile.getEvidence().getKnowledgeList();
+                    Collection<Enums.HackType> evidenceDetails = profile.evidence.getKnowledgeList();
 
                     if (!evidenceDetails.isEmpty()) {
                         size++;
-                        players.append(player.getName()).append(comma);
+                        players.append(player.name).append(comma);
 
                         for (Enums.HackType hackType : evidenceDetails) {
                             evidence.append(hackType.getCheck().getName()).append(comma);
@@ -76,7 +76,7 @@ public class SuspicionNotifications {
                         SpartanLocation location = player.getLocation();
                         CloudConnections.executeDiscordWebhook(
                                 "checks",
-                                player.getUniqueId(), player.getName(),
+                                player.uuid, player.name,
                                 location.getBlockX(), location.getBlockY(), location.getBlockZ(),
                                 (profile.isHacker() ? "Hacker" : "Suspected"), evidence.toString()
                         );

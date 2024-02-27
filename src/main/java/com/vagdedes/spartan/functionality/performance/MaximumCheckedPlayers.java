@@ -97,7 +97,7 @@ public class MaximumCheckedPlayers {
     }
 
     public static void remove(SpartanPlayer player) {
-        UUID uuid = player.getUniqueId();
+        UUID uuid = player.uuid;
 
         synchronized (priority) {
             synchronized (list) {
@@ -126,7 +126,7 @@ public class MaximumCheckedPlayers {
 
     public static boolean add(SpartanPlayer player) {
         int optionAmount = Config.settings.getInteger(option);
-        return optionAmount > 0 && add(player.getUniqueId(), optionAmount);
+        return optionAmount > 0 && add(player.uuid, optionAmount);
     }
 
     public static boolean isChecked(UUID uuid) {

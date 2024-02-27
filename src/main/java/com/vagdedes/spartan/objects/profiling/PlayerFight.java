@@ -46,8 +46,8 @@ public class PlayerFight {
 
     public void setWinner(SpartanPlayer opponent) { // Use only when player is in said fight
         finish(getOpponent(opponent)[0]);
-        opponent1.player.getProfile().getCombat().removeFight(this);
-        opponent2.player.getProfile().getCombat().removeFight(this);
+        opponent1.player.getProfile().playerCombat.removeFight(this);
+        opponent2.player.getProfile().playerCombat.removeFight(this);
     }
 
     public void update(SpartanPlayer damager) {

@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.system.SpartanBukkit;
 import org.bukkit.Bukkit;
@@ -25,13 +24,10 @@ public class AwarenessNotifications {
     }
 
     public static boolean areEnabled() {
-        return Config.settings.getBoolean("Notifications.awareness_notifications") && !IDs.isPreview();
+        return Config.settings.getBoolean("Notifications.awareness_notifications");
     }
 
     public static boolean canSend(UUID uuid, String key, int secondsCooldown) {
-        if (IDs.isPreview()) {
-            return false;
-        }
         boolean hasCooldown = secondsCooldown != Integer.MAX_VALUE;
         Map<String, Long> childMap = map.get(uuid);
         boolean send;
@@ -94,7 +90,7 @@ public class AwarenessNotifications {
             } else if (sender instanceof SpartanPlayer) {
                 SpartanPlayer spartanPlayer = (SpartanPlayer) sender;
                 spartanPlayer.sendMessage(message);
-                Bukkit.getConsoleSender().sendMessage("(" + spartanPlayer.getName() + ") " + message);
+                Bukkit.getConsoleSender().sendMessage("(" + spartanPlayer.name + ") " + message);
             }
         } else { // Console
             Bukkit.getConsoleSender().sendMessage(message);

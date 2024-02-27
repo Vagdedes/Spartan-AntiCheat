@@ -61,7 +61,7 @@ public class ElytraUse {
         ItemStack item = p.getItemInHand();
 
         if (item.getType() == firework
-                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && (item = p.getInventory().getItemInOffHand()) != null && item.getType() == firework
+                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && (item = p.getInventory().itemInOffHand) != null && item.getType() == firework
                 || p.getHandlers().has(Handlers.HandlerType.Trident)
                 || Velocity.hasCooldown(p)) {
             p.getCooldowns().add(increasedSpeedKey, 20);

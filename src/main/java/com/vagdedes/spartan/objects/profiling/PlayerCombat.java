@@ -144,7 +144,7 @@ public class PlayerCombat {
     }
 
     private void removeFightCopy(PlayerFight fight) {
-        PlayerCombat combat = fight.getOpponent(profile.getSpartanPlayer())[1].player.getProfile().getCombat();
+        PlayerCombat combat = fight.getOpponent(profile.getSpartanPlayer())[1].player.getProfile().playerCombat;
 
         synchronized (combat.fights) {
             combat.fights.remove(fight);

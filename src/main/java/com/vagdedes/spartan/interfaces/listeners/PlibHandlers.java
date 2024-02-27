@@ -32,7 +32,7 @@ public class PlibHandlers {
                         SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
                         if (p == null
-                                || p.getProfile().getCombat().isActivelyFighting(null, true, true, false)) {
+                                || p.getProfile().playerCombat.isActivelyFighting(null, true, true, false)) {
                             return;
                         }
 

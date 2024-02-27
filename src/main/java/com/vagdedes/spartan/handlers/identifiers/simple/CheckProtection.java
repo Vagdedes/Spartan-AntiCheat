@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class CheckProtection {
 
-    private static final Enums.HackType[] checksAffectedByCombatOrMovement;
+    private static final Enums.HackType[] mostlyAffected;
     private static long cooldown = 0L, delay = 0L;
 
     static {
@@ -21,7 +21,7 @@ public class CheckProtection {
         List<Enums.HackType> checksAffectedByCombatArray = new ArrayList<>(hackTypes.length);
 
         for (Enums.HackType hackType : hackTypes) {
-            switch (hackType.getCheck().getCheckType()) {
+            switch (hackType.getCheck().type) {
                 case MOVEMENT:
                 case COMBAT:
                 case EXPLOITS:
@@ -31,7 +31,7 @@ public class CheckProtection {
                     break;
             }
         }
-        checksAffectedByCombatOrMovement = checksAffectedByCombatArray.toArray(new Enums.HackType[0]);
+        mostlyAffected = checksAffectedByCombatArray.toArray(new Enums.HackType[0]);
     }
     public static void cancel(UUID uuid, int ticks) {
         SpartanBukkit.cooldowns.add(uuid + "=check=protection", ticks);
@@ -51,7 +51,7 @@ public class CheckProtection {
     public static boolean hasCooldown(SpartanPlayer player) {
         return cooldown >= System.currentTimeMillis()
                 || player.getHandlers().has(Handlers.HandlerType.GameMode)
-                || !SpartanBukkit.cooldowns.canDo(player.getUniqueId() + "=check=protection");
+                || !SpartanBukkit.cooldowns.canDo(player.uuid + "=check=protection");
     }
 
     public static void evadeCommonFalsePositives(SpartanPlayer player, Compatibility.CompatibilityType compatibilityType, Enums.HackType[] hackTypes, int ticks) {
@@ -61,6 +61,6 @@ public class CheckProtection {
     }
 
     public static void evadeStandardCombatFPs(SpartanPlayer player, Compatibility.CompatibilityType compatibilityType, int ticks) {
-        evadeCommonFalsePositives(player, compatibilityType, checksAffectedByCombatOrMovement, ticks);
+        evadeCommonFalsePositives(player, compatibilityType, mostlyAffected, ticks);
     }
 }

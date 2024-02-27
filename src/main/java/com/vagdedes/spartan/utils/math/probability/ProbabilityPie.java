@@ -22,14 +22,31 @@ public class ProbabilityPie {
         this.total = 0;
     }
 
-    public void clear() {
+    public ProbabilityPie clear() {
         this.map.clear();
         this.total = 0;
+        return this;
     }
 
     // Separator
 
-    public void create(Number number, int amount) {
+    public ProbabilityPie addMultiple(Collection<? extends Number> numbers) {
+        for (Number number : numbers) {
+            this.add(number);
+        }
+        return this;
+    }
+
+    public ProbabilityPie addMultiplePatterns(Collection<PatternValue> values) {
+        for (PatternValue value : values) {
+            this.add(value.number);
+        }
+        return this;
+    }
+
+    // Separator
+
+    public ProbabilityPie create(Number number, int amount) {
         Integer count = this.map.get(number);
 
         if (count != null) {
@@ -37,44 +54,35 @@ public class ProbabilityPie {
         }
         this.map.put(number, amount);
         this.total += amount;
+        return this;
     }
 
-    public void add(Number number) {
-        this.increase(number, 1);
+    public ProbabilityPie add(Number number) {
+        return this.increase(number, 1);
     }
 
-    public void addMultiple(Collection<? extends Number> numbers) {
-        for (Number number : numbers) {
-            this.add(number);
-        }
-    }
-
-    public void addMultiplePatterns(Collection<PatternValue> values) {
-        for (PatternValue value : values) {
-            this.add(value.number);
-        }
-    }
-
-    public void increase(Number number, int amount) {
+    public ProbabilityPie increase(Number number, int amount) {
         this.map.put(number, this.map.getOrDefault(number, 0) + amount);
         this.total += amount;
+        return this;
     }
 
     // Separator
 
-    public void delete(Number number) {
+    public ProbabilityPie delete(Number number) {
         Integer count = this.map.remove(number);
 
         if (count != null) {
             this.total -= count;
         }
+        return this;
     }
 
-    public void remove(Number number) {
-        this.decrease(number, 1);
+    public ProbabilityPie remove(Number number) {
+        return this.decrease(number, 1);
     }
 
-    public void decrease(Number number, int amount) {
+    public ProbabilityPie decrease(Number number, int amount) {
         Integer count = this.map.get(number);
 
         if (count != null) {
@@ -86,6 +94,7 @@ public class ProbabilityPie {
                 this.total -= amount;
             }
         }
+        return this;
     }
 
     // Separator
@@ -100,8 +109,7 @@ public class ProbabilityPie {
     }
 
     public Stream<Map.Entry<Number, Integer>> getChancesRanked() {
-        return this.map.entrySet().stream().sorted(
-                Map.Entry.comparingByValue(Comparator.reverseOrder()));
+        return this.map.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()));
     }
 
     // Separator
@@ -117,7 +125,7 @@ public class ProbabilityPie {
     // Separator
 
     public int getSlices() {
-        return (int) this.map.size();
+        return this.map.size();
     }
 
     public int getTotal() {

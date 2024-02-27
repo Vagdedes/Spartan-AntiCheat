@@ -36,35 +36,23 @@ public class Check {
             maximumDefaultCancelViolation = 6;
     public static final long violationCycleMilliseconds = violationCycleSeconds * 1_000L;
 
-    private static boolean canPunishByDefault(Enums.HackType hackType) {
-        return hackType != Enums.HackType.GhostHand;
-    }
-
-    private static boolean supportsLiveEvidence(Enums.HackType hackType) {
-        return hackType != Enums.HackType.XRay;
-    }
-
-    private static boolean supportsSilent(Enums.HackType hackType) {
-        return hackType != Enums.HackType.AutoRespawn;
-    }
 
     // Object
 
-    private final Enums.HackType hackType;
+    public final Enums.HackType hackType;
     private String name;
-    private final Enums.CheckType checkType;
+    public final Enums.CheckType type;
     private final Map<Integer, Collection<String>> commandsLegacy;
     private final Map<String, Object> options;
-    private final int cancelViolation;
+    public final int cancelViolation;
     private boolean silent;
-    private final boolean handleCancelledEvents;
+    public final boolean handleCancelledEvents;
     private final Map<Integer, Integer> maxCancelledViolations;
     private final boolean[] enabled;
-    private final boolean
-            canPunish, canPunishByDefault,
+    public final boolean
+            canPunish,
             supportsLiveEvidence,
-            supportsSilent,
-            canBeAsync;
+            supportsSilent;
     private final String[]
             disabledWorlds, silentWorlds,
             description;
@@ -264,28 +252,28 @@ public class Check {
             case FastClicks:
             case HitReach:
             case Velocity:
-                this.checkType = Enums.CheckType.COMBAT;
+                this.type = Enums.CheckType.COMBAT;
                 break;
             case Exploits:
-                this.checkType = Enums.CheckType.EXPLOITS;
+                this.type = Enums.CheckType.EXPLOITS;
                 break;
             case ImpossibleInventory:
             case InventoryClicks:
             case ItemDrops:
-                this.checkType = Enums.CheckType.INVENTORY;
+                this.type = Enums.CheckType.INVENTORY;
                 break;
             case AutoRespawn:
             case FastEat:
             case FastHeal:
             case NoSwing:
-                this.checkType = Enums.CheckType.PLAYER;
+                this.type = Enums.CheckType.PLAYER;
                 break;
             case Speed:
             case IrregularMovements:
             case MorePackets:
             case NoSlowdown:
             case NoFall:
-                this.checkType = Enums.CheckType.MOVEMENT;
+                this.type = Enums.CheckType.MOVEMENT;
                 break;
             case FastPlace:
             case FastBreak:
@@ -293,24 +281,10 @@ public class Check {
             case GhostHand:
             case XRay:
             case ImpossibleActions:
-                this.checkType = Enums.CheckType.WORLD;
+                this.type = Enums.CheckType.WORLD;
                 break;
             default:
-                this.checkType = null;
-                break;
-        }
-
-        // Separator
-
-        switch (hackType) { // MorePackets: Repeats too much and is not particularly heavy
-            case Speed:
-            case IrregularMovements:
-            case NoFall:
-            case KillAura:
-                this.canBeAsync = true;
-                break;
-            default:
-                this.canBeAsync = false;
+                this.type = null;
                 break;
         }
 
@@ -324,14 +298,9 @@ public class Check {
         // Separator
 
         boolean legacy = Config.isLegacy();
-        Object silent,
+        Object silent = hackType == Enums.HackType.AutoRespawn ? null : getOption("silent", false, false),
                 handleCancelledEvents = getOption("cancelled_event", false, false);
 
-        if (supportsSilent(hackType)) { // Can Be Silent
-            silent = getOption("silent", false, false);
-        } else {
-            silent = null;
-        }
         String name = getOption("name", this.hackType.toString(), false).toString(),
                 worlds_config = getOption("disabled_worlds", "exampleDisabledWorld1, exampleDisabledWorld2", false).toString(),
                 silents_config = getOption("silent_worlds", "exampleSilentWorld1, exampleSilentWorld2", false).toString();
@@ -355,7 +324,7 @@ public class Check {
             boolean hasOldOption = oldOptionValue instanceof Boolean;
 
             if (hasOldOption) {
-                setOption("enabled", null, false);
+                setOption("enabled", null);
             }
 
             for (ResearchEngine.DataType dataType : dataTypes) {
@@ -370,16 +339,16 @@ public class Check {
                                         Boolean.parseBoolean(optionValue.toString().toLowerCase());
             }
         }
-        this.supportsLiveEvidence = supportsLiveEvidence(hackType);
+        this.supportsLiveEvidence = hackType != Enums.HackType.XRay;
 
         if (this.supportsLiveEvidence) {
-            this.canPunishByDefault = canPunishByDefault(hackType);
+            boolean canPunishByDefault = hackType != Enums.HackType.GhostHand;
 
             if (legacy) {
                 ConfigurationSection section = Register.plugin.getConfig().getConfigurationSection(hackType + ".punishments");
                 this.canPunish = section != null && !section.getKeys(false).isEmpty();
 
-                if (!this.canPunish && this.canPunishByDefault) {
+                if (!this.canPunish && canPunishByDefault) {
                     File file = Config.getFile();
 
                     try {
@@ -400,7 +369,7 @@ public class Check {
                     }
                 }
             } else {
-                Object punish = getOption("punish", this.canPunishByDefault, false);
+                Object punish = getOption("punish", canPunishByDefault, false);
                 this.canPunish = punish instanceof Boolean ? (boolean) punish :
                         punish instanceof Long || punish instanceof Integer || punish instanceof Short ? ((long) punish) > 0L :
                                 punish instanceof Double || punish instanceof Float ? ((double) punish) > 0.0 :
@@ -408,7 +377,6 @@ public class Check {
             }
         } else {
             this.canPunish = false;
-            this.canPunishByDefault = false;
         }
 
         // Separator
@@ -583,7 +551,7 @@ public class Check {
                             player.getViolations(hackType).reset();
                         }
                     }
-                    setOption("enabled." + type.lowerCase, b, false);
+                    setOption("enabled." + type.lowerCase, b);
                 }
             }
         }
@@ -614,16 +582,8 @@ public class Check {
 
     // Separator
 
-    public boolean canBeAsynchronous() {
-        return canBeAsync;
-    }
-
     public int ordinal() {
         return hackType.hashCode();
-    }
-
-    public Enums.HackType getHackType() {
-        return hackType;
     }
 
     public String getName() {
@@ -640,16 +600,12 @@ public class Check {
             }
         }
         this.name = name;
-        setOption("name", name, false);
+        setOption("name", name);
     }
 
     // Separator
 
-    public boolean setOption(String option, Object value) {
-        return setOption(option, value, true);
-    }
-
-    private boolean setOption(String option, Object value, boolean production) {
+    private boolean setOption(String option, Object value) {
         File file = Config.getFile();
 
         try {
@@ -666,11 +622,7 @@ public class Check {
                         if (Config.isLegacy()) {
                             Register.plugin.reloadConfig();
                         }
-                        if (production) {
-                            this.hackType.resetCheck();
-                        } else {
-                            options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
-                        }
+                        options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
                     } catch (Exception ex) {
                         AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                         ex.printStackTrace();
@@ -869,12 +821,8 @@ public class Check {
 
     // Separator
 
-    public boolean supportsSilent() {
-        return supportsSilent;
-    }
-
     public boolean isSilent(String world) {
-        return !supportsSilent()
+        return !supportsSilent
                 || silent
                 || world != null && isSilentOnWorld(world);
     }
@@ -896,55 +844,21 @@ public class Check {
         return silentWorlds;
     }
 
-    public void setSilent(boolean b) {
-        if (supportsSilent() && silent != b) {
+    public boolean setSilent(boolean b) {
+        if (supportsSilent && silent != b) {
             if (Config.settings.getBoolean("Important.enable_developer_api")) {
                 CheckSilentToggleEvent event = new CheckSilentToggleEvent(this.hackType, Enums.ToggleAction.DISABLE);
                 Register.manager.callEvent(event);
 
                 if (event.isCancelled()) {
-                    return;
+                    return false;
                 }
             }
             this.silent = b;
-            setOption("silent", b, false);
+            return setOption("silent", b);
+        } else {
+            return false;
         }
-    }
-
-    // Separator
-
-    public Enums.CheckType getCheckType() {
-        return checkType;
-    }
-
-    // Separator
-
-    public boolean canHandleCancelledEvents() {
-        return handleCancelledEvents;
-    }
-
-    // Separator
-
-    public boolean canPunishByDefault() {
-        return canPunishByDefault;
-    }
-
-    public boolean supportsLiveEvidence() {
-        return supportsLiveEvidence;
-    }
-
-    public boolean canPunish() {
-        return canPunish;
-    }
-
-    // Separator
-
-    public boolean hasMinimumDefaultCancelViolation() {
-        return cancelViolation == minimumDefaultCancelViolation;
-    }
-
-    public boolean hasMaximumDefaultCancelViolation() {
-        return cancelViolation == maximumDefaultCancelViolation;
     }
 
     // Separator
@@ -999,10 +913,6 @@ public class Check {
     }
 
     // Separator
-
-    public int getCancelViolation() {
-        return cancelViolation;
-    }
 
     public Collection<String> getLegacyCommands(int violation) {
         synchronized (commandsLegacy) {

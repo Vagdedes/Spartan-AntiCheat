@@ -97,18 +97,18 @@ public class ConfigUtils {
                 message = replace(message, "{detection}", check.getName());
                 message = replace(message, "{detection:real}", hackType.toString());
             }
-            message = replace(message, "{punish:detection}", String.valueOf(check.canPunish()));
+            message = replace(message, "{punish:detection}", String.valueOf(check.canPunish));
         }
         return message;
     }
 
     public static String replaceWithSyntax(SpartanPlayer p, String message, HackType hackType) {
-        UUID uuid = p.getUniqueId();
+        UUID uuid = p.uuid;
         SpartanLocation loc = p.getLocation();
         String worldName = p.getWorld().getName();
         message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
-        message = replace(message, "{player}", p.getName());
-        message = replace(message, "{player:type}", p.getDataType().lowerCase);
+        message = replace(message, "{player}", p.name);
+        message = replace(message, "{player:type}", p.dataType.lowerCase);
         message = replace(message, "{uuid}", uuid.toString());
         message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{vls}", String.valueOf(p.getViolationCount()));
@@ -121,10 +121,10 @@ public class ConfigUtils {
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
         message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
-        message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.getLastPlayed()), 1000)));
+        message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.lastPlayed), 1000)));
         message = replace(message, "{moving}", String.valueOf(p.isMoving(true)));
 
-        PunishmentHistory punishmentHistory = p.getProfile().getPunishmentHistory();
+        PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
         message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
         message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
 
@@ -152,7 +152,7 @@ public class ConfigUtils {
                 SpartanLocation loc = p.getLocation();
                 String worldName = p.getWorld().getName();
                 message = replace(message, "{vls}", String.valueOf(p.getViolationCount()));
-                message = replace(message, "{player:type}", p.getDataType().lowerCase);
+                message = replace(message, "{player:type}", p.dataType.lowerCase);
                 message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
                 message = replace(message, "{ping}", String.valueOf(p.getPing()));
                 message = replace(message, "{world}", worldName);
@@ -164,10 +164,10 @@ public class ConfigUtils {
                 message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
                 message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
                 message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
-                message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.getLastPlayed()), 1000)));
+                message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.lastPlayed), 1000)));
                 message = replace(message, "{moving}", String.valueOf(p.getCustomDistance() > 0.0));
 
-                PunishmentHistory punishmentHistory = p.getProfile().getPunishmentHistory();
+                PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
                 message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
                 message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
 

@@ -31,7 +31,7 @@ public class Floodgate {
 
             if (!players.isEmpty()) {
                 for (SpartanPlayer p : players) {
-                    if (AwarenessNotifications.canSend(p.getUniqueId(), "floodgate")) {
+                    if (AwarenessNotifications.canSend(p.uuid, "floodgate")) {
                         p.sendMessage(message);
                     }
                 }
@@ -46,7 +46,7 @@ public class Floodgate {
 
                 if (players.size() > 0) {
                     for (SpartanPlayer p : players) {
-                        if (p.isBedrockPlayer()) {
+                        if (p.bedrockPlayer) {
                             return true;
                         }
                     }

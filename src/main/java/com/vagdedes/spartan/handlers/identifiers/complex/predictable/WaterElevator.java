@@ -34,11 +34,11 @@ public class WaterElevator {
 
             for (SpartanLocation loc : locations) {
                 SpartanBlock block = loc.getBlock();
-                Material type = block.getType();
+                Material type = block.material;
 
                 if (type == Material.SOUL_SAND) {
                     return true;
-                } else if (BlockUtils.isSolid(type) && !block.isWaterLogged()) {
+                } else if (BlockUtils.isSolid(type) && !block.waterLogged) {
                     nonLiquid++;
 
                     if (nonLiquid == locations.length) {

@@ -96,7 +96,7 @@ public class EventsHandler6 implements Listener {
                 || ItemsAdder.is(defaultEntity)) {
             return;
         }
-        UUID playerUUID = player.getUniqueId(),
+        UUID playerUUID = player.uuid,
                 entityUUID = defaultEntity.getUniqueId();
 
         if (playerUUID.equals(entityUUID)) {
@@ -137,7 +137,7 @@ public class EventsHandler6 implements Listener {
                     SpartanPlayer target = SpartanBukkit.getPlayer((Player) entity);
 
                     if (target != null) {
-                        player.getProfile().getCombat().getFight(target).update(player);
+                        player.getProfile().playerCombat.getFight(target).update(player);
                     }
                 }
             }

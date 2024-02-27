@@ -38,7 +38,7 @@ public class Essentials {
 
     public static boolean isAFK(SpartanPlayer p) {
         if (Compatibility.CompatibilityType.Essentials.isFunctional() && essentials != null && essentials.isEnabled()) {
-            User user = ((com.earth2me.essentials.Essentials) essentials).getUser(p.getUniqueId());
+            User user = ((com.earth2me.essentials.Essentials) essentials).getUser(p.uuid);
             return user != null && user.isAfk();
         }
         return false;

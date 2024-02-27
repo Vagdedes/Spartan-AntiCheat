@@ -121,7 +121,7 @@ public class SpartanLocation {
         this(player, world, chunk, x, y, z, yaw, pitch);
 
         if (block != null) {
-            loadBlock(block.getType(), block.getData(), block.isLiquid(), block.isWaterLogged());
+            loadBlock(block.material, block.data, block.isLiquid(), block.waterLogged);
         } else {
             this.block = null;
         }
@@ -731,7 +731,7 @@ public class SpartanLocation {
 
     public SpartanLocation[] getSurroundingLocations(double x, double y, double z) {
         if (player == null
-                || player.isBedrockPlayer()
+                || player.bedrockPlayer
                 || player.getVehicle() != null
                 || player.getHandlers().has()
                 || !player.getActivePotionEffects().isEmpty()
@@ -762,7 +762,7 @@ public class SpartanLocation {
                 this.clone().add(0, 0, z),
                 this.clone().add(0, 0, -z),
         }) {
-            if (BlockUtils.isSolid(location.getBlock().getType())) {
+            if (BlockUtils.isSolid(location.getBlock().material)) {
                 count++;
 
                 if (count == cap) {
@@ -776,7 +776,7 @@ public class SpartanLocation {
     // Identifiers
 
     public boolean isType(Material m) {
-        return getBlock().getType() == m;
+        return getBlock().material == m;
     }
 
     public boolean isBlock(Material[] m, double i) {
@@ -829,8 +829,8 @@ public class SpartanLocation {
 
             if (diff > 1.0 && diff <= limit) {
                 for (int i = Math.min(oldY, newY) + 1; i < Math.max(oldY, newY); i++) {
-                    if (BlockUtils.isSolid(clone().add(0, -i, 0).getBlock().getType())
-                            || BlockUtils.isSolid(from.clone().add(0, i, 0).getBlock().getType())) {
+                    if (BlockUtils.isSolid(clone().add(0, -i, 0).getBlock().material)
+                            || BlockUtils.isSolid(from.clone().add(0, i, 0).getBlock().material)) {
                         return true;
                     }
                 }

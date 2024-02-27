@@ -7,8 +7,8 @@ public class SpartanInventory {
 
     private final ItemStack[] contents;
     private final ItemStack[] armor;
-    private final ItemStack itemInHand;
-    private final ItemStack itemInOffHand;
+    public final ItemStack itemInHand;
+    public final ItemStack itemInOffHand;
 
     SpartanInventory(ItemStack[] contents, ItemStack[] armor, ItemStack itemInHand, ItemStack itemOffHand) {
         this.contents = contents;
@@ -73,13 +73,5 @@ public class SpartanInventory {
 
     public ItemStack getBoots() {
         return armor[3];
-    }
-
-    public ItemStack getItemInHand() {
-        return itemInHand;
-    }
-
-    public ItemStack getItemInOffHand() {
-        return itemInOffHand;
     }
 }

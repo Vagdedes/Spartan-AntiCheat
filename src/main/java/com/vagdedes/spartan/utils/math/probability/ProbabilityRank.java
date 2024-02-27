@@ -18,27 +18,42 @@ public class ProbabilityRank {
         this.sorted = false;
     }
 
-    public void clear() {
+    public ProbabilityRank clear() {
         this.numbers.clear();
+        this.sorted = false;
+        return this;
     }
 
-    public void addMultiple(Collection<? extends Number> numbers) {
+    public ProbabilityRank addMultiple(Collection<? extends Number> numbers) {
         for (Number number : numbers) {
             this.numbers.add(number.doubleValue());
         }
         this.sorted = false;
+        return this;
     }
 
-    public void addMultiplePatterns(Collection<PatternValue> values) {
+    public ProbabilityRank addMultiple(Map<? extends Number, Integer> map) {
+        for (Map.Entry<? extends Number, Integer> entry : map.entrySet()) {
+            for (int i = 0; i < entry.getValue(); i++) {
+                this.numbers.add(entry.getKey().doubleValue());
+            }
+        }
+        this.sorted = false;
+        return this;
+    }
+
+    public ProbabilityRank addMultiplePatterns(Collection<PatternValue> values) {
         for (PatternValue value : values) {
             this.numbers.add(value.number.doubleValue());
         }
         this.sorted = false;
+        return this;
     }
 
-    public void add(Number number) {
+    public ProbabilityRank add(Number number) {
         this.numbers.add(number.doubleValue());
         this.sorted = false;
+        return this;
     }
 
     // Separator

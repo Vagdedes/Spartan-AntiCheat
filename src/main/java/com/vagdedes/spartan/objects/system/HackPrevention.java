@@ -41,7 +41,7 @@ public class HackPrevention {
         // Redundancy
         Check check = hackType.getCheck();
 
-        if (violation == 1 && check.getCheckType() == Enums.CheckType.MOVEMENT) {
+        if (violation == 1 && check.type == Enums.CheckType.MOVEMENT) {
             if (VehicleAccess.hasExitCooldown(player, hackType)) {
                 this.violation = 0;
             } else {
@@ -63,7 +63,7 @@ public class HackPrevention {
             teleported = true;
         }
         if (teleported) {
-            String key = player.getUniqueId() + "velocity";
+            String key = player.uuid + "velocity";
 
             if (cooldowns.canDo(key)
                     && (hackType == Enums.HackType.IrregularMovements

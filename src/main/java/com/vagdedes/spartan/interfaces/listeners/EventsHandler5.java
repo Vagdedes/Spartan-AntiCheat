@@ -125,7 +125,7 @@ public class EventsHandler5 implements Listener {
         Block nb = e.getBlock();
         SpartanBlock b = new SpartanBlock(p, nb);
 
-        if (n.getWorld() != b.getWorld()) {
+        if (n.getWorld() != b.world) {
             return;
         }
         Block rba = e.getBlockAgainst();

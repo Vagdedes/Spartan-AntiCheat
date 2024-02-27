@@ -200,7 +200,7 @@ public class Permissions {
     // Separator
 
     public static void remove(SpartanPlayer p) {
-        remove(p.getUniqueId());
+        remove(p.uuid);
     }
 
     public static void remove(UUID uuid) {
@@ -215,7 +215,7 @@ public class Permissions {
             return true;
         }
         boolean cache = !TestServer.isIdentified() && isCacheEnabled();
-        UUID uuid = player.getUniqueId();
+        UUID uuid = player.uuid;
 
         for (Enums.Permission permission : staffPermissions) {
             if (cache) {

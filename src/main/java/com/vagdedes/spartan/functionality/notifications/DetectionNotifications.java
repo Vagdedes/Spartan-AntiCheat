@@ -56,7 +56,7 @@ public class DetectionNotifications {
     // Feedback
 
     public static boolean isEnabled(SpartanPlayer p) {
-        return notifications.containsKey(p.getUniqueId());
+        return notifications.containsKey(p.uuid);
     }
 
     public static boolean hasPermission(SpartanPlayer p) {
@@ -64,7 +64,7 @@ public class DetectionNotifications {
     }
 
     public static Integer getDivisor(SpartanPlayer p, boolean absolute) {
-        Integer divisor = notifications.get(p.getUniqueId());
+        Integer divisor = notifications.get(p.uuid);
         return divisor != null ? (absolute ? Math.abs(divisor) : divisor) : null;
     }
 
@@ -86,7 +86,7 @@ public class DetectionNotifications {
         if (!isEnabled(p)) {
             change(p, i, false);
         } else {
-            notifications.remove(p.getUniqueId());
+            notifications.remove(p.uuid);
             p.sendMessage(Config.messages.getColorfulString("notifications_disable").replace("{type}", ""));
         }
     }
@@ -96,13 +96,13 @@ public class DetectionNotifications {
             if (!isEnabled(p)) {
                 change(p, i, false);
             }
-        } else if (notifications.remove(p.getUniqueId()) != null) {
+        } else if (notifications.remove(p.uuid) != null) {
             p.sendMessage(Config.messages.getColorfulString("notifications_disable").replace("{type}", "Verbose"));
         }
     }
 
     public static void change(SpartanPlayer p, int i, boolean change) {
-        notifications.put(p.getUniqueId(), i);
+        notifications.put(p.uuid, i);
         p.sendMessage(Config.messages.getColorfulString(change ? "notifications_modified" : "notifications_enable").replace("{type}", ""));
     }
 
@@ -141,22 +141,21 @@ public class DetectionNotifications {
 
     public static void runMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
         if (player.getGameMode() == GameMode.SURVIVAL && PlayerData.isPickaxeItem(player.getItemInHand().getType())) {
-            Material material = block.getType();
-            Enums.MiningOre ore = getMiningOre(material);
+            Enums.MiningOre ore = getMiningOre(block.material);
 
             if (ore != null) {
                 SpartanLocation location = player.getLocation();
                 World.Environment environment = location.getWorld().getEnvironment();
                 int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
                 String key = ore.toString(),
-                        log = player.getName() + " found " + amount + " " + key
+                        log = player.name + " found " + amount + " " + key
                                 + " on " + x + ", " + y + ", " + z + ", " + BlockUtils.environmentToString(environment);
 
                 // API Event
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(player.getPlayer(), log, location.getLimitedBukkitLocation(), material);
+                    event = new PlayerFoundOreEvent(player.getPlayer(), log, location.getLimitedBukkitLocation(), block.material);
                     Register.manager.callEvent(event);
                 } else {
                     event = null;
@@ -167,7 +166,7 @@ public class DetectionNotifications {
                             player,
                             log,
                             null,
-                            material,
+                            block.material,
                             XRay.check,
                             true,
                             player.getViolations(XRay.check).getLevel()

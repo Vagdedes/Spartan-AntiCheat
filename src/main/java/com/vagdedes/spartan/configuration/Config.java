@@ -6,7 +6,6 @@ import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
 import com.vagdedes.spartan.handlers.stability.Cache;
@@ -15,7 +14,6 @@ import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.interfaces.listeners.EventsHandler7;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
 import com.vagdedes.spartan.objects.system.Check;
-import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import com.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.api.API;
@@ -27,13 +25,18 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.List;
 
 public class Config {
 
     public static final String
             legacyFileName = "config.yml",
-            fileName = "checks.yml";
+            fileName = "checks.yml",
+            checksFileName = "checks.yml";
+    public static final String[] configs = new String[]{
+            "config.yml", "Config.settings.yml", checksFileName,
+            "compatibility.yml", "messages.yml", "sql.yml"
+    };
+
     private static YamlConfiguration configuration = null;
     private static String construct = null;
     private static boolean legacyFile = false;
@@ -148,20 +151,8 @@ public class Config {
 
         // Check Cache
         if (clearChecksCache) {
-            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-
-            if (!players.isEmpty()) {
-                for (HackType hackType : Enums.HackType.values()) {
-                    hackType.resetCheck();
-
-                    for (SpartanPlayer p : players) {
-                        p.getViolations(hackType).reset();
-                    }
-                }
-            } else {
-                for (HackType hackType : Enums.HackType.values()) {
-                    hackType.resetCheck();
-                }
+            for (HackType hackType : Enums.HackType.values()) {
+                hackType.resetCheck();
             }
         }
     }
@@ -213,7 +204,6 @@ public class Config {
         Permissions.clear();
 
         // Features
-        SpartanMenu.manageConfiguration.clear();
         AwarenessNotifications.refresh();
 
         // Objects

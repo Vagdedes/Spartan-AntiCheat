@@ -13,7 +13,6 @@ import java.util.Map;
 public class Buffer {
 
     private final Map<String, BufferChild> storage;
-    private final Enums.HackType hackType;
     private final SpartanPlayer player;
     private final boolean combat;
 
@@ -31,9 +30,8 @@ public class Buffer {
     public Buffer(SpartanPlayer player, Enums.HackType hackType) {
         this.player = player;
         this.storage = Collections.synchronizedMap(new LinkedHashMap<>());
-        this.hackType = hackType;
         this.combat = hackType != null
-                && hackType.getCheck().getCheckType() == Enums.CheckType.COMBAT;
+                && hackType.getCheck().type == Enums.CheckType.COMBAT;
     }
 
     // Runnable
@@ -64,7 +62,7 @@ public class Buffer {
                     bufferChild.ticks -= 1L;
                 } else {
                     for (Enums.HackType hackType : Enums.HackType.values()) {
-                        if (hackType.getCheck().getCheckType() == Enums.CheckType.COMBAT
+                        if (hackType.getCheck().type == Enums.CheckType.COMBAT
                                 && player.getViolations(hackType).isDetected(false)) {
                             bufferChild.ticks -= 1L;
                             break;

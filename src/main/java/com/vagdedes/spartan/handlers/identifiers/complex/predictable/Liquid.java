@@ -51,7 +51,7 @@ public class Liquid {
     // Utils
 
     public static boolean isLocation(SpartanPlayer player, SpartanLocation location) {
-        double hitbox = player.isBedrockPlayer() ? BlockUtils.hitbox_max : BlockUtils.hitbox;
+        double hitbox = player.bedrockPlayer ? BlockUtils.hitbox_max : BlockUtils.hitbox;
         return location.getBlock().isLiquid()
                 || PatternUtils.isLiquidPattern(new double[][]{
                 {hitbox, 0, hitbox},

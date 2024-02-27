@@ -40,7 +40,7 @@ public class mcMMO {
 
     private static boolean hasTamingAbility(SpartanPlayer p) {
         if (Compatibility.CompatibilityType.mcMMO.isFunctional()) {
-            UUID uuid = p.getUniqueId();
+            UUID uuid = p.uuid;
 
             for (Entity entity : p.getNearbyEntities(MoveUtils.chunk, MoveUtils.chunk, MoveUtils.chunk)) {
                 if (entity instanceof Wolf) {

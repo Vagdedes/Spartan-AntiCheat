@@ -29,7 +29,7 @@ public class PatternUtils {
 
     public static void synchronizeClearance(SpartanBlock block) {
         synchronized (memory) {
-            memory.remove(block.getIdentifier());
+            memory.remove(block.identifier);
         }
     }
 
@@ -121,7 +121,7 @@ public class PatternUtils {
                     } else {
                         if (surroundings) {
                             for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                                Material material = surroundingLocation.getBlock().getType();
+                                Material material = surroundingLocation.getBlock().material;
 
                                 for (Set<Material> set : sets) {
                                     if (set.contains(material)) {
@@ -133,7 +133,7 @@ public class PatternUtils {
                                 }
                             }
                         } else {
-                            Material material = location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().getType();
+                            Material material = location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().material;
 
                             for (Set<Material> set : sets) {
                                 if (set.contains(material)) {
@@ -158,7 +158,7 @@ public class PatternUtils {
 
                     if (surroundings) {
                         for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                            Material material = surroundingLocation.getBlock().getType();
+                            Material material = surroundingLocation.getBlock().material;
 
                             for (Set<Material> set : sets) {
                                 if (set.contains(material)) {
@@ -168,7 +168,7 @@ public class PatternUtils {
                             }
                         }
                     } else {
-                        Material material = location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().getType();
+                        Material material = location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().material;
 
                         for (Set<Material> set : sets) {
                             if (set.contains(material)) {
@@ -221,7 +221,7 @@ public class PatternUtils {
             // Calculate and add them in cache
             if (surroundings) {
                 for (SpartanLocation surroundingLocation : location.getSurroundingLocations(x, y, z)) {
-                    Material material = surroundingLocation.getBlock().getType();
+                    Material material = surroundingLocation.getBlock().material;
 
                     for (Set<Material> set : sets) {
                         if (set.contains(material)) {
@@ -233,7 +233,7 @@ public class PatternUtils {
                     }
                 }
             } else {
-                Material material = location.clone().add(x, y, z).getBlock().getType();
+                Material material = location.clone().add(x, y, z).getBlock().material;
 
                 for (Set<Material> set : sets) {
                     if (set.contains(material)) {
@@ -280,14 +280,14 @@ public class PatternUtils {
                     } else {
                         if (surroundings) {
                             for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                                if (surroundingLocation.getBlock().isWaterLogged()) {
+                                if (surroundingLocation.getBlock().waterLogged) {
                                     synchronized (memory) {
                                         childMap.put(positionIdentifiers[position], true);
                                     }
                                     return true;
                                 }
                             }
-                        } else if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isWaterLogged()) {
+                        } else if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().waterLogged) {
                             synchronized (memory) {
                                 childMap.put(positionIdentifiers[position], true);
                             }
@@ -307,13 +307,13 @@ public class PatternUtils {
 
                     if (surroundings) {
                         for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                            if (surroundingLocation.getBlock().isWaterLogged()) {
+                            if (surroundingLocation.getBlock().waterLogged) {
                                 childMap.put(positionIdentifiers[position], true);
                                 return true;
                             }
                         }
                     } else {
-                        if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isWaterLogged()) {
+                        if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().waterLogged) {
                             childMap.put(positionIdentifiers[position], true);
                             return true;
                         }
@@ -358,14 +358,14 @@ public class PatternUtils {
             // Calculate and add them in cache
             if (surroundings) {
                 for (SpartanLocation surroundingLocation : location.getSurroundingLocations(x, y, z)) {
-                    if (surroundingLocation.getBlock().isWaterLogged()) {
+                    if (surroundingLocation.getBlock().waterLogged) {
                         synchronized (memory) {
                             childMap.put(positionIdentifier, true);
                         }
                         return true;
                     }
                 }
-            } else if (location.clone().add(x, y, z).getBlock().isWaterLogged()) {
+            } else if (location.clone().add(x, y, z).getBlock().waterLogged) {
                 synchronized (memory) {
                     childMap.put(positionIdentifier, true);
                 }

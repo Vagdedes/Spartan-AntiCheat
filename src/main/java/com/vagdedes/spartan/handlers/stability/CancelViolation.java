@@ -31,7 +31,7 @@ public class CancelViolation {
             for (ResearchEngine.DataType dataType : ResearchEngine.getDynamicUsableDataTypes(true)) {
                 memory.put(
                         ResearchEngine.getStorageKey(hackType, dataType),
-                        check.getCancelViolation() + (check.getCancelViolation() * check.getProblematicDetections())
+                        check.cancelViolation + (check.cancelViolation * check.getProblematicDetections())
                 );
             }
         }
@@ -41,7 +41,7 @@ public class CancelViolation {
 
     public static boolean isForced(SpartanPlayer player, Enums.HackType hackType) {
         return !player.getCooldowns().canDo(masterKey + hackType.ordinal())
-                || UltimateStatistics.isSuspected(player.getUniqueId());
+                || UltimateStatistics.isSuspected(player.uuid);
     }
 
     public static void force(SpartanPlayer player, Enums.HackType hackType) {
@@ -50,6 +50,6 @@ public class CancelViolation {
 
     public static int get(Enums.HackType hackType, ResearchEngine.DataType dataType) {
         return TestServer.isIdentified() ? Check.minimumDefaultCancelViolation :
-                memory.getOrDefault(ResearchEngine.getStorageKey(hackType, dataType), hackType.getCheck().getCancelViolation());
+                memory.getOrDefault(ResearchEngine.getStorageKey(hackType, dataType), hackType.getCheck().cancelViolation);
     }
 }

@@ -213,18 +213,18 @@ public class GroundUtils {
         SpartanBlock block = loc.getBlock();
 
         if (liquid && block.isLiquid()
-                || climbable && BlockUtils.canClimb(block.getType())) {
+                || climbable && BlockUtils.canClimb(block.material)) {
             if (original) {
                 p.setAirTicks(0);
             }
             return true;
         }
-        original &= p.getVehicle() == null && !p.isBedrockPlayer();
+        original &= p.getVehicle() == null && !p.bedrockPlayer;
         double box = loc.getY() - loc.getBlockY();
 
         for (SpartanLocation loopLocation : loc.getSurroundingLocations(hitbox, 0, hitbox)) {
             for (double position : new double[]{-(box + minPossibleStep), 0.0}) {
-                Material type = loopLocation.clone().add(0.0, position, 0.0).getBlock().getType();
+                Material type = loopLocation.clone().add(0.0, position, 0.0).getBlock().material;
 
                 if (BlockUtils.isSolid(type)) {
                     if (original) {

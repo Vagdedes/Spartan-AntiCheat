@@ -78,7 +78,7 @@ public class PlayerLimitPerIP {
 
         if (!players.isEmpty()) {
             for (SpartanPlayer p : players) {
-                String ip = p.getIpAddress();
+                String ip = p.ipAddress;
 
                 if (ip != null) {
                     Player n = p.getPlayer();
@@ -125,7 +125,7 @@ public class PlayerLimitPerIP {
     }
 
     public static void remove(SpartanPlayer p) {
-        String ip = p.getIpAddress();
+        String ip = p.ipAddress;
 
         if (ip != null) {
             Player n = p.getPlayer();

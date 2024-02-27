@@ -5,9 +5,9 @@ import org.bukkit.inventory.ItemStack;
 
 public class SpartanOpenInventory {
 
-    private final ItemStack cursor;
-    private final int slots;
-    private final SpartanInventory topInventory, bottomInventory;
+    public final ItemStack cursor;
+    public final int slots;
+    public final SpartanInventory topInventory, bottomInventory;
 
     SpartanOpenInventory(ItemStack cursor, int slots, ItemStack[] topInventoryContents, ItemStack[] bottomInventoryContents) {
         this.cursor = cursor;
@@ -20,14 +20,6 @@ public class SpartanOpenInventory {
         this(new ItemStack(Material.AIR), 36, new ItemStack[]{}, new ItemStack[]{});
     }
 
-    public ItemStack getCursor() {
-        return cursor;
-    }
-
-    public int countSlots() {
-        return slots;
-    }
-
     public boolean contains(Material material) {
         for (SpartanInventory inventory : new SpartanInventory[]{topInventory, bottomInventory}) {
             for (ItemStack itemStack : inventory.getContents()) {
@@ -37,13 +29,5 @@ public class SpartanOpenInventory {
             }
         }
         return false;
-    }
-
-    public SpartanInventory getTopInventory() {
-        return topInventory;
-    }
-
-    public SpartanInventory getBottomInventory() {
-        return bottomInventory;
     }
 }

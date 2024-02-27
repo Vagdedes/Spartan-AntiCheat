@@ -1483,176 +1483,176 @@ public class BlockUtils {
     // Separator
 
     public static boolean areCandles(SpartanLocation loc) {
-        return areCandles(loc.getBlock().getType());
+        return areCandles(loc.getBlock().material);
     }
 
     public static boolean areCandleCakes(SpartanLocation loc) {
-        return areCandleCakes(loc.getBlock().getType());
+        return areCandleCakes(loc.getBlock().material);
     }
 
     public static boolean isScaffoldingBlock(SpartanLocation loc) {
-        return isScaffoldingBlock(loc.getBlock().getType());
+        return isScaffoldingBlock(loc.getBlock().material);
     }
 
     public static boolean areIceBlocks(SpartanLocation loc) {
-        return areIceBlocks(loc.getBlock().getType());
+        return areIceBlocks(loc.getBlock().material);
     }
 
     public static boolean areWools(SpartanLocation loc) {
-        return areWools(loc.getBlock().getType());
+        return areWools(loc.getBlock().material);
     }
 
     public static boolean areChests(SpartanLocation loc) {
-        return areChests(loc.getBlock().getType());
+        return areChests(loc.getBlock().material);
     }
 
     public static boolean arePlates(SpartanLocation loc) {
-        return arePlates(loc.getBlock().getType());
+        return arePlates(loc.getBlock().material);
     }
 
     public static boolean areGlasses(SpartanLocation loc) {
-        return areGlasses(loc.getBlock().getType());
+        return areGlasses(loc.getBlock().material);
     }
 
     public static boolean areStainedGlasses(SpartanLocation loc) {
-        return areStainedGlasses(loc.getBlock().getType());
+        return areStainedGlasses(loc.getBlock().material);
     }
 
     public static boolean areSlabs(SpartanLocation loc) {
-        return areSlabs(loc.getBlock().getType());
+        return areSlabs(loc.getBlock().material);
     }
 
     public static boolean areTrapdoors(SpartanLocation loc) {
-        return areTrapdoors(loc.getBlock().getType());
+        return areTrapdoors(loc.getBlock().material);
     }
 
     public static boolean isPowderSnow(SpartanLocation loc) {
-        return isPowderSnow(loc.getBlock().getType());
+        return isPowderSnow(loc.getBlock().material);
     }
 
     public static boolean areDripLeafs(SpartanLocation loc) {
-        return areDripLeafs(loc.getBlock().getType());
+        return areDripLeafs(loc.getBlock().material);
     }
 
     public static boolean areHeads(SpartanLocation loc) {
-        return areHeads(loc.getBlock().getType());
+        return areHeads(loc.getBlock().material);
     }
 
     public static boolean areCoralFans(SpartanLocation loc) {
-        return areCoralFans(loc.getBlock().getType());
+        return areCoralFans(loc.getBlock().material);
     }
 
     public static boolean areInteractiveBushes(SpartanLocation loc) {
-        return areInteractiveBushes(loc.getBlock().getType());
+        return areInteractiveBushes(loc.getBlock().material);
     }
 
     public static boolean areWebs(SpartanLocation loc) {
-        return areWebs(loc.getBlock().getType());
+        return areWebs(loc.getBlock().material);
     }
 
     public static boolean areStairs(SpartanLocation loc) {
-        return areStairs(loc.getBlock().getType());
+        return areStairs(loc.getBlock().material);
     }
 
     public static boolean areFences(SpartanLocation loc) {
-        return areFences(loc.getBlock().getType());
+        return areFences(loc.getBlock().material);
     }
 
     public static boolean areFenceGates(SpartanLocation loc) {
-        return areFenceGates(loc.getBlock().getType());
+        return areFenceGates(loc.getBlock().material);
     }
 
     public static boolean areDoors(SpartanLocation loc) {
-        return areDoors(loc.getBlock().getType());
+        return areDoors(loc.getBlock().material);
     }
 
     public static boolean areEntityBlocks(SpartanLocation loc) {
-        return areEntityBlocks(loc.getBlock().getType());
+        return areEntityBlocks(loc.getBlock().material);
     }
 
     public static boolean areCobbleWalls(SpartanLocation loc) {
-        return areCobbleWalls(loc.getBlock().getType());
+        return areCobbleWalls(loc.getBlock().material);
     }
 
     public static boolean areShulkerBoxes(SpartanLocation loc) {
-        return areShulkerBoxes(loc.getBlock().getType());
+        return areShulkerBoxes(loc.getBlock().material);
     }
 
     public static boolean areBeds(SpartanLocation loc) {
-        return areBeds(loc.getBlock().getType());
+        return areBeds(loc.getBlock().material);
     }
 
     public static boolean areCarpets(SpartanLocation loc) {
-        return areCarpets(loc.getBlock().getType());
+        return areCarpets(loc.getBlock().material);
     }
 
     public static boolean areAnvils(SpartanLocation loc) {
-        return areAnvils(loc.getBlock().getType());
+        return areAnvils(loc.getBlock().material);
     }
 
     public static boolean areWires(SpartanLocation loc) {
-        return areWires(loc.getBlock().getType());
+        return areWires(loc.getBlock().material);
     }
 
     public static boolean areLeaves(SpartanLocation loc) {
-        return areLeaves(loc.getBlock().getType());
+        return areLeaves(loc.getBlock().material);
     }
 
     public static boolean areOres(SpartanLocation loc) {
-        return areOres(loc.getBlock().getType());
+        return areOres(loc.getBlock().material);
     }
 
     public static boolean areAir(SpartanLocation loc) {
-        return areAir(loc.getBlock().getType());
+        return areAir(loc.getBlock().material);
     }
 
     public static boolean areWoods(SpartanLocation loc) {
-        return areWoods(loc.getBlock().getType());
+        return areWoods(loc.getBlock().material);
     }
 
     public static boolean isInteractiveAndPassable(SpartanPlayer p, SpartanLocation loc) {
-        return p.isFrozen() || isInteractiveAndPassable(loc.getBlock().getType());
+        return p.isFrozen() || isInteractiveAndPassable(loc.getBlock().material);
     }
 
     public static boolean areTerracotta(SpartanLocation loc) {
-        return areTerracotta(loc.getBlock().getType());
+        return areTerracotta(loc.getBlock().material);
     }
 
     public static boolean areConcrete(SpartanLocation loc) {
-        return areConcrete(loc.getBlock().getType());
+        return areConcrete(loc.getBlock().material);
     }
 
     public static boolean areBanners(SpartanLocation loc) {
-        return areBanners(loc.getBlock().getType());
+        return areBanners(loc.getBlock().material);
     }
 
     public static boolean areHoneyBlocks(SpartanLocation loc) {
-        return areHoneyBlocks(loc.getBlock().getType());
+        return areHoneyBlocks(loc.getBlock().material);
     }
 
     public static boolean areSlimeBlocks(SpartanLocation loc) {
-        return areSlimeBlocks(loc.getBlock().getType());
+        return areSlimeBlocks(loc.getBlock().material);
     }
 
     public static boolean isSensitive(SpartanLocation loc, long time) {
-        return isSensitive(loc.getBlock().getType(), time);
+        return isSensitive(loc.getBlock().material, time);
     }
 
     public static boolean isSensitive(SpartanPlayer p, SpartanLocation loc) {
-        return isSensitive(p, loc.getBlock().getType());
+        return isSensitive(p, loc.getBlock().material);
     }
 
     public static boolean isSensitive(SpartanLocation loc) {
         SpartanPlayer p = loc.getPlayer();
-        return p != null ? isSensitive(p, loc.getBlock().getType()) : isSensitive(loc.getBlock().getType());
+        return p != null ? isSensitive(p, loc.getBlock().material) : isSensitive(loc.getBlock().material);
     }
 
     public static boolean isFullSolid(SpartanLocation loc) {
-        return isFullSolid(loc.getBlock().getType());
+        return isFullSolid(loc.getBlock().material);
     }
 
     public static boolean isChangeable(SpartanLocation loc) {
-        return isChangeable(loc.getBlock().getType());
+        return isChangeable(loc.getBlock().material);
     }
 
     public static boolean isAnvilBugged(SpartanLocation loc) {
@@ -1665,7 +1665,7 @@ public class BlockUtils {
     }
 
     public static boolean canClimb(SpartanLocation loc) {
-        return canClimb(loc.getBlock().getType());
+        return canClimb(loc.getBlock().material);
     }
 
     public static boolean isLiquid(SpartanLocation loc) {
@@ -1703,15 +1703,15 @@ public class BlockUtils {
     }
 
     public static boolean areWalls(SpartanLocation loc) {
-        return areWalls(loc.getBlock().getType());
+        return areWalls(loc.getBlock().material);
     }
 
     public static boolean isSolid(SpartanLocation loc) {
-        return isSolid(loc.getBlock().getType());
+        return isSolid(loc.getBlock().material);
     }
 
     public static boolean isSemiSolid(SpartanLocation loc) {
-        return isSemiSolid(loc.getBlock().getType());
+        return isSemiSolid(loc.getBlock().material);
     }
 
     // Separator
@@ -1719,15 +1719,15 @@ public class BlockUtils {
     public static boolean isSlime(SpartanPlayer p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
             if (p.isOnGroundCustom()) {
-                return loc.getBlock().getType() == Material.SLIME_BLOCK;
+                return loc.getBlock().material == Material.SLIME_BLOCK;
             } else {
                 SpartanLocation loopLocation = loc.clone();
 
-                if (!isSolid(loopLocation.getBlock().getType())) {
+                if (!isSolid(loopLocation.getBlock().material)) {
                     int y = loc.getBlockY();
 
                     for (int i = y; i > Math.max(getMinHeight(p.getWorld()), y - blocks); i--) {
-                        Material m = loopLocation.add(0, -1, 0).getBlock().getType();
+                        Material m = loopLocation.add(0, -1, 0).getBlock().material;
 
                         if (m == Material.SLIME_BLOCK) {
                             return true;
@@ -1750,15 +1750,15 @@ public class BlockUtils {
     public static boolean isBed(SpartanPlayer p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_12)) {
             if (p.isOnGroundCustom()) {
-                return areBeds(loc.getBlock().getType());
+                return areBeds(loc.getBlock().material);
             } else {
                 SpartanLocation loopLocation = loc.clone();
 
-                if (!isSolid(loopLocation.getBlock().getType())) {
+                if (!isSolid(loopLocation.getBlock().material)) {
                     int y = loc.getBlockY();
 
                     for (int i = y; i > Math.max(getMinHeight(p.getWorld()), y - blocks); i--) {
-                        Material m = loopLocation.add(0, -1, 0).getBlock().getType();
+                        Material m = loopLocation.add(0, -1, 0).getBlock().material;
 
                         if (areBeds(m)) {
                             return true;
@@ -1782,7 +1782,6 @@ public class BlockUtils {
         if (!b.isLiquid()) {
             return true;
         }
-        int data = b.getData();
-        return data == 0 || data == 8 || p != null && p.getLocation().getBlock() != b;
+        return b.data == 0 || b.data == 8 || p != null && p.getLocation().getBlock() != b;
     }
 }

@@ -174,7 +174,7 @@ public class MinigameMaker implements Listener {
                     for (IncompatibleItem incompatibleItem : set) {
                         if (eventType == incompatibleItem.getEventType()) {
                             for (ItemStack itemStack : new ItemStack[]{
-                                    inventory.getItemInHand(),
+                                    inventory.itemInHand,
                                     inventory.getHelmet(),
                                     inventory.getChestplate(),
                                     inventory.getLeggings(),

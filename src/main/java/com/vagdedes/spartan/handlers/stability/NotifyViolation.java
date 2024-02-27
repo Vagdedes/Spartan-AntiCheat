@@ -21,13 +21,13 @@ public class NotifyViolation {
             } else {
                 double multiplier = Math.max(playerCount / 25.0, 1.0);
                 int defaultDivisor = Math.min(
-                        AlgebraUtils.integerRound(hackType.getCheck().getCancelViolation() * multiplier),
+                        AlgebraUtils.integerRound(hackType.getCheck().cancelViolation * multiplier),
                         Check.maximumDefaultCancelViolation
                 );
 
                 if (detectedPlayer != null
                         && defaultDivisor < Check.maximumDefaultCancelViolation) {
-                    if (staff.getUniqueId().equals(detectedPlayer.getUniqueId())
+                    if (staff.uuid.equals(detectedPlayer.uuid)
                             || staff.getWorld().equals(detectedPlayer.getWorld())
                             && AlgebraUtils.getHorizontalDistance(staff.getLocation(), detectedPlayer.getLocation()) <= MoveUtils.chunk) {
                         return 1;

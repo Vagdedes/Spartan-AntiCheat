@@ -26,7 +26,7 @@ public class CombatProcessing {
             pitchDifference = pitch + "-difference";
 
     public static void remove(SpartanPlayer player) {
-        directionalComparison.remove(player.getUniqueId());
+        directionalComparison.remove(player.uuid);
     }    private static final String[]
             teleportationList = new String[]{yaw, pitch, yawDifference, pitchDifference};
 
@@ -37,7 +37,7 @@ public class CombatProcessing {
 
     public static void runMove(SpartanPlayer p, SpartanLocation to) {
         if (p.canRunChecks(false)) {
-            UUID uuid = p.getUniqueId();
+            UUID uuid = p.uuid;
             Vector[] directions = directionalComparison.get(uuid);
             float yawVar = to.getYaw(), pitchVar = to.getPitch();
 

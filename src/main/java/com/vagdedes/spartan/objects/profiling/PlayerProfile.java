@@ -8,6 +8,7 @@ import com.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
@@ -15,15 +16,15 @@ import java.util.UUID;
 public class PlayerProfile {
 
     private UUID uuid;
-    private final String name;
+    public final String name;
     private final ViolationHistory[] violationHistory;
     private final MiningHistory[] miningHistory;
-    private final PunishmentHistory punishmentHistory;
-    private final PlayerEvidence evidence;
+    public final PunishmentHistory punishmentHistory;
+    public final PlayerEvidence evidence;
     private boolean bedrockPlayer, bedrockPlayerCheck;
     private ItemStack skull;
     private OfflinePlayer offlinePlayer;
-    private final PlayerCombat playerCombat;
+    public final PlayerCombat playerCombat;
 
     // Separator
 
@@ -43,7 +44,7 @@ public class PlayerProfile {
         SpartanPlayer player = this.getSpartanPlayer();
 
         if (player != null) {
-            this.bedrockPlayer = player.isBedrockPlayer();
+            this.bedrockPlayer = player.bedrockPlayer;
             this.bedrockPlayerCheck = true;
         } else {
             this.bedrockPlayer = BedrockCompatibility.isPlayer(name);
@@ -64,15 +65,15 @@ public class PlayerProfile {
 
     public PlayerProfile(SpartanPlayer player) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        this.uuid = player.getUniqueId();
-        this.name = player.getName();
+        this.uuid = player.uuid;
+        this.name = player.name;
         this.offlinePlayer = player.getPlayer(); // Attention
         this.punishmentHistory = new PunishmentHistory(this);
         this.playerCombat = new PlayerCombat(this);
         this.evidence = new PlayerEvidence(this);
         this.skull = null;
         this.offlinePlayer = null;
-        this.bedrockPlayer = player.isBedrockPlayer(); // Attention
+        this.bedrockPlayer = player.bedrockPlayer; // Attention
         this.bedrockPlayerCheck = true;
 
         this.violationHistory = new ViolationHistory[hackTypes.length];
@@ -88,41 +89,35 @@ public class PlayerProfile {
 
     // Separator
 
-    public UUID getUniqueId() {
-        if (uuid == null) {
-            SpartanPlayer player = getSpartanPlayer();
-
-            if (player != null) {
-                this.uuid = player.getUniqueId();
-
-                if (!bedrockPlayerCheck && BedrockCompatibility.isPlayer(uuid, name)) {
-                    this.bedrockPlayerCheck = true;
-                    this.bedrockPlayer = true;
-                }
-            } else {
-                OfflinePlayer offlinePlayer = getOfflinePlayer();
-
-                if (offlinePlayer != null) {
-                    this.uuid = offlinePlayer.getUniqueId();
-
-                    if (!bedrockPlayerCheck && BedrockCompatibility.isPlayer(uuid, name)) {
-                        this.bedrockPlayerCheck = true;
-                        this.bedrockPlayer = true;
-                    }
-                }
-            }
-        }
-        return uuid;
-    }
-
     public String getName() {
         return name;
     }
 
-    public ItemStack getSkull() {
+    public ItemStack getSkull(boolean force) {
         if (skull == null) {
-            OfflinePlayer player = getOfflinePlayer();
-            this.skull = player == null ? InventoryUtils.getHead() : InventoryUtils.getSkull(player);
+            if (force) {
+                OfflinePlayer player = getOfflinePlayer();
+
+                if (player == null) {
+                    return InventoryUtils.getHead();
+                } else {
+                    this.skull = InventoryUtils.getSkull(player);
+                }
+            } else {
+                SpartanPlayer spartanPlayer = getSpartanPlayer();
+
+                if (spartanPlayer == null) {
+                    return InventoryUtils.getHead();
+                } else {
+                    Player player = spartanPlayer.getPlayer();
+
+                    if (player == null) {
+                        return InventoryUtils.getHead();
+                    } else {
+                        this.skull = InventoryUtils.getSkull(player);
+                    }
+                }
+            }
         }
         return skull;
     }
@@ -141,7 +136,7 @@ public class PlayerProfile {
             if (player != null) {
                 bedrockPlayerCheck = true;
 
-                if (player.isBedrockPlayer()) {
+                if (player.bedrockPlayer) {
                     return bedrockPlayer = true;
                 }
             }
@@ -150,10 +145,17 @@ public class PlayerProfile {
     }
 
     public OfflinePlayer getOfflinePlayer() {
-        if (offlinePlayer == null && name != null) {
+        if (offlinePlayer == null) {
             if (this.uuid == null) {
-                this.offlinePlayer = Bukkit.getOfflinePlayer(name);
-                this.uuid = offlinePlayer.getUniqueId();
+                SpartanPlayer player = getSpartanPlayer();
+
+                if (player != null) {
+                    this.uuid = player.uuid;
+                    this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+                } else {
+                    this.offlinePlayer = Bukkit.getOfflinePlayer(name);
+                    this.uuid = offlinePlayer.getUniqueId();
+                }
             } else {
                 this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
             }
@@ -167,13 +169,9 @@ public class PlayerProfile {
     }
 
     public SpartanPlayer getSpartanPlayer() {
-        return uuid != null ? SpartanBukkit.getPlayer(uuid) :
-                name != null ? SpartanBukkit.getPlayer(name) :
-                        null;
-    }
-
-    public boolean isOnline() {
-        return getSpartanPlayer() != null;
+        return uuid != null
+                ? SpartanBukkit.getPlayer(uuid)
+                : SpartanBukkit.getPlayer(name);
     }
 
     // Separator
@@ -184,12 +182,6 @@ public class PlayerProfile {
 
     public ViolationHistory getViolationHistory(Enums.HackType hackType) {
         return violationHistory[hackType.ordinal()];
-    }
-
-    // Separator
-
-    public PlayerEvidence getEvidence() {
-        return evidence;
     }
 
     // Separator
@@ -215,15 +207,15 @@ public class PlayerProfile {
     // Separator
 
     public boolean isLegitimate() {
-        return getEvidence().has(PlayerEvidence.EvidenceType.Legitimate);
+        return evidence.has(PlayerEvidence.EvidenceType.Legitimate);
     }
 
     public boolean isHacker() {
-        return getEvidence().has(PlayerEvidence.EvidenceType.Hacker);
+        return evidence.has(PlayerEvidence.EvidenceType.Hacker);
     }
 
     public boolean isSuspected() {
-        return getEvidence().has(PlayerEvidence.EvidenceType.Suspected);
+        return evidence.has(PlayerEvidence.EvidenceType.Suspected);
     }
 
     public boolean isSuspected(Enums.HackType[] hackTypes) {
@@ -268,16 +260,8 @@ public class PlayerProfile {
         for (ViolationHistory violationHistory : getViolationHistory()) {
             sum += (violationHistory.getCount()
                     + getOverallMiningHistory().getMines()
-                    + getPunishmentHistory().getOverall());
+                    + punishmentHistory.getOverall());
         }
         return sum;
-    }
-
-    public PunishmentHistory getPunishmentHistory() {
-        return punishmentHistory;
-    }
-
-    public PlayerCombat getCombat() {
-        return playerCombat;
     }
 }

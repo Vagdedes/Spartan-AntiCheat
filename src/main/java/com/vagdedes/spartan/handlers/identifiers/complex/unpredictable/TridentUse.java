@@ -11,7 +11,7 @@ public class TridentUse {
     private static final int riptideMaxSafeLevel = 3;
 
     public static void run(SpartanPlayer p) {
-        for (ItemStack item : new ItemStack[]{p.getItemInHand(), p.getInventory().getItemInOffHand()}) {
+        for (ItemStack item : new ItemStack[]{p.getItemInHand(), p.getInventory().itemInOffHand}) {
             if (item.getType() == Material.TRIDENT) {
                 int level = item.getEnchantmentLevel(Enchantment.RIPTIDE);
 

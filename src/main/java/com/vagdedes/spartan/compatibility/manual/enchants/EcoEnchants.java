@@ -19,7 +19,7 @@ public class EcoEnchants {
                     return true;
                 }
             }
-            return has(inventory.getItemInHand()) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && has(inventory.getItemInOffHand());
+            return has(inventory.itemInHand) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && has(inventory.itemInOffHand);
         }
         return false;
     }

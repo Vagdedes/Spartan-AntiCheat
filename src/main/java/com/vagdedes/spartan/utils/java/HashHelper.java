@@ -116,7 +116,7 @@ public class HashHelper {
     // Separator
 
     public static long hashPlayer(SpartanPlayer player) {
-        long hash = Boolean.hashCode(player.isBedrockPlayer());
+        long hash = Boolean.hashCode(player.bedrockPlayer);
         Entity vehicle = player.getVehicle();
         Collection<PotionEffect> potionEffects;
 
@@ -196,7 +196,7 @@ public class HashHelper {
         for (int y = -1; y <= Math.ceil(player.getEyeHeight()); y++) {
             for (SpartanLocation cloned : location.clone().getSurroundingLocations(1.0, y, 1.0, true)) {
                 SpartanBlock block = cloned.getBlock();
-                Material material = block.getType();
+                Material material = block.material;
 
                 if (BlockUtils.isSolid(material)) {
                     foundBlock = true;
@@ -219,7 +219,7 @@ public class HashHelper {
                     foundBlock = true;
                     hash = extendLong(hash, material.toString().hashCode());
                 }
-                hash = extendLong(hash, Boolean.hashCode(block.isWaterLogged()));
+                hash = extendLong(hash, Boolean.hashCode(block.waterLogged));
             }
         }
 

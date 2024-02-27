@@ -38,8 +38,8 @@ public class PunishmentHistory {
             AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + kickMessage + reason, true);
             SpartanLocation location = player.getLocation();
             CrossServerInformation.queueNotificationWithWebhook(
-                    player.getUniqueId(),
-                    player.getName(),
+                    player.uuid,
+                    player.name,
                     location.getBlockX(),
                     location.getBlockY(),
                     location.getBlockZ(),
@@ -65,8 +65,8 @@ public class PunishmentHistory {
             AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + warningMessage + reason, true);
             SpartanLocation location = player.getLocation();
             CrossServerInformation.queueNotificationWithWebhook(
-                    player.getUniqueId(),
-                    player.getName(),
+                    player.uuid,
+                    player.name,
                     location.getBlockX(),
                     location.getBlockY(),
                     location.getBlockZ(),
@@ -84,8 +84,8 @@ public class PunishmentHistory {
             AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + punishmentMessage + commands, true);
             SpartanLocation location = player.getLocation();
             CrossServerInformation.queueWebhook(
-                    player.getUniqueId(),
-                    player.getName(),
+                    player.uuid,
+                    player.name,
                     location.getBlockX(),
                     location.getBlockY(),
                     location.getBlockZ(),

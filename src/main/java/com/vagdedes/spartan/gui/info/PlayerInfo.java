@@ -10,7 +10,6 @@ import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.gui.helpers.AntiCheatUpdates;
 import com.vagdedes.spartan.gui.helpers.PlayerStateLists;
-import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.stability.ResearchEngine;
 import com.vagdedes.spartan.handlers.stability.TPS;
 import com.vagdedes.spartan.objects.profiling.MiningHistory;
@@ -55,7 +54,7 @@ public class PlayerInfo extends InventoryMenu {
             player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
             return false;
         } else {
-            setTitle(player, menu + (isOnline ? target.getName() : playerProfile.getName()));
+            setTitle(player, menu + (isOnline ? target.name : playerProfile.getName()));
             List<String> lore = new ArrayList<>(20);
 
             int i = 10;
@@ -95,7 +94,7 @@ public class PlayerInfo extends InventoryMenu {
                     new ItemStack(Material.QUARTZ_BLOCK);
             add("§2Mining History", lore, item, 16);
 
-            PunishmentHistory punishmentHistory = playerProfile.getPunishmentHistory();
+            PunishmentHistory punishmentHistory = playerProfile.punishmentHistory;
             lore.clear();
             lore.add("");
             lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
@@ -106,7 +105,7 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
                 lore.add("§7Overall Violations§8:§a " + violations);
-                lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + target.getDataType() + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType() + " (" + target.dataType + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
 
                 lore.clear();
@@ -115,7 +114,7 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§cRight click to delete the player's stored data.");
                 add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             } else {
-                lore.add("§7Player State§8:§a " + playerProfile.getEvidence().getType() + " (" + playerProfile.getDataType() + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType() + " (" + playerProfile.getDataType() + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK), information);
 
                 lore.clear();
@@ -139,7 +138,7 @@ public class PlayerInfo extends InventoryMenu {
 
         if (isOnline) {
             for (HackType hackType : hackTypes) {
-                if (hackType.getCheck().getCheckType() == checkType) {
+                if (hackType.getCheck().type == checkType) {
                     violations += player.getViolations(hackType).getLevel();
                 }
             }
@@ -154,18 +153,18 @@ public class PlayerInfo extends InventoryMenu {
         // Separator
 
         double delayNumber = isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0; // Base
-        ResearchEngine.DataType dataType = isOnline ? player.getDataType() : playerProfile.getDataType();
+        ResearchEngine.DataType dataType = isOnline ? player.dataType : playerProfile.getDataType();
         boolean tpsDropping = isOnline && TPS.areLow(player),
-                notChecked = isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
+                notChecked = isOnline && !MaximumCheckedPlayers.isChecked(player.uuid),
                 detectionsNotAvailable = SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 listedChecks = false;
         String cancellableCompatibility = isOnline ? player.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
-            if (hackType.getCheck().getCheckType() == checkType) {
+            if (hackType.getCheck().type == checkType) {
                 violations = isOnline ? player.getViolations(hackType).getLevel() : 0;
                 boolean hasViolations = violations > 0,
-                        hasData = playerProfile.getEvidence().has(hackType);
+                        hasData = playerProfile.evidence.has(hackType);
 
                 String state = getDetectionState(player, hackType, dataType, cancellableCompatibility, delayNumber, isOnline,
                         tpsDropping, notChecked, detectionsNotAvailable, !SpartanEdition.supportsCheck(dataType, hackType),
@@ -173,7 +172,7 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (hasViolations || hasData || state != null) {
                     String color = "§c";
-                    String data = playerProfile.getEvidence().getKnowledge(hackType, color);
+                    String data = playerProfile.evidence.getKnowledge(hackType, color);
                     listedChecks = true;
                     lore.add("§6" + hackType.getCheck().getName() + "§8[§e" + state + "§8] " + color
                             + (hasData ? data : hasViolations ? violations + " " + (violations == 1 ? "violation" : "violations") : "")
@@ -197,8 +196,8 @@ public class PlayerInfo extends InventoryMenu {
                 new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
                 new ItemStack(Material.QUARTZ_BLOCK);
         boolean hasViolations = violations > 0,
-                hasData = playerProfile.getEvidence().has(hackType);
-        ResearchEngine.DataType dataType = isOnline ? player.getDataType() : playerProfile.getDataType();
+                hasData = playerProfile.evidence.has(hackType);
+        ResearchEngine.DataType dataType = isOnline ? player.dataType : playerProfile.getDataType();
         String state = getDetectionState(player,
                 hackType,
                 dataType,
@@ -206,7 +205,7 @@ public class PlayerInfo extends InventoryMenu {
                 isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0,
                 isOnline,
                 isOnline && TPS.areLow(player),
-                isOnline && !MaximumCheckedPlayers.isChecked(player.getUniqueId()),
+                isOnline && !MaximumCheckedPlayers.isChecked(player.uuid),
                 SpartanBukkit.canAdvertise && !SpartanEdition.hasDetectionsPurchased(dataType),
                 !SpartanEdition.supportsCheck(dataType, hackType),
                 !hasViolations && !hasData);
@@ -217,7 +216,7 @@ public class PlayerInfo extends InventoryMenu {
 
             if (hasData) {
                 String color = "§c";
-                lore.add(color + playerProfile.getEvidence().getKnowledge(hackType, color));
+                lore.add(color + playerProfile.evidence.getKnowledge(hackType, color));
             }
         } else {
             lore.add("§c" + PlayerStateLists.noDataAvailable);
@@ -234,9 +233,6 @@ public class PlayerInfo extends InventoryMenu {
                                      boolean detectionMissing,
                                      boolean detectionUnsupported,
                                      boolean returnNull) {
-        if (IDs.isPreview()) {
-            return "Preview Mode";
-        }
         if (!hasPlayer) {
             return returnNull ? null : "Offline";
         }
@@ -252,7 +248,7 @@ public class PlayerInfo extends InventoryMenu {
         if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
             return returnNull ? null : "Disabled";
         }
-        UUID uuid = player.getUniqueId();
+        UUID uuid = player.uuid;
         String delay = delayNumber == 0.0 ? "" : " (" + (Math.floor(delayNumber) == delayNumber ? String.valueOf((int) delayNumber) : String.valueOf(delayNumber)) + ")";
         CancelCause disabledCause = player.getViolations(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
@@ -313,7 +309,7 @@ public class PlayerInfo extends InventoryMenu {
                     for (HackType hackType : Enums.HackType.values()) {
                         t.getViolations(hackType).reset();
                     }
-                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.getName());
+                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.name);
                     player.sendMessage(message);
                 } else {
                     String name = Bukkit.getOfflinePlayer(playerName).getName();

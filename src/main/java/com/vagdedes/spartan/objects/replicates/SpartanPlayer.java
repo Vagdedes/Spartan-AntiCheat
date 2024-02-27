@@ -71,7 +71,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 
 public class SpartanPlayer {
@@ -87,15 +86,14 @@ public class SpartanPlayer {
     private int ping, maximumNoDamageTicks, foodLevel, fireTicks;
     private double eyeHeight, health;
     private GameMode gameMode;
-    private final boolean bedrockPlayer;
+    public final boolean bedrockPlayer;
     private long damageTick, lastHeadMovement;
-    private final long creationTime, lastPlayed;
-    private final String name;
-    private final UUID uuid;
-    private final String ipAddress;
+    public final long creationTime, lastPlayed;
+    public final String name;
+    public final UUID uuid;
+    public final String ipAddress;
     private final Collection<PotionEffect> potionEffects;
-    private final ResearchEngine.DataType dataType;
-    private final InetSocketAddress address;
+    public final ResearchEngine.DataType dataType;
     private EntityDamageEvent lastDamageCause;
     private SpartanInventory inventory;
     private SpartanOpenInventory openInventory;
@@ -130,7 +128,7 @@ public class SpartanPlayer {
 
     // Custom
 
-    private final Map<Long, Double>
+    private final List<Double>
             nmsDistance, nmsHorizontalDistance, nmsVerticalDistance,
             nmsBox;
     private double
@@ -231,7 +229,7 @@ public class SpartanPlayer {
                 clearCache = false;
                 syncTicks--;
 
-                if (syncTicks % 20 == 0) {
+                if (!MultiVersion.folia && syncTicks % 20 == 0) {
                     synchronized (worldEntities) {
                         worldEntities.clear();
 
@@ -319,9 +317,8 @@ public class SpartanPlayer {
 
                             // Check Allowance Cache
                             if (TPS.getTick(p) <= 100
-                                    || !MaximumCheckedPlayers.isChecked(p.getUniqueId())
+                                    || !MaximumCheckedPlayers.isChecked(p.uuid)
                                     || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8) && p.getGameMode() == GameMode.SPECTATOR
-                                    || IDs.isPreview()
                                     || p.getCancellableCompatibility() != null) {
                                 p.runChecks[0] = false;
                                 p.runChecks[1] = false;
@@ -331,7 +328,7 @@ public class SpartanPlayer {
                             }
 
                             // External
-                            p.playerProfile.getCombat().track();
+                            p.playerProfile.playerCombat.track();
                             if (MultiVersion.folia || !SpartanBukkit.isSynchronised()) {
                                 PlayerData.update(p, n, true);
                             }
@@ -386,7 +383,6 @@ public class SpartanPlayer {
         this.flySpeed = p.getFlySpeed();
         this.gameMode = p.getGameMode();
         this.health = p.getHealth();
-        this.address = p.getAddress();
         this.usingItem = p.isBlocking();
         this.fireTicks = p.getFireTicks();
         this.damageTick = 0L;
@@ -402,10 +398,10 @@ public class SpartanPlayer {
         this.customDistance = 0.0;
         this.customHorizontalDistance = 0.0;
         this.customVerticalDistance = 0.0;
-        this.nmsDistance = new LinkedHashMap<>();
-        this.nmsHorizontalDistance = new LinkedHashMap<>();
-        this.nmsVerticalDistance = new LinkedHashMap<>();
-        this.nmsBox = new LinkedHashMap<>();
+        this.nmsDistance = Collections.synchronizedList(new LinkedList<>());
+        this.nmsHorizontalDistance = Collections.synchronizedList(new LinkedList<>());
+        this.nmsVerticalDistance = Collections.synchronizedList(new LinkedList<>());
+        this.nmsBox = Collections.synchronizedList(new LinkedList<>());
         this.lastFall = 0L;
         this.lastOffSprint = 0L;
         this.lastJump = 0L;
@@ -660,11 +656,11 @@ public class SpartanPlayer {
 
     public void calculateClickData(Action action, boolean runRegardless) {
         if (!runRegardless) {
-            if (playerProfile.getCombat().isActivelyFighting(null, true, true, false)) {
+            if (playerProfile.playerCombat.isActivelyFighting(null, true, true, false)) {
                 runRegardless = true;
             } else {
                 SpartanBlock block = getTargetBlock(CombatUtils.maxHitDistance);
-                runRegardless = block == null || BlockUtils.areAir(block.getType());
+                runRegardless = block == null || BlockUtils.areAir(block.material);
             }
         }
 
@@ -686,21 +682,9 @@ public class SpartanPlayer {
             }
 
             if (success && clicks.canDistributeInformation()) {
-                SpartanMenu.playerInfo.refresh(getName());
+                SpartanMenu.playerInfo.refresh(name);
             }
         }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public UUID getUniqueId() {
-        return uuid;
-    }
-
-    public ResearchEngine.DataType getDataType() {
-        return dataType;
     }
 
     private SpartanLocation getVehicleLocation() {
@@ -929,10 +913,6 @@ public class SpartanPlayer {
                                 EcoEnchants.has(this) ? Compatibility.CompatibilityType.EcoEnchants.toString() : null;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
     public boolean isFlying() {
         Entity vehicle = getVehicle();
         return vehicle != null ? vehicle instanceof Player && ((Player) vehicle).isFlying() : flying;
@@ -1135,7 +1115,7 @@ public class SpartanPlayer {
                 }
             }
 
-            playerProfile.getPunishmentHistory().increaseKicks(this, kick);
+            playerProfile.punishmentHistory.increaseKicks(this, kick);
             target.kickPlayer(kick);
         }
     }
@@ -1160,7 +1140,7 @@ public class SpartanPlayer {
             target.sendMessage(warning);
             punisher.sendMessage(feedback);
 
-            playerProfile.getPunishmentHistory().increaseWarnings(this, reason);
+            playerProfile.punishmentHistory.increaseWarnings(this, reason);
         }
     }
 
@@ -1295,10 +1275,6 @@ public class SpartanPlayer {
         this.eyeHeight = eyeHeight;
     }
 
-    public boolean isBedrockPlayer() {
-        return bedrockPlayer;
-    }
-
     public boolean isGliding() {
         return gliding;
     }
@@ -1336,7 +1312,7 @@ public class SpartanPlayer {
     }
 
     public ItemStack getItemInHand() {
-        return inventory.getItemInHand();
+        return inventory.itemInHand;
     }
 
     public SpartanOpenInventory getOpenInventory() {
@@ -1376,18 +1352,6 @@ public class SpartanPlayer {
             prepareForAbstractMovement();
             p.setVelocity(vector);
         }
-    }
-
-    public InetSocketAddress getAddress() {
-        return address;
-    }
-
-    public long getCreationTime() {
-        return creationTime;
-    }
-
-    public long getLastPlayed() {
-        return lastPlayed;
     }
 
     public boolean isUsingItem() {
@@ -1546,11 +1510,17 @@ public class SpartanPlayer {
                 if (p != null) {
                     nearbyEntitiesDistance = max;
 
-                    if (MultiVersion.folia || SpartanBukkit.isSynchronised()) {
+                    if (MultiVersion.folia) {
                         SpartanBukkit.runTask(this, () -> {
                             nearbyEntities.clear();
                             nearbyEntities.addAll(p.getNearbyEntities(x, y, z));
                         });
+                        return new ArrayList<>(nearbyEntities);
+                    } else if (SpartanBukkit.isSynchronised()) {
+                        List<Entity> entities = p.getNearbyEntities(x, y, z);
+                        nearbyEntities.clear();
+                        nearbyEntities.addAll(entities);
+                        return entities;
                     } else {
                         SpartanLocation loc = this.getLocation();
                         List<Entity> entities;
@@ -1578,12 +1548,15 @@ public class SpartanPlayer {
                             }
                             nearbyEntities.clear();
                             nearbyEntities.addAll(entities);
+                            return entities;
                         } else {
                             nearbyEntities.clear();
+                            return new ArrayList<>(0);
                         }
                     }
                 } else {
                     nearbyEntities.clear();
+                    return new ArrayList<>(0);
                 }
             } else if (!nearbyEntities.isEmpty()) {
                 SpartanLocation loc = this.getLocation();
@@ -1605,8 +1578,10 @@ public class SpartanPlayer {
                 }
                 nearbyEntities.clear();
                 nearbyEntities.addAll(entities);
+                return entities;
+            } else {
+                return new ArrayList<>(0);
             }
-            return nearbyEntities;
         }
     }
 
@@ -1620,8 +1595,8 @@ public class SpartanPlayer {
                 int count = 0;
 
                 for (Entity e : getNearbyEntities(distance, distance, distance)) {
-                    if (e instanceof Mob) {
-                        LivingEntity target = ((Mob) e).getTarget();
+                    if (e instanceof Monster) {
+                        LivingEntity target = ((Monster) e).getTarget();
 
                         if (target != null && target.equals(n)) {
                             count++;
@@ -1630,7 +1605,7 @@ public class SpartanPlayer {
                         SpartanPlayer target = SpartanBukkit.getPlayer((Player) e);
 
                         if (target != null
-                                && playerProfile.getCombat().isActivelyFighting(
+                                && playerProfile.playerCombat.isActivelyFighting(
                                 target,
                                 true,
                                 true,
@@ -1695,7 +1670,7 @@ public class SpartanPlayer {
 
         for (double progressiveY = startY; startY > BlockUtils.getMinHeight(world); progressiveY--) {
             SpartanLocation loopLocation = location.clone().add(0.0, -(startY - progressiveY), 0.0);
-            Material material = loopLocation.getBlock().getType();
+            Material material = loopLocation.getBlock().material;
 
             if (iterations != maxIterations
                     && (BlockUtils.canClimb(material)
@@ -1916,70 +1891,85 @@ public class SpartanPlayer {
         return customVerticalDistance;
     }
 
-    private void clearNmsDistance(Map<Long, Double> map) {
-        int size = map.size();
-
-        if (size > 2) {
-            size = size - 2;
-            Iterator<Double> iterator = map.values().iterator();
-
-            while (size > 0 && iterator.hasNext()) {
-                size--;
-                iterator.next();
-                iterator.remove();
-            }
-        }
-    }
-
     public synchronized void setNmsDistance(double distance,
                                             double horizontal,
                                             double vertical,
                                             double box) {
-        long tick = TPS.getTick(this);
-        this.nmsDistance.put(tick, distance);
-        this.nmsHorizontalDistance.put(tick, horizontal);
-        this.nmsVerticalDistance.put(tick, vertical);
-        this.nmsBox.put(tick, box);
-        clearNmsDistance(nmsDistance);
-        clearNmsDistance(nmsHorizontalDistance);
-        clearNmsDistance(nmsVerticalDistance);
-        clearNmsDistance(nmsBox);
+        this.nmsDistance.add(distance);
+        this.nmsHorizontalDistance.add(horizontal);
+        this.nmsVerticalDistance.add(vertical);
+        this.nmsBox.add(box);
+
+        for (List<Double> list : new List[]{
+                nmsDistance,
+                nmsHorizontalDistance,
+                nmsVerticalDistance,
+                nmsBox
+        }) {
+            if (list.size() > 2) {
+                list.remove(0);
+            }
+        }
     }
 
     public double getValueOrDefault(Double value, double def) {
         return value == null ? def : value;
     }
 
-    public synchronized Double getNmsDistance() {
-        return nmsDistance.get(TPS.getTick(this));
+    public Double getNmsDistance() {
+        synchronized (nmsDistance) {
+            int size = nmsDistance.size();
+            return size > 0 ? nmsDistance.get(size - 1) : null;
+        }
     }
 
-    public synchronized Double getPreviousNmsDistance() {
-        return nmsDistance.get(TPS.getTick(this) - 1L);
+    public Double getPreviousNmsDistance() {
+        synchronized (nmsDistance) {
+            int size = nmsDistance.size();
+            return size > 1 ? nmsDistance.get(size - 2) : null;
+        }
     }
 
-    public synchronized Double getNmsHorizontalDistance() {
-        return nmsHorizontalDistance.get(TPS.getTick(this));
+    public Double getNmsHorizontalDistance() {
+        synchronized (nmsHorizontalDistance) {
+            int size = nmsHorizontalDistance.size();
+            return size > 0 ? nmsHorizontalDistance.get(size - 1) : null;
+        }
     }
 
-    public synchronized Double getPreviousNmsHorizontalDistance() {
-        return nmsHorizontalDistance.get(TPS.getTick(this) - 1L);
+    public Double getPreviousNmsHorizontalDistance() {
+        synchronized (nmsHorizontalDistance) {
+            int size = nmsHorizontalDistance.size();
+            return size > 1 ? nmsHorizontalDistance.get(size - 2) : null;
+        }
     }
 
-    public synchronized Double getNmsVerticalDistance() {
-        return nmsVerticalDistance.get(TPS.getTick(this));
+    public Double getNmsVerticalDistance() {
+        synchronized (nmsVerticalDistance) {
+            int size = nmsVerticalDistance.size();
+            return size > 0 ? nmsVerticalDistance.get(size - 1) : null;
+        }
     }
 
-    public synchronized Double getPreviousNmsVerticalDistance() {
-        return nmsVerticalDistance.get(TPS.getTick(this) - 1L);
+    public Double getPreviousNmsVerticalDistance() {
+        synchronized (nmsVerticalDistance) {
+            int size = nmsVerticalDistance.size();
+            return size > 1 ? nmsVerticalDistance.get(size - 2) : null;
+        }
     }
 
-    public synchronized Double getNmsBox() {
-        return nmsBox.get(TPS.getTick(this));
+    public Double getNmsBox() {
+        synchronized (nmsBox) {
+            int size = nmsBox.size();
+            return size > 0 ? nmsBox.get(size - 1) : null;
+        }
     }
 
-    public synchronized Double getOld_NmsBox() {
-        return nmsBox.get(TPS.getTick(this) - 1L);
+    public Double getPreviousNmsBox() {
+        synchronized (nmsBox) {
+            int size = nmsBox.size();
+            return size > 1 ? nmsBox.get(size - 2) : null;
+        }
     }
 
     // Direction
@@ -1998,14 +1988,14 @@ public class SpartanPlayer {
                 try {
                     SpartanBlock targetBlock = getTargetBlock(Math.max(Math.floor(distance), 1.0));
 
-                    if (targetBlock != null && BlockUtils.isSolid(targetBlock.getType())) {
+                    if (targetBlock != null && BlockUtils.isSolid(targetBlock.material)) {
                         SpartanLocation targetBlockLocation = targetBlock.getLocation();
 
                         if (clickedBlockLocation.distance(targetBlockLocation) >= (handlers.has(Handlers.HandlerType.ElytraUse) ? 2.5 : BlockUtils.areEggs(getItemInHand().getType()) ? 2.0 : 1.0)
 
-                                && (targetBlock.getX() != clickedBlock.getX()
-                                || targetBlock.getY() != clickedBlock.getY()
-                                || targetBlock.getZ() != clickedBlock.getZ())
+                                && (targetBlock.x != clickedBlock.x
+                                || targetBlock.y != clickedBlock.y
+                                || targetBlock.z != clickedBlock.z)
 
                                 && (editableClickedBlock && !BlockUtils.isLiquid(targetBlockLocation)
                                 || BlockUtils.isFullSolid(targetBlockLocation))) {

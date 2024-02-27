@@ -63,7 +63,7 @@ public class MythicMobs {
                     return true;
                 }
             }
-            return is(inventory.getItemInHand()) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && is(inventory.getItemInOffHand());
+            return is(inventory.itemInHand) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && is(inventory.itemInOffHand);
         }
         return false;
     }

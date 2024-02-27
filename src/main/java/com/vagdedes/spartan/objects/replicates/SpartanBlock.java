@@ -12,14 +12,14 @@ import org.bukkit.block.data.Waterlogged;
 
 public class SpartanBlock {
 
-    private final SpartanPlayer player;
-    private final Material material;
-    private final World world;
+    public final SpartanPlayer player;
+    public final Material material;
+    public final World world;
     private Chunk chunk;
-    private final byte data;
-    private final int x, z, identifier;
-    private final short y;
-    private final boolean liquid, waterLogged;
+    public final byte data;
+    public final int x, z, identifier;
+    public final short y;
+    public final boolean liquid, waterLogged;
 
     SpartanBlock(SpartanPlayer player, World world, Chunk chunk, Material material, byte data, int identifier, int x, int y, int z, boolean liquid, boolean waterLogged) {
         this.player = player;
@@ -68,38 +68,6 @@ public class SpartanBlock {
             chunk = getLocation().getChunk();
         }
         return chunk;
-    }
-
-    public World getWorld() {
-        return world;
-    }
-
-    public Material getType() {
-        return material;
-    }
-
-    public byte getData() {
-        return data;
-    }
-
-    public int getIdentifier() {
-        return identifier;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getZ() {
-        return z;
-    }
-
-    public boolean isWaterLogged() {
-        return waterLogged;
     }
 
     public boolean isLiquid() {

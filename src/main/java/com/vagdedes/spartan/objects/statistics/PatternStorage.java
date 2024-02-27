@@ -167,7 +167,7 @@ public class PatternStorage {
 
     public Collection<PatternValue> get(SpartanPlayer player, int generalization, int count) {
         synchronized (this.correlations) {
-            Map<Integer, Collection<PatternValue>> map = this.correlations.get(player.getUniqueId());
+            Map<Integer, Collection<PatternValue>> map = this.correlations.get(player.uuid);
 
             if (map != null) {
                 Collection<PatternValue> values = map.get(generalization);

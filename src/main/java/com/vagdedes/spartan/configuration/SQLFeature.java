@@ -335,7 +335,7 @@ public class SQLFeature extends ConfigurationBuilder {
             String table = getTable();
             boolean hasPlayer = p != null;
             boolean hasCheck = hackType != null;
-            UUID uuid = hasPlayer ? p.getUniqueId() : null;
+            UUID uuid = hasPlayer ? p.uuid : null;
             SpartanLocation location = hasPlayer ? p.getLocation() : null;
 
             synchronized (list) {

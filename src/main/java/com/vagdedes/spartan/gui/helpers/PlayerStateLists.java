@@ -48,10 +48,10 @@ public class PlayerStateLists {
 
     private static final Map<UUID, Integer> cache = Cache.store(new LinkedHashMap<>());
 
-    private static void fill(String title, Inventory inventory, String name, List<String> description, int slot) {
-        ItemStack item = ResearchEngine.getSkull(name);
+    private static void fill(String title, Inventory inventory, PlayerProfile profile, List<String> description, int slot) {
+        ItemStack item = profile.getSkull(false);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§c" + name);
+        meta.setDisplayName("§c" + profile.getName());
 
         List<String> lore = new ArrayList<>(description.size() + 10);
         InventoryUtils.prepareDescription(lore, title);
@@ -105,7 +105,7 @@ public class PlayerStateLists {
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidence().getKnowledgeList();
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList();
 
                             if (!evidenceDetails.isEmpty()) {
                                 lore.clear();
@@ -114,7 +114,7 @@ public class PlayerStateLists {
                                 for (Enums.HackType hackType : evidenceDetails) {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
-                                fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
+                                fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
                                 slotPosition++;
                             } else {
                                 listSize--;
@@ -127,7 +127,7 @@ public class PlayerStateLists {
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidence().getKnowledgeList();
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList();
 
                             if (!evidenceDetails.isEmpty()) {
                                 lore.clear();
@@ -136,7 +136,7 @@ public class PlayerStateLists {
                                 for (Enums.HackType hackType : evidenceDetails) {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
-                                fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
+                                fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
                                 slotPosition++;
                             } else {
                                 listSize--;
@@ -150,7 +150,7 @@ public class PlayerStateLists {
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
                             lore.clear();
-                            fill(title, inventory, playerProfile.getName(), lore, freeSlots[slotPosition]);
+                            fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
                             slotPosition++;
                         }
                     }

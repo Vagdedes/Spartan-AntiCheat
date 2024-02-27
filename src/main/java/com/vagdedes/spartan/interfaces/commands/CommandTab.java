@@ -83,7 +83,7 @@ public class CommandTab implements TabCompleter {
                     Player on = o.getPlayer();
 
                     if (on != null && (!player || p.canSee(on))) {
-                        String name = o.getName();
+                        String name = o.name;
 
                         if (name.toLowerCase().contains(argAbstract)) {
                             list.add(name);

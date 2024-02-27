@@ -9,7 +9,6 @@ import com.vagdedes.spartan.functionality.important.Permissions;
 import com.vagdedes.spartan.functionality.performance.FalsePositiveDetection;
 import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
 import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import com.vagdedes.spartan.gui.configuration.ManageConfiguration;
 import com.vagdedes.spartan.handlers.connection.DiscordMemberCount;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.handlers.stability.CancelViolation;
@@ -214,7 +213,7 @@ public class CloudConnections {
                 SpartanPlayer player = playerProfile.getSpartanPlayer();
                 boolean isNull = player == null;
 
-                if (isNull || !Permissions.isStaff(player)) {
+                if (isNull || !Permissions.isStaff(player) && !player.isOp()) {
                     OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
 
                     if (offlinePlayer != null && !offlinePlayer.isOp()) {
@@ -222,7 +221,7 @@ public class CloudConnections {
                         String ipAddress;
 
                         if (!isNull && offlinePlayer.isOnline()) {
-                            ipAddress = player.getIpAddress();
+                            ipAddress = player.ipAddress;
 
                             if (ipAddress == null) {
                                 ipAddress = "NULL";
@@ -333,9 +332,6 @@ public class CloudConnections {
             String checkName = check.getName();
 
             if (check.toString().equals(columnInformation) || checkName.equalsIgnoreCase(columnInformation)) {
-                if (!local && !check.supportsLiveEvidence()) {
-                    return "This check does not support live evidence, therefore we cannot accept a report about it.";
-                }
                 ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, ResearchEngine.DataType.Universal, ResearchEngine.getLegitimatePlayers());
 
                 if (violationHistory == null) {
@@ -356,7 +352,7 @@ public class CloudConnections {
                         .append(newLine);
                 softwareInformation.append("Preventions: ").append(!check.isSilent(null))
                         .append(newLine);
-                softwareInformation.append("Punishments: ").append(check.canPunish())
+                softwareInformation.append("Punishments: ").append(check.canPunish)
                         .append(newLine);
                 softwareInformation.append("Cancel Violation: ").append(CancelViolation.get(hackType, ResearchEngine.DataType.Universal))
                         .append(newLine);
@@ -397,14 +393,14 @@ public class CloudConnections {
                 softwareInformation.append("Configuration:").append(newLine);
                 String dataFolder = Register.plugin.getDataFolder() + "/";
 
-                for (String fileName : ManageConfiguration.configs) {
+                for (String fileName : Config.configs) {
                     softwareInformation.append(fileName).append(":").append(newLine);
                     File file = new File(dataFolder + fileName);
 
                     if (file.exists() && file.isFile()
                             && !fileName.equals(Config.messages.getFile().getName())) {
                         switch (fileName) {
-                            case ManageConfiguration.checksFileName:
+                            case Config.checksFileName:
                                 Collection<Map.Entry<String, Object>> options = check.getOptions();
 
                                 if (!options.isEmpty()) {

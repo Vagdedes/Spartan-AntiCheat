@@ -8,7 +8,6 @@ import com.vagdedes.spartan.functionality.important.Permissions;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.synchronicity.AutoUpdater;
 import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.connection.IDs;
 import com.vagdedes.spartan.handlers.connection.Piracy;
 import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
@@ -109,7 +108,7 @@ public class CloudFeature {
                     if (!players.isEmpty()) {
                         for (String[] announcement : announcements) {
                             if (AwarenessNotifications.canSend(
-                                    player.getUniqueId(),
+                                    player.uuid,
                                     "staff-announcement-" + announcement[0],
                                     Integer.parseInt(announcement[2])
                             )) {
@@ -263,7 +262,11 @@ public class CloudFeature {
                             }
 
                             if (changed) {
-                                SpartanMenu.manageConfiguration.reload(true);
+                                Config.settings.clear();
+                                Config.messages.clear();
+                                Config.sql.refreshConfiguration();
+                                Config.compatibility.clear();
+                                Config.refreshVariables(true);
                             }
                         }
                     } catch (Exception e) {
@@ -402,7 +405,7 @@ public class CloudFeature {
                             for (String[] announcement : announcements) {
                                 for (SpartanPlayer p : players) {
                                     if (AwarenessNotifications.canSend(
-                                            p.getUniqueId(),
+                                            p.uuid,
                                             "staff-announcement-" + announcement[0],
                                             Integer.parseInt(announcement[2])
                                     )) {

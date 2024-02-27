@@ -79,7 +79,7 @@ public class SpartanBukkit {
 
             synchronized (players) {
                 for (SpartanPlayer p : players.values()) {
-                    if (p.getName().toLowerCase().equals(name)) {
+                    if (p.name.toLowerCase().equals(name)) {
                         return p;
                     }
                 }

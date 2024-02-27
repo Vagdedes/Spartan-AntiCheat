@@ -10,7 +10,7 @@ import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
 
-public class ViolationStatistics { // todo use pie equation
+public class ViolationStatistics {
 
     private static final Map<Integer, Map<Integer, Integer>> violationProbabilityPie
             = Collections.synchronizedMap(new LinkedHashMap<>());
@@ -80,7 +80,7 @@ public class ViolationStatistics { // todo use pie equation
                                ResearchEngine.DataType dataType) {
         for (PlayerProfile profile : playerProfiles) {
             if (profile.getDataType() == dataType) {
-                profile.getEvidence().remove(hackType, false, true, false);
+                profile.evidence.remove(hackType, false, true, false);
             }
         }
     }
@@ -145,7 +145,7 @@ public class ViolationStatistics { // todo use pie equation
             }
         } else if (!playerProfiles.isEmpty()) {
             for (PlayerProfile profile : playerProfiles) {
-                profile.getEvidence().clear(false, true, false);
+                profile.evidence.clear(false, true, false);
             }
         }
     }
@@ -217,13 +217,8 @@ public class ViolationStatistics { // todo use pie equation
 
             if (probabilityData != null) {
                 Map<PlayerProfile, Double> probabilityAverage = profileAverageProbability.get(majorHash);
-                ProbabilityRank wave = new ProbabilityRank();
+                ProbabilityRank wave = new ProbabilityRank().addMultiple(probabilityData);
 
-                for (Map.Entry<Double, Integer> entry : probabilityData.entrySet()) {
-                    for (int i = 0; i < entry.getValue(); i++) {
-                        wave.add(entry.getKey());
-                    }
-                }
                 for (PlayerProfile profile : playerProfiles) {
                     if (profile.getDataType() == dataType) {
                         Double probability = probabilityAverage.get(profile);
@@ -232,7 +227,7 @@ public class ViolationStatistics { // todo use pie equation
                             probability = wave.getChance(probability);
 
                             if (probability <= 0.1) {
-                                profile.getEvidence().add(
+                                profile.evidence.add(
                                         hackType,
                                         "Probability: " + AlgebraUtils.cut(probability * 100.0, 2) + "%",
                                         false,
@@ -240,7 +235,7 @@ public class ViolationStatistics { // todo use pie equation
                                         false
                                 );
                             } else {
-                                profile.getEvidence().remove(hackType, false, true, false);
+                                profile.evidence.remove(hackType, false, true, false);
                             }
                         }
                     }

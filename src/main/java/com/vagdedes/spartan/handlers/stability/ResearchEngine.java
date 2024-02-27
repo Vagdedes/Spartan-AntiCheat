@@ -25,12 +25,10 @@ import com.vagdedes.spartan.system.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.sql.ResultSet;
@@ -63,8 +61,6 @@ public class ResearchEngine {
 
     private static final Map<String, PlayerProfile> playerProfiles
             = Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
-    private static final Map<String, ItemStack> skulls
-            = Collections.synchronizedMap(new LinkedHashMap<>(logRequirement));
     private static final Map<Enums.MiningOre, Double> averageMining = new LinkedHashMap<>(Enums.MiningOre.values().length);
     private static final double[] defaultAverageMining = new double[Enums.MiningOre.values().length];
 
@@ -156,14 +152,6 @@ public class ResearchEngine {
 
     // Separator
 
-    public static ItemStack getSkull(String name) {
-        synchronized (skulls) {
-            return skulls.getOrDefault(name, InventoryUtils.getHead());
-        }
-    }
-
-    // Separator
-
     public static void refresh(boolean message, boolean enabledPlugin) {
         Runnable runnable = () -> {
             // Complete Storage
@@ -181,7 +169,6 @@ public class ResearchEngine {
                 }
             } else {
                 isFull = false;
-                skulls.clear();
                 CloudFeature.clear(true);
                 CancelViolation.clear();
                 ViolationStatistics.clear();
@@ -306,7 +293,7 @@ public class ResearchEngine {
 
     public static PlayerProfile getPlayerProfile(SpartanPlayer player) {
         synchronized (playerProfiles) {
-            String name = player.getName();
+            String name = player.name;
             PlayerProfile playerProfile = playerProfiles.get(name);
 
             if (playerProfile != null) {
@@ -379,7 +366,7 @@ public class ResearchEngine {
                 synchronized (playerProfiles) {
                     for (PlayerProfile playerProfile : playerProfiles.values()) {
                         playerProfile.getViolationHistory(hackType).clear();
-                        playerProfile.getEvidence().remove(hackType, true, true, true);
+                        playerProfile.evidence.remove(hackType, true, true, true);
                     }
                 }
             }
@@ -664,11 +651,11 @@ public class ResearchEngine {
                                     }
                                 }
                             } else if (data.contains(PunishmentHistory.warningMessage)) {
-                                getPlayerProfile(split[0]).getPunishmentHistory().increaseWarnings(null, null);
+                                getPlayerProfile(split[0]).punishmentHistory.increaseWarnings(null, null);
                             } else if (data.contains(PunishmentHistory.kickMessage)) {
-                                getPlayerProfile(split[0]).getPunishmentHistory().increaseKicks(null, null);
+                                getPlayerProfile(split[0]).punishmentHistory.increaseKicks(null, null);
                             } else if (data.contains(PunishmentHistory.punishmentMessage)) {
-                                getPlayerProfile(split[0]).getPunishmentHistory().increasePunishments(null, null);
+                                getPlayerProfile(split[0]).punishmentHistory.increasePunishments(null, null);
                             } else if (data.contains(" failed ")) {
                                 if (split.length >= 3) {
                                     if (!data.startsWith(falsePositiveDisclaimer)) {
@@ -761,8 +748,8 @@ public class ResearchEngine {
             ViolationStatistics.calculateData(playerProfiles);
 
             for (PlayerProfile playerProfile : playerProfiles) {
-                playerProfile.getEvidence().judge();
-                PunishmentHistory punishmentHistory = playerProfile.getPunishmentHistory();
+                playerProfile.evidence.judge();
+                PunishmentHistory punishmentHistory = playerProfile.punishmentHistory;
                 logs += playerProfile.getUsefulLogs();
                 mines += playerProfile.getOverallMiningHistory().getMines();
                 kicks += punishmentHistory.getKicks();

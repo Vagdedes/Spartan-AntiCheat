@@ -71,7 +71,7 @@ public class AntiCheatUpdates {
                             counter = 0;
 
                             for (SpartanPlayer player : staffOnline) {
-                                statisticsArray.add("§c" + player.getName());
+                                statisticsArray.add("§c" + player.name);
                                 counter++;
 
                                 if (counter == 10) {
@@ -80,7 +80,7 @@ public class AntiCheatUpdates {
                             }
                         } else {
                             for (SpartanPlayer player : staffOnline) {
-                                statisticsArray.add("§c" + player.getName());
+                                statisticsArray.add("§c" + player.name);
                             }
                         }
                     }

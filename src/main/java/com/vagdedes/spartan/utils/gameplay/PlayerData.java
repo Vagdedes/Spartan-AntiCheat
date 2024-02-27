@@ -290,11 +290,11 @@ public class PlayerData {
 
     public static boolean isUsingAnInventory(SpartanPlayer p, int limit) {
         return (limit == 0 || p.getBuffer().get("player-data=inventory-use") >= limit)
-                && p.getOpenInventory().countSlots() > 46;
+                && p.getOpenInventory().slots > 46;
     }
 
     public static boolean isUsingTheCursor(SpartanPlayer p) {
-        return p.getOpenInventory().getCursor().getType() != Material.AIR;
+        return p.getOpenInventory().cursor.getType() != Material.AIR;
     }
 
     public static boolean holdsFood(SpartanPlayer p) {
@@ -337,20 +337,10 @@ public class PlayerData {
                 || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && m == Material.NETHERITE_AXE;
     }
 
-    public static boolean hasItemInHands(SpartanPlayer p, Material Material) {
-        ItemStack item = p.getItemInHand();
-
-        if (item.getType() == Material) {
-            return true;
-        }
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            ItemStack item_off = p.getInventory().getItemInOffHand();
-
-            if (item_off.getType() == Material) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean hasItemInHands(SpartanPlayer p, Material material) {
+        return p.getItemInHand().getType() == material
+                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                && p.getInventory().itemInOffHand.getType() == material;
     }
 
     // Movement

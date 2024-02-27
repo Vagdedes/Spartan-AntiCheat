@@ -15,7 +15,7 @@ import java.util.List;
 public class StaffChat {
 
     public static boolean run(SpartanPlayer p, String msg) {
-        if (Permissions.has(p, Enums.Permission.STAFF_CHAT) && (!Authentication.isEnabled() || (System.currentTimeMillis() - p.getCreationTime()) > 60_000L)) {
+        if (Permissions.has(p, Enums.Permission.STAFF_CHAT) && (!Authentication.isEnabled() || (System.currentTimeMillis() - p.creationTime) > 60_000L)) {
             String character = Config.settings.getString("Chat.staff_chat_character");
 
             if (character != null && character.length() > 0 && msg.startsWith(character.toLowerCase())) {
@@ -34,7 +34,7 @@ public class StaffChat {
                 }
 
                 SpartanLocation location = p.getLocation();
-                CrossServerInformation.queueNotificationWithWebhook(p.getUniqueId(), p.getName(),
+                CrossServerInformation.queueNotificationWithWebhook(p.uuid, p.name,
                         location.getBlockX(), location.getBlockY(), location.getBlockZ(),
                         "Staff Chat", msg,
                         false);

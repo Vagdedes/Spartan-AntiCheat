@@ -23,7 +23,7 @@ public class ChatProtection {
     }
 
     public static void remove(SpartanPlayer p) {
-        previous.remove(p.getUniqueId());
+        previous.remove(p.uuid);
     }
 
     private static boolean canBlock(String string, String content, boolean blockedCommands) {
@@ -56,7 +56,7 @@ public class ChatProtection {
         if (Permissions.has(p.getPlayer(), Enums.Permission.CHAT_PROTECTION)) {
             return false;
         }
-        UUID uuid = p.getUniqueId();
+        UUID uuid = p.uuid;
         StringBuilder doubleLessMsg = new StringBuilder();
 
         for (String s : msg.split(" ")) {

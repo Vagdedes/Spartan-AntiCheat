@@ -66,7 +66,7 @@ public class LiveViolation {
     }
 
     private final SpartanPlayer player;
-    public final Enums.HackType hackType;
+    private final Enums.HackType hackType;
     private long cycleExpiration, lastTick;
     private final Map<Integer, Long> cancelledLevel;
     private int level;
@@ -86,7 +86,7 @@ public class LiveViolation {
     // Separator
 
     void queue(HackPrevention hackPrevention, Check check) {
-        if (queue.size() < check.getCancelViolation()) {
+        if (queue.size() < check.cancelViolation) {
             synchronized (queue) {
                 queue.putIfAbsent(hackPrevention.information.hashCode(), hackPrevention);
             }
@@ -142,7 +142,7 @@ public class LiveViolation {
                         && (suspectedOrHacker
                         || hasMaxCancelledLevel(playerViolation.similarityIdentity)
                         || CancelViolation.isForced(player, hackType)
-                        || violations >= CancelViolation.get(hackType, player.getDataType()));
+                        || violations >= CancelViolation.get(hackType, player.dataType));
                 falsePositive = false;
                 violations += 1;
             }
@@ -240,7 +240,7 @@ public class LiveViolation {
         if (time != null) {
             time -= System.currentTimeMillis();
             return time > 0L
-                    && (time / 1000.0) >= (hackType.getCheck().getMaxCancelledViolations(player.getDataType(), hash) - 1); // -1 so we don't ceil the number
+                    && (time / 1000.0) >= (hackType.getCheck().getMaxCancelledViolations(player.dataType, hash) - 1); // -1 so we don't ceil the number
         } else {
             return false;
         }
@@ -259,12 +259,12 @@ public class LiveViolation {
 
         // Always last
         if (previousLevel != level) {
-            SpartanMenu.playerInfo.refresh(player.getName());
+            SpartanMenu.playerInfo.refresh(player.name);
         }
     }
 
     private int increaseCancelledLevel(int hash) {
-        double multiplier = 1.0 + player.getProfile().getEvidence().getKnowledgeList().size();
+        double multiplier = 1.0 + player.getProfile().evidence.getKnowledgeList().size();
 
         synchronized (cancelledLevel) {
             Long time = cancelledLevel.get(hash);
@@ -325,10 +325,10 @@ public class LiveViolation {
         this.cycleExpiration = tick + Check.violationCycleTicks;
 
         // Always last
-        player.getProfile().getEvidence().remove(hackType, true, false, true);
+        player.getProfile().evidence.remove(hackType, true, false, true);
 
         if (local) {
-            SpartanMenu.playerInfo.refresh(player.getName());
+            SpartanMenu.playerInfo.refresh(player.name);
         }
     }
 
@@ -372,7 +372,7 @@ public class LiveViolation {
         } else {
             disableCause = new CancelCause(reason, pointer, ticks);
         }
-        SpartanMenu.playerInfo.refresh(player.getName());
+        SpartanMenu.playerInfo.refresh(player.name);
     }
 
     public void addSilentCause(String reason, String pointer, int ticks) {
@@ -381,17 +381,17 @@ public class LiveViolation {
         } else {
             silentCause = new CancelCause(reason, pointer, ticks);
         }
-        SpartanMenu.playerInfo.refresh(player.getName());
+        SpartanMenu.playerInfo.refresh(player.name);
     }
 
     public void removeDisableCause() {
         this.disableCause = null;
-        SpartanMenu.playerInfo.refresh(player.getName());
+        SpartanMenu.playerInfo.refresh(player.name);
     }
 
     public void removeSilentCause() {
         this.silentCause = null;
-        SpartanMenu.playerInfo.refresh(player.getName());
+        SpartanMenu.playerInfo.refresh(player.name);
     }
 
     // Separator
@@ -399,7 +399,7 @@ public class LiveViolation {
     private void performPunishments(int violation) {
         Check check = hackType.getCheck();
 
-        if (check.canPunish()) {
+        if (check.canPunish) {
             boolean legacy = Config.isLegacy();
             Collection<String> commands = legacy
                     ? check.getLegacyCommands(violation)
@@ -436,8 +436,8 @@ public class LiveViolation {
                             }
                         }
                     } else {
-                        Collection<Enums.HackType> detectedHacks = player.getProfile().getEvidence().calculate(player, hackType);
-                        detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish());
+                        Collection<Enums.HackType> detectedHacks = player.getProfile().evidence.calculate(player, hackType);
+                        detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish);
 
                         if (!detectedHacks.isEmpty()) {
                             boolean enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
@@ -481,7 +481,7 @@ public class LiveViolation {
                         String commandsString = StringUtils.toString(commands, "\n");
 
                         if (!commandsString.isEmpty()) {
-                            player.getProfile().getPunishmentHistory().increasePunishments(player, commandsString);
+                            player.getProfile().punishmentHistory.increasePunishments(player, commandsString);
                         }
                     } else if (found && AwarenessNotifications.canSend(SpartanBukkit.uuid, hackType + "-cancelled-punishment-event")) {
                         String notification = "Just a reminder that the punishments of the '" + hackType + "' check were just cancelled via code by a third-party plugin."
@@ -502,7 +502,7 @@ public class LiveViolation {
             } else if (AwarenessNotifications.canSend(SpartanBukkit.uuid, hackType + "-no-punishment-commands")) {
                 AwarenessNotifications.forcefullySend("Just a reminder that you have set no punishment commands for the '" + hackType + "' check.");
             }
-        } else if (check.canPunish() && AwarenessNotifications.canSend(SpartanBukkit.uuid, hackType + "-disabled-punishments")) {
+        } else if (check.canPunish && AwarenessNotifications.canSend(SpartanBukkit.uuid, hackType + "-disabled-punishments")) {
             AwarenessNotifications.forcefullySend("Just a reminder that punishments have been disabled for the '" + hackType + "' check.");
         }
     }
@@ -515,7 +515,7 @@ public class LiveViolation {
                                      boolean suspectedOrHacker) {
         if (level < Check.maxViolationsPerCycle) {
             boolean individualOnlyNotifications = Config.settings.getBoolean("Notifications.individual_only_notifications");
-            int cancelViolation = CancelViolation.get(hackType, player.getDataType()),
+            int cancelViolation = CancelViolation.get(hackType, player.dataType),
                     playerCount = SpartanBukkit.getPlayerCount();
             String message = Config.messages.getColorfulString("detection_notification")
                     .replace("{info}", info);
@@ -527,14 +527,14 @@ public class LiveViolation {
             }
             if (suspectedOrHacker
                     || level % cancelViolation == 0
-                    || !hackType.getCheck().supportsLiveEvidence()) {
+                    || !hackType.getCheck().supportsLiveEvidence) {
                 CrossServerInformation.queueNotification(message, true);
             }
             if (log) {
                 SpartanLocation location = player.getLocation();
                 String cancelViolationString = (canPrevent ? "-" : "") + cancelViolation,
                         information = (falsePositive ? "(False Positive) " : "")
-                                + Config.getConstruct() + player.getName() + " failed " + hackType + " (VL: " + level
+                                + Config.getConstruct() + player.name + " failed " + hackType + " (VL: " + level
                                 + ") " + "[(Version: " + MultiVersion.fork() + " " + MultiVersion.versionString()
                                 + "), (C-V: " + cancelViolationString + ") (Silent: "
                                 + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
@@ -548,7 +548,7 @@ public class LiveViolation {
 
             // Local Notifications
             String command = Config.settings.getString("Notifications.message_clickable_command")
-                    .replace("{player}", player.getName());
+                    .replace("{player}", player.name);
 
             if (individualOnlyNotifications) {
                 Integer divisor = DetectionNotifications.getDivisor(player, false);

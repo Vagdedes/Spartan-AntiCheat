@@ -199,7 +199,7 @@ public class EventsHandler7 implements Listener {
         p.resetLocationData();
 
         // Detections
-        CheckProtection.cancel(p.getUniqueId(), 20);
+        CheckProtection.cancel(p.uuid, 20);
 
         // System
         Cache.clear(p, n, false, true, true, false, p.getLocation());

@@ -11,7 +11,6 @@ import com.vagdedes.spartan.functionality.protections.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.protections.ReconnectCooldown;
 import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
 import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
-import com.vagdedes.spartan.gui.SpartanMenu;
 import com.vagdedes.spartan.handlers.stability.Cache;
 import com.vagdedes.spartan.handlers.stability.DetectionLocation;
 import com.vagdedes.spartan.objects.data.Handlers;
@@ -73,7 +72,6 @@ public class EventsHandler1 implements Listener {
         PlayerLimitPerIP.remove(p);
 
         // Features
-        SpartanMenu.manageConfiguration.save(p, true);
         ReconnectCooldown.remove(n);
         ChatProtection.remove(p);
 
@@ -109,7 +107,7 @@ public class EventsHandler1 implements Listener {
             SpartanPlayer p2 = SpartanBukkit.getPlayer(killer);
 
             if (p2 != null) {
-                PlayerFight fight = p.getProfile().getCombat().getFight(p2);
+                PlayerFight fight = p.getProfile().playerCombat.getFight(p2);
 
                 if (fight != null) {
                     fight.setWinner(p2);
