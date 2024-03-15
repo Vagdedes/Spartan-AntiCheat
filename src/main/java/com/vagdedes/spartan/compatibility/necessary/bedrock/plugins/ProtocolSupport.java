@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.necessary.bedrock.plugins;
 
-import com.vagdedes.spartan.configuration.Compatibility;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import org.bukkit.entity.Player;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;

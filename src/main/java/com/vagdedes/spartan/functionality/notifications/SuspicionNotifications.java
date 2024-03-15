@@ -1,13 +1,13 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudConnections;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
-import com.vagdedes.spartan.handlers.stability.TestServer;
-import com.vagdedes.spartan.objects.profiling.PlayerProfile;
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
+import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TestServer;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.Collection;

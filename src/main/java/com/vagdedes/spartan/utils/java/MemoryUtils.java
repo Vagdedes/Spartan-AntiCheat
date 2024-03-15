@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.utils.java;
 
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 
 import java.util.Collection;
 

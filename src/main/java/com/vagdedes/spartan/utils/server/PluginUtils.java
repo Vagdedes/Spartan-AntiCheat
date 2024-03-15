@@ -1,26 +1,26 @@
 package com.vagdedes.spartan.utils.server;
 
 import com.vagdedes.spartan.Register;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PluginUtils {
 
     private static final List<String>
-            exists = new ArrayList<>(),
-            contains = new ArrayList<>();
+            exists = Collections.synchronizedList(new ArrayList<>()),
+            contains = Collections.synchronizedList(new ArrayList<>());
 
     public static void clear() {
-        exists.clear();
-        contains.clear();
-    }
-
-    public static boolean isCommandRegistered(String command) {
-        return Bukkit.getPluginCommand(command) != null;
+        synchronized (exists) {
+            synchronized (contains) {
+                exists.clear();
+                contains.clear();
+            }
+        }
     }
 
     public static List<Plugin> getDependentPlugins(String independent) {
@@ -47,19 +47,22 @@ public class PluginUtils {
     }
 
     public static boolean contains(String key) {
-        if (contains.contains(key)) {
-            return true;
-        }
-        String[] split = key.toLowerCase().split(" ");
+        synchronized (contains) {
+            if (contains.contains(key)) {
+                return true;
+            } else {
+                String[] split = key.toLowerCase().split(" ");
 
-        for (Plugin p : Register.manager.getPlugins()) {
-            if (p.isEnabled()) {
-                String plugin = p.getName().toLowerCase();
+                for (Plugin p : Register.manager.getPlugins()) {
+                    if (p.isEnabled()) {
+                        String plugin = p.getName().toLowerCase();
 
-                for (String name : split) {
-                    if (plugin.contains(name)) {
-                        contains.add(key);
-                        return true;
+                        for (String name : split) {
+                            if (plugin.contains(name)) {
+                                contains.add(key);
+                                return true;
+                            }
+                        }
                     }
                 }
             }
@@ -77,13 +80,16 @@ public class PluginUtils {
     }
 
     public static boolean exists(String name) {
-        if (exists.contains(name)) {
-            return true;
-        }
-        for (Plugin p : Register.manager.getPlugins()) {
-            if (p.isEnabled() && p.getName().equalsIgnoreCase(name)) {
-                exists.add(name);
+        synchronized (exists) {
+            if (exists.contains(name)) {
                 return true;
+            } else {
+                for (Plugin p : Register.manager.getPlugins()) {
+                    if (p.isEnabled() && p.getName().equalsIgnoreCase(name)) {
+                        exists.add(name);
+                        return true;
+                    }
+                }
             }
         }
         return false;

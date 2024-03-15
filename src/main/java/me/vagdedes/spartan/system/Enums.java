@@ -1,7 +1,7 @@
 package me.vagdedes.spartan.system;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.objects.system.Check;
+import com.vagdedes.spartan.abstraction.check.Check;
 
 public class Enums {
 
@@ -130,5 +130,25 @@ public class Enums {
 
     public enum ArmorState {
         Full, Semi, Empty
+    }
+
+    public enum DataType {
+        Java, Bedrock, Universal;
+
+        public final String lowerCase;
+
+        DataType() {
+            switch (this.ordinal()) {
+                case 0:
+                    lowerCase = "java";
+                    break;
+                case 1:
+                    lowerCase = "bedrock";
+                    break;
+                default:
+                    lowerCase = "universal";
+                    break;
+            }
+        }
     }
 }

@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.configuration.Config;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -58,7 +58,7 @@ public class Wave {
         boolean exists = file.exists();
 
         if (!exists) {
-            ConfigUtils.add(file, section + "." + SpartanBukkit.uuid + ".command", "ban {player} wave punishment example");
+            ConfigUtils.add(file, section + "." + UUID.randomUUID() + ".command", "ban {player} wave punishment example");
         }
 
         if (!local && exists) {
@@ -154,7 +154,7 @@ public class Wave {
                     }
                 }
 
-                SpartanBukkit.storageThread.executeIfFreeElseHere(() -> {
+                SpartanBukkit.dataThread.executeIfFreeElseHere(() -> {
                     for (UUID uuid : uuids) {
                         try {
                             String command = getCommand(uuid);

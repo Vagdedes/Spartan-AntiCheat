@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.objects.replicates.SpartanInventory;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.server.ReflectionUtils;
 import dev.lone.itemsadder.api.CustomBlock;
 import dev.lone.itemsadder.api.CustomMob;

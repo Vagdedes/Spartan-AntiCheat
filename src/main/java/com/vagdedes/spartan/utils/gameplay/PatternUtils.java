@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.utils.gameplay;
 
-import com.vagdedes.spartan.handlers.stability.Cache;
-import com.vagdedes.spartan.handlers.stability.Chunks;
-import com.vagdedes.spartan.objects.replicates.SpartanBlock;
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Cache;
+import com.vagdedes.spartan.functionality.server.Chunks;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.MemoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;

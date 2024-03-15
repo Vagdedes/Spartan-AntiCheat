@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.functionality.configuration;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.configuration.Config;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
@@ -61,16 +61,26 @@ public class AntiCheatLogs {
 
     private static void storeInFile(boolean playerRelated, String information) {
         id++;
-        fileConfiguration.set(
+        Runnable runnable = () -> fileConfiguration.set(
                 syntaxDate(DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()), id),
                 information
         );
 
         if (!playerRelated || (id % 10) == 0) {
             if (SpartanBukkit.isSynchronised()) {
-                SpartanBukkit.storageThread.executeIfFreeElseHere(AntiCheatLogs::saveRaw);
+                SpartanBukkit.dataThread.executeIfFreeElseHere(() -> {
+                    runnable.run();
+                    saveRaw();
+                });
             } else {
+                runnable.run();
                 saveRaw();
+            }
+        } else {
+            if (SpartanBukkit.isSynchronised()) {
+                SpartanBukkit.dataThread.executeIfFreeElseHere(runnable);
+            } else {
+                runnable.run();
             }
         }
     }

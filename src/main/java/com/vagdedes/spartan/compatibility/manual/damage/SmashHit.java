@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.compatibility.manual.damage;
 
 import com.frash23.smashhit.AsyncPreDamageEvent;
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
-import com.vagdedes.spartan.interfaces.listeners.EventsHandler6;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Damage;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.listeners.EventsHandler6;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;

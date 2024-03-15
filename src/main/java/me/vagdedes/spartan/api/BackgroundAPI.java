@@ -1,19 +1,18 @@
 package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.functionality.important.Permissions;
+import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.protections.Latency;
-import com.vagdedes.spartan.handlers.connection.IDs;
-import com.vagdedes.spartan.handlers.stability.CancelViolation;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
-import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.objects.data.Handlers;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.functionality.connection.Latency;
+import com.vagdedes.spartan.functionality.connection.IDs;
+import com.vagdedes.spartan.functionality.performance.CancelViolation;
+import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.abstraction.data.Handlers;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.gameplay.GroundUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
@@ -151,7 +150,7 @@ public class BackgroundAPI {
     }
 
     static int getCancelViolation(HackType hackType) {
-        return CancelViolation.get(hackType, ResearchEngine.DataType.Universal);
+        return CancelViolation.get(hackType, Enums.DataType.Universal);
     }
 
     @Deprecated
@@ -166,15 +165,17 @@ public class BackgroundAPI {
         }
     }
 
+    @Deprecated
     static void reloadPermissions() {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            Permissions.clear();
+            AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
         }
     }
 
+    @Deprecated
     static void reloadPermissions(Player p) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            Permissions.remove(p.getUniqueId());
+            AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
         }
     }
 
@@ -401,9 +402,10 @@ public class BackgroundAPI {
         AwarenessNotifications.forcefullySend("The API method 'warnPlayer' has been removed.");
     }
 
+    @Deprecated
     static void addPermission(Player p, Permission permission) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            Permissions.add(p, permission);
+            AwarenessNotifications.forcefullySend("The API method 'addPermission' has been removed.");
         }
     }
 

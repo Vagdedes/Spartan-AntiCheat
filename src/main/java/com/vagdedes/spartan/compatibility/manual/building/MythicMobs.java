@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.objects.replicates.SpartanInventory;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import io.lumine.mythic.bukkit.BukkitAPIHelper;
 import org.bukkit.Material;

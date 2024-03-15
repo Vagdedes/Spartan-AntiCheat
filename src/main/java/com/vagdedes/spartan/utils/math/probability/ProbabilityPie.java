@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.utils.math.probability;
 
-import com.vagdedes.spartan.objects.statistics.PatternValue;
+import com.vagdedes.spartan.abstraction.pattern.implementation.base.PatternValue;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -39,7 +39,7 @@ public class ProbabilityPie {
 
     public ProbabilityPie addMultiplePatterns(Collection<PatternValue> values) {
         for (PatternValue value : values) {
-            this.add(value.number);
+            this.add(value.pattern);
         }
         return this;
     }
@@ -99,17 +99,23 @@ public class ProbabilityPie {
 
     // Separator
 
-    public double getChance(Number number) {
-        return this.getChance(number, 0.0);
+    public double getProbabilityWithCount(int count) {
+        return count / this.total;
     }
 
-    public double getChance(Number number, double defaultValue) {
+    public double getProbability(Number number) {
+        return this.getProbability(number, 0.0);
+    }
+
+    public double getProbability(Number number, double defaultValue) {
         Integer count = this.map.get(number);
         return count != null ? count / this.total : defaultValue;
     }
 
     public Stream<Map.Entry<Number, Integer>> getChancesRanked() {
-        return this.map.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+        return this.map.entrySet().stream().sorted(
+                Map.Entry.comparingByValue(Comparator.reverseOrder())
+        );
     }
 
     // Separator
@@ -130,5 +136,9 @@ public class ProbabilityPie {
 
     public int getTotal() {
         return (int) this.total;
+    }
+
+    public boolean hasData() {
+        return this.total > 0;
     }
 }

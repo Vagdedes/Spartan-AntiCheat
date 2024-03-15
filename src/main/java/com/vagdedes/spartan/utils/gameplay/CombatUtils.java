@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.utils.gameplay;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.TrigonometryUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;

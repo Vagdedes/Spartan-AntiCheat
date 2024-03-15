@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import me.gwndaan.printer.PrinterModeAPI;
 
 public class PrinterMode {

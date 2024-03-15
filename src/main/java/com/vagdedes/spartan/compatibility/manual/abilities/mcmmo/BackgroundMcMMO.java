@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.abilities.mcmmo;
 
 import com.gmail.nossr50.api.AbilityAPI;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 
 public class BackgroundMcMMO {
 

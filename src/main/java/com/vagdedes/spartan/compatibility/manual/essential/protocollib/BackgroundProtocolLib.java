@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.essential.protocollib;
 
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.interfaces.listeners.PlibHandlers;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.listeners.PlibHandlers;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.PluginUtils;
 import com.vagdedes.spartan.utils.server.ReflectionUtils;

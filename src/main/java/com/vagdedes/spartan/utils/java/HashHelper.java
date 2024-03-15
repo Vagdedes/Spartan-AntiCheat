@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.utils.java;
 
-import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.objects.replicates.SpartanBlock;
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.statistics.PatternValue;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.pattern.implementation.base.PatternValue;
+import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.GroundUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -71,11 +71,11 @@ public class HashHelper {
 
     public static long fastCollection(Collection<PatternValue> collection) {
         Iterator<PatternValue> iterator = collection.iterator();
-        long hash = (iterator.next().number.hashCode() * SpartanBukkit.hashCodeMultiplierLong) + collection.size();
+        long hash = (iterator.next().pattern.hashCode() * SpartanBukkit.hashCodeMultiplierLong) + collection.size();
         Number value = null;
 
         while (iterator.hasNext()) {
-            value = iterator.next().number;
+            value = iterator.next().pattern;
         }
         if (value != null) {
             hash = extendLong(hash, value.hashCode());
@@ -84,33 +84,39 @@ public class HashHelper {
     }
 
     public static long collection(Collection<PatternValue> collection) {
-        long result = 1L;
+        long hash = 1L;
 
         for (PatternValue value : collection) {
-            result = extendLong(result, value.number.hashCode());
-        }
-        return result;
-    }
-
-    public static long collection(Collection<PatternValue> collection, int start, int end) {
-        long hash = 1L;
-        int pos = 0;
-        Iterator<PatternValue> iterator = collection.iterator();
-
-        if (start > 0) {
-            for (int i = 0; i < start; i++) {
-                iterator.next();
-            }
-        }
-        while (iterator.hasNext()) {
-            if (pos >= end) {
-                break;
-            } else {
-                hash = extendLong(hash, iterator.next().number.hashCode());
-                pos++;
-            }
+            hash = extendLong(hash, value.pattern.hashCode());
         }
         return hash;
+    }
+
+    public static long collection(Collection<PatternValue> collection, int fromIndex, int toIndex) {
+        Iterator<PatternValue> iterator = collection.iterator();
+
+        if (fromIndex > 0) {
+            for (int i = 0; i < fromIndex; i++) {
+                if (iterator.hasNext()) {
+                    iterator.next();
+                } else {
+                    return 1L;
+                }
+            }
+
+        }
+        long hash = 1L;
+        int pos = fromIndex;
+
+        while (iterator.hasNext()) {
+            hash = extendLong(hash, iterator.next().pattern.hashCode());
+
+            if (pos == toIndex) {
+                return hash;
+            }
+            pos++;
+        }
+        return 1L;
     }
 
     // Separator
@@ -134,12 +140,17 @@ public class HashHelper {
             if (damage != null && TPS.getTick(player) == player.getDamageTick()) {
                 hash = extendLong(hash, damage.getCause().ordinal());
             }
+            hash = extendLong(hash, player.getGameMode().toString().hashCode());
             hash = extendLong(hash, Double.hashCode(player.getEyeHeight()));
             hash = extendLong(hash, Boolean.hashCode(player.isGliding()));
             hash = extendLong(hash, Boolean.hashCode(player.isSwimming()));
             hash = extendLong(hash, Boolean.hashCode(player.isCrawling()));
             hash = extendLong(hash, Boolean.hashCode(player.isFrozen()));
             hash = extendLong(hash, Boolean.hashCode(player.isSneaking()));
+            hash = extendLong(hash, Boolean.hashCode(player.isFlying()));
+            hash = extendLong(hash, Boolean.hashCode(player.isOnGround()));
+            hash = extendLong(hash, Math.min(player.getTicksOnAir(), 20));
+            hash = extendLong(hash, Math.min(AlgebraUtils.integerFloor(player.getPing() / TPS.tickTimeDecimal), 1000));
             potionEffects = player.getActivePotionEffects();
         }
         if (!potionEffects.isEmpty()) {

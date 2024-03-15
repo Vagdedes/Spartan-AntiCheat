@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.java;
 
-import com.vagdedes.spartan.functionality.synchronicity.SpartanEdition;
-import com.vagdedes.spartan.functionality.synchronicity.cloud.CloudFeature;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
+import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -21,7 +21,7 @@ public class RequestUtils {
         boolean isPost = method.equals("POST");
         String[] split = link.split(" ");
 
-        String token = CloudFeature.getToken();
+        String token = CloudBase.getToken();
         URL url = new URL(split[0]);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.addRequestProperty("User-Agent",

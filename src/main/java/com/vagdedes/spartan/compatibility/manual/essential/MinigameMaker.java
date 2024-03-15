@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.compatibility.manual.essential;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.objects.features.IncompatibleItem;
-import com.vagdedes.spartan.objects.replicates.SpartanInventory;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.functionality.IncompatibleItem;
+import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import io.signality.api.MinigameExecutionEvent;

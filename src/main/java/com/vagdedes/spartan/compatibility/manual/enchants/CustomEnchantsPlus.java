@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.enchants;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.objects.replicates.SpartanInventory;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import me.darrionat.CustomEnchantsAPI;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;

@@ -1,9 +1,9 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
 main: com.vagdedes.spartan.Register
-version: Phase 532.2
+version: Phase 533
 website: https://www.idealistic.ai
-description: Machine Learning cheat prevention made simple.
+description: In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning.
 api-version: 1.13
 softdepend: [ProtocolLib, UltimateStatistics, FileGUI, MinigameMaker, AntiAltAccount,
              mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,

@@ -1,17 +1,17 @@
 package com.vagdedes.spartan.utils.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.functionality.important.Permissions;
-import com.vagdedes.spartan.functionality.synchronicity.CrossServerInformation;
-import com.vagdedes.spartan.handlers.stability.ResearchEngine;
-import com.vagdedes.spartan.handlers.stability.TPS;
-import com.vagdedes.spartan.objects.profiling.PlayerProfile;
-import com.vagdedes.spartan.objects.profiling.PunishmentHistory;
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.system.Check;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.check.Check;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
@@ -229,19 +229,5 @@ public class ConfigUtils {
         Register.plugin.getConfig().set(path, value);
         Register.plugin.saveConfig();
         Register.plugin.reloadConfig();
-    }
-
-    public static int getDirectorySize(String directory) {
-        File[] files = new File(directory).listFiles();
-        int i = 0;
-
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile()) {
-                    i++;
-                }
-            }
-        }
-        return i;
     }
 }

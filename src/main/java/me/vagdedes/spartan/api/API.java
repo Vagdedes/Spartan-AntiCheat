@@ -120,10 +120,12 @@ public class API {
         BackgroundAPI.reloadConfig();
     }
 
+    @Deprecated
     public static void reloadPermissions() {
         BackgroundAPI.reloadPermissions();
     }
 
+    @Deprecated
     public static void reloadPermissions(Player p) {
         BackgroundAPI.reloadPermissions(p);
     }
@@ -269,6 +271,7 @@ public class API {
         BackgroundAPI.warnPlayer(p, reason);
     }
 
+    @Deprecated
     public static void addPermission(Player p, Permission permission) {
         BackgroundAPI.addPermission(p, permission);
     }

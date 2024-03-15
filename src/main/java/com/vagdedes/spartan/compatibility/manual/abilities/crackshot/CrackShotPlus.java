@@ -1,10 +1,10 @@
 package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
-import com.vagdedes.spartan.objects.data.Buffer;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.data.Buffer;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.protections.CheckDelay;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.DeeCaaD.CrackShotPlus.Events.WeaponSecondScopeEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,7 +24,7 @@ public class CrackShotPlus implements Listener {
             }
             if (!e.isCancelled()) {
                 Buffer buffer = p.getBuffer();
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 20);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 20);
 
                 if (e.isZoomIn()) {
                     buffer.set("crackshotplus=compatibility=scope", 1);
@@ -43,7 +43,7 @@ public class CrackShotPlus implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getEntity().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 60);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 60);
             }
         }
     }
@@ -54,7 +54,7 @@ public class CrackShotPlus implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getDamager().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 30);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShotPlus, 30);
             }
         }
     }

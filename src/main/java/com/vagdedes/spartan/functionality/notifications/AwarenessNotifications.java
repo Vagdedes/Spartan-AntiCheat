@@ -1,8 +1,7 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.configuration.Config;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
@@ -14,13 +13,14 @@ public class AwarenessNotifications {
 
     private static final Map<UUID, Map<String, Long>> map = new LinkedHashMap<>();
     private static final String disableMessage = " You can disable Awareness Notifications via " + Config.settings.getFile().getName() + ".";
+    public static final UUID uuid = UUID.randomUUID();
 
     public static void clear() {
         map.clear();
     }
 
     public static void refresh() {
-        map.remove(SpartanBukkit.uuid);
+        map.remove(uuid);
     }
 
     public static boolean areEnabled() {

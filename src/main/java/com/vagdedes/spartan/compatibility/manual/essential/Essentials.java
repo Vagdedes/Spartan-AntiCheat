@@ -2,8 +2,8 @@ package com.vagdedes.spartan.compatibility.manual.essential;
 
 import com.earth2me.essentials.User;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.plugin.Plugin;
 

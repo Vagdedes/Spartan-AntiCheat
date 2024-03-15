@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.vanilla;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.complex.unpredictable.Damage;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Damage;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.gameplay.MoveUtils;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Entity;

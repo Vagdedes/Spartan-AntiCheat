@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.utils.math;
 
-import com.vagdedes.spartan.objects.replicates.SpartanLocation;
+import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import org.bukkit.Location;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
@@ -280,6 +280,15 @@ public class AlgebraUtils {
     public static boolean validInteger(String str) {
         try {
             Integer.parseInt(str);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public static boolean validLong(String str) {
+        try {
+            Long.parseLong(str);
             return true;
         } catch (Exception ex) {
             return false;

@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.protections.CheckDelay;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import de.flo56958.minetinker.events.MTPlayerInteractEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
@@ -22,7 +22,7 @@ public class MineTinker implements Listener {
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.MineTinker;
 
         if (compatibilityType.isFunctional()) {
-            CheckProtection.evadeCommonFalsePositives(p, compatibilityType,
+            CheckDelay.evadeCommonFalsePositives(p, compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,
                             Enums.HackType.FastClicks,

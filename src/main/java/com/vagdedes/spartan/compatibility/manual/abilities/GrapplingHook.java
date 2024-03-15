@@ -1,10 +1,10 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.snowgears.grapplinghook.api.HookAPI;
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.protections.CheckDelay;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.PluginUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -38,9 +38,9 @@ public class GrapplingHook implements Listener {
 
                 if (p != null && t != null && !p.equals(t) && isItem(t.getItemInHand())) {
                     if (PluginUtils.exists("grapplinghook")) {
-                        CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GrapplingHook, 40);
+                        CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GrapplingHook, 40);
                     } else {
-                        CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GrapplingHook, 10);
+                        CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GrapplingHook, 10);
                     }
                 }
             }

@@ -1,10 +1,6 @@
 package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.objects.system.Check;
-import com.vagdedes.spartan.system.SpartanBukkit;
-import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

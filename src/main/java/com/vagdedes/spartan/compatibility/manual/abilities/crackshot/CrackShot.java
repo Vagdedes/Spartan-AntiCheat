@@ -4,11 +4,11 @@ import com.shampaggon.crackshot.events.WeaponDamageEntityEvent;
 import com.shampaggon.crackshot.events.WeaponPreShootEvent;
 import com.shampaggon.crackshot.events.WeaponScopeEvent;
 import com.shampaggon.crackshot.events.WeaponShootEvent;
-import com.vagdedes.spartan.configuration.Compatibility;
-import com.vagdedes.spartan.handlers.identifiers.simple.CheckProtection;
-import com.vagdedes.spartan.objects.data.Buffer;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
-import com.vagdedes.spartan.system.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.data.Buffer;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.protections.CheckDelay;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -27,7 +27,7 @@ public class CrackShot implements Listener {
             }
             if (!e.isCancelled()) {
                 Buffer buffer = p.getBuffer();
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 20);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 20);
 
                 if (e.isZoomIn()) {
                     buffer.set("crackshot=compatibility=scope", 1);
@@ -48,7 +48,7 @@ public class CrackShot implements Listener {
             if (p == null) {
                 return;
             }
-            CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
+            CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
         }
     }
 
@@ -60,7 +60,7 @@ public class CrackShot implements Listener {
             if (p == null) {
                 return;
             }
-            CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
+            CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 40);
         }
     }
 
@@ -70,7 +70,7 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getVictim().getUniqueId());
 
             if (p != null) {
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
             }
         }
     }
@@ -81,7 +81,7 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getEntity().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
             }
         }
     }
@@ -92,7 +92,7 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getDamager().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckProtection.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
+                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CrackShot, 60);
             }
         }
     }

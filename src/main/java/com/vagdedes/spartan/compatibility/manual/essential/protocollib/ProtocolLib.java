@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.essential.protocollib;
 
-import com.vagdedes.spartan.configuration.Compatibility;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.utils.server.ReflectionUtils;
 import org.bukkit.entity.Player;
 

@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.utils.server;
 
-import com.vagdedes.spartan.functionality.important.MultiVersion;
-import com.vagdedes.spartan.objects.replicates.SpartanBlock;
-import com.vagdedes.spartan.objects.replicates.SpartanInventory;
-import com.vagdedes.spartan.objects.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
+import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.PlayerData;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
