@@ -1,5 +1,0 @@
-Transform unnecessary static methods into object oriented programming.
-Rewrite of the Speed check
-Rewrite of the Velocity check
-Rewrite of the KillAura analysis detection
-Rewrite of IrregularMovements liquids detection (Jesus/WaterWalk)
