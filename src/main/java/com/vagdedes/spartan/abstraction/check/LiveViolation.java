@@ -1,25 +1,23 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.profiling.InformationAnalysis;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.CancelViolation;
 import com.vagdedes.spartan.functionality.performance.NotifyViolation;
-import com.vagdedes.spartan.functionality.protections.CheckDelay;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.functionality.server.TestServer;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
@@ -37,266 +35,168 @@ import java.util.*;
 
 public class LiveViolation {
 
-    private static final Map<LiveViolation, String> maxLevel
-            = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>()));
-    public static final String falsePositiveDisclaimer = "§4(False Positive)§f ";
-
-    static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                if (!maxLevel.isEmpty()) {
-                    synchronized (maxLevel) {
-                        Iterator<Map.Entry<LiveViolation, String>> iterator = maxLevel.entrySet().iterator();
-
-                        while (iterator.hasNext()) {
-                            Map.Entry<LiveViolation, String> entry = iterator.next();
-                            LiveViolation violations = entry.getKey();
-
-                            if (violations.getLevel() < Check.maxViolationsPerCycle) {
-                                new HackPrevention(violations.player, violations.hackType, entry.getValue(),
-                                        null, 0, false, 0.0, 1);
-                            } else {
-                                iterator.remove();
-                            }
-                        }
-                    }
-                }
-            }, 1L, 1L);
-        }
-    }
+    private static final long violationTimeWorth = 1_000L;
 
     private final SpartanPlayer player;
     private final Enums.HackType hackType;
-    private long cycleExpiration, lastTick;
-    private final Map<Integer, Long> cancelledLevel;
-    private int level;
+    private final Map<Integer, Long> level;
     private CancelCause disableCause, silentCause;
-    private final Map<Integer, HackPrevention> queue;
+    private HackPrevention prevention;
 
     public LiveViolation(SpartanPlayer player, Enums.HackType hackType) {
         this.player = player;
         this.hackType = hackType;
-        this.level = 0;
-        this.cancelledLevel = Collections.synchronizedMap(new LinkedHashMap<>());
-        this.lastTick = 0L;
-        this.queue = Collections.synchronizedMap(new LinkedHashMap<>());
-        reset(); // Do not make it local as it takes part in object initiation and is not important
+        this.level = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.prevention = new HackPrevention();
     }
 
     // Separator
 
-    void queue(HackPrevention hackPrevention, Check check) {
-        if (queue.size() < check.cancelViolation) {
-            synchronized (queue) {
-                queue.putIfAbsent(hackPrevention.information.hashCode(), hackPrevention);
+    void run(HackPrevention newPrevention, String information, long time) {
+        synchronized (this) {
+            if (!CheckDelay.hasCooldown(player)
+                    && !CloudBase.isPublicInformationCancelled(hackType, information)
+                    && (disableCause == null
+                    || !disableCause.pointerMatches(information))) {
+                InformationAnalysis analysis = new InformationAnalysis(hackType, information);
+                PlayerViolation playerViolation = new PlayerViolation(
+                        time,
+                        hackType,
+                        information,
+                        Math.max(
+                                this.getLevel(analysis.identity) + 1,
+                                AlgebraUtils.integerRound(Math.sqrt(this.getTotalLevel() + 1))
+                        ),
+                        analysis
+                );
+                boolean event = Config.settings.getBoolean("Important.enable_developer_api");
+                this.player.setLastViolation(this);
+
+                Runnable runnable = () -> {
+                    if (event) {
+                        PlayerViolationEvent playerViolationEvent = new PlayerViolationEvent(
+                                player.getPlayer(),
+                                hackType,
+                                playerViolation.level,
+                                information
+                        );
+                        Register.manager.callEvent(playerViolationEvent);
+
+                        if (playerViolationEvent.isCancelled()) {
+                            return;
+                        }
+                    }
+                    player.getProfile().getViolationHistory(hackType).store(playerViolation);
+                    this.increaseLevel(playerViolation.identity);
+                    this.performNotification(playerViolation);
+                    this.performPunishments(playerViolation);
+                    this.prevention = newPrevention;
+                    this.prevention.canPrevent = !hackType.getCheck().isSilent(player.getWorld().getName())
+                            && (silentCause == null
+                            || !silentCause.pointerMatches(information))
+                            && (player.getProfile().isSuspectedOrHacker(hackType)
+                            || playerViolation.level >= playerViolation.getIgnoredViolations(player));
+                };
+
+                if (!event || SpartanBukkit.isSynchronised()) {
+                    runnable.run();
+                } else {
+                    SpartanBukkit.transferTask(player, runnable);
+                }
             }
         }
     }
 
-    public boolean process() {
-        HackPrevention hp;
-        boolean processed;
+    public boolean prevent() {
+        synchronized (this) {
+            if (this.prevention.canPrevent
+                    && !this.prevention.hasExpired(TPS.getTick(player))) {
+                if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                    CheckCancelEvent checkCancelEvent = new CheckCancelEvent(player.getPlayer(), hackType);
+                    Register.manager.callEvent(checkCancelEvent);
 
-        synchronized (queue) {
-            Iterator<HackPrevention> iterator = queue.values().iterator();
-
-            if (iterator.hasNext()) {
-                hp = iterator.next();
-                processed = hp.processed;
-
-                if (hp.expiration < TPS.getTick(player)) {
-                    iterator.remove();
+                    if (!checkCancelEvent.isCancelled()) {
+                        this.prevention.handle(player);
+                        return true;
+                    } else {
+                        return false;
+                    }
                 } else {
-                    hp.processed = true;
+                    this.prevention.handle(player);
+                    return true;
                 }
             } else {
-                hp = null;
-                processed = false;
+                return false;
             }
         }
+    }
 
-        if (hp != null
-                && !CheckDelay.hasCooldown(player)
-                && !CloudBase.isPublicInformationCancelled(hackType, hp.information)
-                && (disableCause == null
-                || !disableCause.pointerMatches(hp.information))) {
-            Check check = hackType.getCheck();
-            int violations = this.getLevel();
-            boolean canPrevent, falsePositive,
-                    suspectedOrHacker = player.getProfile().isSuspectedOrHacker(hackType);
-            PlayerViolation playerViolation = new PlayerViolation(
-                    hackType,
-                    hp.time,
-                    hp.information,
-                    violations + 1
-            );
+    // Separator
 
-            if (!player.getProfile().isHacker()
-                    && !TestServer.isIdentified()
-                    && Config.settings.getBoolean("Performance.enable_false_positive_detection")
-                    && !this.hasMaxCancelledLevel(playerViolation.similarityIdentity)) {
-                canPrevent = false;
-                falsePositive = true;
-            } else {
-                canPrevent = !check.isSilent(player.getWorld().getName())
-                        && (silentCause == null
-                        || !silentCause.pointerMatches(hp.information))
-                        && (suspectedOrHacker
-                        || hasMaxCancelledLevel(playerViolation.similarityIdentity)
-                        || CancelViolation.isForced(player, hackType)
-                        || violations >= CancelViolation.get(hackType, player.dataType));
-                falsePositive = false;
-                violations += 1;
+    public int getLevel(int hash) {
+        Long time;
+
+        synchronized (this.level) {
+            time = this.level.get(hash);
+        }
+        return time != null ? this.calculateLevel(time) : 0;
+    }
+
+    private int calculateLevel(long time) {
+        time -= System.currentTimeMillis();
+        return time > 0L
+                ? AlgebraUtils.integerCeil(time / (double) violationTimeWorth)
+                : 0;
+    }
+
+    public int getTotalLevel() {
+        if (!this.level.isEmpty()) {
+            int total = 0;
+
+            for (Long level : this.level.values()) {
+                total += this.calculateLevel(level);
             }
-            this.lastTick = hp.tick;
-            this.player.setLastViolation(this);
+            return total;
+        } else {
+            return 0;
+        }
+    }
 
-            if (falsePositive) {
-                synchronized (maxLevel) {
-                    String cached = maxLevel.get(this);
-
-                    if (cached != null && cached.equals(hp.information)) {
-                        maxLevel.remove(this);
-                    }
-                }
-                violations = this.increaseCancelledLevel(playerViolation.similarityIdentity);
-                performNotification(hp.information, violations, false, true, false, suspectedOrHacker);
-            } else {
-                boolean enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
-
-                if (processed) {
-                    performNotification(hp.information, violations, false, false, canPrevent, suspectedOrHacker);
-                } else {
-                    switch (hp.violation) {
-                        case 2:
-                            // Algorithm will redirect this to case '1'.
-                            synchronized (maxLevel) {
-                                maxLevel.put(this, hp.information);
-                            }
-                            break;
-                        case 1:
-                            if (enabledDeveloperAPI) {
-                                PlayerViolationEvent playerViolationEvent = new PlayerViolationEvent(player.getPlayer(), hackType, violations, hp.information, falsePositive);
-                                Register.manager.callEvent(playerViolationEvent);
-
-                                if (playerViolationEvent.isCancelled()) {
-                                    break;
-                                }
-                            }
-                            player.getProfile().getViolationHistory(hackType).store(playerViolation);
-                            this.setLevel(playerViolation.similarityIdentity, violations);
-                            performNotification(hp.information, violations, true, false, canPrevent, suspectedOrHacker);
-                            this.performPunishments(violations);
-                            break;
-                        default:
-                            if (enabledDeveloperAPI) {
-                                PlayerViolationEvent playerViolationEvent = new PlayerViolationEvent(player.getPlayer(), hackType, violations, hp.information, falsePositive);
-                                Register.manager.callEvent(playerViolationEvent);
-
-                                if (playerViolationEvent.isCancelled()) {
-                                    break;
-                                }
-                            }
-                            player.getProfile().getViolationHistory(hackType).store(playerViolation);
-                            performNotification(hp.information, violations, false, false, canPrevent, suspectedOrHacker);
-                            break;
-                    }
-                }
-
-                if (canPrevent) {
-                    if (enabledDeveloperAPI) {
-                        CheckCancelEvent checkCancelEvent = new CheckCancelEvent(player.getPlayer(), hackType);
-                        Register.manager.callEvent(checkCancelEvent);
-
-                        if (!checkCancelEvent.isCancelled()) {
-                            hp.handle(player, hackType);
-                            return true;
-                        }
-                    } else {
-                        hp.handle(player, hackType);
-                        return true;
-                    }
+    public boolean hasLevel() {
+        if (!this.level.isEmpty()) {
+            for (Long level : this.level.values()) {
+                if (this.calculateLevel(level) > 0) {
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    // Separator
+    private void increaseLevel(int hash) {
+        int multiplier = 1 + player.getProfile().evidence.getKnowledgeList().size();
 
-    public int getLevel() {
-        timeReset();
-        return level;
-    }
-
-    public boolean hasLevel() {
-        return getLevel() > 0;
-    }
-
-    private boolean hasMaxCancelledLevel(int hash) {
-        Long time;
-
-        synchronized (cancelledLevel) {
-            time = cancelledLevel.get(hash);
-        }
-        if (time != null) {
-            time -= System.currentTimeMillis();
-            return time > 0L
-                    && (time / 1000.0) >= (hackType.getCheck().getMaxCancelledViolations(player.dataType, hash) - 1); // -1 so we don't ceil the number
-        } else {
-            return false;
-        }
-    }
-
-    private void setLevel(int hash, int amount) {
-        timeReset();
-        int previousLevel = level;
-
-        // Violations
-        if (amount < Check.maxViolationsPerCycle) {
-            this.level = amount;
-            increaseCancelledLevel(hash); // Increase it in case a player has reached the max level and is still cheating
-        }
-        timeReset(); // Always after changing the level
-
-        // Always last
-        if (previousLevel != level) {
-            InteractiveInventory.playerInfo.refresh(player.name);
-        }
-    }
-
-    private int increaseCancelledLevel(int hash) {
-        double multiplier = 1.0 + player.getProfile().evidence.getKnowledgeList().size();
-
-        synchronized (cancelledLevel) {
-            Long time = cancelledLevel.get(hash);
+        synchronized (this.level) {
+            Long time = this.level.get(hash);
 
             if (time == null) {
-                cancelledLevel.put(hash, System.currentTimeMillis() + AlgebraUtils.integerRound(1_000 * multiplier));
-                return 1;
+                this.level.put(hash, System.currentTimeMillis() + (violationTimeWorth * multiplier));
             } else {
                 long current = System.currentTimeMillis();
 
                 if (time < current) {
-                    this.cancelledLevel.put(hash, current + AlgebraUtils.integerRound(1_000 * multiplier));
-                    return 1;
+                    this.level.put(hash, current + (violationTimeWorth * multiplier));
                 } else {
-                    time += AlgebraUtils.integerRound(1_000 * multiplier);
-                    this.cancelledLevel.put(hash, time);
-                    return AlgebraUtils.integerCeil(time / 1000.0);
+                    this.level.put(hash, time + (violationTimeWorth * multiplier));
                 }
             }
         }
+        InteractiveInventory.playerInfo.refresh(player.name);
     }
 
     // Separator
 
     public void reset() {
-        reset(false);
-    }
-
-    private void reset(boolean local) {
-        long tick = TPS.getTick(player);
         ViolationResetEvent event;
 
         if (SpartanBukkit.isSynchronised()) {
@@ -316,46 +216,15 @@ public class LiveViolation {
             event = null;
         }
 
-        if (event == null
-                || !event.isCancelled()
-                || this.cycleExpiration <= tick) {
-            synchronized (maxLevel) {
-                maxLevel.remove(this);
+        if (event == null || !event.isCancelled()) {
+            synchronized (this.level) {
+                this.level.clear();
             }
-            this.level = 0;
         }
-        this.cycleExpiration = tick + Check.violationCycleTicks;
 
         // Always last
         player.getProfile().evidence.remove(hackType, true, false, true);
-
-        if (local) {
-            InteractiveInventory.playerInfo.refresh(player.name);
-        }
-    }
-
-    private void timeReset() {
-        if (this.cycleExpiration <= TPS.getTick(player)) {
-            reset(true);
-        }
-    }
-
-    // Separator
-
-    public boolean isDetected(boolean prevention) {
-        return lastTick == TPS.getTick(player)
-                && (!prevention
-                || !hackType.getCheck().isSilent(player.getWorld().getName()));
-    }
-
-    public boolean wasDetected(boolean prevention) {
-        return lastTick >= (TPS.getTick(player) - 1)
-                && (!prevention
-                || !hackType.getCheck().isSilent(player.getWorld().getName()));
-    }
-
-    public long getLastTick() {
-        return lastTick;
+        InteractiveInventory.playerInfo.refresh(player.name);
     }
 
     // Separator
@@ -398,37 +267,50 @@ public class LiveViolation {
 
     // Separator
 
-    private void performPunishments(int violation) {
+    private void performPunishments(PlayerViolation playerViolation) {
         Check check = hackType.getCheck();
 
         if (check.canPunish) {
-            boolean legacy = Config.isLegacy();
-            Collection<String> commands = legacy
-                    ? check.getLegacyCommands(violation)
-                    : Config.settings.getPunishmentCommands();
+            List<String> commands = Config.settings.getPunishmentCommands();
 
             if (!commands.isEmpty()) {
                 Player n = player.getPlayer();
 
                 if (n != null && n.isOnline()) {
                     boolean performed = false, found = false;
+                    int index = 0;
 
-                    if (legacy) {
+                    Collection<Enums.HackType> detectedHacks = player.getProfile().evidence.calculate(player, playerViolation);
+                    detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish);
+
+                    if (!detectedHacks.isEmpty()) {
                         boolean enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
+                        StringBuilder stringBuilder = new StringBuilder();
+
+                        for (Enums.HackType detectedHack : detectedHacks) {
+                            stringBuilder.append(detectedHack.getCheck().getName()).append(", ");
+                        }
+                        String detections = stringBuilder.substring(0, stringBuilder.length() - 2);
 
                         for (String command : commands) {
                             if (command != null) {
                                 found = true;
-                                String modifiedCommand = ConfigUtils.replaceWithSyntax(player, command, hackType);
+                                String modifiedCommand = ConfigUtils.replaceWithSyntax(
+                                        player,
+                                        command.replaceAll("\\{detections}|\\{detection}", detections),
+                                        null
+                                );
+                                commands.set(index, modifiedCommand);
 
                                 if (enabledDeveloperAPI) {
-                                    PlayerViolationCommandEvent event = new PlayerViolationCommandEvent(n, hackType, modifiedCommand);
+                                    PlayerViolationCommandEvent event = new PlayerViolationCommandEvent(n, hackType, detectedHacks, modifiedCommand);
                                     Register.manager.callEvent(event);
 
                                     if (event.isCancelled()) {
                                         continue;
                                     }
                                 }
+
                                 performed = true;
                                 SpartanBukkit.runDelayedTask(player, () -> {
                                     if (player != null) {
@@ -436,55 +318,12 @@ public class LiveViolation {
                                     }
                                 }, 1);
                             }
-                        }
-                    } else {
-                        Collection<Enums.HackType> detectedHacks = player.getProfile().evidence.calculate(player, hackType);
-                        detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish);
-
-                        if (!detectedHacks.isEmpty()) {
-                            boolean enabledDeveloperAPI = Config.settings.getBoolean("Important.enable_developer_api");
-                            StringBuilder stringBuilder = new StringBuilder();
-
-                            for (Enums.HackType detectedHack : detectedHacks) {
-                                stringBuilder.append(detectedHack.getCheck().getName()).append(", ");
-                            }
-                            String detections = stringBuilder.substring(0, stringBuilder.length() - 2);
-
-                            for (String command : commands) {
-                                if (command != null) {
-                                    found = true;
-                                    String modifiedCommand = ConfigUtils.replaceWithSyntax(
-                                            player,
-                                            command.replaceAll("\\{detections}|\\{detection}", detections),
-                                            null
-                                    );
-
-                                    if (enabledDeveloperAPI) {
-                                        PlayerViolationCommandEvent event = new PlayerViolationCommandEvent(n, hackType, detectedHacks, modifiedCommand);
-                                        Register.manager.callEvent(event);
-
-                                        if (event.isCancelled()) {
-                                            continue;
-                                        }
-                                    }
-
-                                    performed = true;
-                                    SpartanBukkit.runDelayedTask(player, () -> {
-                                        if (player != null) {
-                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), modifiedCommand);
-                                        }
-                                    }, 1);
-                                }
-                            }
+                            index++;
                         }
                     }
 
                     if (performed) {
-                        String commandsString = StringUtils.toString(commands, "\n");
-
-                        if (!commandsString.isEmpty()) {
-                            player.getProfile().punishmentHistory.increasePunishments(player, commandsString);
-                        }
+                        player.getProfile().punishmentHistory.increasePunishments(player, StringUtils.toString(commands, "\n"));
                     } else if (found && AwarenessNotifications.canSend(AwarenessNotifications.uuid, hackType + "-cancelled-punishment-event")) {
                         String notification = "Just a reminder that the punishments of the '" + hackType + "' check were just cancelled via code by a third-party plugin."
                                 + " Please do not reach support for this as it relates only to your server.";
@@ -507,71 +346,58 @@ public class LiveViolation {
         }
     }
 
-    private void performNotification(String info,
-                                     int level,
-                                     boolean log,
-                                     boolean falsePositive,
-                                     boolean canPrevent,
-                                     boolean suspectedOrHacker) {
-        if (level < Check.maxViolationsPerCycle) {
-            boolean individualOnlyNotifications = Config.settings.getBoolean("Notifications.individual_only_notifications");
-            int cancelViolation = CancelViolation.get(hackType, player.dataType),
-                    playerCount = SpartanBukkit.getPlayerCount();
-            String message = Config.messages.getColorfulString("detection_notification")
-                    .replace("{info}", info);
+    private void performNotification(PlayerViolation playerViolation) {
+        boolean canPrevent = this.prevention != null,
+                individualOnlyNotifications = Config.settings.getBoolean("Notifications.individual_only_notifications");
+        int ignoredViolations = playerViolation.getIgnoredViolations(player);
+        String message = ConfigUtils.replaceWithSyntax(
+                player,
+                Config.messages.getColorfulString("detection_notification")
+                        .replace("{info}", playerViolation.information),
+                hackType
+        );
 
-            if (falsePositive) {
-                message = falsePositiveDisclaimer + ConfigUtils.replaceWithSyntax(player, message, hackType);
-            } else {
-                message = ConfigUtils.replaceWithSyntax(player, message, hackType);
+        if (canPrevent
+                || !hackType.getCheck().supportsLiveEvidence) {
+            CrossServerInformation.queueNotification(message, true);
+        }
+        SpartanLocation location = player.movement.getLocation();
+        String information = Config.getConstruct() + player.name + " failed " + hackType + " (VL: " + playerViolation
+                + ") " + "[(Version: " + MultiVersion.fork() + " " + MultiVersion.versionString()
+                + "), (I-V: " + (canPrevent ? "-" : "") + ignoredViolations + ") (Silent: "
+                + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
+                + "(Ping: " + player.getPing() + "ms), (TPS: "
+                + AlgebraUtils.cut(TPS.get(player, false), 3) + "), " +
+                "(XYZ: " + location.getBlockX() + " " + location.getBlockY() + " "
+                + location.getBlockZ() + "), (" + playerViolation.information + ")]";
+        AntiCheatLogs.logInfo(player, information, information, null, hackType, true, playerViolation.level);
+
+        // Local Notifications
+        String command = Config.settings.getString("Notifications.message_clickable_command")
+                .replace("{player}", player.name);
+
+        if (individualOnlyNotifications) {
+            Integer divisor = DetectionNotifications.getDivisor(player, false);
+
+            if (DetectionNotifications.canAcceptMessages(player, divisor, false)
+                    && isDivisorValid(playerViolation.level, divisor)) { // Attention
+                ClickableMessage.sendCommand(player, message, "Command: " + command, command);
             }
-            if (suspectedOrHacker
-                    || level % cancelViolation == 0
-                    || !hackType.getCheck().supportsLiveEvidence) {
-                CrossServerInformation.queueNotification(message, true);
-            }
-            if (log) {
-                SpartanLocation location = player.getLocation();
-                String cancelViolationString = (canPrevent ? "-" : "") + cancelViolation,
-                        information = (falsePositive ? "(False Positive) " : "")
-                                + Config.getConstruct() + player.name + " failed " + hackType + " (VL: " + level
-                                + ") " + "[(Version: " + MultiVersion.fork() + " " + MultiVersion.versionString()
-                                + "), (C-V: " + cancelViolationString + ") (Silent: "
-                                + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
-                                + "(Ping: " + player.getPing() + "ms), (TPS: "
-                                + AlgebraUtils.cut(TPS.get(player, false), 3) + "), (Hacker: " + suspectedOrHacker
-                                + "), (Online: " + playerCount + "), " +
-                                "(XYZ: " + location.getBlockX() + " " + location.getBlockY() + " "
-                                + location.getBlockZ() + "), (" + info + ")]";
-                AntiCheatLogs.logInfo(player, information, information, null, hackType, true, level);
-            }
+        } else {
+            List<SpartanPlayer> notificationPlayers = DetectionNotifications.getPlayers(false);
 
-            // Local Notifications
-            String command = Config.settings.getString("Notifications.message_clickable_command")
-                    .replace("{player}", player.name);
-
-            if (individualOnlyNotifications) {
-                Integer divisor = DetectionNotifications.getDivisor(player, false);
-
-                if (DetectionNotifications.canAcceptMessages(player, divisor, false)
-                        && isDivisorValid(level, divisor)) { // Attention
-                    ClickableMessage.sendCommand(player, message, "Command: " + command, command);
-                }
-            } else {
-                List<SpartanPlayer> notificationPlayers = DetectionNotifications.getPlayers(false);
-
-                if (!notificationPlayers.isEmpty()) {
-                    for (SpartanPlayer staff : notificationPlayers) {
-                        int divisor = NotifyViolation.get(staff, player, hackType, playerCount);
-
-                        if (isDivisorValid(level, divisor)) {
-                            ClickableMessage.sendCommand(
-                                    staff,
-                                    message,
-                                    "Command: " + command,
-                                    command
-                            );
-                        }
+            if (!notificationPlayers.isEmpty()) {
+                for (SpartanPlayer staff : notificationPlayers) {
+                    if (isDivisorValid(
+                            playerViolation.level,
+                            NotifyViolation.get(staff, player, ignoredViolations)
+                    )) {
+                        ClickableMessage.sendCommand(
+                                staff,
+                                message,
+                                "Command: " + command,
+                                command
+                        );
                     }
                 }
             }
@@ -579,6 +405,6 @@ public class LiveViolation {
     }
 
     private boolean isDivisorValid(int level, int divisor) {
-        return divisor == 0 || level % divisor == 0;
+        return divisor == 1 || level % divisor == 0;
     }
 }

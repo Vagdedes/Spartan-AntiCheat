@@ -1,10 +1,9 @@
 package com.vagdedes.spartan.functionality.performance;
 
-import com.vagdedes.spartan.abstraction.check.Check;
+import com.vagdedes.spartan.abstraction.math.implementation.NumberRank;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.math.probability.ProbabilityRank;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
@@ -33,8 +32,8 @@ public class ViolationAnalysis {
         public void add(PlayerProfile profile, PlayerViolation playerViolation) {
             players.add(profile.hashCode());
             violations.put(
-                    playerViolation.similarityIdentity,
-                    violations.getOrDefault(playerViolation.similarityIdentity, 0) + 1
+                    playerViolation.identity,
+                    violations.getOrDefault(playerViolation.identity, 0) + 1
             );
         }
 
@@ -60,7 +59,7 @@ public class ViolationAnalysis {
     private static int hash(PlayerViolation playerViolation) {
         return Objects.hash(
                 playerViolation.level,
-                playerViolation.similarityIdentity
+                playerViolation.identity
         );
     }
 
@@ -116,7 +115,7 @@ public class ViolationAnalysis {
                             }
                         }
 
-                        if (totalViolations >= ResearchEngine.dataRequirement) {
+                        if (totalViolations >= (ResearchEngine.requiredProfiles * ResearchEngine.requiredProfiles)) {
                             calculateProfileProbability(
                                     playerProfiles,
                                     hackType,
@@ -165,7 +164,7 @@ public class ViolationAnalysis {
 
                 if (!violations.isEmpty()) {
                     for (PlayerViolation violation : violations) {
-                        long time = AlgebraUtils.floorToNearest(violation.time, (int) Check.violationCycleMilliseconds);
+                        long time = AlgebraUtils.floorToNearest(violation.time, ResearchEngine.violationsMeasurementDuration);
                         PlayerViolation highest = highestViolation.get(time);
 
                         if (highest == null || violation.level > highest.level) {
@@ -216,14 +215,15 @@ public class ViolationAnalysis {
 
             if (probabilityData != null) {
                 Map<PlayerProfile, Double> probabilityAverage = profileAverageProbability.get(majorHash);
-                ProbabilityRank wave = new ProbabilityRank().addMultiple(probabilityData);
+                NumberRank wave = new NumberRank();
+                wave.addMultiple(probabilityData);
 
                 for (PlayerProfile profile : playerProfiles) {
                     if (profile.getDataType() == dataType) {
                         Double probability = probabilityAverage.get(profile);
 
                         if (probability != null) {
-                            probability = wave.getChance(probability);
+                            probability = wave.getPosition(probability, 1.0);
 
                             if (probability <= 0.1) {
                                 profile.evidence.add(

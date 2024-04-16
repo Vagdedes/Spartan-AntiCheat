@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.chat;
 
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.necessary.Authentication;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -15,7 +15,9 @@ import java.util.List;
 public class StaffChat {
 
     public static boolean run(SpartanPlayer p, String msg) {
-        if (Permissions.has(p, Enums.Permission.STAFF_CHAT) && (!Authentication.isEnabled() || (System.currentTimeMillis() - p.creationTime) > 60_000L)) {
+        if (Permissions.has(p, Enums.Permission.STAFF_CHAT)
+                && (!Compatibility.CompatibilityType.Authentication.isFunctional()
+                || (System.currentTimeMillis() - p.creationTime) > 60_000L)) {
             String character = Config.settings.getString("Chat.staff_chat_character");
 
             if (character != null && character.length() > 0 && msg.startsWith(character.toLowerCase())) {
@@ -33,11 +35,17 @@ public class StaffChat {
                     }
                 }
 
-                SpartanLocation location = p.getLocation();
-                CrossServerInformation.queueNotificationWithWebhook(p.uuid, p.name,
-                        location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                        "Staff Chat", msg,
-                        false);
+                SpartanLocation location = p.movement.getLocation();
+                CloudConnections.executeDiscordWebhook(
+                        "communication",
+                        p.uuid,
+                        p.name,
+                        location.getBlockX(),
+                        location.getBlockY(),
+                        location.getBlockZ(),
+                        "Staff Chat",
+                        msg
+                );
                 return true;
             }
         }

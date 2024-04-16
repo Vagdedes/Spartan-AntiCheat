@@ -2,9 +2,10 @@ package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 
 public class PunishmentHistory {
 
@@ -13,18 +14,12 @@ public class PunishmentHistory {
             warningMessage = " was warned for ",
             kickMessage = " was kicked for ";
 
-    private final PlayerProfile profile;
     private int kicks, warnings, punishments;
 
-    PunishmentHistory(PlayerProfile profile) {
-        this.profile = profile;
+    PunishmentHistory() {
         this.kicks = 0;
         this.warnings = 0;
         this.punishments = 0;
-    }
-
-    public int getOverall() {
-        return kicks + warnings + punishments;
     }
 
     public int getKicks() {
@@ -35,17 +30,21 @@ public class PunishmentHistory {
         kicks++;
 
         if (reason != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + kickMessage + reason, true);
-            SpartanLocation location = player.getLocation();
-            CrossServerInformation.queueNotificationWithWebhook(
+            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + kickMessage + reason, true);
+            SpartanLocation location = player.movement.getLocation();
+            CrossServerInformation.queueNotification(
+                    reason,
+                    true
+            );
+            CloudConnections.executeDiscordWebhook(
+                    "punishments",
                     player.uuid,
                     player.name,
                     location.getBlockX(),
                     location.getBlockY(),
                     location.getBlockZ(),
                     "Kick",
-                    reason,
-                    true
+                    reason
             );
         }
     }
@@ -62,17 +61,21 @@ public class PunishmentHistory {
         warnings++;
 
         if (reason != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + warningMessage + reason, true);
-            SpartanLocation location = player.getLocation();
-            CrossServerInformation.queueNotificationWithWebhook(
+            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + warningMessage + reason, true);
+            SpartanLocation location = player.movement.getLocation();
+            CrossServerInformation.queueNotification(
+                    reason,
+                    true
+            );
+            CloudConnections.executeDiscordWebhook(
+                    "punishments",
                     player.uuid,
                     player.name,
                     location.getBlockX(),
                     location.getBlockY(),
                     location.getBlockZ(),
                     "Warning",
-                    reason,
-                    true
+                    reason
             );
         }
     }
@@ -81,9 +84,10 @@ public class PunishmentHistory {
         punishments++;
 
         if (commands != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + profile.getName() + punishmentMessage + commands, true);
-            SpartanLocation location = player.getLocation();
-            CrossServerInformation.queueWebhook(
+            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + punishmentMessage + commands, true);
+            SpartanLocation location = player.movement.getLocation();
+            CloudConnections.executeDiscordWebhook(
+                    "punishments",
                     player.uuid,
                     player.name,
                     location.getBlockX(),
@@ -94,4 +98,5 @@ public class PunishmentHistory {
             );
         }
     }
+
 }

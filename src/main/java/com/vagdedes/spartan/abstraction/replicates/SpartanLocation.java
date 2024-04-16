@@ -1,8 +1,6 @@
 package com.vagdedes.spartan.abstraction.replicates;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -10,8 +8,8 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.CombatUtils;
-import com.vagdedes.spartan.utils.gameplay.MoveUtils;
 import com.vagdedes.spartan.utils.gameplay.PatternUtils;
+import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -76,8 +74,8 @@ public class SpartanLocation {
 
     // Object
 
-    private final SpartanPlayer player;
-    private final World serverWorld;
+    public final SpartanPlayer player;
+    public final World world;
     private Chunk chunk;
     private int identifier;
     private double x, y, z;
@@ -88,7 +86,7 @@ public class SpartanLocation {
     // Utilities
 
     private SpartanBlock loadBlock(Material material, byte data, boolean liquid, boolean waterLogged) {
-        return this.block = new SpartanBlock(this.player, this.serverWorld, this.chunk, material, data, this.identifier, getBlockX(), getBlockY(), getBlockZ(), liquid, waterLogged);
+        return this.block = new SpartanBlock(this.player, this.world, this.chunk, material, data, this.identifier, getBlockX(), getBlockY(), getBlockZ(), liquid, waterLogged);
     }
 
     private void loadEmptyBlock(boolean air) {
@@ -101,7 +99,7 @@ public class SpartanLocation {
                             double x, double y, double z,
                             float yaw, float pitch) { // Used for inititation
         this.player = player;
-        this.serverWorld = world;
+        this.world = world;
         this.chunk = chunk;
         this.x = x;
         this.y = y;
@@ -113,7 +111,7 @@ public class SpartanLocation {
 
     SpartanLocation() { // Used as a backup
         this(null, Bukkit.getWorlds().get(0), null, 0, 0, 0, 0, 0);
-        this.identifier = Chunks.locationIdentifier(serverWorld.hashCode(), 0, 0, 0);
+        this.identifier = Chunks.locationIdentifier(world.hashCode(), 0, 0, 0);
         loadEmptyBlock(false);
     }
 
@@ -121,11 +119,11 @@ public class SpartanLocation {
         this(player, world, chunk, x, y, z, yaw, pitch);
 
         if (block != null) {
-            loadBlock(block.material, block.data, block.isLiquid(), block.waterLogged);
+            loadBlock(block.material, block.data, block.liquid, block.waterLogged);
         } else {
             this.block = null;
         }
-        this.identifier = Chunks.locationIdentifier(serverWorld.hashCode(), getBlockX(), getBlockY(), getBlockZ());
+        this.identifier = Chunks.locationIdentifier(this.world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
     }
 
     // Native
@@ -143,7 +141,7 @@ public class SpartanLocation {
         } else {
             this.block = null;
         }
-        this.identifier = Chunks.locationIdentifier(serverWorld.hashCode(), getBlockX(), getBlockY(), getBlockZ());
+        this.identifier = Chunks.locationIdentifier(world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
     }
 
     public SpartanLocation(SpartanPlayer player, World world, double x, double y, double z, float yaw, float pitch, SpartanLocation nearby) { // Used globally
@@ -156,7 +154,7 @@ public class SpartanLocation {
     }
 
     private SpartanLocation(SpartanLocation loc) { // Used for copying
-        this(loc.player, loc.serverWorld, loc.chunk, loc.x, loc.y, loc.z, loc.yaw, loc.pitch);
+        this(loc.player, loc.world, loc.chunk, loc.x, loc.y, loc.z, loc.yaw, loc.pitch);
         this.block = loc.block;
         this.vector = loc.vector;
         this.identifier = loc.identifier;
@@ -168,17 +166,9 @@ public class SpartanLocation {
         return new SpartanLocation(this);
     }
 
-    public SpartanPlayer getPlayer() {
-        return player;
-    }
-
-    public World getWorld() {
-        return serverWorld;
-    }
-
     public Chunk getChunk() {
         if (chunk == null) {
-            chunk = serverWorld.getChunkAt(getChunkX(), getChunkZ());
+            chunk = world.getChunkAt(getChunkX(), getChunkZ());
         }
         return chunk;
     }
@@ -389,7 +379,7 @@ public class SpartanLocation {
             if (startX != getChunkX() || startZ != getChunkZ()) {
                 this.chunk = null;
             }
-            this.identifier = Chunks.locationIdentifier(serverWorld.hashCode(), getBlockX(), getBlockY(), getBlockZ());
+            this.identifier = Chunks.locationIdentifier(world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
         } else {
             int startX = getBlockX(),
                     startY = getBlockY(),
@@ -408,14 +398,14 @@ public class SpartanLocation {
                 if ((startX >> 4) != getChunkX() || (startZ >> 4) != getChunkZ()) {
                     this.chunk = null;
                 }
-                this.identifier = Chunks.locationIdentifier(serverWorld.hashCode(), blockX, blockY, blockZ);
+                this.identifier = Chunks.locationIdentifier(world.hashCode(), blockX, blockY, blockZ);
             }
         }
         return this;
     }
 
     private SpartanBlock setBlock() {
-        Block block = serverWorld.getBlockAt(getBlockX(), getBlockY(), getBlockZ());
+        Block block = world.getBlockAt(getBlockX(), getBlockY(), getBlockZ());
 
         if (block != null) {
             if (v_1_13) {
@@ -439,11 +429,11 @@ public class SpartanLocation {
             int blockY = getBlockY();
 
             if (v_1_17 ?
-                    blockY >= serverWorld.getMinHeight() && blockY <= serverWorld.getMaxHeight() :
-                    blockY >= 0 && blockY <= MoveUtils.height) {
+                    blockY >= world.getMinHeight() && blockY <= world.getMaxHeight() :
+                    blockY >= 0 && blockY <= PlayerUtils.height) {
                 if (MultiVersion.folia
                         || SpartanBukkit.isSynchronised()
-                        || Chunks.isLoaded(serverWorld, getBlockX() >> 4, getBlockZ() >> 4)) {
+                        || Chunks.isLoaded(world, getBlockX() >> 4, getBlockZ() >> 4)) {
                     BlockCache cache;
 
                     synchronized (memory) {
@@ -498,13 +488,18 @@ public class SpartanLocation {
         }
     }
 
-    private double rawDistance(SpartanLocation loc) {
-        return AlgebraUtils.getDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
+    public boolean isNearbyChunk(SpartanLocation loc) {
+        return Math.abs(getChunkX() - loc.getChunkX()) <= 1 && Math.abs(getChunkZ() - loc.getChunkZ()) <= 1;
+    }
+
+    public boolean isNearbyChunk(Location loc) {
+        return Math.abs(getChunkX() - (loc.getBlockX() >> 4)) <= 1
+                && Math.abs(getChunkZ() - (loc.getBlockZ() >> 4)) <= 1;
     }
 
     public double distance(SpartanLocation loc) {
         this.retrieveDataFrom(loc);
-        return rawDistance(loc);
+        return AlgebraUtils.getDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
     }
 
     public double distance(Location loc) {
@@ -512,11 +507,11 @@ public class SpartanLocation {
     }
 
     public Location getBukkitLocation() {
-        return new Location(this.serverWorld, this.x, this.y, this.z, this.yaw, this.pitch);
+        return new Location(this.world, this.x, this.y, this.z, this.yaw, this.pitch);
     }
 
     public Location getLimitedBukkitLocation() {
-        return new Location(this.serverWorld, this.x, this.y, this.z);
+        return new Location(this.world, this.x, this.y, this.z);
     }
 
     // Custom
@@ -623,27 +618,27 @@ public class SpartanLocation {
                     if (iterator.hasNext()) {
                         double[] positions4 = iterator.next();
                         return new SpartanLocation[]{
-                                new SpartanLocation(player, serverWorld, positions1[0], y, positions1[1], yaw, pitch, this),
-                                new SpartanLocation(player, serverWorld, positions2[0], y, positions2[1], yaw, pitch, this),
-                                new SpartanLocation(player, serverWorld, positions3[0], y, positions3[1], yaw, pitch, this),
-                                new SpartanLocation(player, serverWorld, positions4[0], y, positions4[1], yaw, pitch, this)
+                                new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
+                                new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this),
+                                new SpartanLocation(player, world, positions3[0], y, positions3[1], yaw, pitch, this),
+                                new SpartanLocation(player, world, positions4[0], y, positions4[1], yaw, pitch, this)
                         };
                     } else {
                         return new SpartanLocation[]{
-                                new SpartanLocation(player, serverWorld, positions1[0], y, positions1[1], yaw, pitch, this),
-                                new SpartanLocation(player, serverWorld, positions2[0], y, positions2[1], yaw, pitch, this),
-                                new SpartanLocation(player, serverWorld, positions3[0], y, positions3[1], yaw, pitch, this)
+                                new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
+                                new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this),
+                                new SpartanLocation(player, world, positions3[0], y, positions3[1], yaw, pitch, this)
                         };
                     }
                 } else {
                     return new SpartanLocation[]{
-                            new SpartanLocation(player, serverWorld, positions1[0], y, positions1[1], yaw, pitch, this),
-                            new SpartanLocation(player, serverWorld, positions2[0], y, positions2[1], yaw, pitch, this)
+                            new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
+                            new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this)
                     };
                 }
             } else {
                 return new SpartanLocation[]{
-                        new SpartanLocation(player, serverWorld, positions1[0], y, positions1[1], yaw, pitch, this)
+                        new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this)
                 };
             }
         }
@@ -743,11 +738,9 @@ public class SpartanLocation {
             if (playerProfile.isSuspectedOrHacker()) {
                 return getSurroundingLocations(x, y, z, true);
             } else {
-                LiveViolation liveViolation = player.getLastViolation();
                 return getSurroundingLocations(
                         x, y, z,
-                        liveViolation.hasLevel()
-                                || liveViolation.getLastTick() <= Check.violationCycleTicks
+                        player.getLastViolation().hasLevel()
                 );
             }
         }

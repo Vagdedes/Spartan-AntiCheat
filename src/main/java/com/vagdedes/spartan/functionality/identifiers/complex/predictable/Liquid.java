@@ -5,8 +5,8 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.MoveUtils;
 import com.vagdedes.spartan.utils.gameplay.PatternUtils;
+import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import org.bukkit.Material;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +25,7 @@ public class Liquid {
     }
 
     public static boolean runMove(SpartanPlayer p) {
-        if (p.isSwimming() || isLocation(p, p.getLocation())) {
+        if (p.movement.isSwimming() || isLocation(p, p.movement.getLocation())) {
             add(p);
             return true;
         }
@@ -33,17 +33,17 @@ public class Liquid {
     }
 
     public static void remove(SpartanPlayer p) {
-        p.removeLastLiquidTime();
+        p.movement.removeLastLiquidTime();
         WaterElevator.remove(p);
     }
 
     private static void add(SpartanPlayer p) {
-        p.setLastLiquidTime();
+        p.movement.setLastLiquidTime();
 
         if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                 && Compatibility.CompatibilityType.ViaVersion.isFunctional()
                 && Math.round(p.getEyeHeight() * 10.0) == 4.0) {
-            p.setSwimming(false, 10);
+            p.movement.setSwimming(false, 10);
         }
         WaterElevator.runMove(p);
     }
@@ -52,11 +52,11 @@ public class Liquid {
 
     public static boolean isLocation(SpartanPlayer player, SpartanLocation location) {
         double hitbox = player.bedrockPlayer ? BlockUtils.hitbox_max : BlockUtils.hitbox;
-        return location.getBlock().isLiquid()
+        return location.getBlock().isLiquidOrWaterLogged()
                 || PatternUtils.isLiquidPattern(new double[][]{
                 {hitbox, 0, hitbox},
                 {hitbox, 1, hitbox},
-                {hitbox, player.getEyeHeight() + MoveUtils.lowPrecision, hitbox}
+                {hitbox, player.getEyeHeight() + PlayerUtils.lowPrecision, hitbox}
         }, location, true);
     }
 }

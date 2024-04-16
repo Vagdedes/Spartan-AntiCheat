@@ -30,4 +30,8 @@ public class SpartanOpenInventory {
         }
         return false;
     }
+
+    public boolean isUsingTheCursor() {
+        return this.cursor.getType() != Material.AIR;
+    }
 }

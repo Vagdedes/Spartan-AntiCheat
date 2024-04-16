@@ -1,8 +1,6 @@
 package com.vagdedes.spartan.utils.server;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
@@ -23,26 +21,6 @@ public class InventoryUtils {
             array.add("§e" + title);
             array.add("");
         }
-    }
-
-    public static int createHashCode(ItemStack itemStack) {
-        int hash = 1;
-        hash = hash * 31 + itemStack.getType().hashCode();
-        hash = hash * 31 + itemStack.getAmount();
-        //hash = hash * 31 + (itemStack.getDurability() & '\uffff');
-        hash = hash * 31 + (itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName() ? itemStack.getItemMeta().getDisplayName().hashCode() : 0);
-        return hash;
-    }
-
-    public static Enums.ArmorState getArmorState(SpartanPlayer p) {
-        int counter = 0;
-
-        for (ItemStack item : p.getInventory().getArmorContents()) {
-            if (item != null) {
-                counter++;
-            }
-        }
-        return counter == 0 ? Enums.ArmorState.Empty : counter == 4 ? Enums.ArmorState.Full : Enums.ArmorState.Semi;
     }
 
     public static void add(Inventory inv, String name, List<String> lore, ItemStack item, int slot) {

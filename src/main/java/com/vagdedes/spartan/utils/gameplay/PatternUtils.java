@@ -2,11 +2,10 @@ package com.vagdedes.spartan.utils.gameplay;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.MemoryUtils;
+import com.vagdedes.spartan.utils.java.HashUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 
@@ -66,8 +65,9 @@ public class PatternUtils {
             double verticalBox;
 
             if (aboveTop) {
-                SpartanPlayer player = location.getPlayer();
-                verticalBox = player != null ? player.getEyeHeight() + (location.getY() - location.getBlockY()) : 1.0;
+                verticalBox = location.player != null
+                        ? location.player.getEyeHeight() + (location.getY() - location.getBlockY())
+                        : 1.0;
             } else {
                 verticalBox = 0.0;
             }
@@ -99,7 +99,7 @@ public class PatternUtils {
             childMap = memory.get(locationIdentifier);
         }
         for (Set<Material> set : sets) {
-            searchHash = (searchHash * SpartanBukkit.hashCodeMultiplier) + MemoryUtils.fastHashCode(set);
+            searchHash = (searchHash * SpartanBukkit.hashCodeMultiplier) + HashUtils.fastAbstractCollection(set);
         }
         if (childMap != null) {
             for (int position = 0; position < positions.length; position++) {
@@ -198,7 +198,7 @@ public class PatternUtils {
 
             // Calculate hashes and check them if cache is available
             for (Set<Material> set : sets) {
-                searchHash = (searchHash * SpartanBukkit.hashCodeMultiplier) + MemoryUtils.fastHashCode(set);
+                searchHash = (searchHash * SpartanBukkit.hashCodeMultiplier) + HashUtils.fastAbstractCollection(set);
             }
             double x = coordinates[0], y = coordinates[1], z = coordinates[2];
             int positionIdentifier = (Chunks.positionIdentifier(x, y, z) * SpartanBukkit.hashCodeMultiplier) + searchHash;
@@ -407,14 +407,14 @@ public class PatternUtils {
                     } else {
                         if (surroundings) {
                             for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                                if (surroundingLocation.getBlock().isLiquid()) {
+                                if (surroundingLocation.getBlock().isLiquidOrWaterLogged()) {
                                     synchronized (memory) {
                                         childMap.put(positionIdentifiers[position], true);
                                     }
                                     return true;
                                 }
                             }
-                        } else if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isLiquid()) {
+                        } else if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isLiquidOrWaterLogged()) {
                             synchronized (memory) {
                                 childMap.put(positionIdentifiers[position], true);
                             }
@@ -434,13 +434,13 @@ public class PatternUtils {
 
                     if (surroundings) {
                         for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
-                            if (surroundingLocation.getBlock().isLiquid()) {
+                            if (surroundingLocation.getBlock().isLiquidOrWaterLogged()) {
                                 childMap.put(positionIdentifiers[position], true);
                                 return true;
                             }
                         }
                     } else {
-                        if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isLiquid()) {
+                        if (location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().isLiquidOrWaterLogged()) {
                             childMap.put(positionIdentifiers[position], true);
                             return true;
                         }
@@ -485,14 +485,14 @@ public class PatternUtils {
             // Calculate and add them in cache
             if (surroundings) {
                 for (SpartanLocation surroundingLocation : location.getSurroundingLocations(x, y, z)) {
-                    if (surroundingLocation.getBlock().isLiquid()) {
+                    if (surroundingLocation.getBlock().isLiquidOrWaterLogged()) {
                         synchronized (memory) {
                             childMap.put(positionIdentifier, true);
                         }
                         return true;
                     }
                 }
-            } else if (location.clone().add(x, y, z).getBlock().isLiquid()) {
+            } else if (location.clone().add(x, y, z).getBlock().isLiquidOrWaterLogged()) {
                 synchronized (memory) {
                     childMap.put(positionIdentifier, true);
                 }

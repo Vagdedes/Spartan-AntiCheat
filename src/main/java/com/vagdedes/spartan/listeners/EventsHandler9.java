@@ -1,37 +1,25 @@
 package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.identifiers.simple.VehicleAccess;
 import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.PluginUtils;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryInteractEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.event.vehicle.VehicleExitEvent;
 
-import java.net.InetAddress;
+import java.util.Collection;
+import java.util.List;
 
 public class EventsHandler9 implements Listener {
 
-    @EventHandler
-    private void PreLoginEvent(AsyncPlayerPreLoginEvent e) {
-        // Features
-        if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
-            InetAddress address = e.getAddress();
-            String ipAddress = address != null ? PlayerLimitPerIP.get(address) : null;
-            CloudConnections.updatePunishedPlayer(e.getUniqueId(), ipAddress);
-        }
-    }
+    private static long InventoryMoveItemEventCooldown = 0L;
 
     @EventHandler
     private void PluginEnable(PluginEnableEvent e) {
@@ -54,33 +42,37 @@ public class EventsHandler9 implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void VehicleExit(VehicleExitEvent e) {
-        Entity en = e.getExited();
+    public static void InventoryMove(InventoryMoveItemEvent e) {
+        long ms = System.currentTimeMillis();
 
-        if (en instanceof Player) {
-            SpartanPlayer p = SpartanBukkit.getPlayer((Player) en);
+        if (InventoryMoveItemEventCooldown <= ms) {
+            InventoryMoveItemEventCooldown = ms + 50L;
 
-            if (p == null) {
-                return;
+            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) { // It's faster to loop through Bukkit instead of using Bukkit's search method
+                Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+
+                if (!players.isEmpty()) {
+                    for (Player n : players) {
+                        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+                        if (p != null) {
+                            p.setInventory(n.getInventory(), n.getOpenInventory());
+                        }
+                    }
+                }
+            } else {
+                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+
+                if (!players.isEmpty()) {
+                    for (SpartanPlayer p : players) {
+                        Player n = p.getPlayer();
+
+                        if (n != null && n.isOnline()) {
+                            p.setInventory(n.getInventory(), n.getOpenInventory());
+                        }
+                    }
+                }
             }
-            // Protections
-            VehicleAccess.runExit(p);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public static void InventoryInteract(InventoryInteractEvent e) {
-        HumanEntity he = e.getWhoClicked();
-
-        if (he instanceof Player) {
-            Player n = (Player) he;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-            if (p == null) {
-                return;
-            }
-            // Objects
-            p.setInventory(n.getInventory(), n.getOpenInventory());
         }
     }
 }

@@ -26,7 +26,7 @@ public class Enums {
                 this.check.clearConfigurationCache();
                 this.check = new Check(
                         this,
-                        this.check.copyMaxCancelledViolations(),
+                        this.check.copyIgnoredViolations(),
                         true
                 );
             }
@@ -51,7 +51,7 @@ public class Enums {
     public enum Permission {
         CONDITION, STAFF_CHAT, WAVE, RECONNECT, ADMIN, RELOAD,
         KICK, BYPASS, MANAGE, INFO, CHAT_PROTECTION, WARN, USE_BYPASS,
-        NOTIFICATIONS;
+        NOTIFICATIONS, BEDROCK;
 
         private final String key;
 
@@ -126,10 +126,6 @@ public class Enums {
             return string;
         }
 
-    }
-
-    public enum ArmorState {
-        Full, Semi, Empty
     }
 
     public enum DataType {

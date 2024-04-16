@@ -169,7 +169,7 @@ public class CombatUtils {
 
     public static double[] get_X_Y_Distance(SpartanPlayer player, LivingEntity entity) {
         SpartanLocation
-                playerFeetLocation = player.getLocation(),
+                playerFeetLocation = player.movement.getLocation(),
                 playerEyeLocation = playerFeetLocation.clone().add(0, player.getEyeHeight(), 0);
         Location entityFeetLocation = entity.getLocation();
         double directionalDistance = playerEyeLocation.distance(entityFeetLocation);
@@ -227,7 +227,7 @@ public class CombatUtils {
     }
 
     public static boolean hasBlockBehind(SpartanPlayer p, LivingEntity entity) {
-        SpartanLocation location = p.getLocation().clone();
+        SpartanLocation location = p.movement.getLocation().clone();
         location.setPitch(0.0f);
         SpartanLocation multipliedLocation = new SpartanLocation(null, entity.getLocation().clone().add(location.getDirection().multiply(1.0)));
 
@@ -247,7 +247,7 @@ public class CombatUtils {
     }
 
     public static boolean areFacingEachOther(SpartanPlayer p, LivingEntity entity) {
-        return p.getLocation().getDirection().distance(entity.getLocation().getDirection()) >= 1.5;
+        return p.movement.getLocation().getDirection().distance(entity.getLocation().getDirection()) >= 1.5;
     }
 
     public static boolean newPvPMechanicsEnabled() {

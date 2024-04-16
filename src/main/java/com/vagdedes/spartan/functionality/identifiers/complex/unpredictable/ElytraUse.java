@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.functionality.identifiers.complex.unpredictable;
 
+import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
 import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.exploits.Exploits;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -23,7 +23,7 @@ public class ElytraUse {
                     if (i.getDurability() < 432) {
                         if (!event
                                 || !p.getExecutor(Enums.HackType.Exploits).handle(false, Exploits.ELYTRA_GLIDE_SPAM)) {
-                            p.setGliding(gliding, false);
+                            p.movement.setGliding(gliding, false);
                             Handlers handlers = p.getHandlers();
                             handlers.add(Handlers.HandlerType.ElytraWear, 2);
 
@@ -32,24 +32,24 @@ public class ElytraUse {
                             }
                         }
                     } else {
-                        p.setGliding(false, gliding);
+                        p.movement.setGliding(false, gliding);
 
                         if (gliding) {
                             p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{2, 2});
                         }
                     }
                 } else {
-                    p.setGliding(false, gliding);
+                    p.movement.setGliding(false, gliding);
                 }
             } else {
-                p.setGliding(false, gliding);
+                p.movement.setGliding(false, gliding);
 
                 if (gliding && !p.getHandlers().has(Handlers.HandlerType.ElytraWear)) {
                     p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{3, 2});
                 }
             }
         } else {
-            p.setGliding(false, gliding);
+            p.movement.setGliding(false, gliding);
 
             if (gliding) {
                 p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{1, 0});

@@ -15,7 +15,7 @@ public class ViolationResetEvent extends Event implements Cancellable {
     public ViolationResetEvent(Player player, Enums.HackType hackType) {
         this.player = player;
         this.hackType = hackType;
-        cancelled = false;
+        this.cancelled = false;
     }
 
     public Player getPlayer() {
@@ -26,8 +26,9 @@ public class ViolationResetEvent extends Event implements Cancellable {
         return hackType;
     }
 
+    @Deprecated
     public int getTime() {
-        return me.vagdedes.spartan.api.API.getViolationResetTime();
+        return BackgroundAPI.getViolationResetTime();
     }
 
     public boolean isCancelled() {

@@ -59,7 +59,7 @@ public class TPS {
     // Scheduler
 
     private static int getHash(SpartanPlayer player) {
-        SpartanLocation location = player.getLocation();
+        SpartanLocation location = player.movement.getLocation();
         int hash = SpartanBukkit.hashCodeMultiplier + player.getWorld().hashCode();
         hash = (SpartanBukkit.hashCodeMultiplier * hash) + location.getChunkX();
         return (SpartanBukkit.hashCodeMultiplier * hash) + location.getBlockZ();
@@ -123,7 +123,7 @@ public class TPS {
     // Base
 
     public static boolean areLow(SpartanPlayer player) {
-        if (TestServer.isIdentified() || Config.settings.getBoolean(Settings.tpsProtectionOption)) {
+        if (Config.settings.getBoolean(Settings.tpsProtectionOption)) {
             Calculator calculator;
 
             if (MultiVersion.folia) {

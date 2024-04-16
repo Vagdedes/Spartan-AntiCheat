@@ -5,15 +5,12 @@ import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.performance.CancelViolation;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.*;
 
 public class PlayerEvidence {
-
-    public static final double standardRatio = 3.5;
 
     enum EvidenceType {
         Hacker(2),
@@ -58,7 +55,7 @@ public class PlayerEvidence {
                 this.historical.clear();
             }
             if (judge) {
-                judgeLocal();
+                this.judgeLocal();
             }
         }
     }
@@ -72,7 +69,7 @@ public class PlayerEvidence {
                 this.historical.remove(hackType);
             }
             if (judge) {
-                judgeLocal();
+                this.judgeLocal();
             }
         }
     }
@@ -86,7 +83,7 @@ public class PlayerEvidence {
                 this.historical.put(hackType, info);
             }
             if (judge) {
-                judgeLocal();
+                this.judgeLocal();
             }
         }
     }
@@ -136,30 +133,31 @@ public class PlayerEvidence {
 
     // Separator
 
-    public Collection<Enums.HackType> calculate(SpartanPlayer player, Enums.HackType hackType) {
+    public Collection<Enums.HackType> calculate(SpartanPlayer player, PlayerViolation playerViolation) {
         synchronized (this.live) {
-            if (this.live.containsKey(hackType)
-                    || this.historical.containsKey(hackType)) {
-                return getRawKnowledgeList();
+            if (this.live.containsKey(playerViolation.hackType)
+                    || this.historical.containsKey(playerViolation.hackType)) {
+                return this.getRawKnowledgeList();
             } else {
-                Check check = hackType.getCheck();
+                Check check = playerViolation.hackType.getCheck();
 
                 if (check.supportsLiveEvidence) {
-                    int violationCount = player.getViolations(hackType).getLevel()
-                            - CancelViolation.get(hackType, profile.getDataType())
-                            - AlgebraUtils.integerCeil(Latency.getDelay(player));
+                    double ignoredViolations = playerViolation.getIgnoredViolations(player),
+                            violationCount = player.getViolations(playerViolation.hackType).getLevel(playerViolation.identity)
+                                    - AlgebraUtils.integerCeil(Latency.getDelay(player))
+                                    - ignoredViolations;
 
-                    if (violationCount > 0) {
-                        double ratio = (violationCount / ((double) CancelViolation.get(hackType, profile.getDataType())));
+                    if (violationCount > 0.0) {
+                        double ratio = violationCount / ignoredViolations;
 
-                        if (ratio >= standardRatio) {
-                            this.live.put(hackType,
+                        if (ratio >= Check.standardIgnoredViolations) {
+                            this.live.put(playerViolation.hackType,
                                     "Ratio: " + AlgebraUtils.cut(ratio, 2) + "%"
                             );
                             this.judgeLocal();
                             InteractiveInventory.playerInfo.refresh(player.name);
                             MainMenu.refresh();
-                            return getRawKnowledgeList();
+                            return this.getRawKnowledgeList();
                         }
                     }
                 }
@@ -188,7 +186,7 @@ public class PlayerEvidence {
 
     public void judge() {
         synchronized (this.live) {
-            judgeLocal();
+            this.judgeLocal();
         }
     }
 }

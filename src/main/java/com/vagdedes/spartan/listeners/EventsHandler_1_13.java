@@ -28,10 +28,10 @@ public class EventsHandler_1_13 implements Listener {
             }
             // Objects
             boolean swimming = e.isCancelled() ? n.isSwimming() : n.isSwimming() || e.isSwimming();
-            p.setSwimming(swimming, 0);
+            p.movement.setSwimming(swimming, 0);
 
             if (swimming) {
-                p.setLastLiquidTime();
+                p.movement.setLastLiquidTime();
             }
         }
     }

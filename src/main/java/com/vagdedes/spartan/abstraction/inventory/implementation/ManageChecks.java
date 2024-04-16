@@ -6,7 +6,6 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.management.Config;
-import com.vagdedes.spartan.functionality.performance.CancelViolation;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -101,7 +100,6 @@ public class ManageChecks extends InventoryMenu {
                 silent = check.isSilent(null),
                 bypassing = Permissions.isBypassing(player, hackType);
         String[] disabledDetections = CloudBase.getShownDisabledDetections(hackType);
-        int problematicDetections = check.getProblematicDetections();
         String enabledOption, silentOption, colour, secondColour;
         ItemStack item;
 
@@ -153,10 +151,7 @@ public class ManageChecks extends InventoryMenu {
         lore.add("");
 
         for (Enums.DataType dataType : ResearchEngine.getDynamicUsableDataTypes(false)) {
-            lore.add("§7§l" + dataType.toString() + " §r§7Cancel Violation§8:§c " + CancelViolation.get(hackType, dataType));
-        }
-        if (problematicDetections > 0) {
-            lore.add("§7Problematic Detections§8: " + problematicDetections);
+            lore.add("§7§l" + dataType.toString() + " §r§7Average Ignored Violations§8:§c " + check.getAverageIgnoredViolations(dataType));
         }
 
         // Separator
@@ -165,41 +160,17 @@ public class ManageChecks extends InventoryMenu {
                 + (silent ? "§a" : "§c") + "Silent §8/ "
                 + (check.canPunish ? "§a" : "§c") + "Punishments §8/ "
                 + (bypassing ? "§a" : "§c") + "Bypassing");
+        int counter = 0;
 
-        if (Config.isLegacy()) {
-            for (int i = 1; i <= Check.maxViolationsPerCycle; i++) {
-                int counter = 0;
+        for (String s : Config.settings.getPunishmentCommands()) {
+            if (s != null) {
+                counter++;
+                String base = "§7" + counter + "§8:§f ";
 
-                for (String s : check.getLegacyCommands(i)) {
-                    if (s != null) {
-                        counter++;
-                        String base = "§7" + i + "§8:§f ";
-
-                        if (s.length() > 40) {
-                            lore.add(base + s.substring(0, 40));
-                        } else {
-                            lore.add(base + s);
-                        }
-
-                        if (counter >= Check.maxCommands) {
-                            break;
-                        }
-                    }
-                }
-            }
-        } else {
-            int counter = 0;
-
-            for (String s : Config.settings.getPunishmentCommands()) {
-                if (s != null) {
-                    counter++;
-                    String base = "§7" + counter + "§8:§f ";
-
-                    if (s.length() > 40) {
-                        lore.add(base + s.substring(0, 40));
-                    } else {
-                        lore.add(base + s);
-                    }
+                if (s.length() > 40) {
+                    lore.add(base + s.substring(0, 40));
+                } else {
+                    lore.add(base + s);
                 }
             }
         }

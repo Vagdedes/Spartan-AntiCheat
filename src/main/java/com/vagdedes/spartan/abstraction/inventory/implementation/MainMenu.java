@@ -4,7 +4,6 @@ import com.vagdedes.filegui.api.FileGUIAPI;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.necessary.FileGUI;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
@@ -12,8 +11,10 @@ import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
 import com.vagdedes.spartan.functionality.inventory.Summary;
 import com.vagdedes.spartan.functionality.management.Config;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import com.vagdedes.spartan.functionality.server.*;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
@@ -99,9 +100,6 @@ public class MainMenu extends InventoryMenu {
         InventoryUtils.prepareDescription(lore, "Plugin Management");
         Runtime runtime = Runtime.getRuntime();
 
-        if (TestServer.isIdentified()) {
-            lore.add("§7Test Server§8: §aType " + TestServer.getIdentification());
-        }
         if (!MultiVersion.unknownFork || !MultiVersion.other) {
             lore.add("§7Server Information§8: §a" + (MultiVersion.unknownFork ? "Version" : MultiVersion.fork())
                     + (MultiVersion.other ? "" : " " + MultiVersion.versionString()));
@@ -111,7 +109,6 @@ public class MainMenu extends InventoryMenu {
                 + " - " + (tps >= TPS.excellent ? "Excellent" : tps >= TPS.good ? "Good" : tps >= TPS.minimum ? "Mediocre" : "Unstable"));
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
-        lore.add("§7Research Engine§8: §a" + ResearchEngine.getProgress().logs + " Logs");
         lore.add("§7Detections Available§8: "
                 + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.Java) ? "§a" : "§c") + Enums.DataType.Java
                 + " §8/ "
@@ -180,7 +177,7 @@ public class MainMenu extends InventoryMenu {
                 if (Compatibility.CompatibilityType.FileGUI.isFunctional()) {
                     Player n = player.getPlayer();
 
-                    if (n != null && n.isOnline() && n.hasPermission(FileGUI.permission)) {
+                    if (n != null && n.isOnline() && n.hasPermission("filegui.modify")) {
                         FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                     } else {
                         player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));

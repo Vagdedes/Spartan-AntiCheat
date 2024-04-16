@@ -13,7 +13,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 public class CrossServerInformation {
 
@@ -183,24 +186,6 @@ public class CrossServerInformation {
             return absent
                     ? !notifications.contains(string) && notifications.add(string)
                     : notifications.add(string);
-        }
-    }
-
-    public static void queueNotificationWithWebhook(UUID uuid, String name, int x, int y, int z, String type, String string, boolean absent) {
-        long ms = System.currentTimeMillis();
-
-        if (ms >= cooldown && queueNotification(string, absent)) {
-            cooldown = ms + 500L; // Always First
-            DiscordWebhooks.send(uuid, name, x, y, z, type, string);
-        }
-    }
-
-    public static void queueWebhook(UUID uuid, String name, int x, int y, int z, String type, String string) {
-        long ms = System.currentTimeMillis();
-
-        if (ms >= cooldown) {
-            cooldown = ms + 500L; // Always First
-            DiscordWebhooks.send(uuid, name, x, y, z, type, string);
         }
     }
 

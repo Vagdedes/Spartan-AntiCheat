@@ -4,7 +4,6 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TestServer;
 
 import java.util.*;
 
@@ -130,16 +129,12 @@ public class MaximumCheckedPlayers {
     }
 
     public static boolean isChecked(UUID uuid) {
-        if (TestServer.isIdentified()) {
+        int optionAmount = Config.settings.getInteger(option);
+
+        if (optionAmount <= 0) {
             return true;
         } else {
-            int optionAmount = Config.settings.getInteger(option);
-
-            if (optionAmount <= 0) {
-                return true;
-            } else {
-                return add(uuid, optionAmount);
-            }
+            return add(uuid, optionAmount);
         }
     }
 }

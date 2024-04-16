@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.entity;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Buffer;
+import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import es.pollitoyeye.vehicles.enums.VehicleType;
@@ -38,24 +38,23 @@ public class Vehicles implements Listener {
     }
 
     private static void add(SpartanPlayer p, String type) {
-        Buffer buffer = p.getBuffer();
-        buffer.set(key + type, 1);
-        buffer.setRemainingTicks(key + type, 20);
+        Cooldowns cooldowns = p.getCooldowns();
+        cooldowns.add(key + type, 20);
     }
 
-    private static boolean has(Buffer buffer, String type) {
-        return buffer.get(key + type) == 1 || buffer.getRemainingTicks(key + type) > 0;
+    private static boolean has(Cooldowns cooldowns, String type) {
+        return !cooldowns.canDo(key + type);
     }
 
     public static boolean has(SpartanPlayer p, String type) {
-        return has(p.getBuffer(), type);
+        return has(p.getCooldowns(), type);
     }
 
     public static boolean has(SpartanPlayer p, String[] types) {
-        Buffer buffer = p.getBuffer();
+        Cooldowns cooldowns = p.getCooldowns();
 
         for (String type : types) {
-            if (has(buffer, type)) {
+            if (has(cooldowns, type)) {
                 return true;
             }
         }

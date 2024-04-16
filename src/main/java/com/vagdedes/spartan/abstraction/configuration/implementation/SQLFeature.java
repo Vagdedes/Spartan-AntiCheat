@@ -3,13 +3,13 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
@@ -181,7 +181,7 @@ public class SQLFeature extends ConfigurationBuilder {
         addOption("escape_special_characters", false);
         refreshConfiguration();
 
-        SpartanBukkit.dataThread.execute(this::connect);
+        SpartanBukkit.dataThread.executeWithPriority(this::connect);
 
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);
@@ -337,7 +337,7 @@ public class SQLFeature extends ConfigurationBuilder {
             boolean hasPlayer = p != null;
             boolean hasCheck = hackType != null;
             UUID uuid = hasPlayer ? p.uuid : null;
-            SpartanLocation location = hasPlayer ? p.getLocation() : null;
+            SpartanLocation location = hasPlayer ? p.movement.getLocation() : null;
 
             synchronized (list) {
                 list.add(
@@ -366,7 +366,7 @@ public class SQLFeature extends ConfigurationBuilder {
             }
 
             if (list.size() >= 10) {
-                Runnable runnable = () -> {
+                SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
                     List<String> newList;
 
                     synchronized (list) {
@@ -376,13 +376,7 @@ public class SQLFeature extends ConfigurationBuilder {
                     for (String insert : newList) {
                         update(insert);
                     }
-                };
-
-                if (SpartanBukkit.isSynchronised()) {
-                    SpartanBukkit.dataThread.execute(runnable);
-                } else {
-                    runnable.run();
-                }
+                });
             }
         }
     }

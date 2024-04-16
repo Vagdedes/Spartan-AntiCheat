@@ -107,6 +107,7 @@ public class API {
         return BackgroundAPI.getCancelViolation(hackType, worldName);
     }
 
+    @Deprecated
     public static int getCancelViolation(HackType hackType) {
         return BackgroundAPI.getCancelViolation(hackType);
     }

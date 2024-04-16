@@ -2,7 +2,8 @@ package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.CharUtils;
+import com.vagdedes.spartan.utils.gameplay.GroundUtils;
+import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
@@ -10,140 +11,109 @@ import java.util.*;
 
 public class InformationAnalysis {
 
-    // Structure
+    private static final int max = 10_000;
+    private static final Map<Integer, StoredInformation>
+            map = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>(max)));
 
-    private static final Map<Integer, Map<Integer, Set<Integer>>>
-            numbers = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>()));
-    private static final Map<Integer, Boolean>
-            detectionHasOption = Cache.store(Collections.synchronizedMap(new LinkedHashMap<>()));
+    // Separator
 
-    private static boolean containsDetection(String string, String find) {
-        int index = string.indexOf(find);
+    private static final class StoredInformation {
 
-        if (index > -1) {
-            int findLength = find.length(),
-                    stringLength = string.length();
+        private final Map<Integer, Set<Integer>> positions;
+        private final boolean isOption;
 
-            // Start
-            if (index == 0) {
-                index += findLength;
-                return index < stringLength && string.charAt(index) == '_';
-            }
-
-            // End
-            if (index == (stringLength - 1)) {
-                return string.charAt(index - 1) == '_';
-            }
-
-            // Between
-            if (string.charAt(index - 1) == '_') {
-                index += findLength;
-                return index >= stringLength || string.charAt(index) == '_';
-            }
+        private StoredInformation(boolean isOption) {
+            this.positions = new LinkedHashMap<>();
+            this.isOption = isOption;
         }
-        return false;
-    }
-
-    private static String removeDetectionDetails(String detection) {
-        detection = detection.split("\\(")[0];
-        boolean foundNumberPreviously = false;
-        StringBuilder reconstruct = new StringBuilder();
-
-        for (int position = 0; position < detection.length(); position++) {
-            char character = detection.charAt(position);
-
-            if (CharUtils.isNumeric(character)) {
-                foundNumberPreviously = true;
-            } else {
-                if (foundNumberPreviously && character == '.') { // Do not add character as it is part of a decimal
-                    continue;
-                }
-                foundNumberPreviously = false;
-                reconstruct.append(character);
-            }
-        }
-        return reconstruct.toString();
     }
 
     // Orientation
 
-    private final int key;
+    final int hash;
+    public final int identity;
     final String detection;
-    private final String[] array;
+    final boolean isOption;
+    final Collection<Number> numbers;
 
-    InformationAnalysis(Enums.HackType hackType, String information) {
-        this.array = information.split(" ");
+    public InformationAnalysis(Enums.HackType hackType, String information) {
+        String[] array = information.split(" ");
 
         String detection = array[1];
         this.detection = detection.substring(0, detection.length() - 1); // Remove comma
-        this.key = (hackType.hashCode() * SpartanBukkit.hashCodeMultiplier) + detection.hashCode();
-    }
+        this.hash = (hackType.hashCode() * SpartanBukkit.hashCodeMultiplier) + detection.hashCode();
 
-    boolean isOption(Enums.HackType hackType) {
+        // Separator
+
         Collection<String> configKeys = hackType.getCheck().getOptionKeys();
         int configKeyCount = configKeys.size();
+        StoredInformation data;
 
-        if (configKeyCount > 0) {
-            int hash = (key * SpartanBukkit.hashCodeMultiplier) + configKeyCount;
+        synchronized (map) {
+            data = map.get(this.hash);
 
-            synchronized (detectionHasOption) {
-                Boolean cachedDetection = detectionHasOption.get(hash);
+            if (data == null) {
+                List<String> foundDetections = new ArrayList<>(configKeyCount);
 
-                if (cachedDetection != null) {
-                    return cachedDetection;
-                } else {
-                    List<String> foundDetections = new ArrayList<>(configKeyCount);
-
-                    for (String keyword : removeDetectionDetails(detection).split("-")) {
-                        for (String configKey : configKeys) {
-                            if (containsDetection(configKey, keyword)) {
-                                foundDetections.add(configKey);
-                            }
+                for (String keyword : this.removeDetectionDetails(detection).split("-")) {
+                    for (String configKey : configKeys) {
+                        if (this.containsDetection(configKey, keyword)) {
+                            foundDetections.add(configKey);
                         }
                     }
+                }
 
-                    // Use the config key instead to cover all the sub-detections
-                    if (foundDetections.size() == 1) {
-                        detectionHasOption.put(hash, true);
-                        return true;
-                    } else {
-                        detectionHasOption.put(hash, false);
+                data = new StoredInformation(foundDetections.size() == 1);
+                Map<Integer, Number> positionsAndNumbers = this.identifyAndShowNumbers(array, array.length);
+                data.positions.put(array.length, positionsAndNumbers.keySet());
+                this.numbers = positionsAndNumbers.values();
+                int delete = map.size() - max;
+
+                if (delete > 0) {
+                    Iterator<Integer> iterator = map.keySet().iterator();
+
+                    while (iterator.hasNext()) {
+                        iterator.next();
+                        iterator.remove();
+
+                        if (--delete == 0) {
+                            break;
+                        }
                     }
                 }
-            }
-        }
-        return false;
-    }
+                map.put(this.hash, data);
+            } else {
+                Set<Integer> positions = data.positions.get(array.length);
 
-    Collection<Number> getNumbers() {
-        int size = array.length;
-
-        if (size >= 2) {
-            synchronized (numbers) {
-                Map<Integer, Set<Integer>> childMap = numbers.get(key);
-
-                if (childMap == null) {
-                    childMap = new LinkedHashMap<>();
-                    Map<Integer, Number> positionsAndNumbers = identifyAndShowNumbers(array, size);
-                    childMap.put(size, positionsAndNumbers.keySet());
-                    numbers.put(key, childMap);
-                    return positionsAndNumbers.values();
+                if (positions != null) {
+                    this.numbers = this.showNumbers(array, array.length, positions);
                 } else {
-                    Set<Integer> positions = childMap.get(size);
-
-                    if (positions != null) {
-                        return showNumbers(array, size, positions);
-                    } else {
-                        Map<Integer, Number> positionsAndNumbers = identifyAndShowNumbers(array, size);
-                        childMap.put(size, positionsAndNumbers.keySet());
-                        return positionsAndNumbers.values();
-                    }
+                    Map<Integer, Number> positionsAndNumbers = this.identifyAndShowNumbers(array, array.length);
+                    data.positions.put(array.length, positionsAndNumbers.keySet());
+                    this.numbers = positionsAndNumbers.values();
                 }
             }
-        } else {
-            return new ArrayList<>(0);
         }
+        this.isOption = data.isOption;
+
+        // Separator
+
+        int identity = this.hash;
+
+        if (!this.numbers.isEmpty()) {
+            for (Number number : this.numbers) {
+                if (number instanceof Double) {
+                    identity = (identity * SpartanBukkit.hashCodeMultiplier)
+                            + Double.hashCode(AlgebraUtils.cut(number.doubleValue(), GroundUtils.maxHeightLength));
+                } else {
+                    identity = (identity * SpartanBukkit.hashCodeMultiplier) + number.intValue();
+                }
+            }
+        }
+        this.identity = identity;
     }
+
+    // Separator
 
     private Map<Integer, Number> identifyAndShowNumbers(String[] array, int size) {
         Map<Integer, Number> map = new LinkedHashMap<>(size);
@@ -190,4 +160,49 @@ public class InformationAnalysis {
         }
         return numbers;
     }
+
+    // Separator
+
+    private boolean containsDetection(String string, String find) {
+        int index = string.indexOf(find);
+
+        if (index > -1) {
+            if (index == 0) { // Start
+                index += find.length();
+                return index < string.length() && string.charAt(index) == '_';
+            } else {
+                int stringLength = string.length();
+
+                if (index == (stringLength - 1)) { // End
+                    return string.charAt(index - 1) == '_';
+                } else if (string.charAt(index - 1) == '_') { // Between
+                    index += find.length();
+                    return index >= stringLength || string.charAt(index) == '_';
+                }
+            }
+        }
+        return false;
+    }
+
+    private String removeDetectionDetails(String detection) {
+        detection = detection.split("\\(")[0];
+        boolean foundNumberPreviously = false;
+        StringBuilder reconstruct = new StringBuilder();
+
+        for (int position = 0; position < detection.length(); position++) {
+            char character = detection.charAt(position);
+
+            if (StringUtils.isNumeric(character)) {
+                foundNumberPreviously = true;
+            } else {
+                if (foundNumberPreviously && character == '.') { // Do not add character as it is part of a decimal
+                    continue;
+                }
+                foundNumberPreviously = false;
+                reconstruct.append(character);
+            }
+        }
+        return reconstruct.toString();
+    }
+
 }

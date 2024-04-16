@@ -1,90 +1,53 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.data.Cooldowns;
-import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.movement.speed.Speed;
-import com.vagdedes.spartan.functionality.identifiers.simple.VehicleAccess;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.gameplay.MoveUtils;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 public class HackPrevention {
 
-    final String information;
-    final SpartanLocation location;
-    final int violation;
-    final boolean groundTeleport;
-    boolean processed;
-    final double damage;
-    final long time, tick, expiration;
-
-    private static final Cooldowns cooldowns = new Cooldowns(null);
+    boolean canPrevent;
+    private final SpartanLocation location;
+    private final boolean groundTeleport;
+    private final double damage;
+    private final long expiration;
 
     // Separator
 
-    public HackPrevention(SpartanPlayer player, Enums.HackType hackType, String verbose,
-                          SpartanLocation location, int cancelTicks, boolean groundTeleport,
-                          double damage, int violation) {
-        // Object Data
-        this.time = System.currentTimeMillis();
-        this.tick = TPS.getTick(player);
-        this.expiration = cancelTicks == 0 ? 0L : this.tick + cancelTicks;
-        this.information = verbose;
+    HackPrevention() {
+        this.canPrevent = false;
+        this.location = null;
+        this.groundTeleport = false;
+        this.damage = 0.0;
+        this.expiration = 0L;
+    }
+
+    HackPrevention(SpartanPlayer player, Enums.HackType hackType, String information,
+                   SpartanLocation location, int cancelTicks, boolean groundTeleport,
+                   double damage) {
+        long time = System.currentTimeMillis();
+        this.canPrevent = false;
         this.location = location;
         this.groundTeleport = groundTeleport;
         this.damage = damage;
-        this.processed = false;
-
-        // Redundancy
-        Check check = hackType.getCheck();
-
-        if (violation == 1 && check.type == Enums.CheckType.MOVEMENT) {
-            if (VehicleAccess.hasExitCooldown(player, hackType)) {
-                this.violation = 0;
-            } else {
-                this.violation = violation;
-            }
-        } else {
-            this.violation = violation;
-        }
-        player.getViolations(hackType).queue(this, check);
+        this.expiration = TPS.getTick(player) + cancelTicks;
+        player.getViolations(hackType).run(this, information, time);
     }
 
-    void handle(SpartanPlayer player, Enums.HackType hackType) {
-        SpartanLocation preventionFrom = this.location;
-        boolean teleported = preventionFrom != null
-                && player.safeTeleport(preventionFrom);
+    boolean hasExpired(long tick) {
+        return tick > this.expiration;
+    }
 
-        if (this.groundTeleport
-                && player.groundTeleport(true)) {
-            teleported = true;
+    void handle(SpartanPlayer player) {
+        if (this.location != null) {
+            player.safeTeleport(this.location);
         }
-        if (teleported) {
-            String key = player.uuid + "velocity";
-
-            if (cooldowns.canDo(key)
-                    && (hackType == Enums.HackType.IrregularMovements
-                    || hackType == Enums.HackType.Speed && this.information.contains(Speed.strongPrevention))) {
-                SpartanLocation to = player.getLocation(),
-                        from = player.getEventFromLocation();
-
-                if (AlgebraUtils.getHorizontalDistance(to, from) <= 0.75) {
-                    double vertical = Math.abs(to.getY() - from.getY());
-
-                    if (vertical == 0.0 || vertical >= MoveUtils.nearMaxFallingMotion) {
-                        cooldowns.add(key, 5);
-                        player.getHandlers().disable(Handlers.HandlerType.Velocity, 2);
-                        player.setVelocity(to.getDirection().setY(MoveUtils.gravityAcceleration));
-                    }
-                }
-            }
+        if (this.groundTeleport) {
+            player.groundTeleport(true);
         }
-
-        if (damage > 0.0) {
-            player.applyFallDamage(damage);
+        if (this.damage > 0.0) {
+            player.applyFallDamage(this.damage);
         }
     }
 }

@@ -62,13 +62,14 @@ public class Chunks {
 
             if (list.contains(hash)) {
                 return true;
-            }
-            for (Chunk chunk : world.getLoadedChunks()) {
-                if (chunk.getX() == x && chunk.getZ() == z) {
-                    if (!list.contains(hash)) {
-                        list.add(hash);
+            } else if (SpartanBukkit.isSynchronised()) {
+                for (Chunk chunk : world.getLoadedChunks()) {
+                    if (chunk.getX() == x && chunk.getZ() == z) {
+                        if (!list.contains(hash)) {
+                            list.add(hash);
+                        }
+                        return true;
                     }
-                    return true;
                 }
             }
         }

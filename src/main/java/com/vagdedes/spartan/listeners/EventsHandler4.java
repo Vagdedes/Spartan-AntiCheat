@@ -3,8 +3,8 @@ package com.vagdedes.spartan.listeners;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Piston;
+import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.protections.CheckDelay;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -47,7 +47,7 @@ public class EventsHandler4 implements Listener {
         // Detections
         p.getExecutor(Enums.HackType.ItemDrops).run(cancelled);
 
-        if (p.getViolations(Enums.HackType.ItemDrops).process()) {
+        if (p.getViolations(Enums.HackType.ItemDrops).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -94,8 +94,8 @@ public class EventsHandler4 implements Listener {
             p.getExecutor(Enums.HackType.InventoryClicks).handle(cancelled, e);
 
             // GUIs
-            if (p.getViolations(Enums.HackType.ImpossibleInventory).process()
-                    | p.getViolations(Enums.HackType.InventoryClicks).process()) {
+            if (p.getViolations(Enums.HackType.ImpossibleInventory).prevent()
+                    | p.getViolations(Enums.HackType.InventoryClicks).prevent()) {
                 e.setCancelled(true);
             } else if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 for (InventoryMenu menu : InteractiveInventory.menus) {

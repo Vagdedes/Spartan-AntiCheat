@@ -61,15 +61,4 @@ public class RequestUtils {
     public static String[] get(String link) throws Exception {
         return get(link, "GET", null, defaultTimeOut);
     }
-
-    public static String getDomain(String site, boolean secure) {
-        site = site.replace((secure ? "https" : "http") + "://", "");
-
-        for (int i = 0; i <= site.length(); i++) {
-            if (site.substring(i).startsWith("/")) {
-                return site.substring(0, i);
-            }
-        }
-        return null;
-    }
 }

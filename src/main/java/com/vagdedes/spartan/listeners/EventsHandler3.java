@@ -1,18 +1,14 @@
 package com.vagdedes.spartan.listeners;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
 import com.vagdedes.spartan.abstraction.data.Handlers;
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.movement.NoFall;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.chat.StaffChat;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.Explosion;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.FloorProtection;
 import com.vagdedes.spartan.functionality.identifiers.complex.predictable.Liquid;
-import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Damage;
-import com.vagdedes.spartan.functionality.protections.CheckDelay;
+import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -78,7 +74,7 @@ public class EventsHandler3 implements Listener {
             // Objects
             p.setFallDistance(n.getFallDistance(), false);
             p.setHealth(n.getHealth());
-            p.setLastDamageCause(e, n.getMaximumNoDamageTicks());
+            p.addReceivedDamage(e);
 
             if (cancelled) {
                 // Detections
@@ -91,14 +87,9 @@ public class EventsHandler3 implements Listener {
 
                 // Handlers
                 p.getHandlers().disable(Handlers.HandlerType.Velocity, 2);
-                Damage.runReceivedDamage(p, dmg);
-                Explosion.runDamage(p, null, dmg);
 
                 // Detections
                 ((NoFall) p.getExecutor(Enums.HackType.NoFall)).manageRatio(dmg, e.getDamage(), false);
-
-                // Protections
-                FloorProtection.runDamage(p, dmg);
             }
         } else {
             Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? entity.getPassengers().toArray(new Entity[0]) : new Entity[]{entity.getPassenger()};
@@ -113,11 +104,7 @@ public class EventsHandler3 implements Listener {
                             // Objects
                             p.setFallDistance(n.getFallDistance(), false);
                             p.setHealth(n.getHealth());
-                            p.setLastDamageCause(e, n.getMaximumNoDamageTicks());
-
-                            // Handlers
-                            Damage.runReceivedDamage(p, dmg);
-                            Explosion.runDamage(p, null, dmg);
+                            p.addReceivedDamage(e);
                         }
                     }
                 }
@@ -144,7 +131,7 @@ public class EventsHandler3 implements Listener {
         // Detections
         p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getLines());
 
-        if (p.getViolations(Enums.HackType.Exploits).process()) {
+        if (p.getViolations(Enums.HackType.Exploits).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -163,16 +150,13 @@ public class EventsHandler3 implements Listener {
             }
             Block nb = e.getClickedBlock();
             Action action = e.getAction();
-            boolean cancelled = e.isCancelled(),
-                    notNull = nb != null,
+            boolean notNull = nb != null,
                     customBlock = notNull && ItemsAdder.is(nb);
 
             // Object
-            p.calculateClickData(action, false);
+            p.calculateClicks(action, false);
 
             if (notNull) {
-                SpartanBlock b = new SpartanBlock(p, nb);
-
                 // Detections
                 if (!customBlock) {
                     p.getExecutor(Enums.HackType.BlockReach).handle(false, e);
@@ -183,14 +167,17 @@ public class EventsHandler3 implements Listener {
                 p.getExecutor(Enums.HackType.NoSlowdown).handle(false, e);
                 p.getExecutor(Enums.HackType.ItemDrops).handle(false, e);
 
-                // Detections
                 if (!customBlock) {
                     p.getExecutor(Enums.HackType.GhostHand).handle(false, e);
+
+                    // Handler
                     Liquid.runInteract(p, action);
                 }
             } else {
                 // Detections
-                p.getExecutor(Enums.HackType.FastClicks).handle(false, e);
+                if (action == Action.LEFT_CLICK_AIR) {
+                    p.getExecutor(Enums.HackType.FastClicks).run(false);
+                }
                 p.getExecutor(Enums.HackType.FastEat).handle(false, e);
             }
             // Detections
@@ -199,8 +186,8 @@ public class EventsHandler3 implements Listener {
             }
             p.getExecutor(Enums.HackType.FastBow).handle(false, e);
 
-            if (p.getViolations(Enums.HackType.GhostHand).process()
-                    || p.getViolations(Enums.HackType.FastClicks).process()) {
+            if (p.getViolations(Enums.HackType.GhostHand).prevent()
+                    || p.getViolations(Enums.HackType.FastClicks).prevent()) {
                 e.setCancelled(true);
             }
         }

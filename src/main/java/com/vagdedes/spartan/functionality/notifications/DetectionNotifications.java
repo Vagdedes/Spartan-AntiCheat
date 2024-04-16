@@ -1,20 +1,19 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.implementation.world.XRay;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.world.XRay;
-import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TestServer;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerData;
+import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import me.vagdedes.spartan.api.PlayerFoundOreEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.GameMode;
@@ -73,7 +72,6 @@ public class DetectionNotifications {
                 && (divisor < 0
 
                 || (all
-                || TestServer.isIdentified()
                 || !ResearchEngine.enoughData()
                 || divisor >= 1
                 || Config.settings.getBoolean("Notifications.individual_only_notifications"))
@@ -140,12 +138,12 @@ public class DetectionNotifications {
     }
 
     public static void runMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
-        if (player.getGameMode() == GameMode.SURVIVAL && PlayerData.isPickaxeItem(player.getItemInHand().getType())) {
+        if (player.getGameMode() == GameMode.SURVIVAL && PlayerUtils.isPickaxeItem(player.getItemInHand().getType())) {
             Enums.MiningOre ore = getMiningOre(block.material);
 
             if (ore != null) {
-                SpartanLocation location = player.getLocation();
-                World.Environment environment = location.getWorld().getEnvironment();
+                SpartanLocation location = player.movement.getLocation();
+                World.Environment environment = location.world.getEnvironment();
                 int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
                 String key = ore.toString(),
                         log = player.name + " found " + amount + " " + key
@@ -169,7 +167,7 @@ public class DetectionNotifications {
                             block.material,
                             XRay.check,
                             true,
-                            player.getViolations(XRay.check).getLevel()
+                            -1
                     );
                     MiningHistory miningHistory = player.getProfile().getMiningHistory(ore);
 

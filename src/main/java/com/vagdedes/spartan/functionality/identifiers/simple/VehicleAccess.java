@@ -53,7 +53,6 @@ public class VehicleAccess {
         handlers.remove(Handlers.HandlerType.ElytraUse);
         handlers.remove(Handlers.HandlerType.Trident);
         handlers.remove(Handlers.HandlerType.ExtremeCollision);
-        handlers.remove(Handlers.HandlerType.Floor);
 
         // Separator
 

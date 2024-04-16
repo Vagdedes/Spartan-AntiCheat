@@ -3,8 +3,8 @@ package com.vagdedes.spartan.compatibility.manual.damage;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
-import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Damage;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.gameplay.CombatUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -35,7 +35,7 @@ public class NoHitDelay {
     }
 
     public static boolean hasCooldown(SpartanPlayer p) {
-        return Damage.getLastReceived(p) <= CombatUtils.combatTimeRequirement
+        return p.getLastDamageReceived().ticksPassed() <= (CombatUtils.combatTimeRequirement / TPS.tickTime)
                 && (Compatibility.CompatibilityType.NoHitDelay.isFunctional() && !p.getCooldowns().canDo("no-hit-delay=compatibility")
                 || Attributes.has(p, Attributes.GENERIC_ATTACK_SPEED)
                 || KnockbackMaster.isUsing(p));

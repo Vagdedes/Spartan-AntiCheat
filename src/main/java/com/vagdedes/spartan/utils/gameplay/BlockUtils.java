@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class BlockUtils {
 
-    private static final Material
+    public static final Material
             water = MaterialUtils.get("water"),
             lava = MaterialUtils.get("lava"),
             head = MaterialUtils.get("head"),
@@ -1643,8 +1643,7 @@ public class BlockUtils {
     }
 
     public static boolean isSensitive(SpartanLocation loc) {
-        SpartanPlayer p = loc.getPlayer();
-        return p != null ? isSensitive(p, loc.getBlock().material) : isSensitive(loc.getBlock().material);
+        return loc.player != null ? isSensitive(loc.player, loc.getBlock().material) : isSensitive(loc.getBlock().material);
     }
 
     public static boolean isFullSolid(SpartanLocation loc) {
@@ -1669,7 +1668,7 @@ public class BlockUtils {
     }
 
     public static boolean isLiquid(SpartanLocation loc) {
-        return loc.getBlock().isLiquid();
+        return loc.getBlock().isLiquidOrWaterLogged();
     }
 
     public static boolean isGroundFree(SpartanPlayer p, SpartanLocation loc, double x, double y, double z) {
@@ -1677,7 +1676,7 @@ public class BlockUtils {
             return false;
         }
         for (SpartanLocation locs : loc.getSurroundingLocations(x, y, z)) {
-            if (PlayerData.isOnGround(p, locs, 0.0)) {
+            if (GroundUtils.isOnGround(p, locs, 0.0, true, true)) {
                 return false;
             }
         }
@@ -1779,9 +1778,9 @@ public class BlockUtils {
     public static boolean isClearLiquid(SpartanPlayer p, SpartanLocation loc) {
         SpartanBlock b = loc.getBlock();
 
-        if (!b.isLiquid()) {
+        if (!b.liquid) {
             return true;
         }
-        return b.data == 0 || b.data == 8 || p != null && p.getLocation().getBlock() != b;
+        return b.data == 0 || b.data == 8 || p != null && p.movement.getLocation().getBlock() != b;
     }
 }

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.necessary.bedrock.BedrockCompatibility;
+import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -33,7 +33,7 @@ public class PlayerProfile {
         // Separator
         this.uuid = null;
         this.name = name;
-        this.punishmentHistory = new PunishmentHistory(this);
+        this.punishmentHistory = new PunishmentHistory();
         this.playerCombat = new PlayerCombat(this);
         this.evidence = new PlayerEvidence(this);
         this.skull = null;
@@ -67,7 +67,7 @@ public class PlayerProfile {
         this.uuid = player.uuid;
         this.name = player.name;
         this.offlinePlayer = player.getPlayer(); // Attention
-        this.punishmentHistory = new PunishmentHistory(this);
+        this.punishmentHistory = new PunishmentHistory();
         this.playerCombat = new PlayerCombat(this);
         this.evidence = new PlayerEvidence(this);
         this.skull = null;
@@ -173,6 +173,10 @@ public class PlayerProfile {
                 : SpartanBukkit.getPlayer(name);
     }
 
+    public boolean isOnline() {
+        return getSpartanPlayer() != null;
+    }
+
     // Separator
 
     public ViolationHistory[] getViolationHistory() {
@@ -249,18 +253,5 @@ public class PlayerProfile {
 
     public boolean isSuspectedOrHacker(Enums.HackType hackType) {
         return isHacker() || isSuspected(hackType);
-    }
-
-    // Separator
-
-    public int getUsefulLogs() {
-        int sum = 0;
-
-        for (ViolationHistory violationHistory : getViolationHistory()) {
-            sum += (violationHistory.getCount()
-                    + getOverallMiningHistory().getMines()
-                    + punishmentHistory.getOverall());
-        }
-        return sum;
     }
 }

@@ -10,10 +10,10 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
+import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import com.vagdedes.spartan.functionality.protections.CheckDelay;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import com.vagdedes.spartan.utils.server.PluginUtils;
@@ -29,10 +29,7 @@ import java.io.File;
 
 public class Config {
 
-    public static final String
-            legacyFileName = "config.yml",
-            fileName = "checks.yml",
-            checksFileName = "checks.yml";
+    public static final String checksFileName = "checks.yml";
     public static final String[] configs = new String[]{
             "config.yml", "Config.settings.yml", checksFileName,
             "compatibility.yml", "messages.yml", "sql.yml"
@@ -40,7 +37,6 @@ public class Config {
 
     private static YamlConfiguration configuration = null;
     private static String construct = null;
-    private static boolean legacyFile = false;
     private static int maxPlayers = 20;
     public static Settings settings = new Settings();
     public static SQLFeature sql = new SQLFeature();
@@ -57,12 +53,8 @@ public class Config {
         return maxPlayers;
     }
 
-    public static boolean isLegacy() {
-        return legacyFile;
-    }
-
     public static File getFile() {
-        return new File(Register.plugin.getDataFolder() + "/" + (isLegacy() ? legacyFileName : fileName));
+        return new File(Register.plugin.getDataFolder() + "/" + checksFileName);
     }
 
     public static YamlConfiguration getConfiguration() { // Synchronise it in all uses
@@ -84,10 +76,6 @@ public class Config {
             }
         }
         return configuration;
-    }
-
-    public static File getAlternativeFile() {
-        return new File(Register.plugin.getDataFolder() + "/" + (!isLegacy() ? legacyFileName : fileName));
     }
 
     public static String getConstruct() {
@@ -118,31 +106,21 @@ public class Config {
         int max = Math.max(Bukkit.getMaxPlayers(), maxPlayers); // static, dynamic & past/minimum
         maxPlayers = Math.min(max, 500);
 
-        // Legacy Configuration
-        String path = Register.plugin.getDataFolder() + "/";
-        File file = new File(path + legacyFileName);
+        // Configuration
+        File file = getFile();
 
-        if (file.exists()) {
-            legacyFile = true;
-            configuration = YamlConfiguration.loadConfiguration(file);
-            Register.plugin.reloadConfig();
-        } else {
-            legacyFile = false;
-            file = new File(path + fileName);
-
-            if (!file.exists()) {
-                try {
-                    if (file.createNewFile()) {
-                        configuration = YamlConfiguration.loadConfiguration(file);
-                    } else {
-                        configuration = null;
-                    }
-                } catch (Exception ignored) {
+        if (!file.exists()) {
+            try {
+                if (file.createNewFile()) {
+                    configuration = YamlConfiguration.loadConfiguration(file);
+                } else {
                     configuration = null;
                 }
-            } else {
-                configuration = YamlConfiguration.loadConfiguration(file);
+            } catch (Exception ignored) {
+                configuration = null;
             }
+        } else {
+            configuration = YamlConfiguration.loadConfiguration(file);
         }
 
         // Identification & Labelling
@@ -159,11 +137,7 @@ public class Config {
     }
 
     public static void createConfigurations(boolean local) {
-        if (Config.isLegacy()) {
-            Register.plugin.reloadConfig();
-        }
         if (!local) { // Always first
-            Config.getAlternativeFile().delete();
             File file = getFile();
 
             if (file.exists()) {

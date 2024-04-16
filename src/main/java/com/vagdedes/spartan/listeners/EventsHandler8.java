@@ -60,17 +60,17 @@ public class EventsHandler8 implements Listener {
         }
         if (e.isCancelled()) {
             // Objects
-            p.setSprinting(n.isSprinting());
+            p.movement.setSprinting(n.isSprinting());
         } else {
             boolean sprinting = e.isSprinting();
 
             // Utils
             if (!sprinting) {
-                p.setLastOffSprint();
+                p.movement.setLastOffSprint();
             }
 
             // Objects
-            p.setSprinting(sprinting);
+            p.movement.setSprinting(sprinting);
         }
     }
 
@@ -84,13 +84,13 @@ public class EventsHandler8 implements Listener {
         }
         if (e.isCancelled()) {
             // Objects
-            p.setSneaking(false);
+            p.movement.setSneaking(false);
             p.setEyeHeight(n.getEyeHeight());
         } else {
             boolean sneaking = e.isSneaking();
 
             // Objects
-            p.setSneaking(sneaking);
+            p.movement.setSneaking(sneaking);
             p.setEyeHeight(n.getEyeHeight());
         }
     }
@@ -105,8 +105,8 @@ public class EventsHandler8 implements Listener {
             if (p == null) {
                 return;
             }
-            if (p.getViolations(Enums.HackType.Speed).process()
-                    || p.getViolations(Enums.HackType.IrregularMovements).process()) {
+            if (p.getViolations(Enums.HackType.Speed).prevent()
+                    || p.getViolations(Enums.HackType.IrregularMovements).prevent()) {
                 e.setCancelled(true);
             } else {
                 // Handlers

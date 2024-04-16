@@ -7,7 +7,6 @@ import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TestServer;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.Collection;
@@ -18,8 +17,7 @@ public class SuspicionNotifications {
 
     public static void run() {
         SpartanBukkit.runRepeatingTask(() -> { // Here because there are no other class calls
-            if (!TestServer.isIdentified()
-                    && ResearchEngine.enoughData()
+            if (ResearchEngine.enoughData()
                     && !Config.settings.getBoolean("Notifications.individual_only_notifications")) {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
                 Iterator<SpartanPlayer> iterator = players.iterator();
@@ -42,45 +40,43 @@ public class SuspicionNotifications {
         int size = 0, commaLength = comma.length();
 
         for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
-            if (player.canRunChecks(false)) {
-                PlayerProfile profile = player.getProfile();
-                boolean shouldList;
+            PlayerProfile profile = player.getProfile();
+            boolean shouldList;
 
-                if (profile.isHacker()) {
-                    shouldList = true;
-                } else if (profile.isSuspected()) {
-                    shouldList = false;
+            if (profile.isHacker()) {
+                shouldList = true;
+            } else if (profile.isSuspected()) {
+                shouldList = false;
 
-                    for (Enums.HackType hackType : profile.evidence.getKnowledgeList()) {
-                        if (player.getViolations(hackType).hasLevel()) {
-                            shouldList = true;
-                            break;
-                        }
+                for (Enums.HackType hackType : profile.evidence.getKnowledgeList()) {
+                    if (player.getViolations(hackType).hasLevel()) {
+                        shouldList = true;
+                        break;
                     }
-                } else {
-                    shouldList = false;
                 }
+            } else {
+                shouldList = false;
+            }
 
-                if (shouldList) {
-                    StringBuilder evidence = new StringBuilder();
-                    Collection<Enums.HackType> evidenceDetails = profile.evidence.getKnowledgeList();
+            if (shouldList) {
+                StringBuilder evidence = new StringBuilder();
+                Collection<Enums.HackType> evidenceDetails = profile.evidence.getKnowledgeList();
 
-                    if (!evidenceDetails.isEmpty()) {
-                        size++;
-                        players.append(player.name).append(comma);
+                if (!evidenceDetails.isEmpty()) {
+                    size++;
+                    players.append(player.name).append(comma);
 
-                        for (Enums.HackType hackType : evidenceDetails) {
-                            evidence.append(hackType.getCheck().getName()).append(comma);
-                        }
-                        evidence = new StringBuilder(evidence.substring(0, evidence.length() - commaLength));
-                        SpartanLocation location = player.getLocation();
-                        CloudConnections.executeDiscordWebhook(
-                                "checks",
-                                player.uuid, player.name,
-                                location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                                (profile.isHacker() ? "Hacker" : "Suspected"), evidence.toString()
-                        );
+                    for (Enums.HackType hackType : evidenceDetails) {
+                        evidence.append(hackType.getCheck().getName()).append(comma);
                     }
+                    evidence = new StringBuilder(evidence.substring(0, evidence.length() - commaLength));
+                    SpartanLocation location = player.movement.getLocation();
+                    CloudConnections.executeDiscordWebhook(
+                            "checks",
+                            player.uuid, player.name,
+                            location.getBlockX(), location.getBlockY(), location.getBlockZ(),
+                            (profile.isHacker() ? "Hacker" : "Suspected"), evidence.toString()
+                    );
                 }
             }
         }

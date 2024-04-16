@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.inventory;
 
-import com.vagdedes.spartan.abstraction.functionality.StatisticalProgress;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.profiling.StatisticalProgress;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -15,72 +15,66 @@ public class Summary {
 
     public static List<String> get() {
         int arraySize = 20;
-        double players;
         List<String> array = new ArrayList<>(arraySize),
                 statisticsArray = new ArrayList<>(arraySize);
         StatisticalProgress object = ResearchEngine.getProgress();
+        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+        double players = playerProfiles.size(); // purposely double to help with the divisions
 
-        if (object.logs > 0) {
-            List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
-            players = playerProfiles.size(); // purposely double to help with the divisions
+        if (players > 0) {
+            Collection<SpartanPlayer> staffOnline = object.getStaffOnline();
+            int hackers = ResearchEngine.getHackers().size(),
+                    suspectedPlayers = ResearchEngine.getSuspectedPlayers().size(),
+                    legitimates = ResearchEngine.getLegitimatePlayers().size(),
+                    staffOnlineAmount = staffOnline.size();
 
-            if (players > 0) {
-                Collection<SpartanPlayer> staffOnline = object.getStaffOnline();
-                int hackers = ResearchEngine.getHackers().size(),
-                        suspectedPlayers = ResearchEngine.getSuspectedPlayers().size(),
-                        legitimates = ResearchEngine.getLegitimatePlayers().size(),
-                        staffOnlineAmount = staffOnline.size();
+            // Separator
 
-                // Separator
+            if (hackers > 0) {
+                statisticsArray.add("§c" + AlgebraUtils.integerRound((hackers / players) * 100.0) + "§r§c% §7of players are §chackers");
+            }
+            if (suspectedPlayers > 0) {
+                statisticsArray.add("§c" + AlgebraUtils.integerRound((suspectedPlayers / players) * 100.0) + "§r§c% §7of players are §csuspected");
+            }
+            if (legitimates > 0) {
+                statisticsArray.add("§c" + AlgebraUtils.integerRound((legitimates / players) * 100.0) + "§r§c% §7of players are §clegitimate");
+            }
+            if (object.kicks > 0
+                    || object.warnings > 0
+                    || object.punishments > 0) {
+                statisticsArray.add("§c" + object.kicks + " §r§c" + (object.kicks == 1 ? "kick" : "kicks")
+                        + "§7, §c" + object.warnings + " §r§c" + (object.warnings == 1 ? "warning" : "warnings")
+                        + " §7& §c" + object.punishments + " §r§c" + (object.punishments == 1 ? "punishment" : "punishments")
+                        + " §7executed");
+            }
+            if (object.mines > 0) {
+                statisticsArray.add("§c" + object.mines + " ore " + (object.mines == 1 ? "block" : "§r§cblocks") + " have been §cmined");
+            }
+            if (staffOnlineAmount > 0) {
+                int counter = 10;
 
-                if (hackers > 0) {
-                    statisticsArray.add("§c" + AlgebraUtils.integerRound((hackers / players) * 100.0) + "§r§c% §7of players are §chackers");
+                if (!statisticsArray.isEmpty()) {
+                    statisticsArray.add("");
                 }
-                if (suspectedPlayers > 0) {
-                    statisticsArray.add("§c" + AlgebraUtils.integerRound((suspectedPlayers / players) * 100.0) + "§r§c% §7of players are §csuspected");
-                }
-                if (legitimates > 0) {
-                    statisticsArray.add("§c" + AlgebraUtils.integerRound((legitimates / players) * 100.0) + "§r§c% §7of players are §clegitimate");
-                }
-                if (object.kicks > 0
-                        || object.warnings > 0
-                        || object.punishments > 0) {
-                    statisticsArray.add("§c" + object.kicks + " §r§c" + (object.kicks == 1 ? "kick" : "kicks")
-                            + "§7, §c" + object.warnings + " §r§c" + (object.warnings == 1 ? "warning" : "warnings")
-                            + " §7& §c" + object.punishments + " §r§c" + (object.punishments == 1 ? "punishment" : "punishments")
-                            + " §7executed");
-                }
-                if (object.mines > 0) {
-                    statisticsArray.add("§c" + object.mines + " ore " + (object.mines == 1 ? "block" : "§r§cblocks") + " have been §cmined");
-                }
-                if (staffOnlineAmount > 0) {
-                    int counter = 10;
+                statisticsArray.add("§c" + staffOnlineAmount + " §7staff " + (staffOnlineAmount == 1 ? "player is" : "players are") + " §conline§8:");
 
-                    if (!statisticsArray.isEmpty()) {
-                        statisticsArray.add("");
+                if (staffOnlineAmount > counter) {
+                    counter = 0;
+
+                    for (SpartanPlayer player : staffOnline) {
+                        statisticsArray.add("§c" + player.name);
+                        counter++;
+
+                        if (counter == 10) {
+                            break;
+                        }
                     }
-                    statisticsArray.add("§c" + staffOnlineAmount + " §7staff " + (staffOnlineAmount == 1 ? "player is" : "players are") + " §conline§8:");
-
-                    if (staffOnlineAmount > counter) {
-                        counter = 0;
-
-                        for (SpartanPlayer player : staffOnline) {
-                            statisticsArray.add("§c" + player.name);
-                            counter++;
-
-                            if (counter == 10) {
-                                break;
-                            }
-                        }
-                    } else {
-                        for (SpartanPlayer player : staffOnline) {
-                            statisticsArray.add("§c" + player.name);
-                        }
+                } else {
+                    for (SpartanPlayer player : staffOnline) {
+                        statisticsArray.add("§c" + player.name);
                     }
                 }
             }
-        } else {
-            players = 0.0;
         }
 
         // Separator

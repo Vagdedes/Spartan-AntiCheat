@@ -1,34 +1,79 @@
 package com.vagdedes.spartan.abstraction.pattern.implementation;
 
+import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.pattern.PatternFamily;
-import com.vagdedes.spartan.abstraction.pattern.implementation.base.PatternStorage;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.utils.gameplay.GroundUtils;
 
 public class MovementPatterns extends PatternFamily {
 
-    public PatternStorage horizontal, vertical, all, fall;
+    public static final short horizontalGeneralization = (short) (GroundUtils.maxHeightLength / 2);
 
-    public MovementPatterns(long storeFrequency) {
-        super(storeFrequency, 4);
+    public final Pattern horizontal, vertical, all, fall;
+
+    public MovementPatterns() {
+        super(1_000L, 4);
         this.addPatterns(
-                new PatternStorage[]{
-                        this.horizontal = new PatternStorage(
+                new Pattern[]{
+                        this.horizontal = new Pattern(
                                 "movement/distance/horizontal",
-                                new int[]{GroundUtils.maxHeightLength}
+                                new short[]{
+                                        horizontalGeneralization
+                                },
+                                true,
+                                false
                         ),
-                        this.vertical = new PatternStorage(
+                        this.vertical = new Pattern(
                                 "movement/distance/vertical",
-                                new int[]{GroundUtils.maxHeightLength}
+                                new short[]{
+                                        (short) GroundUtils.maxHeightLength
+                                },
+                                true,
+                                false
                         ),
-                        this.all = new PatternStorage(
+                        this.all = new Pattern(
                                 "movement/distance/all",
-                                new int[]{GroundUtils.maxHeightLength}
+                                new short[]{
+                                        (short) GroundUtils.maxHeightLength
+                                },
+                                true,
+                                false
                         ),
-                        this.fall = new PatternStorage(
+                        this.fall = new Pattern(
                                 "movement/distance/fall",
-                                new int[]{}
+                                new short[]{
+                                        (short) GroundUtils.maxHeightLength
+                                },
+                                true,
+                                false
                         )
                 }
         );
+    }
+
+    public void learn(SpartanPlayer player,
+                      int situation,
+                      double dis, double hor, double ver, double fall) {
+        this.all.learn(
+                player,
+                situation,
+                dis
+        );
+        this.horizontal.learn(
+                player,
+                situation,
+                hor
+        );
+        this.vertical.learn(
+                player,
+                situation,
+                ver
+        );
+        this.fall.learn(
+                player,
+                situation,
+                fall
+        );
+        this.store();
     }
 }

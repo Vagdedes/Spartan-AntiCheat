@@ -101,12 +101,10 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
 
             if (isOnline) {
-                int violations = target.getViolationCount();
                 lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
-                lore.add("§7Overall Violations§8:§a " + violations);
                 lore.add("§7Player State§8:§a " + playerProfile.evidence.getType() + " (" + target.dataType + ")");
-                add("§2Information", lore, new ItemStack(Material.BOOK, Math.max(1, Math.min(violations, 64))), information);
+                add("§2Information", lore, new ItemStack(Material.BOOK, 1), information);
 
                 lore.clear();
                 lore.add("");
@@ -138,7 +136,7 @@ public class PlayerInfo extends InventoryMenu {
         if (isOnline) {
             for (HackType hackType : hackTypes) {
                 if (hackType.getCheck().type == checkType) {
-                    violations += player.getViolations(hackType).getLevel();
+                    violations += player.getViolations(hackType).getTotalLevel();
                 }
             }
         }
@@ -161,7 +159,7 @@ public class PlayerInfo extends InventoryMenu {
 
         for (HackType hackType : hackTypes) {
             if (hackType.getCheck().type == checkType) {
-                violations = isOnline ? player.getViolations(hackType).getLevel() : 0;
+                violations = isOnline ? player.getViolations(hackType).getTotalLevel() : 0;
                 boolean hasViolations = violations > 0,
                         hasData = playerProfile.evidence.has(hackType);
 
@@ -190,7 +188,7 @@ public class PlayerInfo extends InventoryMenu {
                           List<String> lore) {
         lore.clear();
         lore.add("");
-        int violations = !isOnline ? 0 : player.getViolations(hackType).getLevel();
+        int violations = !isOnline ? 0 : player.getViolations(hackType).getTotalLevel();
         ItemStack item = isOnline && violations > 0 ?
                 new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
                 new ItemStack(Material.QUARTZ_BLOCK);

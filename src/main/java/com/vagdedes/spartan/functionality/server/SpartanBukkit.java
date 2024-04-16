@@ -4,7 +4,7 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Threads;
 import com.vagdedes.spartan.abstraction.pattern.implementation.MovementPatterns;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.manual.essential.protocollib.ProtocolLib;
+import com.vagdedes.spartan.compatibility.manual.packet.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.IDs;
 import com.vagdedes.spartan.functionality.connection.Piracy;
 import com.vagdedes.spartan.functionality.management.Config;
@@ -18,21 +18,23 @@ import java.util.*;
 public class SpartanBukkit {
 
     public static final boolean
+            testMode = !Piracy.enabled && !IDs.isBuiltByBit() && !IDs.isPolymart()
+            && Bukkit.getMotd().contains(Register.plugin.getName()),
             supportedFork = MultiVersion.fork().equals("Spigot") || MultiVersion.fork().equals("Paper"),
-            canAdvertise = !Piracy.enabled || IDs.isBuiltByBit() || IDs.isSongoda() || IDs.isPolymart();
+            canAdvertise = !Piracy.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
-            playerThread = MultiVersion.folia ? null : new Threads.ThreadPool(2L),
             dataThread = new Threads.ThreadPool(1L),
+            analysisThread = new Threads.ThreadPool(1L),
+            playerThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             chunkThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             detectionThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L);
 
     public static final MovementPatterns
-            movementPatterns = new MovementPatterns(1_000L);
+            movementPatterns = new MovementPatterns();
 
     public static final int hashCodeMultiplier = 31;
-    public static final long hashCodeMultiplierLong = 31L;
     private static final Map<UUID, SpartanPlayer> players =
             Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
     public static final Class<?> craftPlayer = ReflectionUtils.getClass(

@@ -19,47 +19,35 @@ public class CombatProcessing {
     private static final String
             baseKey = "combat=",
             cooldownKey = "=cooldown";
-    private static final Map<UUID, Vector[]> directionalComparison = Cache.store(new LinkedHashMap<>(Config.getMaxPlayers()));    public static final String
+    private static final Map<UUID, Vector[]> directionalComparison = Cache.store(new LinkedHashMap<>(Config.getMaxPlayers()));
+    public static final String
             yaw = "yaw",
             pitch = "pitch",
             yawDifference = yaw + "-difference",
             pitchDifference = pitch + "-difference";
 
-    public static void remove(SpartanPlayer player) {
-        directionalComparison.remove(player.uuid);
-    }    private static final String[]
-            teleportationList = new String[]{yaw, pitch, yawDifference, pitchDifference};
-
-    public static void runTeleport(SpartanPlayer p) {
-        p.getDecimals().remove(teleportationList);
-        remove(p);
-    }
-
     public static void runMove(SpartanPlayer p, SpartanLocation to) {
-        if (p.canRunChecks(false)) {
-            UUID uuid = p.uuid;
-            Vector[] directions = directionalComparison.get(uuid);
-            float yawVar = to.getYaw(), pitchVar = to.getPitch();
+        Vector[] directions = directionalComparison.get(p.uuid);
+        float yawVar = to.getYaw(), pitchVar = to.getPitch();
 
-            if (directions != null) {
-                Vector yawDirection = CombatUtils.getDirection(yawVar, 0.0f);
-                p.getDecimals().add(baseKey + yawDifference, Math.toDegrees(yawDirection.distance(directions[0])), pastTicks);
-                p.getCooldowns().add(baseKey + yawDifference + cooldownKey, pastTicks);
-                Vector pitchDirection = CombatUtils.getDirection(0.0f, pitchVar);
-                p.getDecimals().add(baseKey + pitchDifference, Math.toDegrees(pitchDirection.distance(directions[1])), pastTicks);
-                p.getCooldowns().add(baseKey + pitchDifference + cooldownKey, pastTicks);
-                directionalComparison.put(uuid, new Vector[]{yawDirection, pitchDirection});
-            } else {
-                directionalComparison.put(uuid, new Vector[]{
-                        CombatUtils.getDirection(yawVar, 0.0f),
-                        CombatUtils.getDirection(0.0f, pitchVar)
-                });
-            }
-            p.getDecimals().add(baseKey + yaw, yawVar, pastTicks);
-            p.getCooldowns().add(baseKey + yaw + cooldownKey, pastTicks);
-            p.getDecimals().add(baseKey + pitch, pitchVar, pastTicks);
-            p.getCooldowns().add(baseKey + pitch + cooldownKey, pastTicks);
+        if (directions != null) {
+            Vector yawDirection = CombatUtils.getDirection(yawVar, 0.0f);
+            p.getDecimals().add(baseKey + yawDifference, Math.toDegrees(yawDirection.distance(directions[0])), pastTicks);
+            p.getCooldowns().add(baseKey + yawDifference + cooldownKey, pastTicks);
+            Vector pitchDirection = CombatUtils.getDirection(0.0f, pitchVar);
+            p.getDecimals().add(baseKey + pitchDifference, Math.toDegrees(pitchDirection.distance(directions[1])), pastTicks);
+            p.getCooldowns().add(baseKey + pitchDifference + cooldownKey, pastTicks);
+            directionalComparison.put(p.uuid, new Vector[]{yawDirection, pitchDirection});
+        } else {
+            directionalComparison.put(p.uuid, new Vector[]{
+                    CombatUtils.getDirection(yawVar, 0.0f),
+                    CombatUtils.getDirection(0.0f, pitchVar)
+            });
         }
+        p.getDecimals().add(baseKey + yaw, yawVar, pastTicks);
+        p.getCooldowns().add(baseKey + yaw + cooldownKey, pastTicks);
+        p.getDecimals().add(baseKey + pitch, pitchVar, pastTicks);
+        p.getCooldowns().add(baseKey + pitch + cooldownKey, pastTicks);
     }
 
     public static double getDecimal(SpartanPlayer p, String s, double fallback) {

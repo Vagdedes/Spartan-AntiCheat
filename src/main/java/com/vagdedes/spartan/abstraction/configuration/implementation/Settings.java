@@ -5,12 +5,10 @@ import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
-import com.vagdedes.spartan.functionality.connection.cloud.DiscordWebhooks;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TestServer;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -27,13 +25,12 @@ public class Settings extends ConfigurationBuilder {
         super("settings");
     }
 
-    public static final String explosionOption = "Protections.explosion_detection_cooldown",
+    public static final String
             showEcosystemOption = "Important.show_ecosystem",
             tpsProtectionOption = "Protections.use_tps_protection",
             maxSupportedLatencyOption = "Protections.max_supported_player_latency",
             cloudServerNameOption = "Cloud.server_name",
-            cloudSynchroniseFilesOption = "Cloud.synchronise_files",
-    falsePositiveDetection = "Performance.enable_false_positive_detection";
+            cloudSynchroniseFilesOption = "Cloud.synchronise_files";
     private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
     private Collection<String> punishments = null;
 
@@ -65,9 +62,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Logs.log_file", true);
         addOption("Logs.log_console", true);
 
-        if (TestServer.isIdentified()) {
-            addOption("Notifications.individual_only_notifications", false);
-        }
+        addOption("Notifications.individual_only_notifications", false);
         addOption("Notifications.enable_notifications_on_login", true);
         addOption("Notifications.awareness_notifications", true);
         addOption("Notifications.message_clickable_command", "/teleport {player}");
@@ -86,6 +81,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Protections.disallowed_building", true); // test server
 
         addOption("Important.op_bypass", false);
+        addOption("Important.bedrock_client_permission", false);
         addOption("Important.violations_reset_on_kick", false); // test server
         addOption("Important.modify_server_configuration", false);
         addOption("Important.refresh_inventory_menu", true);
@@ -101,13 +97,12 @@ public class Settings extends ConfigurationBuilder {
         addOption("Detections.fall_damage_on_teleport", false); // test server
         addOption("Detections.update_blocks_upon_violation", false);
 
-        addOption(falsePositiveDetection, true); // test server
         addOption(MaximumCheckedPlayers.option, 100); // test server alternative
 
-        addOption(DiscordWebhooks.configurationSection + ".webhook_hex_color", "4caf50");
-        addOption(DiscordWebhooks.configurationSection + ".checks_webhook_url", "");
-        addOption(DiscordWebhooks.configurationSection + ".punishments_webhook_url", "");
-        addOption(DiscordWebhooks.configurationSection + ".communication_webhook_url", "");
+        addOption("Discord.webhook_hex_color", "4caf50");
+        addOption("Discord.checks_webhook_url", "");
+        addOption("Discord.punishments_webhook_url", "");
+        addOption("Discord.communication_webhook_url", "");
 
         if (!local && exists) {
             CrossServerInformation.sendConfiguration(file);
@@ -131,13 +126,9 @@ public class Settings extends ConfigurationBuilder {
         }
     }
 
-    public List<String> getDefaultPunishmentCommands() {
-        return defaultPunishments;
-    }
-
-    public Collection<String> getPunishmentCommands() {
+    public List<String> getPunishmentCommands() {
         if (punishments != null) {
-            return punishments;
+            return new ArrayList<>(punishments);
         } else {
             String sectionString = "Punishments.Commands";
 
@@ -175,9 +166,9 @@ public class Settings extends ConfigurationBuilder {
                         }
                     }
                 }
-                return punishments = list;
+                return new ArrayList<>(punishments = list);
             } else {
-                return punishments = new ArrayList<>(0);
+                return new ArrayList<>(punishments = new ArrayList<>(0));
             }
         }
     }

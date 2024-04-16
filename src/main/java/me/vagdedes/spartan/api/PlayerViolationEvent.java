@@ -13,15 +13,13 @@ public class PlayerViolationEvent extends Event implements Cancellable {
     private final HackType h;
     private final String m;
     private final int v;
-    private final boolean fp;
     private boolean cancelled;
 
-    public PlayerViolationEvent(Player player, HackType HackType, Integer violation, String message, boolean falsePositive) {
+    public PlayerViolationEvent(Player player, HackType HackType, Integer violation, String message) {
         p = player;
         h = HackType;
         v = violation;
         m = message;
-        fp = falsePositive;
         cancelled = false;
     }
 
@@ -41,8 +39,10 @@ public class PlayerViolationEvent extends Event implements Cancellable {
         return v;
     }
 
+    @Deprecated
     public boolean isFalsePositive() {
-        return fp;
+        AwarenessNotifications.forcefullySend("The Event API method 'isFalsePositive' has been removed.");
+        return false;
     }
 
     @Deprecated

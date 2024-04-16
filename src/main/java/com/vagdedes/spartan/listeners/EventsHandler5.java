@@ -3,8 +3,9 @@ package com.vagdedes.spartan.listeners;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
+import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.identifiers.complex.predictable.BouncingBlocks;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.Explosion;
 import com.vagdedes.spartan.functionality.identifiers.simple.Building;
 import com.vagdedes.spartan.functionality.identifiers.simple.SensitiveBlockBreak;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
@@ -18,10 +19,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+
+import java.net.InetAddress;
 
 public class EventsHandler5 implements Listener {
 
@@ -43,8 +46,8 @@ public class EventsHandler5 implements Listener {
             p.getExecutor(Enums.HackType.NoSlowdown).handle(cancelled, e);
             p.getExecutor(Enums.HackType.FastHeal).handle(cancelled, e);
 
-            if (p.getViolations(Enums.HackType.FastEat).process()
-                    || p.getViolations(Enums.HackType.NoSlowdown).process()) {
+            if (p.getViolations(Enums.HackType.FastEat).prevent()
+                    || p.getViolations(Enums.HackType.NoSlowdown).prevent()) {
                 e.setCancelled(true);
                 p.setFoodLevel(n.getFoodLevel(), false);
             } else {
@@ -71,7 +74,7 @@ public class EventsHandler5 implements Listener {
             // Detections
             p.getExecutor(Enums.HackType.FastHeal).handle(e.isCancelled(), e);
 
-            if (p.getViolations(Enums.HackType.FastHeal).process()) {
+            if (p.getViolations(Enums.HackType.FastHeal).prevent()) {
                 e.setCancelled(true);
             }
         }
@@ -104,12 +107,12 @@ public class EventsHandler5 implements Listener {
         p.getExecutor(Enums.HackType.MorePackets).handle(false, e);
         DetectionNotifications.runMining(p, b, cancelled);
 
-        if (p.getViolations(Enums.HackType.NoSwing).process()
-                || p.getViolations(Enums.HackType.BlockReach).process()
-                || p.getViolations(Enums.HackType.ImpossibleActions).process()
-                || p.getViolations(Enums.HackType.FastBreak).process()
-                || p.getViolations(Enums.HackType.GhostHand).process()
-                || p.getViolations(Enums.HackType.XRay).process()) {
+        if (p.getViolations(Enums.HackType.NoSwing).prevent()
+                || p.getViolations(Enums.HackType.BlockReach).prevent()
+                || p.getViolations(Enums.HackType.ImpossibleActions).prevent()
+                || p.getViolations(Enums.HackType.FastBreak).prevent()
+                || p.getViolations(Enums.HackType.GhostHand).prevent()
+                || p.getViolations(Enums.HackType.XRay).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -135,7 +138,7 @@ public class EventsHandler5 implements Listener {
 
         // Protections
         Building.runPlace(p, b, blockFace, cancelled);
-        BouncingBlocks.judge(p, p.getLocation());
+        BouncingBlocks.judge(p, p.movement.getLocation());
 
         // Detections
         if (!ItemsAdder.is(nb)) {
@@ -144,15 +147,20 @@ public class EventsHandler5 implements Listener {
             p.getExecutor(Enums.HackType.FastPlace).handle(cancelled, e);
         }
 
-        if (p.getViolations(Enums.HackType.FastPlace).process()
-                || p.getViolations(Enums.HackType.BlockReach).process()
-                || p.getViolations(Enums.HackType.ImpossibleActions).process()) {
+        if (p.getViolations(Enums.HackType.FastPlace).prevent()
+                || p.getViolations(Enums.HackType.BlockReach).prevent()
+                || p.getViolations(Enums.HackType.ImpossibleActions).prevent()) {
             e.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public static void BlockExplode(BlockExplodeEvent e) {
-        Explosion.runExplosion(e.getBlock());
+    @EventHandler
+    private void PreLoginEvent(AsyncPlayerPreLoginEvent e) {
+        // Features
+        if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            InetAddress address = e.getAddress();
+            String ipAddress = address != null ? PlayerLimitPerIP.get(address) : null;
+            CloudConnections.updatePunishedPlayer(e.getUniqueId(), ipAddress);
+        }
     }
 }

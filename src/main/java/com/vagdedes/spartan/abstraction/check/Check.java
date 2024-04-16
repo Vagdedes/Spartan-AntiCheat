@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.management.Config;
@@ -9,14 +8,10 @@ import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.functionality.server.TestServer;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
 import me.vagdedes.spartan.api.CheckSilentToggleEvent;
 import me.vagdedes.spartan.api.CheckToggleEvent;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -27,27 +22,19 @@ public class Check {
     // Static
 
     public static final int
-            violationCycleSeconds = 60,
-            violationCycleTicks = TPS.tickTimeInteger * violationCycleSeconds,
             maxCommands = 10,
-            maxMath = 10,
-            maxViolationsPerCycle = 100,
-            minimumDefaultCancelViolation = 1,
-            maximumDefaultCancelViolation = 6;
-    public static final long violationCycleMilliseconds = violationCycleSeconds * 1_000L;
-
+            standardIgnoredViolations = 3,
+            detectionMeasurementTicks = AlgebraUtils.integerRound(TPS.maximum * 20);
 
     // Object
 
     public final Enums.HackType hackType;
     private String name;
     public final Enums.CheckType type;
-    private final Map<Integer, Collection<String>> commandsLegacy;
     private final Map<String, Object> options;
-    public final int cancelViolation;
     private boolean silent;
     public final boolean handleCancelledEvents;
-    private final Map<Integer, Integer> maxCancelledViolations;
+    private final Map<Enums.DataType, Map<Integer, Integer>> ignoredViolations;
     private final boolean[] enabled;
     public final boolean
             canPunish,
@@ -63,52 +50,9 @@ public class Check {
         this(hackType, new LinkedHashMap<>(), false);
     }
 
-    public Check(Enums.HackType hackType, Map<Integer, Integer> maxCancelledViolations, boolean copy) {
-        switch (hackType) {
-            case FastBow:
-            case FastHeal:
-            case ItemDrops:
-            case BlockReach:
-            case AutoRespawn:
-            case XRay:
-            case InventoryClicks:
-                this.cancelViolation = minimumDefaultCancelViolation;
-                break;
-            case Criticals:
-            case FastPlace:
-            case FastBreak:
-            case FastEat:
-            case NoSwing:
-            case Velocity:
-            case ImpossibleInventory:
-            case ImpossibleActions:
-                this.cancelViolation = 2;
-                break;
-            case KillAura:
-            case FastClicks:
-            case NoFall:
-            case NoSlowdown:
-            case HitReach:
-                this.cancelViolation = 3;
-                break;
-            case Exploits:
-            case MorePackets:
-                this.cancelViolation = 4;
-                break;
-            case Speed:
-            case IrregularMovements:
-                this.cancelViolation = 5;
-                break;
-            case GhostHand:
-                this.cancelViolation = maximumDefaultCancelViolation;
-                break;
-            default:
-                this.cancelViolation = 0;
-                break;
-        }
-
-        // Separator
-
+    public Check(Enums.HackType hackType,
+                 Map<Enums.DataType, Map<Integer, Integer>> ignoredViolations,
+                 boolean copy) {
         switch (hackType) {
             case KillAura:
                 this.description = new String[]{"This check will prevent client modules",
@@ -292,12 +236,10 @@ public class Check {
 
         this.options = Collections.synchronizedMap(new LinkedHashMap<>());
         this.hackType = hackType;
-        this.commandsLegacy = Collections.synchronizedMap(new LinkedHashMap<>(maxViolationsPerCycle));
-        this.maxCancelledViolations = copy ? maxCancelledViolations : Collections.synchronizedMap(maxCancelledViolations);
+        this.ignoredViolations = copy ? ignoredViolations : Collections.synchronizedMap(ignoredViolations);
 
         // Separator
 
-        boolean legacy = Config.isLegacy();
         Object silent = hackType == Enums.HackType.AutoRespawn ? null : getOption("silent", false, false),
                 handleCancelledEvents = getOption("cancelled_event", false, false);
 
@@ -308,73 +250,32 @@ public class Check {
         // Separator
         Enums.DataType[] dataTypes = ResearchEngine.getDynamicUsableDataTypes(false);
         this.enabled = new boolean[ResearchEngine.usableDataTypes.length];
+        Object oldOptionValue = getOption("enabled", null, false);
+        boolean hasOldOption = oldOptionValue instanceof Boolean;
 
-        if (legacy) {
-            Object optionValue = getOption("enabled", true, false);
-            boolean boolValue = optionValue instanceof Boolean ? (boolean) optionValue :
+        if (hasOldOption) {
+            setOption("enabled", null);
+        }
+
+        for (Enums.DataType dataType : dataTypes) {
+            Object optionValue = getOption(
+                    "enabled." + dataType.lowerCase,
+                    hasOldOption ? oldOptionValue : true,
+                    false
+            );
+            this.enabled[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
                     optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
                             optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
                                     Boolean.parseBoolean(optionValue.toString().toLowerCase());
-
-            for (Enums.DataType dataType : dataTypes) {
-                this.enabled[dataType.ordinal()] = boolValue;
-            }
-        } else {
-            Object oldOptionValue = getOption("enabled", null, false);
-            boolean hasOldOption = oldOptionValue instanceof Boolean;
-
-            if (hasOldOption) {
-                setOption("enabled", null);
-            }
-
-            for (Enums.DataType dataType : dataTypes) {
-                Object optionValue = getOption(
-                        "enabled." + dataType.lowerCase,
-                        hasOldOption ? oldOptionValue : true,
-                        false
-                );
-                this.enabled[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
-                        optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
-                                optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
-                                        Boolean.parseBoolean(optionValue.toString().toLowerCase());
-            }
         }
         this.supportsLiveEvidence = hackType != Enums.HackType.XRay;
 
         if (this.supportsLiveEvidence) {
-            boolean canPunishByDefault = hackType != Enums.HackType.GhostHand;
-
-            if (legacy) {
-                ConfigurationSection section = Register.plugin.getConfig().getConfigurationSection(hackType + ".punishments");
-                this.canPunish = section != null && !section.getKeys(false).isEmpty();
-
-                if (!this.canPunish && canPunishByDefault) {
-                    File file = Config.getFile();
-
-                    try {
-                        if (file.exists() || file.createNewFile()) {
-                            for (int position = 0; position < Check.maxCommands; position++) {
-                                ConfigUtils.add(
-                                        file,
-                                        hackType + ".punishments." + AlgebraUtils.integerRound(this.cancelViolation * PlayerEvidence.standardRatio) + "." + (position + 1),
-                                        Config.settings.getDefaultPunishmentCommands().get(position)
-                                );
-                            }
-                        } else {
-                            AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
-                        }
-                    } catch (Exception ex) {
-                        AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
-                        ex.printStackTrace();
-                    }
-                }
-            } else {
-                Object punish = getOption("punish", canPunishByDefault, false);
-                this.canPunish = punish instanceof Boolean ? (boolean) punish :
-                        punish instanceof Long || punish instanceof Integer || punish instanceof Short ? ((long) punish) > 0L :
-                                punish instanceof Double || punish instanceof Float ? ((double) punish) > 0.0 :
-                                        Boolean.parseBoolean(punish.toString().toLowerCase());
-            }
+            Object punish = getOption("punish", hackType != Enums.HackType.GhostHand, false); // GhostHand: can punish by default
+            this.canPunish = punish instanceof Boolean ? (boolean) punish :
+                    punish instanceof Long || punish instanceof Integer || punish instanceof Short ? ((long) punish) > 0L :
+                            punish instanceof Double || punish instanceof Float ? ((double) punish) > 0.0 :
+                                    Boolean.parseBoolean(punish.toString().toLowerCase());
         } else {
             this.canPunish = false;
         }
@@ -480,9 +381,6 @@ public class Check {
     }
 
     public void clearConfigurationCache() {
-        synchronized (commandsLegacy) {
-            commandsLegacy.clear(); // Always clear regardless
-        }
         synchronized (options) {
             options.clear();
         }
@@ -618,10 +516,6 @@ public class Check {
 
                     try {
                         configuration.save(file);
-
-                        if (Config.isLegacy()) {
-                            Register.plugin.reloadConfig();
-                        }
                         options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
                     } catch (Exception ex) {
                         AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
@@ -684,9 +578,6 @@ public class Check {
     }
 
     public Object getOption(String option, Object def, boolean cache) {
-        if (TestServer.isIdentified()) {
-            return def;
-        }
         if (cache) {
             synchronized (options) {
                 Object cached = options.get(option);
@@ -721,10 +612,6 @@ public class Check {
                                 try {
                                     configuration.save(file);
                                     options.put(option, def);
-
-                                    if (Config.isLegacy()) {
-                                        Register.plugin.reloadConfig();
-                                    }
                                 } catch (Exception ex) {
                                     AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                                     ex.printStackTrace();
@@ -739,10 +626,6 @@ public class Check {
 
                             try {
                                 configuration.save(file);
-
-                                if (Config.isLegacy()) {
-                                    Register.plugin.reloadConfig();
-                                }
                             } catch (Exception ex) {
                                 AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                                 ex.printStackTrace();
@@ -863,144 +746,73 @@ public class Check {
 
     // Separator
 
-    public int getProblematicDetections() {
-        if (!maxCancelledViolations.isEmpty()) {
-            synchronized (maxCancelledViolations) {
-                int count = 0;
-
-                for (int level : maxCancelledViolations.values()) {
-                    if (level >= cancelViolation) {
-                        count++;
+    public void setIgnoredViolations(Enums.DataType dataType, Map<Integer, Double> map) {
+        synchronized (ignoredViolations) {
+            if (!map.isEmpty()) {
+                for (Map.Entry<Integer, Double> entry : map.entrySet()) {
+                    for (Enums.DataType data : new Enums.DataType[]{
+                            dataType,
+                            Enums.DataType.Universal
+                    }) {
+                        ignoredViolations.computeIfAbsent(
+                                data,
+                                k -> new LinkedHashMap<>()
+                        ).put(
+                                entry.getKey(),
+                                AlgebraUtils.integerCeil(entry.getValue()) // Ceil to be the safest
+                        );
                     }
                 }
-                return count;
             }
-        } else {
-            return 0;
         }
     }
 
-    public void setMaxCancelledViolations(Enums.DataType dataType, Map<Integer, Double> map) {
-        synchronized (maxCancelledViolations) {
-            if (!map.isEmpty()) {
-                for (Map.Entry<Integer, Double> entry : map.entrySet()) {
-                    maxCancelledViolations.put(
-                            (dataType.hashCode() * SpartanBukkit.hashCodeMultiplier) + entry.getKey(),
-                            AlgebraUtils.integerCeil(entry.getValue()) // Ceil to be the safest
+    public void clearIgnoredViolations() {
+        synchronized (ignoredViolations) {
+            ignoredViolations.clear();
+        }
+    }
+
+    public Map<Enums.DataType, Map<Integer, Integer>> copyIgnoredViolations() {
+        return ignoredViolations;
+    }
+
+    public int getIgnoredViolations(Enums.DataType dataType, int hash) {
+        synchronized (ignoredViolations) {
+            Map<Integer, Integer> map = ignoredViolations.get(dataType);
+
+            if (map == null) {
+                return standardIgnoredViolations;
+            } else {
+                Integer integer = map.get(hash);
+                return integer == null
+                        ? this.getAverageIgnoredViolations(dataType)
+                        : Math.max(integer, this.getAverageIgnoredViolations(dataType));
+            }
+        }
+    }
+
+    public int getAverageIgnoredViolations(Enums.DataType dataType) {
+        if (ignoredViolations.isEmpty()) {
+            return standardIgnoredViolations;
+        } else {
+            synchronized (ignoredViolations) {
+                Map<Integer, Integer> map = ignoredViolations.get(dataType);
+
+                if (map == null) {
+                    return standardIgnoredViolations;
+                } else {
+                    int sum = 0;
+
+                    for (int violations : map.values()) {
+                        sum += violations;
+                    }
+                    return Math.max(
+                            standardIgnoredViolations,
+                            AlgebraUtils.integerRound(sum / (double) ignoredViolations.size())
                     );
                 }
             }
-        }
-    }
-
-    public void clearMaxCancelledViolations() {
-        synchronized (maxCancelledViolations) {
-            maxCancelledViolations.clear();
-        }
-    }
-
-    public Map<Integer, Integer> copyMaxCancelledViolations() {
-        return maxCancelledViolations;
-    }
-
-    public int getMaxCancelledViolations(Enums.DataType dataType, int hash) {
-        synchronized (maxCancelledViolations) {
-            return maxCancelledViolations.getOrDefault(
-                    (dataType.hashCode() * SpartanBukkit.hashCodeMultiplier) + hash,
-                    0
-            );
-        }
-    }
-
-    // Separator
-
-    public Collection<String> getLegacyCommands(int violation) {
-        synchronized (commandsLegacy) {
-            // Cache
-            Collection<String> commandsFound = commandsLegacy.get(violation);
-
-            if (commandsFound != null) {
-                return new ArrayList<>(commandsFound);
-            }
-            // Base Variables
-            FileConfiguration config = Register.plugin.getConfig();
-            commandsFound = new ArrayList<>();
-            String punishmentKey = hackType + ".punishments.";
-
-            // Numbers Handler
-            boolean containsNumber = config.contains(punishmentKey + violation);
-            Set<Integer> mathFound = new HashSet<>(maxMath);
-
-            for (int math = 1; math <= maxMath; math++) {
-                if (math > 1 && config.contains(punishmentKey + violation + "*" + math) || config.contains(punishmentKey + violation + "+" + math)) {
-                    mathFound.add(math);
-                }
-            }
-            boolean containsMath = !mathFound.isEmpty();
-
-            // Search Handler
-            if (containsNumber || containsMath) {
-                for (int command = 1; command <= maxCommands; command++) {
-                    boolean multiply = false;
-                    String punishmentKeyModifiable = punishmentKey + violation;
-                    int mathKey = 0;
-
-                    if (containsMath) {
-                        for (int math : mathFound) {
-                            String key = punishmentKeyModifiable + "*" + math + "." + command;
-
-                            if (config.contains(key)) {
-                                multiply = true;
-                                mathKey = math;
-                                punishmentKeyModifiable = key;
-                                break;
-                            } else {
-                                key = punishmentKeyModifiable + "+" + math + "." + command;
-
-                                if (config.contains(key)) {
-                                    mathKey = math;
-                                    punishmentKeyModifiable = key;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (mathKey == 0) {
-                        punishmentKeyModifiable = punishmentKeyModifiable + "." + command;
-                    }
-
-                    if (config.contains(punishmentKeyModifiable)) {
-                        String commandContent = config.getString(punishmentKeyModifiable);
-
-                        if (commandContent != null && !commandContent.isEmpty()) {
-                            commandsFound.add(commandContent);
-                            commandsLegacy.put(violation, commandsFound);
-
-                            if (mathKey > 0 && violation > 0) {
-                                int violationModifiable = violation;
-
-                                while (violationModifiable <= maxViolationsPerCycle) {
-
-                                    if (multiply) {
-                                        violationModifiable *= mathKey;
-                                    } else {
-                                        violationModifiable += mathKey;
-                                    }
-                                    commandsLegacy.putIfAbsent(violationModifiable, commandsFound);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Empty Handler
-            if (commandsFound.isEmpty()) {
-                commandsLegacy.put(violation, new LinkedList<>());
-            }
-
-            // Return List
-            return new ArrayList<>(commandsFound);
         }
     }
 }

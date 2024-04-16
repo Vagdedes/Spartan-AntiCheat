@@ -4,8 +4,6 @@ import java.util.Objects;
 
 public class TrigonometryUtils {
 
-    public static final int triangleTeamDivision = AlgebraUtils.integerRound(Math.PI);
-
     // Angle (a + A = Pair, B = Angle)
     public static double sineAngle(double a, double A, double b) {
         return Math.asin(Math.sin(A) * b / a);

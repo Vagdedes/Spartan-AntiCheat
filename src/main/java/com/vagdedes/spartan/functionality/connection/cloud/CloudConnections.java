@@ -10,12 +10,10 @@ import com.vagdedes.spartan.abstraction.profiling.ViolationHistory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.management.Config;
-import com.vagdedes.spartan.functionality.performance.CancelViolation;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TestServer;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -202,45 +200,43 @@ public class CloudConnections {
 
     static void punishPlayers() {
         // Doesn't need ID validation due to its validated method call
-        if (Config.settings.getBoolean(Settings.falsePositiveDetection)) {
-            StringBuilder value = new StringBuilder();
+        StringBuilder value = new StringBuilder();
 
-            for (PlayerProfile playerProfile : ResearchEngine.getHackers()) {
-                SpartanPlayer player = playerProfile.getSpartanPlayer();
-                boolean isNull = player == null;
+        for (PlayerProfile playerProfile : ResearchEngine.getHackers()) {
+            SpartanPlayer player = playerProfile.getSpartanPlayer();
+            boolean isNull = player == null;
 
-                if (isNull || !Permissions.isStaff(player) && !player.isOp()) {
-                    OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
+            if (isNull || !Permissions.isStaff(player) && !player.isOp()) {
+                OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
 
-                    if (offlinePlayer != null && !offlinePlayer.isOp()) {
-                        UUID uuid = offlinePlayer.getUniqueId();
-                        String ipAddress;
+                if (offlinePlayer != null && !offlinePlayer.isOp()) {
+                    UUID uuid = offlinePlayer.getUniqueId();
+                    String ipAddress;
 
-                        if (!isNull && offlinePlayer.isOnline()) {
-                            ipAddress = player.ipAddress;
+                    if (!isNull && offlinePlayer.isOnline()) {
+                        ipAddress = player.ipAddress;
 
-                            if (ipAddress == null) {
-                                ipAddress = "NULL";
-                            }
-                        } else {
+                        if (ipAddress == null) {
                             ipAddress = "NULL";
                         }
-                        value.append(StringUtils.encodeBase64(uuid + CloudBase.separator + ipAddress)).append(CloudBase.separator);
+                    } else {
+                        ipAddress = "NULL";
                     }
+                    value.append(StringUtils.encodeBase64(uuid + CloudBase.separator + ipAddress)).append(CloudBase.separator);
                 }
             }
+        }
 
-            if (value.length() > 0) {
-                value = new StringBuilder(value.substring(0, value.length() - CloudBase.separator.length()));
+        if (value.length() > 0) {
+            value = new StringBuilder(value.substring(0, value.length() - CloudBase.separator.length()));
 
-                try {
-                    RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + " " +
-                                    CloudBase.identification + "&action=add&data=punishedPlayers&version=" + CloudBase.version
-                                    + "&value=" + URLEncoder.encode(value.toString(), "UTF-8"),
-                            "POST");
-                } catch (Exception e) {
-                    CloudBase.throwError(e, "punishedPlayers:ADD");
-                }
+            try {
+                RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + " " +
+                                CloudBase.identification + "&action=add&data=punishedPlayers&version=" + CloudBase.version
+                                + "&value=" + URLEncoder.encode(value.toString(), "UTF-8"),
+                        "POST");
+            } catch (Exception e) {
+                CloudBase.throwError(e, "punishedPlayers:ADD");
             }
         }
     }
@@ -316,23 +312,8 @@ public class CloudConnections {
     private static String sendCustomerSupport(String contactPlatform, String contactInformation,
                                               String columnType, String columnInformation,
                                               String userInformation) {
-        String name = null;
-
         if (contactInformation == null) {
             contactInformation = "None";
-        } else if (contactPlatform.equals("discord")) {
-            String[] discordTag;
-
-            if (contactInformation.contains("#")) {
-                discordTag = StringUtils.getDiscordTag(contactInformation);
-
-                if (discordTag == null) {
-                    return "The Discord tag you provided is incorrect.";
-                }
-            } else {
-                discordTag = new String[]{contactInformation};
-            }
-            name = discordTag[0];
         }
 
         for (Enums.HackType hackType : Enums.HackType.values()) {
@@ -362,7 +343,7 @@ public class CloudConnections {
                         .append(newLine);
                 softwareInformation.append("Punishments: ").append(check.canPunish)
                         .append(newLine);
-                softwareInformation.append("Cancel Violation: ").append(CancelViolation.get(hackType, Enums.DataType.Universal))
+                softwareInformation.append("Average Ignored Violations: ").append(check.getAverageIgnoredViolations(Enums.DataType.Universal))
                         .append(newLine);
                 softwareInformation.append("Violation Count: ").append(violationHistory.getCount())
                         .append(newLine);
@@ -373,10 +354,6 @@ public class CloudConnections {
                         .append(newLine);
                 softwareInformation.append("Version: ").append(MultiVersion.fork()).append(" ").append(MultiVersion.versionString())
                         .append(newLine);
-                softwareInformation.append("Testing Environment: ").append(TestServer.isIdentified())
-                        .append(newLine);
-                softwareInformation.append("Configuration: ").append(Config.isLegacy() ? "Legacy" : "Normal")
-                        .append(newLine).append(newLine);
 
                 softwareInformation.append("Plugins:").append(newLine)
                         .append(StringUtils.toString(Register.manager.getPlugins(), comma))
@@ -465,7 +442,7 @@ public class CloudConnections {
                         String information = "x" + playerViolation.level
                                 + " (" + playerViolation.information + ")";
 
-                        if (uniqueInformation.add(playerViolation.similarityIdentity)) {
+                        if (uniqueInformation.add(playerViolation.identity)) {
                             softwareInformation.append(information).append(newLine);
                             validViolations++;
 
@@ -484,9 +461,7 @@ public class CloudConnections {
                         .append(newLine)
                         .append("Average Violations: ").append(AlgebraUtils.cut(averageViolations / ((double) totalViolations), 2))
                         .append(newLine)
-                        .append("Maximum Violations: ").append(maxViolations)
-                        .append(newLine)
-                        .append("Problematic Detections: ").append(check.getProblematicDetections());
+                        .append("Maximum Violations: ").append(maxViolations);
 
                 try {
                     String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + " " + CloudBase.identification
@@ -503,7 +478,7 @@ public class CloudConnections {
                         if (data.equals("false")) {
                             return "Failed to complete request, reach support if this continues.";
                         } else if (data.equals("true")) {
-                            return "Thanks for reporting" + (name != null ? " " + name : "") + ", we will get back to you if needed. You can join our Discord server at: §n" + DiscordMemberCount.discordURL;
+                            return "Thanks for reporting" + " " + contactInformation + ", we will get back to you if needed. You can join our Discord server at: §n" + DiscordMemberCount.discordURL;
                         }
                     }
                     return "No results were returned from the server, try updating and reach support if this continues.";

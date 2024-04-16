@@ -26,7 +26,7 @@ class SpartanScheduler {
             }
         } else {
             if (player != null) {
-                SpartanLocation location = player.getLocation();
+                SpartanLocation location = player.movement.getLocation();
                 Bukkit.getRegionScheduler()
                         .execute(Register.plugin,
                                 player.getWorld(), location.getChunkX(), location.getChunkZ(),
@@ -64,7 +64,7 @@ class SpartanScheduler {
         } else {
             if (repetition == -1L) {
                 if (player != null) {
-                    SpartanLocation location = player.getLocation();
+                    SpartanLocation location = player.movement.getLocation();
                     return Bukkit.getRegionScheduler()
                             .runDelayed(Register.plugin,
                                     player.getWorld(), location.getChunkX(), location.getChunkZ(),
@@ -75,7 +75,7 @@ class SpartanScheduler {
                 }
             } else {
                 if (player != null) {
-                    SpartanLocation location = player.getLocation();
+                    SpartanLocation location = player.movement.getLocation();
                     return Bukkit.getRegionScheduler()
                             .runAtFixedRate(Register.plugin,
                                     player.getWorld(), location.getChunkX(), location.getChunkZ(),

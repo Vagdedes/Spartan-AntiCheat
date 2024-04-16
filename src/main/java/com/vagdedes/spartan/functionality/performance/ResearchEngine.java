@@ -1,27 +1,24 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.LiveViolation;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.criticals.Criticals;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.criticals.CriticalsUtils;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.functionality.StatisticalProgress;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.pattern.implementation.base.PatternStorage;
+import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.profiling.*;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.combat.criticals.Criticals;
-import com.vagdedes.spartan.checks.combat.criticals.CriticalsUtils;
-import com.vagdedes.spartan.functionality.configuration.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
+import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.java.StringUtils;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -31,7 +28,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,12 +35,8 @@ import java.util.*;
 
 public class ResearchEngine {
 
-    public static final int
-            dataRequirement = Check.maxViolationsPerCycle,
-            profileRequirement = AlgebraUtils.integerRound(dataRequirement / 15.0), // 7
-            maxBytes = AlgebraUtils.integerRound(Runtime.getRuntime().maxMemory() * 0.05),
-            maxRows = maxBytes / 1024;
-
+    public static final double requiredProfiles = 10;
+    public static final int violationsMeasurementDuration = 60_000;
     private static final double minimumAverageMining = 16.0;
 
     private static final int cacheRefreshTicks = 1200;
@@ -83,7 +75,7 @@ public class ResearchEngine {
                 if (schedulerTicks == 0) {
                     schedulerTicks = cacheRefreshTicks * 10;
 
-                    SpartanBukkit.dataThread.executeIfFree(() -> {
+                    SpartanBukkit.analysisThread.executeIfFree(() -> {
                         if (Config.sql.isEnabled()) {
                             refresh(Register.isPluginEnabled());
                         } else if (schedulerTicks % cacheRefreshTicks == 0) {
@@ -95,7 +87,7 @@ public class ResearchEngine {
                     schedulerTicks -= 1;
 
                     if (schedulerTicks % cacheRefreshTicks == 0) {
-                        SpartanBukkit.dataThread.executeIfFree(() -> {
+                        SpartanBukkit.analysisThread.executeIfFree(() -> {
                             updateCache();
                             MainMenu.refresh();
                         });
@@ -121,16 +113,17 @@ public class ResearchEngine {
     public static boolean enoughData() {
         if (enoughData) {
             return true;
-        } else if (playerProfiles.size() >= profileRequirement) {
-            int logs = 0, profiles = 0;
+        } else if (playerProfiles.size() >= requiredProfiles) {
+            int profiles = 0;
 
             synchronized (playerProfiles) {
                 for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    profiles++;
-                    logs += playerProfile.getUsefulLogs();
+                    if (playerProfile.isLegitimate()) {
+                        profiles++;
 
-                    if (logs >= dataRequirement && profiles >= profileRequirement) {
-                        return enoughData = true;
+                        if (profiles >= requiredProfiles) {
+                            return enoughData = true;
+                        }
                     }
                 }
             }
@@ -241,17 +234,13 @@ public class ResearchEngine {
     }
 
     public static PlayerProfile getPlayerProfile(SpartanPlayer player) {
-        synchronized (playerProfiles) {
-            String name = player.name;
-            PlayerProfile playerProfile = playerProfiles.get(name);
+        PlayerProfile playerProfile;
 
-            if (playerProfile != null) {
-                return playerProfile;
-            }
+        synchronized (playerProfiles) {
             playerProfile = new PlayerProfile(player);
-            playerProfiles.put(name, playerProfile);
-            return playerProfile;
+            playerProfiles.put(player.name, playerProfile);
         }
+        return playerProfile;
     }
 
     public static PlayerProfile getPlayerProfileAdvanced(String name, boolean deep) {
@@ -304,10 +293,9 @@ public class ResearchEngine {
     // Separator
 
     public static void resetData(Enums.HackType hackType) {
-        SpartanBukkit.dataThread.execute(() -> {
+        SpartanBukkit.analysisThread.executeWithPriority(() -> {
             String hackTypeString = hackType.toString();
-            hackType.getCheck().clearMaxCancelledViolations();
-            CancelViolation.clear(hackType);
+            hackType.getCheck().clearIgnoredViolations();
 
             // Separator
 
@@ -371,9 +359,9 @@ public class ResearchEngine {
 
         if (isStorageMode()) {
             // Clear Files/Database
-            SpartanBukkit.dataThread.execute(() -> {
-                PatternStorage.delete(profile);
+            Pattern.deleteFromFile(profile, true);
 
+            SpartanBukkit.analysisThread.executeWithPriority(() -> {
                 synchronized (playerProfiles) {
                     playerProfiles.remove(playerName);
                 }
@@ -404,7 +392,7 @@ public class ResearchEngine {
                 }
             });
         } else {
-            SpartanBukkit.dataThread.execute(() -> PatternStorage.delete(profile));
+            Pattern.deleteFromFile(profile, true);
 
             synchronized (playerProfiles) {
                 playerProfiles.remove(playerName);
@@ -461,15 +449,15 @@ public class ResearchEngine {
             if (CrossServerInformation.isOptionValid(crossServerInformationOption)) {
                 String[] incomingInformation = CloudConnections.getCrossServerInformation("log", crossServerInformationOption);
 
-                if (incomingInformation != null && incomingInformation.length > 0) {
-                    String key = AntiCheatLogs.syntaxDate(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now()), AlgebraUtils.randomInteger(1, Check.maxViolationsPerCycle - 1));
+                if (incomingInformation.length > 0) {
+                    String key = AntiCheatLogs.syntaxDate(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now()), new Random().nextInt());
 
                     for (String information : incomingInformation) {
                         AntiCheatLogs.logInfo(null, information, null, null, null, false, -1);
                         cache.put(key, information);
                         byteSize += key.length() + information.length();
 
-                        if (byteSize >= maxBytes) {
+                        if (byteSize >= Cache.maxBytes) {
                             isFull = true;
                             break;
                         }
@@ -483,17 +471,17 @@ public class ResearchEngine {
         if (Config.sql.isEnabled()) {
             if (!isFull) {
                 try {
-                    ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + maxRows + ";");
+                    ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + Cache.maxRows + ";");
 
                     if (rs != null) {
                         while (rs.next()) {
                             String data = rs.getString("information");
-                            Timestamp t = rs.getTimestamp("creation_date");
-                            String date = "(" + AlgebraUtils.randomInteger(1, Check.maxViolationsPerCycle - 1) + ")[" + TimeUtils.getYearMonthDay(t) + " " + TimeUtils.getTime(t) + "]";
+                            String[] all = TimeUtils.getAll(rs.getTimestamp("creation_date"));
+                            String date = "(" + new Random().nextInt() + ")[" + all[0] + " " + all[1] + "]";
                             cache.put(date, data);
                             byteSize += date.length() + data.length();
 
-                            if (byteSize >= maxBytes) {
+                            if (byteSize >= Cache.maxBytes) {
                                 isFull = true;
                                 break;
                             }
@@ -532,7 +520,7 @@ public class ResearchEngine {
                             cache.put(key, data);
                             byteSize += key.length() + data.length();
 
-                            if (byteSize >= maxBytes) {
+                            if (byteSize >= Cache.maxBytes) {
                                 isFull = true;
                                 break;
                             }
@@ -559,20 +547,19 @@ public class ResearchEngine {
             if (enabledPlugin) {
                 CloudBase.refresh(true);
                 buildCache();
-                PatternStorage.reload();
+                Pattern.reload();
                 CloudBase.refresh(false);
             } else {
                 CloudBase.clear(true);
-                PatternStorage.clear();
-                CancelViolation.clear();
+                Pattern.clear();
                 ViolationAnalysis.clear();
             }
         };
 
-        if (!SpartanBukkit.isSynchronised()) {
-            runnable.run();
+        if (SpartanBukkit.isSynchronised()) {
+            SpartanBukkit.analysisThread.executeIfFree(runnable);
         } else {
-            SpartanBukkit.dataThread.executeIfFree(runnable);
+            runnable.run();
         }
     }
 
@@ -584,8 +571,6 @@ public class ResearchEngine {
             int size = logs.size();
 
             if (size > 0) {
-                String falsePositiveDisclaimer = StringUtils.getClearColorString(LiveViolation.falsePositiveDisclaimer);
-
                 try {
                     String construct = Config.getConstruct();
 
@@ -627,32 +612,30 @@ public class ResearchEngine {
                                 getPlayerProfile(split[0]).punishmentHistory.increasePunishments(null, null);
                             } else if (data.contains(" failed ")) {
                                 if (split.length >= 3) {
-                                    if (!data.startsWith(falsePositiveDisclaimer)) {
-                                        String name = split[0];
-                                        String hackTypeString = split[2];
-                                        PlayerProfile playerProfile = getPlayerProfile(name);
+                                    String name = split[0];
+                                    String hackTypeString = split[2];
+                                    PlayerProfile playerProfile = getPlayerProfile(name);
 
-                                        for (Enums.HackType hackType : Enums.HackType.values()) {
-                                            if (hackTypeString.equals(hackType.toString())) {
-                                                // Separator
-                                                String detection = getDetectionInformation(data);
+                                    for (Enums.HackType hackType : Enums.HackType.values()) {
+                                        if (hackTypeString.equals(hackType.toString())) {
+                                            // Separator
+                                            String detection = getDetectionInformation(data);
 
-                                                if (detection != null) {
-                                                    int violation = getDetectionViolationLevel(data);
+                                            if (detection != null) {
+                                                int violation = getDetectionViolationLevel(data);
 
-                                                    if (violation != -1) {
-                                                        SimpleDateFormat sdf = new SimpleDateFormat(
-                                                                fullDate.contains(AntiCheatLogs.dateFormatChanger) ?
-                                                                        AntiCheatLogs.dateFormat :
-                                                                        AntiCheatLogs.usualDateFormat
-                                                        );
-                                                        playerProfile.getViolationHistory(hackType).store(
-                                                                new PlayerViolation(hackType, sdf.parse(fullDate).getTime(), detection, violation)
-                                                        );
-                                                    }
+                                                if (violation != -1) {
+                                                    SimpleDateFormat sdf = new SimpleDateFormat(
+                                                            fullDate.contains(AntiCheatLogs.dateFormatChanger) ?
+                                                                    AntiCheatLogs.dateFormat :
+                                                                    AntiCheatLogs.usualDateFormat
+                                                    );
+                                                    playerProfile.getViolationHistory(hackType).store(
+                                                            new PlayerViolation(sdf.parse(fullDate).getTime(), hackType, detection, violation)
+                                                    );
                                                 }
-                                                break;
                                             }
+                                            break;
                                         }
                                     }
                                 }
@@ -703,13 +686,12 @@ public class ResearchEngine {
             Enums.HackType[] hackTypes = Enums.HackType.values();
             Enums.DataType[] dataTypes = getDynamicUsableDataTypes(false);
             List<PlayerProfile> legitimatePlayers = getLegitimatePlayers();
-            int mines = 0, logs = 0, kicks = 0, warnings = 0, punishments = 0;
+            int mines = 0, kicks = 0, warnings = 0, punishments = 0;
             ViolationAnalysis.calculateData(playerProfiles);
 
             for (PlayerProfile playerProfile : playerProfiles) {
                 playerProfile.evidence.judge();
                 PunishmentHistory punishmentHistory = playerProfile.punishmentHistory;
-                logs += playerProfile.getUsefulLogs();
                 mines += playerProfile.getOverallMiningHistory().getMines();
                 kicks += punishmentHistory.getKicks();
                 warnings += punishmentHistory.getWarnings();
@@ -725,20 +707,19 @@ public class ResearchEngine {
             }
             statisticalProgress = new StatisticalProgress(
                     mines,
-                    logs,
                     kicks,
                     warnings,
                     punishments,
                     staffOnline
             );
 
-            // Separator (Find False Positives)
+            // Separator
 
             if (enoughData()) {
-                double duration = 1000.0; // 1 second
+                double analysisDuration = 1_000.0; // 1 second
 
                 for (Enums.HackType hackType : hackTypes) {
-                    hackType.getCheck().clearMaxCancelledViolations();
+                    hackType.getCheck().clearIgnoredViolations();
 
                     for (Enums.DataType dataType : dataTypes) {
                         if (hackType.getCheck().isEnabled(dataType, null, null)) {
@@ -753,7 +734,7 @@ public class ResearchEngine {
                                     // Organize the violations into time period pieces
                                     if (!list.isEmpty()) {
                                         for (PlayerViolation playerViolation : list) {
-                                            int timeMoment = AlgebraUtils.integerFloor(playerViolation.time / duration);
+                                            int timeMoment = AlgebraUtils.integerFloor(playerViolation.time / analysisDuration);
                                             ViolationAnalysis.TimePeriod timePeriod = averages.get(timeMoment);
 
                                             if (timePeriod == null) {
@@ -788,21 +769,21 @@ public class ResearchEngine {
                                 }
 
                                 // Calculate the average violations for each executed detection and multiply to get the bigger image
-                                duration = Check.violationCycleMilliseconds / duration;
+                                analysisDuration = violationsMeasurementDuration / analysisDuration;
 
                                 for (Map.Entry<Integer, Double> entry : violationAverages.entrySet()) {
-                                    entry.setValue(entry.getValue() / violationAveragesDivisor.get(entry.getKey()) * duration);
+                                    entry.setValue(entry.getValue() / violationAveragesDivisor.get(entry.getKey()) * analysisDuration);
                                 }
-                                hackType.getCheck().setMaxCancelledViolations(dataType, violationAverages);
+                                hackType.getCheck().setIgnoredViolations(dataType, violationAverages);
                             } else {
-                                hackType.getCheck().clearMaxCancelledViolations();
+                                hackType.getCheck().clearIgnoredViolations();
                             }
                         }
                     }
                 }
             } else {
                 for (Enums.HackType hackType : hackTypes) {
-                    hackType.getCheck().clearMaxCancelledViolations();
+                    hackType.getCheck().clearIgnoredViolations();
                 }
             }
 
@@ -829,22 +810,16 @@ public class ResearchEngine {
                         averageMining.remove(ore);
                     }
                 }
-
-                // Separator
-
-                CancelViolation.refresh(hackTypes); // Always at the end to include all the recently calculated/cached data
             } else {
                 averageMining.clear();
-                CancelViolation.clear(); // We clear because there are no hacker-free players
             }
         } else { // We clear because there are no players
             statisticalProgress = new StatisticalProgress();
             averageMining.clear();
             ViolationAnalysis.clear();
-            CancelViolation.clear();
 
             for (Enums.HackType hackType : Enums.HackType.values()) {
-                hackType.getCheck().clearMaxCancelledViolations();
+                hackType.getCheck().clearIgnoredViolations();
             }
         }
     }

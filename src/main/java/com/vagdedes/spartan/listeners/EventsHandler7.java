@@ -1,23 +1,22 @@
 package com.vagdedes.spartan.listeners;
 
+import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
+import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.NoSlowdown;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.exploits.Exploits;
-import com.vagdedes.spartan.checks.inventory.ImpossibleInventory;
-import com.vagdedes.spartan.checks.movement.MorePackets;
-import com.vagdedes.spartan.checks.movement.NoFall;
-import com.vagdedes.spartan.checks.movement.NoSlowdown;
-import com.vagdedes.spartan.checks.movement.irregularmovements.IrregularMovements;
-import com.vagdedes.spartan.checks.movement.speed.Speed;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.management.Cache;
-import com.vagdedes.spartan.functionality.protections.CheckDelay;
-import com.vagdedes.spartan.functionality.protections.ServerFlying;
+import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.CombatProcessing;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
-import com.vagdedes.spartan.utils.gameplay.PlayerData;
-import com.vagdedes.spartan.utils.java.HashHelper;
+import com.vagdedes.spartan.functionality.tracking.ServerFlying;
+import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
+import com.vagdedes.spartan.utils.java.HashUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
@@ -54,7 +53,7 @@ public class EventsHandler7 implements Listener {
         }
 
         // Objects
-        p.setFlying(e.isCancelled() ? n.isFlying() : e.isFlying() || n.isFlying());
+        p.movement.setFlying(e.isCancelled() ? n.isFlying() : e.isFlying() || n.isFlying());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -89,7 +88,7 @@ public class EventsHandler7 implements Listener {
         if (p == null) {
             return;
         }
-        PlayerData.update(p, n, false);
+        PlayerUtils.update(p, n, false);
         boolean cancelled = e.isCancelled();
 
         if (!p.canDo(false)) {
@@ -101,23 +100,16 @@ public class EventsHandler7 implements Listener {
         if (nto == null) {
             return;
         }
-        SpartanLocation to = p.setEventLocation(nto),
+        SpartanLocation to = p.movement.setEventLocation(nto),
                 from = new SpartanLocation(p, e.getFrom());
-        p.processLastMoveEvent(to, from);
+        p.movement.processLastMoveEvent(to, from);
 
         // Objects
-        to.retrieveDataFrom(p.getLocation());
+        to.retrieveDataFrom(p.movement.getLocation());
         from.retrieveDataFrom(to);
 
         if (to.getYaw() != from.getYaw() || to.getPitch() != from.getPitch()) {
-            p.setLastHeadMovement();
-        }
-
-        // Handlers
-        for (Enums.HackType hackType : handledChecks) {
-            if (p.getViolations(hackType).process()) {
-                return;
-            }
+            p.movement.setLastHeadMovement();
         }
 
         // Values
@@ -129,67 +121,50 @@ public class EventsHandler7 implements Listener {
                 ver = toY - fromY,
                 hor = Math.sqrt(preXZ);
         float fall = p.getFallDistance();
-        boolean crawling = p.isCrawling();
+
+        // Detections (Always previous so it counts the previous tick and makes the current tick's prediction)
+        int situation = HashUtils.extendInt(HashUtils.hashPlayer(p), HashUtils.hashEnvironment(p, to));
 
         // Patterns
-        long situation = HashHelper.hashPlayer(p);
-        situation = HashHelper.extendLong(situation, HashHelper.hashEnvironment(p, to));
-        SpartanBukkit.movementPatterns.all.collect(
-                p.getProfile(),
-                situation,
-                dis,
-                dis != 0.0 || p.getValueOrDefault(p.getPreviousNmsDistance(), 0.0) != 0.0
-        );
-        SpartanBukkit.movementPatterns.horizontal.collect(
-                p.getProfile(),
-                situation,
-                hor,
-                hor != 0.0 || p.getValueOrDefault(p.getPreviousNmsHorizontalDistance(), 0.0) != 0.0
-        );
-        SpartanBukkit.movementPatterns.vertical.collect(
-                p.getProfile(),
-                situation,
-                ver,
-                ver != 0.0 || p.getValueOrDefault(p.getPreviousNmsVerticalDistance(), 0.0) != 0.0
-        );
-        SpartanBukkit.movementPatterns.fall.collect(
-                p.getProfile(),
-                situation,
-                fall,
-                fall != 0.0 || p.getValueOrDefault(p.getPreviousNmsFall(), 0.0f) != 0.0
-        );
-        SpartanBukkit.movementPatterns.store();
+        SpartanBukkit.movementPatterns.learn(p, situation, dis, hor, ver, fall);
 
         // Handlers
-        MovementProcessing.run(p, dis, hor, ver, box, fall, crawling);
+        MovementProcessing.run(p, dis, hor, ver, box, fall);
         CombatProcessing.runMove(p, to);
 
         // Detections
-        if (!crawling) {
-            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.HEAD); // Optimised
-            p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled); // Optimised
-            p.getExecutor(Enums.HackType.KillAura).run(cancelled); // Optimised
-        }
+        p.getExecutor(Enums.HackType.IrregularMovements).handle(false, situation);
+        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.HEAD);
+        p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
+        p.getExecutor(Enums.HackType.KillAura).run(cancelled);
         p.getExecutor(Enums.HackType.Exploits).handle(cancelled, dis);
 
         if (dis == 0.0) {
+            // Handlers
+            for (Enums.HackType hackType : handledChecks) {
+                if (p.getViolations(hackType).prevent()) {
+                    break;
+                }
+            }
             return;
         }
 
         // Detections
-        if (!crawling) {
-            ServerFlying.run(p);
-            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.CHUNK);
-            p.getExecutor(Enums.HackType.Speed).handle(cancelled, Speed.SPRINT);
-        }
-        if (!crawling) {
-            p.getExecutor(Enums.HackType.NoFall).run(cancelled);
-            p.getExecutor(Enums.HackType.NoSlowdown).run(cancelled);
-        }
+        ServerFlying.run(p);
+        p.getExecutor(Enums.HackType.Speed).handle(cancelled, Speed.SPRINT);
+        p.getExecutor(Enums.HackType.NoFall).run(cancelled);
+        p.getExecutor(Enums.HackType.NoSlowdown).run(cancelled);
         p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
         p.getExecutor(Enums.HackType.Speed).run(cancelled);
         p.getExecutor(Enums.HackType.Speed).handle(cancelled, Speed.WATER);
         p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
+
+        // Handlers
+        for (Enums.HackType hackType : handledChecks) {
+            if (p.getViolations(hackType).prevent()) {
+                break;
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -201,12 +176,12 @@ public class EventsHandler7 implements Listener {
             return;
         }
         // Object
-        p.resetLocationData();
+        p.resetHandlers();
 
         // Detections
         CheckDelay.cancel(p.uuid, 20);
 
         // System
-        Cache.clear(p, n, false, true, true, false, p.getLocation());
+        p.getExecutor(Enums.HackType.MorePackets).handle(false, p.movement.getLocation());
     }
 }

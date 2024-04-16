@@ -12,7 +12,7 @@ public class WaterElevator {
 
     static void runMove(SpartanPlayer p) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            SpartanLocation location = p.getLocation();
+            SpartanLocation location = p.movement.getLocation();
             int blockY = location.getBlockY(), minY = BlockUtils.getMinHeight(p.getWorld());
 
             if (blockY > minY && isSoulSand(location, blockY, minY)) {

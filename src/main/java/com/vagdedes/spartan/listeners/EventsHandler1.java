@@ -1,17 +1,14 @@
 package com.vagdedes.spartan.listeners;
 
+import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
 import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.checks.inventory.ImpossibleInventory;
 import com.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.Explosion;
-import com.vagdedes.spartan.functionality.identifiers.simple.DetectionLocation;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -71,8 +68,8 @@ public class EventsHandler1 implements Listener {
         // Features
         ChatProtection.remove(p);
 
-        // System
-        Cache.clear(p, n, true, true, true, false, null);
+        // Detections
+        p.getExecutor(Enums.HackType.Criticals).handle(false, null);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -84,17 +81,9 @@ public class EventsHandler1 implements Listener {
             return;
         }
         // Detections
-        Cache.clearCheckCache(p);
-        p.getExecutor(Enums.HackType.KillAura).handle(false, null);
         p.getExecutor(Enums.HackType.ImpossibleActions).run(false);
         p.getExecutor(Enums.HackType.AutoRespawn).run(false);
         p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, ImpossibleInventory.DEATH);
-
-        // Protections
-        p.resetHandlers(); // Always First
-
-        // Utils
-        DetectionLocation.update(p, p.getLocation(), true);
 
         // Objects
         Player killer = n.getKiller();
@@ -110,7 +99,8 @@ public class EventsHandler1 implements Listener {
                 }
             }
         }
-        p.resetLocationData();
+        p.resetHandlers();
+        p.movement.setDetectionLocation(true);
         p.setDead(true);
         p.setSleeping(false);
         p.setHealth(n.getHealth());
@@ -124,16 +114,9 @@ public class EventsHandler1 implements Listener {
         if (p == null) {
             return;
         }
-        // Detections
-        Cache.clearCheckCache(p);
-        p.getExecutor(Enums.HackType.KillAura).handle(false, null);
-        p.getExecutor(Enums.HackType.IrregularMovements).handle(false, null);
-
-        // Utils
-        DetectionLocation.update(p, p.getLocation(), true);
 
         // Objects
-        p.resetLocationData();
+        p.movement.setDetectionLocation(true);
         p.setDead(false);
         p.setSleeping(false);
         p.setHealth(n.getMaxHealth());
@@ -155,11 +138,10 @@ public class EventsHandler1 implements Listener {
         // Handlers
         if (!e.isCancelled()) {
             p.getHandlers().add(Handlers.HandlerType.Velocity, 80);
-            Explosion.runVelocity(p);
         }
 
         // Detections
-        if (p.getViolations(Enums.HackType.Velocity).process()) {
+        if (p.getViolations(Enums.HackType.Velocity).prevent()) {
             e.setCancelled(true);
         }
     }

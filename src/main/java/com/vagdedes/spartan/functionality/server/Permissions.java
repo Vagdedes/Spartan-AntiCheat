@@ -49,6 +49,17 @@ public class Permissions {
 
     // Separator
 
+    public static boolean onlyHas(SpartanPlayer p, Enums.Permission permission) {
+        Player n = p.getPlayer();
+        return n != null && n.isOnline() && onlyHas(n, permission);
+    }
+
+    public static boolean onlyHas(Player p, Enums.Permission permission) {
+        return p.hasPermission(permission.getKey());
+    }
+
+    // Separator
+
     public static boolean isBypassing(SpartanPlayer p, Enums.HackType hackType) {
         if (p.isOp()) {
             return Config.settings.getBoolean("Important.op_bypass");

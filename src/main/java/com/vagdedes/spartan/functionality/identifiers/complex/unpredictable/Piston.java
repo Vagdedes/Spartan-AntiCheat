@@ -4,7 +4,7 @@ import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.gameplay.MoveUtils;
+import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -26,14 +26,14 @@ public class Piston {
 
             for (SpartanPlayer p : players) {
                 if (p.getWorld().equals(world)) {
-                    SpartanLocation location = p.getLocation();
+                    SpartanLocation location = p.movement.getLocation();
                     double preX = AlgebraUtils.getPreDistance(location.getX(), block.getX()),
                             diffY = location.getY() - block.getY(),
                             preZ = AlgebraUtils.getPreDistance(location.getZ(), block.getZ());
 
                     if (!run(p, preX, diffY, preZ) // Check if the player is nearby to the piston
                             && runBlocks
-                            && Math.sqrt(preX + (diffY * diffY) + preZ) <= MoveUtils.chunk) { // Check if the player is nearby to the piston affected blocks
+                            && Math.sqrt(preX + (diffY * diffY) + preZ) <= PlayerUtils.chunk) { // Check if the player is nearby to the piston affected blocks
                         for (Block affected : blocks) {
                             preX = AlgebraUtils.getPreDistance(location.getX(), affected.getX());
                             diffY = location.getY() - block.getY();
