@@ -15,7 +15,7 @@
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long.png?id=1"></a>
 
-<a href="https://docs.google.com/document/d/e/2PACX-1vTw-BJ8cKRPYkWm-xhCyG02pkTK-6TpUuKdaezYGEIsMQiVls_SIHDcVdQMYUrRQkoS7oLKyRpX960s/pub"><img src="https://vagdedes.com/.images/spartan/blocked_hacks.png"></a>
+<a href="https://docs.google.com/document/d/e/2PACX-1vTHwxatQmlastam-oCq5zOwQ3gLFTSa6SgqL5WT37JzC5g4YZWhkE3r-a6JGAJC_LnjIHXx8EDFRKMV/pub"><img src="https://vagdedes.com/.images/spartan/blocked_hacks.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vQlpvD3a2wOu2j1xSNcYWlSCbEQfCmQvkbnINkBwFek_0r_xV5ni8V7fpqsRx2iVVxlCOAZckdUISpW/pub"><img src="https://vagdedes.com/.images/spartan/install.png"></a>
 
