@@ -5,8 +5,6 @@
 
 ### [BACK TO MAIN PAGE](https://www.idealistic.ai)
 
-<a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/banner.png"></a>
-
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/what.png"></a>
 
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple.png"></a>
@@ -24,8 +22,6 @@
 <a href="https://www.youtube.com/playlist?list=PL2hl9dLPbmzWPHImiP4sUBu__-shV1yIO"><img src="https://vagdedes.com/.images/spartan/videos.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vTQVMXekugGx9fqmKLTPGWbyO5JP--wP6yhv0C29V4hFipcFx1m5iR96GTXkpN0SBfwLLv6nWzFNK8z/pub"><img src="https://vagdedes.com/.images/spartan/commands_permissions.png"></a>
-
-<a href="https://vagdedes.com/discord"><img src="https://vagdedes.com/.images/spartan/customer_support.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vRPetvIOb4bSOvNMCTymatoTS8X-h3oz1llHKY0LByL6b--yeMBdbLp_PseNUDkVc0S5u5TY5YPOcu-/pub"><img src="https://vagdedes.com/.images/spartan/cloud.png"></a>
 
