@@ -1,10 +1,3 @@
-<br>
-<p align="center"><img src='https://vagdedes.com/.images/idealistic/logoCircular.png' width='200' height='200'></p> 
-
-# <p align="center">Idealistic AI [Sign In](https://www.idealistic.ai/account)</p>
-
-### [BACK TO MAIN PAGE](https://www.idealistic.ai)
-
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/what.png"></a>
 
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple.png"></a>
@@ -28,5 +21,3 @@
 <a href="https://namemc.com/server/minecraft.vagdedes.com"><img src="https://vagdedes.com/.images/spartan/test.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vTzeCDiD2goCFO3oWIs3ANwmOvOqI2TLYVkjHO4Z-2q3yTDZPyYZ9bFX4OCwlBamWA_SOP7Ib5uARc8/pub"><img src="https://vagdedes.com/.images/spartan/developers.png"></a>
-
-### [BACK TO MAIN PAGE](https://www.idealistic.ai)
