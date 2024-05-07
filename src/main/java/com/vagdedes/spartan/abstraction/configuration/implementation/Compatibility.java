@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.compatibility.manual.abilities.*;
@@ -38,12 +37,12 @@ public class Compatibility {
     private static final Map<String, Boolean> bool = new LinkedHashMap<>();
 
     public enum CompatibilityType {
-        AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, MagicSpells, ProtocolLib, mcMMO, NoHitDelay,
-        TreeFeller, VeinMiner, GrapplingHook, ViaRewind, RecentPvPMechanics, MineBomb, SuperPickaxe,
-        RealDualWield, MythicMobs, ViaVersion, ItemAttributes, PrinterMode, Vehicles, MineTinker,
-        WildTools, DragonPhases, AureliumSkills, KnockbackMaster, MyPet, CustomEnchantsPlus,
-        EcoEnchants, ItemsAdder, RampenDrills, OldCombatMechanics, CustomKnockback, ProjectKorra, AcidRain,
-        MajorIncompatibility, FileGUI, Floodgate, ProtocolSupport, Authentication;
+        ADVANCED_ABILITIES, CRACK_SHOT, CRACK_SHOT_PLUS, CRAFT_BOOK, MAGIC_SPELLS, PROTOCOL_LIB,
+        MC_MMO, NO_HIT_DELAY, TREE_FELLER, VEIN_MINER, GRAPPLING_HOOK, RECENT_PVP_MECHANICS,
+        MINE_BOMB, SUPER_PICKAXE, REAL_DUAL_WIELD, MYTHIC_MOBS, ITEM_ATTRIBUTES, PRINTER_MODE,
+        VEHICLES, MINE_TINKER, WILD_TOOLS, DRAGON_PHASES, AURELIUM_SKILLS, KNOCKBACK_MASTER,
+        MY_PET, CUSTOM_ENCHANTS_PLUS, ECO_ENCHANTS, ITEMS_ADDER, RAMPEN_DRILLS, OLD_COMBAT_MECHANICS,
+        CUSTOM_KNOCKBACK, PROJECT_KORRA, ACID_RAIN, FILE_GUI, FLOODGATE, PROTOCOL_SUPPORT, AUTHENTICATION;
 
         private boolean enabled, forced, functional;
 
@@ -58,14 +57,14 @@ public class Compatibility {
             String name;
 
             switch (this) {
-                case ProtocolSupport: // Necessary
-                case Floodgate: // Necessary
-                case FileGUI: // Local
+                case PROTOCOL_SUPPORT: // Necessary
+                case FLOODGATE: // Necessary
+                case FILE_GUI: // Local
                     hardcoded = true;
                     contains = false;
                     name = this.name().toLowerCase();
                     break;
-                case Authentication: // General
+                case AUTHENTICATION: // General
                     hardcoded = true;
                     contains = true;
                     name = "auth";
@@ -86,7 +85,7 @@ public class Compatibility {
                 String compatibility = this.toString();
 
                 if (create) {
-                    ConfigUtils.add(file, compatibility + ".enabled", !this.equals(CompatibilityType.WildTools));
+                    ConfigUtils.add(file, compatibility + ".enabled", !this.equals(CompatibilityType.WILD_TOOLS));
                     ConfigUtils.add(file, compatibility + ".force", false);
                 }
                 this.enabled = getBoolean(compatibility + ".enabled", create);
@@ -243,124 +242,113 @@ public class Compatibility {
         for (CompatibilityType compatibilityType : CompatibilityType.values()) {
             compatibilityType.refresh(create);
         }
-        CompatibilityType.mcMMO.setFunctional();
-        CompatibilityType.TreeFeller.setFunctional(
-                CompatibilityType.TreeFeller.toString(),
-                CompatibilityType.mcMMO
+        CompatibilityType.MC_MMO.setFunctional();
+        CompatibilityType.TREE_FELLER.setFunctional(
+                CompatibilityType.TREE_FELLER.toString(),
+                CompatibilityType.MC_MMO
         );
-        CompatibilityType.CraftBook.setFunctional(CraftBook::resetBoatLimit);
-        CompatibilityType.CrackShot.setFunctional(
+        CompatibilityType.CRAFT_BOOK.setFunctional(CraftBook::resetBoatLimit);
+        CompatibilityType.CRACK_SHOT.setFunctional(
                 () -> Register.enable(new CrackShot(), CrackShot.class)
         );
-        CompatibilityType.CrackShotPlus.setFunctional(
+        CompatibilityType.CRACK_SHOT_PLUS.setFunctional(
                 () -> Register.enable(new CrackShotPlus(), CrackShotPlus.class)
         );
-        CompatibilityType.CustomKnockback.setFunctional("%knockback");
-        CompatibilityType.KnockbackMaster.setFunctional(
+        CompatibilityType.CUSTOM_KNOCKBACK.setFunctional("%knockback");
+        CompatibilityType.KNOCKBACK_MASTER.setFunctional(
                 new String[]{
                         "com.xdefcon.knockbackmaster.api.KnockbackMasterAPI+",
-                        CompatibilityType.KnockbackMaster + "+"
+                        CompatibilityType.KNOCKBACK_MASTER + "+"
                 }
         );
-        CompatibilityType.RealDualWield.setFunctional(
+        CompatibilityType.REAL_DUAL_WIELD.setFunctional(
                 () -> Register.enable(new RealDualWield(), RealDualWield.class)
         );
-        CompatibilityType.MagicSpells.setFunctional(
+        CompatibilityType.MAGIC_SPELLS.setFunctional(
                 () -> Register.enable(new MagicSpells(), MagicSpells.class)
         );
-        CompatibilityType.MajorIncompatibility.setFunctional(
+        CompatibilityType.ACID_RAIN.setFunctional(
                 new String[]{
-                        "Skript",
-                        "CMI",
-                        "SlimeFun",
-                        "EcoSkills"
-                }
-        );
-        CompatibilityType.AcidRain.setFunctional(
-                new String[]{
-                        CompatibilityType.AcidRain.toString(),
+                        CompatibilityType.ACID_RAIN.toString(),
                         "acidisland",
                         "askyblock"
                 },
                 () -> Register.enable(new AcidRain(), AcidRain.class)
         );
-        CompatibilityType.AdvancedAbilities.setFunctional(
+        CompatibilityType.ADVANCED_ABILITIES.setFunctional(
                 () -> Register.enable(new AdvancedAbilities(), AdvancedAbilities.class)
         );
-        CompatibilityType.OldCombatMechanics.setFunctional();
-        CompatibilityType.DragonPhases.setFunctional(
+        CompatibilityType.OLD_COMBAT_MECHANICS.setFunctional();
+        CompatibilityType.DRAGON_PHASES.setFunctional(
                 new String[]{
                         "org.bukkit.event.entity.EnderDragonChangePhaseEvent"
                 },
                 () -> Register.enable(new DragonPhases(), DragonPhases.class)
         );
-        CompatibilityType.VeinMiner.setFunctional(VeinMiner::reload);
-        CompatibilityType.ViaVersion.setFunctional();
-        CompatibilityType.ProjectKorra.setFunctional(
+        CompatibilityType.VEIN_MINER.setFunctional(VeinMiner::reload);
+        CompatibilityType.PROJECT_KORRA.setFunctional(
                 () -> Register.enable(new ProjectKorra(), ProjectKorra.class)
         );
-        CompatibilityType.GrapplingHook.setFunctional(
+        CompatibilityType.GRAPPLING_HOOK.setFunctional(
                 () -> Register.enable(new GrapplingHook(), GrapplingHook.class)
         );
-        CompatibilityType.MythicMobs.setFunctional(MythicMobs::reload);
-        CompatibilityType.CustomEnchantsPlus.setFunctional();
-        CompatibilityType.EcoEnchants.setFunctional(ReflectionUtils.classExists("com.willfp.ecoenchants.enchants.EcoEnchant"));
-        CompatibilityType.Vehicles.setFunctional(
+        CompatibilityType.MYTHIC_MOBS.setFunctional(MythicMobs::reload);
+        CompatibilityType.CUSTOM_ENCHANTS_PLUS.setFunctional();
+        CompatibilityType.ECO_ENCHANTS.setFunctional(ReflectionUtils.classExists("com.willfp.ecoenchants.enchants.EcoEnchant"));
+        CompatibilityType.VEHICLES.setFunctional(
                 () -> Register.enable(new Vehicles(), Vehicles.class)
         );
-        CompatibilityType.MineTinker.setFunctional(
+        CompatibilityType.MINE_TINKER.setFunctional(
                 () -> Register.enable(new MineTinker(), MineTinker.class)
         );
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            CompatibilityType.ItemAttributes.setFunctional(
+            CompatibilityType.ITEM_ATTRIBUTES.setFunctional(
                     new String[]{""},
                     new CompatibilityType[]{
-                            CompatibilityType.MineTinker,
-                            CompatibilityType.MythicMobs,
-                            CompatibilityType.ProjectKorra,
-                            CompatibilityType.MajorIncompatibility
+                            CompatibilityType.MINE_TINKER,
+                            CompatibilityType.MYTHIC_MOBS,
+                            CompatibilityType.PROJECT_KORRA
                     }
             );
-            CompatibilityType.RecentPvPMechanics.setFunctional(
+            CompatibilityType.RECENT_PVP_MECHANICS.setFunctional(
                     new String[]{""}
             );
         }
-        CompatibilityType.WildTools.setFunctional(
+        CompatibilityType.WILD_TOOLS.setFunctional(
                 () -> Register.enable(new WildTools(), WildTools.class)
         );
-        CompatibilityType.Floodgate.setFunctional(
+        CompatibilityType.FLOODGATE.setFunctional(
                 new String[]{
-                        "%" + CompatibilityType.Floodgate,
+                        "%" + CompatibilityType.FLOODGATE,
                         "%geyser"
                 },
                 Floodgate::reload
         );
-        CompatibilityType.ProtocolSupport.setFunctional(
+        CompatibilityType.PROTOCOL_SUPPORT.setFunctional(
                 new String[]{
                         "protocolsupport.api.Connection+",
                         "protocolsupport.api.ProtocolSupportAPI+",
-                        CompatibilityType.ProtocolSupport + "+"
+                        CompatibilityType.PROTOCOL_SUPPORT + "+"
                 }
         );
-        CompatibilityType.ProtocolLib.setFunctional(ProtocolLib::reload);
-        CompatibilityType.MyPet.setFunctional();
-        CompatibilityType.RampenDrills.setFunctional(
+        CompatibilityType.PROTOCOL_LIB.setFunctional(ProtocolLib::reload);
+        CompatibilityType.MY_PET.setFunctional();
+        CompatibilityType.RAMPEN_DRILLS.setFunctional(
                 () -> Register.enable(new RampenDrills(), RampenDrills.class)
         );
-        CompatibilityType.MineBomb.setFunctional(MineBomb::reload);
-        CompatibilityType.PrinterMode.setFunctional();
-        CompatibilityType.SuperPickaxe.setFunctional(
+        CompatibilityType.MINE_BOMB.setFunctional(MineBomb::reload);
+        CompatibilityType.PRINTER_MODE.setFunctional();
+        CompatibilityType.SUPER_PICKAXE.setFunctional(
                 new String[]{
-                        CompatibilityType.SuperPickaxe.toString(),
-                        CompatibilityType.SuperPickaxe + "Reloaded"
+                        CompatibilityType.SUPER_PICKAXE.toString(),
+                        CompatibilityType.SUPER_PICKAXE + "Reloaded"
                 }
         );
-        CompatibilityType.ViaRewind.setFunctional(Speed::updateLimits);
-        CompatibilityType.AureliumSkills.setFunctional(
+        CompatibilityType.AURELIUM_SKILLS.setFunctional(
                 () -> Register.enable(new AureliumSkills(), AureliumSkills.class)
         );
-        CompatibilityType.ItemsAdder.setFunctional();
-        CompatibilityType.NoHitDelay.setFunctional(
+        CompatibilityType.ITEMS_ADDER.setFunctional();
+        CompatibilityType.NO_HIT_DELAY.setFunctional(
                 new String[]{""}
         );
         MainMenu.refresh();
@@ -417,12 +405,12 @@ public class Compatibility {
         return active;
     }
 
-    public List<CompatibilityType> getInactiveCompatibilities() {
+    public List<CompatibilityType> getTotalCompatibilities() { // todo
         CompatibilityType[] compatibilities = CompatibilityType.values();
         List<CompatibilityType> active = new ArrayList<>(compatibilities.length);
 
         for (CompatibilityType compatibility : CompatibilityType.values()) {
-            if (!compatibility.isFunctional()) {
+            if (compatibility.isEnabled()) {
                 active.add(compatibility);
             }
         }

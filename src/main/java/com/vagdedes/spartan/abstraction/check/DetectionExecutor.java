@@ -1,7 +1,5 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.data.Decimals;
-import com.vagdedes.spartan.abstraction.pattern.PatternGeneralization;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -64,41 +62,6 @@ public abstract class DetectionExecutor {
 
     protected final void cancel(String verbose) {
         new HackPrevention(player, hackType, verbose, null, 0, false, 0.0);
-    }
-
-    // Separator
-
-    protected final void machineLearningDetection(PatternGeneralization generalization, int situation,
-                                                  int repetitions, double min) {
-        if (false) {
-            PatternGeneralization.Comparison comparison = generalization.comparison(
-                    player.getProfile(),
-                    situation
-            );
-            if (repetitions > 1) {
-                Decimals decimals = player.getDecimals(hackType);
-
-                if (decimals.getCount(generalization.parent.key) == repetitions) {
-                    player.debug(
-                            false,
-                            true,
-                            decimals.get(generalization.parent.key, 1.0, Decimals.CALCULATE_AVERAGE)
-                    );
-                    decimals.removeOldest(generalization.parent.key);
-                }
-                decimals.add(generalization.parent.key, 0.0);
-            } else {
-                player.debug(
-                        false,
-                        true,
-                        comparison.probability,
-                        comparison.significance,
-                        comparison.contribution,
-                        comparison.similarity,
-                        comparison.outcome
-                );
-            }
-        }
     }
 
 }

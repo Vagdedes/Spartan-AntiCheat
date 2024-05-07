@@ -19,22 +19,45 @@ public class Pattern {
     private static final int storageLimit = 1024 * 1024 * 1024;
     static final int
             testingNotificationDivisor = 69,
-            globalDataLimit = 10_000,
-            globalDataLimitBase = 625,
-            individualGlobalDataLimit = 1_024,
-            individualGlobalDataLimitBase = 2;
+            globalDataLimit = 320_000,
+            globalDataBase = 625,
+            individualDataLimit = 8_192,
+            individualDataBase = 2;
+    static final double individualPotentialContribution = 0.1;
+    static final PlayerProfile[] artificialProfiles = new PlayerProfile[10];
     static final String
             profileOption = "profile",
             patternOption = "pattern",
             situationOption = "situation";
     private static final String[] options = {profileOption, patternOption, situationOption};
-    private static final Collection<Pattern> instances = Collections.synchronizedList(new ArrayList<>());
+    private static final Collection<Pattern> instances = Collections.synchronizedList(new ArrayList<>(individualDataBase));
 
-    static int hash(PlayerProfile playerProfile) {
+    static {
+        for (int i = 0; i < artificialProfiles.length; i++) {
+            artificialProfiles[i] = new PlayerProfile();
+        }
+    }
+
+    static int hashProfile(PlayerProfile playerProfile) {
         return playerProfile.getName().hashCode();
     }
 
-    public static void deleteFromFile(PlayerProfile profile, boolean completely) {
+    public static int[] hashSituation(int[] situation) {
+        int result = 1;
+
+        for (int i : situation) {
+            result = (SpartanBukkit.hashCodeMultiplier * result) + i;
+        }
+        int[] copy = new int[situation.length + 1];
+        copy[0] = result;
+
+        for (int i = 0; i < situation.length; i++) {
+            copy[i + 1] = situation[i];
+        }
+        return copy;
+    }
+
+    public static void deleteFromFile(PlayerProfile profile) {
         synchronized (instances) {
             for (Pattern instance : instances) {
                 SpartanBukkit.dataThread.executeWithPriority(() -> {
@@ -48,7 +71,7 @@ public class Pattern {
                                 Set<String> keys = configuration.getKeys(false);
 
                                 if (!keys.isEmpty()) {
-                                    int profileHash = hash(profile);
+                                    int profileHash = hashProfile(profile);
                                     boolean changed = false;
 
                                     for (String key : keys) {
@@ -82,14 +105,14 @@ public class Pattern {
                                                 synchronized (instance.generalizations) {
                                                     for (PatternGeneralization patternGeneralization : instance.generalizations.values()) {
                                                         if (patternGeneralization.scissors != 0) {
-                                                            patternGeneralization.deletePattern(
-                                                                    (int) situation,
+                                                            patternGeneralization.decreaseImportance(
+                                                                    new int[]{(int) situation},
                                                                     profileHash,
                                                                     (float) AlgebraUtils.cut(pattern, patternGeneralization.scissors)
                                                             );
                                                         } else {
-                                                            patternGeneralization.deletePattern(
-                                                                    (int) situation,
+                                                            patternGeneralization.decreaseImportance(
+                                                                    new int[]{(int) situation},
                                                                     profileHash,
                                                                     (float) pattern
                                                             );
@@ -109,11 +132,9 @@ public class Pattern {
                                         } catch (Exception ignored) {
                                         }
                                     }
-                                    if (completely) {
-                                        synchronized (instance.generalizations) {
-                                            for (PatternGeneralization patternGeneralization : instance.generalizations.values()) {
-                                                patternGeneralization.deleteProfile(profile);
-                                            }
+                                    synchronized (instance.generalizations) {
+                                        for (PatternGeneralization patternGeneralization : instance.generalizations.values()) {
+                                            patternGeneralization.deleteProfile(profile);
                                         }
                                     }
                                 }
@@ -152,15 +173,13 @@ public class Pattern {
     public final String key;
     private final String learningFolder;
     private final Map<Short, PatternGeneralization> generalizations;
-    private boolean loaded, loading;
+    private boolean loading;
+    boolean loaded;
     private short count;
     private File file;
     private YamlConfiguration configuration;
 
-    public Pattern(String key,
-                   short[] generalizations,
-                   boolean linear,
-                   boolean ranked) {
+    public Pattern(String key, PatternGeneralization[] generalizations) {
         this.key = key;
         this.learningFolder = Register.plugin.getDataFolder()
                 + "/learning/"
@@ -169,14 +188,8 @@ public class Pattern {
         this.loading = false;
         this.generalizations = Collections.synchronizedMap(new HashMap<>(generalizations.length));
 
-        for (short generalization : generalizations) {
-            this.generalizations.put(
-                    generalization,
-                    linear ? new LinearPatternGeneralization(this, generalization)
-                            : (ranked
-                            ? new NonLinearRankedPatternGeneralization(this, generalization)
-                            : new NonLinearPatternGeneralization(this, generalization))
-            );
+        for (short i = 0; i < generalizations.length; i++) {
+            this.generalizations.put(i, generalizations[i]);
         }
         this.reloadLearningFile();
 
@@ -231,11 +244,11 @@ public class Pattern {
         }
     }
 
-    void setToFile(PlayerProfile profile, long time, int situation, double pattern) {
+    private void setToFile(PlayerProfile profile, long time, int[] situation, double pattern) {
         SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
             this.count++;
             this.configuration.set(time + "." + profileOption, profile.getName());
-            this.configuration.set(time + "." + situationOption, situation);
+            this.configuration.set(time + "." + situationOption, situation[0]);
             this.configuration.set(time + "." + patternOption, pattern);
         });
     }
@@ -263,27 +276,21 @@ public class Pattern {
         this.storeFiles();
 
         SpartanBukkit.dataThread.executeWithPriority(() -> {
-            Map<Short, PatternGeneralization> generalizations = new HashMap<>();
+            Map<Short, PatternGeneralization> generalizations = new HashMap<>(individualDataBase, 1.0f);
+            Set<Map.Entry<Short, PatternGeneralization>> entries;
             File[] files = this.getLearningFiles();
 
+            synchronized (this.generalizations) {
+                entries = new HashSet<>(this.generalizations.entrySet());
+            }
+            for (Map.Entry<Short, PatternGeneralization> entry : entries) {
+                PatternGeneralization patternGeneralization = entry.getValue().clearCopy();
+                generalizations.put(entry.getKey(), patternGeneralization);
+                patternGeneralization.loadStarting();
+            }
             if (files != null) {
                 Arrays.sort(files, Comparator.comparingLong(File::lastModified));
-                Set<Map.Entry<Short, PatternGeneralization>> entries;
 
-                synchronized (this.generalizations) {
-                    entries = new HashSet<>(this.generalizations.entrySet());
-                }
-
-                for (Map.Entry<Short, PatternGeneralization> entry : entries) {
-                    generalizations.put(
-                            entry.getKey(),
-                            entry.getValue() instanceof LinearPatternGeneralization
-                                    ? new LinearPatternGeneralization(this, entry.getValue().scissors)
-                                    : (entry.getValue() instanceof NonLinearPatternGeneralization
-                                    ? new NonLinearPatternGeneralization(this, entry.getValue().scissors)
-                                    : new NonLinearRankedPatternGeneralization(this, entry.getValue().scissors))
-                    );
-                }
                 for (File file : files) {
                     if (file.isFile() && file.getName().endsWith(".yml")) {
                         YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
@@ -316,24 +323,23 @@ public class Pattern {
                                     changed = true;
                                     continue;
                                 }
-                                try {
-                                    String profileName = profileObject.toString();
+                                String profileName = profileObject.toString();
 
-                                    if (profileName.isEmpty()) {
-                                        this.deleteFromFile(configuration, key);
-                                        changed = true;
-                                        continue;
-                                    }
-                                    long time = Long.parseLong(key);
+                                if (profileName.isEmpty()) {
+                                    this.deleteFromFile(configuration, key);
+                                    changed = true;
+                                    continue;
+                                }
+                                try {
                                     PlayerProfile profile = ResearchEngine.getPlayerProfile(profileName);
 
                                     for (PatternGeneralization generalization : generalizations.values()) {
                                         generalization.learn(
                                                 profile,
-                                                time,
-                                                (int) situation,
+                                                new int[]{(int) situation},
                                                 (double) pattern,
-                                                false
+                                                true,
+                                                true
                                         );
                                     }
                                 } catch (Exception ignored) {
@@ -352,19 +358,16 @@ public class Pattern {
                 }
             }
 
-            if (!generalizations.isEmpty()) {
-                synchronized (this.generalizations) {
-                    this.generalizations.clear();
-                    this.generalizations.putAll(generalizations);
-                }
+            synchronized (this.generalizations) {
+                this.generalizations.clear();
+                this.generalizations.putAll(generalizations);
+            }
+            for (PatternGeneralization generalization : generalizations.values()) {
+                generalization.loadCompleted();
             }
             this.loaded = true;
             this.loading = false;
         });
-    }
-
-    boolean isLoaded() {
-        return this.loaded;
     }
 
     private void deleteFromFile(YamlConfiguration configuration, String key) {
@@ -391,42 +394,52 @@ public class Pattern {
 
     // Separator
 
-    public void learn(SpartanPlayer player, int situation, Number pattern) {
-        long time = System.currentTimeMillis();
-        Integer divisor = DetectionNotifications.getDivisor(player, false);
-        boolean notifications = divisor != null,
-                found = false,
-                stored = false,
-                include = !SpartanBukkit.testMode || !player.isWhitelisted()
-                        && (!notifications || divisor != testingNotificationDivisor);
+    public void learn(SpartanPlayer player, int[] situation, Number pattern) {
+        if (this.loaded) {
+            long time = System.currentTimeMillis();
+            PlayerProfile profile = player.getProfile();
+            Integer divisor = DetectionNotifications.getDivisor(player, false);
+            boolean notifications = divisor != null,
+                    found = false,
+                    store = false,
+                    include = player.getProfile().isLegitimate()
+                            && (!SpartanBukkit.testMode
+                            || !notifications
+                            || divisor != testingNotificationDivisor);
 
-        synchronized (this.generalizations) {
-            for (PatternGeneralization generalization : this.generalizations.values()) {
-                if (notifications) {
-                    found |= generalization.hasPatterns(situation);
+            synchronized (this.generalizations) {
+                for (PatternGeneralization generalization : this.generalizations.values()) {
+                    if (notifications && this.loaded) {
+                        found |= generalization.hasPatterns(situation);
+                    }
+                    if (generalization.learn(
+                            profile,
+                            situation,
+                            pattern.doubleValue(),
+                            false,
+                            true
+                    )) {
+                        store |= include;
+                    }
                 }
-                stored |= generalization.learn(
-                        player.getProfile(),
-                        time,
-                        situation,
-                        pattern.doubleValue(),
-                        include && !stored
-                );
             }
-        }
+            if (store) {
+                this.setToFile(profile, time, situation, pattern.doubleValue());
+            }
 
-        if (!found && notifications) {
-            String message = AwarenessNotifications.getOptionalNotification(
-                    "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
-                            + (player.getProfile().isLegitimate()
-                            ? "Continue playing LEGITIMATELY to train the algorithm and get better results."
-                            : "Since you are " + player.getProfile().evidence.getType() + ", either clear your data via '/spartan info'"
-                            + " and play LEGITIMATELY or find a legitimate player to help train the algorithm and get better results.")
-            );
+            if (!found && notifications) {
+                String message = AwarenessNotifications.getOptionalNotification(
+                        "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
+                                + (player.getProfile().isLegitimate()
+                                ? "Continue playing LEGITIMATELY to train the algorithm and get better results."
+                                : "Since you are " + player.getProfile().evidence.getType() + ", either clear your data via '/spartan info'"
+                                + " and play LEGITIMATELY or find a legitimate player to help train the algorithm and get better results.")
+                );
 
-            if (message != null
-                    && AwarenessNotifications.canSend(player.uuid, "pattern-data", 60)) {
-                player.sendMessage(message);
+                if (message != null
+                        && AwarenessNotifications.canSend(player.uuid, "pattern-data", 60)) {
+                    player.sendMessage(message);
+                }
             }
         }
     }
@@ -434,6 +447,12 @@ public class Pattern {
     public PatternGeneralization getGeneralization(Number generalization) {
         synchronized (this.generalizations) {
             return this.generalizations.get(generalization.shortValue());
+        }
+    }
+
+    public PatternGeneralization getGeneralization() {
+        synchronized (this.generalizations) {
+            return this.generalizations.values().iterator().next();
         }
     }
 

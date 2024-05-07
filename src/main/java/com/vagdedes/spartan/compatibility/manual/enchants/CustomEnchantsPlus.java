@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 public class CustomEnchantsPlus {
 
     public static boolean has(SpartanPlayer player) {
-        if (Compatibility.CompatibilityType.CustomEnchantsPlus.isFunctional()) {
+        if (Compatibility.CompatibilityType.CUSTOM_ENCHANTS_PLUS.isFunctional()) {
             SpartanInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {

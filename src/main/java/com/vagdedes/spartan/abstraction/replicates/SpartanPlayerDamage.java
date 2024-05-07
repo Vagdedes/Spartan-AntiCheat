@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.replicates;
 
-import com.vagdedes.spartan.abstraction.data.Handlers;
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -37,10 +37,11 @@ public class SpartanPlayerDamage {
                         EntityDamageEvent event,
                         SpartanLocation location,
                         long tick) {
+        player.getTrackers().add(Trackers.TrackerType.DAMAGE, (int) TPS.maximum);
         this.parent = player;
         this.tick = tick;
         this.event = event;
-        this.location = location;
+        this.location = location.clone();
 
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent actualEvent = (EntityDamageByEntityEvent) this.event;
@@ -90,8 +91,8 @@ public class SpartanPlayerDamage {
             int level = this.activeItem.getEnchantmentLevel(Enchantment.KNOCKBACK);
 
             if (level > 2) {
-                this.parent.getHandlers().add(
-                        Handlers.HandlerType.Velocity,
+                this.parent.getTrackers().add(
+                        Trackers.TrackerType.ABSTRACT_VELOCITY,
                         AlgebraUtils.integerRound(Math.log(level) * TPS.maximum)
                 );
             }
@@ -120,7 +121,7 @@ public class SpartanPlayerDamage {
                 : this.activeItem;
     }
 
-    public boolean isPropellingProjectile() { // todo cover fishing rods
+    public boolean isPropellingProjectile() {
         if (!this.event.isCancelled()
                 && this.ticksPassed() <= TPS.maximum
                 && this.parent.movement.getTicksOnAir() <= TPS.maximum

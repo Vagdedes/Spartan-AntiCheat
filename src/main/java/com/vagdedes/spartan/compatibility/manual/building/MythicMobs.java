@@ -50,12 +50,12 @@ public class MythicMobs {
     }
 
     public static boolean is(Entity entity) {
-        return Compatibility.CompatibilityType.MythicMobs.isFunctional()
+        return Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()
                 && new BukkitAPIHelper().isMythicMob(entity);
     }
 
     public static boolean is(SpartanPlayer player) {
-        if (Compatibility.CompatibilityType.MythicMobs.isFunctional()) {
+        if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()) {
             SpartanInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {

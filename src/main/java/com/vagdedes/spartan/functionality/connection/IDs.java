@@ -35,15 +35,15 @@ public class IDs {
     // Platforms
 
     public static String user() {
-        return !Piracy.enabled ? localID : user;
+        return !JarVerification.enabled ? localID : user;
     }
 
     public static String nonce() {
-        return !Piracy.enabled ? (CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()) : localID) : nonce;
+        return !JarVerification.enabled ? (CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()) : localID) : nonce;
     }
 
     static String resource() {
-        return !Piracy.enabled ? localID : "%%__RESOURCE__%%";
+        return !JarVerification.enabled ? localID : "%%__RESOURCE__%%";
     }
 
     static String site() {
@@ -65,7 +65,7 @@ public class IDs {
     }
 
     public static boolean isSpigotMC() {
-        return platform == 1 || Piracy.enabled && !CloudBase.hasToken() && !isBuiltByBit() && !isPolymart();
+        return platform == 1 || JarVerification.enabled && !CloudBase.hasToken() && !isBuiltByBit() && !isPolymart();
     }
 
     public static String getPlatform(boolean notNull) {

@@ -13,9 +13,9 @@ import java.util.*;
 public class PlayerEvidence {
 
     enum EvidenceType {
-        Hacker(2),
-        Suspected(1),
-        Legitimate(0);
+        HACKER(2),
+        SUSPECTED(1),
+        LEGITIMATE(0);
 
         private final int requirement;
 
@@ -33,7 +33,7 @@ public class PlayerEvidence {
 
     PlayerEvidence(PlayerProfile profile) {
         this.profile = profile;
-        this.type = EvidenceType.Legitimate;
+        this.type = EvidenceType.LEGITIMATE;
         this.live = Collections.synchronizedMap(new LinkedHashMap<>(Enums.HackType.values().length));
         this.historical = new LinkedHashMap<>(Enums.HackType.values().length);
     }
@@ -176,7 +176,7 @@ public class PlayerEvidence {
             if (count >= evidenceType.requirement) {
                 type = evidenceType;
 
-                if (evidenceType != EvidenceType.Legitimate) {
+                if (evidenceType != EvidenceType.LEGITIMATE) {
                     break;
                 }
             }

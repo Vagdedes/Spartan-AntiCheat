@@ -148,7 +148,7 @@ public class Buffer {
         } else {
             count = obj.increase(1);
         }
-        return count >= minimumTicks ? count / (double) ticksPassed : 0.0;
+        return count >= minimumTicks ? count / ticksPassed : 0.0;
     }
 
     public boolean canDo(String name) {

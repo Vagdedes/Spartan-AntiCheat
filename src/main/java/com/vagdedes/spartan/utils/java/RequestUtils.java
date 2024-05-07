@@ -25,7 +25,7 @@ public class RequestUtils {
         URL url = new URL(split[0]);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.addRequestProperty("User-Agent",
-                (token != null ? token : SpartanEdition.getProductName(true))
+                (token != null ? token : SpartanEdition.getProductID())
                         + (message != null ? " (" + message + ")" : ""));
         connection.setRequestMethod(method);
         connection.setReadTimeout(timeOut);

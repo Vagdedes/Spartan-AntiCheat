@@ -26,7 +26,7 @@ public class Attributes {
             ZOMBIE_SPAWN_REINFORCEMENTS = "ZOMBIE_SPAWN_REINFORCEMENTS";
 
     public static boolean has(SpartanPlayer p, String attributeString) {
-        if (Compatibility.CompatibilityType.ItemAttributes.isFunctional()) {
+        if (Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
             try {
                 Attribute attribute = Attribute.valueOf(attributeString);
                 Player n = p.getPlayer();

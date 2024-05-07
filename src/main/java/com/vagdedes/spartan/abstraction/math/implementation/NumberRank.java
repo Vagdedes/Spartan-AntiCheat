@@ -2,12 +2,14 @@ package com.vagdedes.spartan.abstraction.math.implementation;
 
 import com.vagdedes.spartan.abstraction.math.AbstractRank;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class NumberRank implements AbstractRank {
 
-    private final Map<Float, Short> map;
-    private float total;
+    private final Map<Integer, Short> map;
+    private double total;
 
     public NumberRank() {
         this.map = new TreeMap<>();
@@ -21,14 +23,14 @@ public class NumberRank implements AbstractRank {
     }
 
     @Override
-    public Float removeLeastSignificant() {
+    public Number removeLeastSignificant() {
         if (this.map.isEmpty()) {
             return null;
         } else {
             int min = Integer.MAX_VALUE;
-            Float key = null;
+            Integer key = null;
 
-            for (Map.Entry<Float, Short> entry : this.map.entrySet()) {
+            for (Map.Entry<Integer, Short> entry : this.map.entrySet()) {
                 if (entry.getValue() < min) {
                     min = entry.getValue();
                     key = entry.getKey();
@@ -61,7 +63,7 @@ public class NumberRank implements AbstractRank {
 
     @Override
     public int getCount(Number number) {
-        return this.map.getOrDefault(number.floatValue(), (short) 0);
+        return this.map.getOrDefault(number.hashCode(), (short) 0);
     }
 
     // Separator
@@ -75,20 +77,20 @@ public class NumberRank implements AbstractRank {
     public void addMultiple(Map<? extends Number, ? extends Number> map) {
         for (Map.Entry<? extends Number, ? extends Number> entry : map.entrySet()) {
             short newCount = (short) Math.min(
-                    this.map.getOrDefault(entry.getKey().floatValue(), (short) 0) + entry.getValue().shortValue(),
+                    this.map.getOrDefault(entry.getKey().hashCode(), (short) 0) + entry.getValue().shortValue(),
                     32767
             );
-            this.map.put(entry.getKey().floatValue(), newCount);
+            this.map.put(entry.getKey().hashCode(), newCount);
             this.total += entry.getValue().shortValue();
         }
     }
 
     public void add(Number number) {
-        short current = this.map.getOrDefault(number.floatValue(), (short) 0);
+        short current = this.map.getOrDefault(number.hashCode(), (short) 0);
 
         if (current < 32767) {
             this.map.put(
-                    number.floatValue(),
+                    number.hashCode(),
                     (short) (current + 1)
             );
             this.total++;
@@ -96,16 +98,16 @@ public class NumberRank implements AbstractRank {
     }
 
     public boolean remove(Number number) {
-        Short count = this.map.get(number.floatValue());
+        Short count = this.map.get(number.hashCode());
 
         if (count != null) {
             this.total--;
 
             if (count == 1) {
-                this.map.remove(number.floatValue());
+                this.map.remove(number.hashCode());
                 return true;
             } else {
-                this.map.put(number.floatValue(), (short) (count - 1));
+                this.map.put(number.hashCode(), (short) (count - 1));
                 return false;
             }
         } else {
@@ -116,82 +118,65 @@ public class NumberRank implements AbstractRank {
     // Separator
 
     @Override
-    public double getContribution() {
-        return 1.0 / (this.total + 1.0);
+    public double getGeneralContribution() {
+        return this.total > 0
+                ? 1.0 / this.total
+                : 1.0;
     }
 
     @Override
-    public double getContribution(Number ignoreNumber) {
-        short count = this.map.getOrDefault(ignoreNumber.floatValue(), (short) 0);
-        return 1.0 / (this.total - count + 1.0);
+    public double getUniqueContribution() {
+        return this.map.isEmpty()
+                ? 1.0
+                : 1.0 / this.map.size();
     }
 
     @Override
-    public double getRatio(Number number, double defaultValue) {
-        Short count = this.map.get(number.floatValue());
+    public double getGeneralContribution(Number ignoreNumber) {
+        Short remove = this.map.getOrDefault(ignoreNumber.hashCode(), (short) 0);
+
+        if (this.total > remove) {
+            return 1.0 / (this.total - remove);
+        } else {
+            return this.total > 0
+                    ? 1.0 / this.total
+                    : 1.0;
+        }
+    }
+
+    @Override
+    public double getPersonalContribution(Number number) {
+        Short count = this.map.get(number.hashCode());
+        return count != null
+                ? 1.0 / count
+                : 1.0;
+    }
+
+    @Override
+    public double getProbability(Number number, double defaultValue) {
+        Short count = this.map.get(number.hashCode());
         return count != null ? count / this.total : defaultValue;
     }
 
     @Override
-    public double getDistance(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Short selfCount = this.map.get(number.floatValue());
-
-            if (selfCount != null) {
-                double average = this.total / (double) this.map.size();
-                Set<Double> rank = new TreeSet<>();
-
-                for (short count : this.map.values()) {
-                    rank.add(Math.abs(count - average));
-                }
-                average = Math.abs(selfCount - average);
-                int position = 0;
-
-                for (double distance : rank) {
-                    if (distance == average) {
-                        return position / (double) rank.size();
-                    } else {
-                        position++;
-                    }
-                }
-            }
-        }
-        return defaultValue;
+    public double getCumulativeProbability(Number number, double defaultValue) {
+        return this.getCumulativeProbability(this.getZScore(number, defaultValue));
     }
 
     @Override
-    public double getSlopeProbability(Number number, double defaultValue) {
+    public double getZScore(Number number, double defaultValue) {
         if (this.map.size() > 1) {
-            Short selfCount = this.map.get(number.floatValue());
+            Short selfCount = this.map.get(number.hashCode());
 
             if (selfCount != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
+                double mean = this.total / (double) this.map.size(),
+                        sumSquaredDifferences = 0.0;
 
-                for (short count : this.map.values()) {
-                    double distance = Math.abs(count - average);
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
+                for (short loopCount : this.map.values()) {
+                    double difference = loopCount - mean;
+                    sumSquaredDifferences += difference * difference;
                 }
-                return rank.get(Math.abs(selfCount - average)) / (double) rank.size();
-            }
-        }
-        return defaultValue;
-    }
-
-    @Override
-    public double getCurveProbability(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Short selfCount = this.map.get(number.floatValue());
-
-            if (selfCount != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
-
-                for (short count : this.map.values()) {
-                    double distance = count - average;
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                }
-                return rank.get(selfCount - average) / (double) rank.size();
+                return (selfCount - mean) / Math.sqrt(sumSquaredDifferences / (double) this.map.size());
             }
         }
         return defaultValue;
@@ -201,9 +186,9 @@ public class NumberRank implements AbstractRank {
     public double getPosition(Number number, double defaultValue) {
         if (this.map.size() > 1) {
             int position = 0;
-            float find = number.floatValue();
+            float find = number.hashCode();
 
-            for (Map.Entry<Float, Short> entry : this.map.entrySet()) {
+            for (Map.Entry<Integer, Short> entry : this.map.entrySet()) {
                 if (entry.getKey() == find) {
                     if (entry.getValue() > 1) {
                         return (position + (entry.getValue() / 2.0)) / this.total;

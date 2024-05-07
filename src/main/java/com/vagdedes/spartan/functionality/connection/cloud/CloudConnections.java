@@ -131,8 +131,22 @@ public class CloudConnections {
 
     // Multiple
 
+    public static int getDetectionSlots() { // Once
+        try {
+            String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
+                    + "&action=get&data=detectionSlots&version=" + CloudBase.version
+                    + "&value=" + Bukkit.getPort() + CloudBase.separator + SpartanBukkit.getPlayerCount());
+
+            if (results.length == 1 && AlgebraUtils.validInteger(results[0])) {
+                return Integer.parseInt(results[0]);
+            }
+        } catch (Exception e) {
+            CloudBase.throwError(e, "detectionSlots:GET");
+        }
+        return 5;
+    }
+
     public static String[] getCrossServerInformation(String type, String name) {
-        // Doesn't need ID validation due to its validated method call
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                             + "&action=get&data=crossServerInformation&version=" + CloudBase.version
@@ -176,7 +190,6 @@ public class CloudConnections {
     }
 
     public static void sendCrossServerInformation(String type, String name, String[] array) {
-        // Doesn't need ID validation due to its validated method call
         try {
             StringBuilder information = new StringBuilder();
 
@@ -199,7 +212,6 @@ public class CloudConnections {
     }
 
     static void punishPlayers() {
-        // Doesn't need ID validation due to its validated method call
         StringBuilder value = new StringBuilder();
 
         for (PlayerProfile playerProfile : ResearchEngine.getHackers()) {
@@ -321,7 +333,7 @@ public class CloudConnections {
             String checkName = check.getName();
 
             if (check.toString().equals(columnInformation) || checkName.equalsIgnoreCase(columnInformation)) {
-                ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, Enums.DataType.Universal, ResearchEngine.getLegitimatePlayers());
+                ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, Enums.DataType.UNIVERSAL, ResearchEngine.getLegitimatePlayers());
 
                 if (violationHistory == null) {
                     return "No useful information was found for this check, try again later.";
@@ -343,7 +355,7 @@ public class CloudConnections {
                         .append(newLine);
                 softwareInformation.append("Punishments: ").append(check.canPunish)
                         .append(newLine);
-                softwareInformation.append("Average Ignored Violations: ").append(check.getAverageIgnoredViolations(Enums.DataType.Universal))
+                softwareInformation.append("Average Ignored Violations: ").append(check.getAverageIgnoredViolations(Enums.DataType.UNIVERSAL))
                         .append(newLine);
                 softwareInformation.append("Violation Count: ").append(violationHistory.getCount())
                         .append(newLine);

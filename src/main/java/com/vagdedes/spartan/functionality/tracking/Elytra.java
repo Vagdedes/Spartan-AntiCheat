@@ -1,18 +1,15 @@
-package com.vagdedes.spartan.functionality.identifiers.complex.unpredictable;
+package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
-import com.vagdedes.spartan.abstraction.data.Handlers;
+import com.vagdedes.spartan.abstraction.data.Cooldowns;
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
+import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-public class ElytraUse {
-
-    private static final String increasedSpeedKey = "elytra=increased-speed";
-    private static final Material firework = MaterialUtils.get("firework");
+public class Elytra {
 
     public static void judge(SpartanPlayer p, boolean gliding, boolean event) {
         if (p.getVehicle() == null) {
@@ -24,11 +21,11 @@ public class ElytraUse {
                         if (!event
                                 || !p.getExecutor(Enums.HackType.Exploits).handle(false, Exploits.ELYTRA_GLIDE_SPAM)) {
                             p.movement.setGliding(gliding, false);
-                            Handlers handlers = p.getHandlers();
-                            handlers.add(Handlers.HandlerType.ElytraWear, 2);
+                            Cooldowns cooldowns = p.getCooldowns();
+                            cooldowns.add("elytra-wear", 2);
 
                             if (gliding) {
-                                handlers.add(Handlers.HandlerType.ElytraUse, hasIncreasedSpeed(p) ? 20 : 10);
+                                p.getTrackers().add(Trackers.TrackerType.ELYTRA_USE, (int) (TPS.maximum / 2));
                             }
                         }
                     } else {
@@ -44,7 +41,7 @@ public class ElytraUse {
             } else {
                 p.movement.setGliding(false, gliding);
 
-                if (gliding && !p.getHandlers().has(Handlers.HandlerType.ElytraWear)) {
+                if (gliding && !p.getCooldowns().canDo("elytra-wear")) {
                     p.getExecutor(Enums.HackType.Exploits).handle(false, new int[]{3, 2});
                 }
             }
@@ -57,16 +54,4 @@ public class ElytraUse {
         }
     }
 
-    private static boolean hasIncreasedSpeed(SpartanPlayer p) {
-        ItemStack item = p.getItemInHand();
-
-        if (item.getType() == firework
-                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && (item = p.getInventory().itemInOffHand) != null && item.getType() == firework
-                || p.getHandlers().has(Handlers.HandlerType.Trident)
-                || Velocity.hasCooldown(p)) {
-            p.getCooldowns().add(increasedSpeedKey, 20);
-            return true;
-        }
-        return !p.getCooldowns().canDo(increasedSpeedKey);
-    }
 }

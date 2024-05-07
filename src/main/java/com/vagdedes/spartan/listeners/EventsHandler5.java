@@ -5,11 +5,9 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.BouncingBlocks;
-import com.vagdedes.spartan.functionality.identifiers.simple.Building;
-import com.vagdedes.spartan.functionality.identifiers.simple.SensitiveBlockBreak;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.Building;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -43,11 +41,9 @@ public class EventsHandler5 implements Listener {
 
             // Detections
             p.getExecutor(Enums.HackType.FastEat).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.NoSlowdown).handle(cancelled, e);
             p.getExecutor(Enums.HackType.FastHeal).handle(cancelled, e);
 
-            if (p.getViolations(Enums.HackType.FastEat).prevent()
-                    || p.getViolations(Enums.HackType.NoSlowdown).prevent()) {
+            if (p.getViolations(Enums.HackType.FastEat).prevent()) {
                 e.setCancelled(true);
                 p.setFoodLevel(n.getFoodLevel(), false);
             } else {
@@ -97,19 +93,13 @@ public class EventsHandler5 implements Listener {
             p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
             p.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
             p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.ImpossibleActions).handle(cancelled, e);
         }
 
-        // Protections
-        SensitiveBlockBreak.run(p, cancelled, b);
-
         // Detections
-        p.getExecutor(Enums.HackType.MorePackets).handle(false, e);
         DetectionNotifications.runMining(p, b, cancelled);
 
         if (p.getViolations(Enums.HackType.NoSwing).prevent()
                 || p.getViolations(Enums.HackType.BlockReach).prevent()
-                || p.getViolations(Enums.HackType.ImpossibleActions).prevent()
                 || p.getViolations(Enums.HackType.FastBreak).prevent()
                 || p.getViolations(Enums.HackType.GhostHand).prevent()
                 || p.getViolations(Enums.HackType.XRay).prevent()) {
@@ -133,12 +123,10 @@ public class EventsHandler5 implements Listener {
         }
         Block rba = e.getBlockAgainst();
         BlockFace blockFace = nb.getFace(rba);
-        SpartanBlock ba = new SpartanBlock(p, rba);
         boolean cancelled = e.isCancelled();
 
         // Protections
         Building.runPlace(p, b, blockFace, cancelled);
-        BouncingBlocks.judge(p, p.movement.getLocation());
 
         // Detections
         if (!ItemsAdder.is(nb)) {

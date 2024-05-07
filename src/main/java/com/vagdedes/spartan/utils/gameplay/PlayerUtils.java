@@ -1,28 +1,18 @@
 package com.vagdedes.spartan.utils.gameplay;
 
-import com.vagdedes.spartan.abstraction.data.Buffer;
-import com.vagdedes.spartan.abstraction.data.Cooldowns;
-import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.BouncingBlocks;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.GroundCollision;
-import com.vagdedes.spartan.functionality.identifiers.complex.predictable.Liquid;
-import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.ExtremeCollision;
-import com.vagdedes.spartan.functionality.identifiers.simple.VehicleAccess;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BoundingBox;
 
@@ -32,6 +22,11 @@ import static org.bukkit.potion.PotionEffectType.*;
 
 public class PlayerUtils {
 
+    public static final boolean
+            slowFall = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13),
+            dolphinsGrace = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13),
+            soulSpeed = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16),
+            levitation = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9);
     private static final Material
             gold_axe = MaterialUtils.get("gold_axe"),
             wood_axe = MaterialUtils.get("wood_axe"),
@@ -43,36 +38,28 @@ public class PlayerUtils {
             stone_spade = MaterialUtils.get("stone_spade"),
             wood_spade = MaterialUtils.get("wood_spade");
 
-    private static final double
-            climbingMin = 0.03684,
-            climbingMax = 0.15444,
-            climbingDefault = 0.11760;
     public static final double
-            postJumpPreFall = 0.00301,
-            gravityAcceleration = 0.0784,
-            terminalVelocity = 3.92,
-            drag = gravityAcceleration / terminalVelocity,
-            dragComplement = 1.0 - drag,
-            actualTerminalVelocity = terminalVelocity * dragComplement,
-            highPrecision = 0.0019,
-            lowPrecision = highPrecision * 2.0,
+            optimizationY = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? 0.005 : 0.003,
+            airDrag = AlgebraUtils.floatDouble(0.98),
+            waterDrag = AlgebraUtils.floatDouble(0.8),
+            lavaDrag = 0.5,
+            terminalVelocity = AlgebraUtils.floatDouble(3.92),
+            jumpAcceleration = AlgebraUtils.floatDouble(0.42),
+            airAcceleration = terminalVelocity * 0.02,
+            liquidAcceleration = 0.02,
             chunk = 16.0,
+            climbingDefault = 0.11760,
             climbingScaffoldingMax = climbingDefault + 0.2,
-            totalJumpingMotion,
             maxJumpingMotionDifference;
-
-    public static final double[]
-            jumping = new double[]{0.08307, 0.42f, 0.0001}, // Last one is jump value precision
-            climbing = new double[]{climbingMin, 0.07531, 0.11215, climbingDefault, 0.12529, 0.15, climbingMax},
-            climbingMinMax = new double[]{climbingMin, climbingMax};
 
     public static final int
             height,
-            fallDamageBlocks = 4,
-            jumpingMotions = 5;
+            fallDamageAboveBlocks = 3;
 
-    private static final Set<Double> jumps = new HashSet<>(jumpingMotions);
-    private static final Map<Integer, Double> gravity = new LinkedHashMap<>();
+    private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
+    private static final Map<Double, Integer>
+            fallTicks = Collections.synchronizedMap(new LinkedHashMap<>());
+    private static final Map<Integer, Collection<Double>> fallMotions = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Map<PotionEffectType, Integer> handledPotionEffects = new LinkedHashMap<>();
 
     static {
@@ -89,19 +76,22 @@ public class PlayerUtils {
 
         // Separator
 
-        jumps.add(jumping[1]);
-        jumps.add(0.33319);
-        jumps.add(0.24813);
-        jumps.add(0.16477);
-        jumps.add(jumping[0]);
-        Iterator<Double> iterator = jumps.iterator();
+        for (int jumpEffect = 0; jumpEffect < 255; jumpEffect++) {
+            List<Double> jumps = new ArrayList<>();
+            double jump = jumpAcceleration + (jumpEffect * 0.1);
+
+            while (jump > 0.0) {
+                jumps.add(jump);
+                jump = (jump * airDrag) - airAcceleration;
+            }
+            jumpsValues.put((byte) jumpEffect, jumps);
+        }
+        Iterator<Double> iterator = jumpsValues.get((byte) 0).iterator();
         double maxJumpingMotionDifferenceLocal = Double.MIN_VALUE,
-                previousJumpingMotion = iterator.next(),
-                totalJumpingMotionLocal = 0.0;
+                previousJumpingMotion = iterator.next();
 
         while (iterator.hasNext()) {
             double currentMotion = iterator.next();
-            totalJumpingMotionLocal += currentMotion;
             maxJumpingMotionDifferenceLocal = Math.max(
                     previousJumpingMotion - currentMotion,
                     maxJumpingMotionDifferenceLocal
@@ -109,22 +99,6 @@ public class PlayerUtils {
             previousJumpingMotion = currentMotion;
         }
         maxJumpingMotionDifference = maxJumpingMotionDifferenceLocal;
-        totalJumpingMotion = totalJumpingMotionLocal;
-
-        // Separator
-
-        double fall = 0.0;
-        int counter = 0;
-
-        while (true) {
-            fall = (fall * dragComplement) + gravityAcceleration;
-
-            if ((terminalVelocity - fall) < highPrecision) {
-                break;
-            }
-            gravity.put(counter, fall);
-            counter++;
-        }
 
         // Separator
 
@@ -146,111 +120,6 @@ public class PlayerUtils {
         }
     }
 
-    public static void run(SpartanPlayer p, Player n, Collection<PotionEffect> potionEffects) {
-        update(p, n, false);
-
-        if (!p.isDead() && !p.isSleeping()) {
-            Buffer buffer = p.getBuffer();
-            SpartanLocation to = p.movement.getLocation(),
-                    from = p.movement.getFromLocation();
-
-            // Separator
-            if (from != null) {
-                p.movement.setCustomDistance(
-                        to.distance(from),
-                        AlgebraUtils.getHorizontalDistance(to, from),
-                        to.getY() - from.getY()
-                );
-            }
-            p.movement.setFromLocation(to);
-
-            // Separator
-            boolean ground = p.refreshOnGroundCustom(from);
-
-            if (ground) {
-                p.movement.setAirTicks(0);
-                p.movement.setGroundTicks(p.movement.getTicksOnGround() + 1);
-            } else {
-                p.movement.setGroundTicks(0);
-                p.movement.setAirTicks(p.movement.getTicksOnAir() + 1);
-                Double nmsVerticalDistance = p.movement.getNmsVerticalDistance(),
-                        old_NmsVerticalDistance = p.movement.getPreviousNmsVerticalDistance();
-
-                if (nmsVerticalDistance != null
-                        && old_NmsVerticalDistance != null
-                        && nmsVerticalDistance < old_NmsVerticalDistance) {
-                    p.movement.setFallingTicks(p.movement.getFallingTicks() + 1);
-                } else {
-                    p.movement.setFallingTicks(0);
-                }
-            }
-
-            // Separator
-            if (isUsingAnInventory(p, 0)) {
-                buffer.increase("player-data=inventory-use", 1);
-            } else {
-                buffer.remove("player-data=inventory-use");
-            }
-
-            // Separator
-            if (!potionEffects.isEmpty()) {
-                for (PotionEffect potionEffect : potionEffects) {
-                    PotionEffectType type = potionEffect.getType();
-
-                    if (handledPotionEffects.containsKey(type)) {
-                        getPotionLevel(p, type);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void update(SpartanPlayer p, Player n, boolean heavy) {
-        if (heavy) {
-            if (!Liquid.runMove(p)) {
-                if (!GroundCollision.run(p)) {
-                    ExtremeCollision.run(p);
-                    BouncingBlocks.runMove(p);
-                }
-            } else {
-                ExtremeCollision.run(p);
-                BouncingBlocks.runMove(p);
-            }
-        } else {
-            if (n.isSprinting()) {
-                p.movement.setSprinting(true);
-                p.movement.setSneaking(false);
-            } else {
-                p.movement.setSprinting(false);
-                p.movement.setSneaking(n.isSneaking());
-            }
-            p.setFallDistance(n.getFallDistance(), false);
-            p.setWalkSpeed(n.getWalkSpeed());
-            p.setFlySpeed(n.getFlySpeed());
-            p.setEyeHeight(n.getEyeHeight());
-            p.setUsingItem(n.isBlocking());
-
-            // Separator
-
-            GameMode current = p.getGameMode();
-
-            if (current == GameMode.CREATIVE
-                    || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8) && current == GameMode.SPECTATOR) {
-                p.getHandlers().add(Handlers.HandlerType.GameMode, 60);
-            }
-
-            // Separator
-
-            Entity entity = n.getVehicle();
-            p.setVehicle(entity);
-
-            if (entity != null) {
-                p.getBuffer().remove(GroundUtils.inaccuracyKey);
-                VehicleAccess.runEnter(p, entity, false);
-            }
-        }
-    }
-
     // Enchantments
 
     public static int getDepthStriderLevel(SpartanPlayer p) {
@@ -261,93 +130,11 @@ public class PlayerUtils {
         return b != null ? b.getEnchantmentLevel(Enchantment.DEPTH_STRIDER) : 0;
     }
 
-    // Speed
-
-    public static boolean hasSoulSpeedEnchantment(SpartanPlayer p, SpartanLocation location) {
-        if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)) {
-            return false;
-        }
-        String key = "player-data=soul-speed-enchantment";
-        Cooldowns cooldowns = p.getCooldowns();
-        boolean b = false;
-
-        if (!cooldowns.canDo(key)) {
-            if (cooldowns.get(key) > 5) {
-                return true;
-            } else {
-                b = true;
-            }
-        }
-        if (location != null) {
-            ItemStack boots = p.getInventory().getBoots();
-
-            if (boots != null && boots.containsEnchantment(Enchantment.SOUL_SPEED)) {
-                SpartanLocation locationM1;
-
-                if (location.isBlock(Material.SOUL_SAND, BlockUtils.hitbox)
-                        || location.isBlock(Material.SOUL_SOIL, BlockUtils.hitbox)
-                        || (locationM1 = location.clone().add(0, -1, 0)).isBlock(Material.SOUL_SAND, BlockUtils.hitbox)
-                        || locationM1.isBlock(Material.SOUL_SOIL, BlockUtils.hitbox)) {
-                    b = true;
-                }
-            }
-
-            if (b) {
-                p.getCooldowns().add(key, 20);
-            }
-        }
-        return b;
-    }
-
-    public static boolean hasSpeedEffect(SpartanPlayer p, SpartanLocation location, boolean soulSpeed) {
-        return p.getVehicle() == null
-                && (getPotionLevel(p, PotionEffectType.SPEED) > 0
-                || soulSpeed && hasSoulSpeedEnchantment(p, location));
-    }
-
     // Jumping
 
-    public static boolean hasJumpEffect(SpartanPlayer p) {
-        return getPotionLevel(p, JUMP) > 0;
-    }
-
-    public static boolean hasLowJumpEffect(SpartanPlayer p) {
-        if (p.getVehicle() != null) {
-            return false;
-        }
-        int potionLevel = getPotionLevel(p, JUMP);
-        return potionLevel > 0 && potionLevel <= 128
-                || potionLevel >= 250;
-    }
-
-    public static boolean hasHighJumpEffect(SpartanPlayer p) {
-        if (p.getVehicle() != null) {
-            return false;
-        }
-        int potionLevel = getPotionLevel(p, JUMP);
-        return potionLevel > 128
-                && potionLevel < 250;
-    }
-
-    public static double getJumpingPrecision(SpartanPlayer p) {
-        return p.bedrockPlayer || hasJumpEffect(p)
-                ? highPrecision
-                : jumping[2];
-    }
-
-    public static boolean isJumping(double d, double diff, double offDiff) {
-        if (d > (jumping[0] - offDiff)
-                && d < (0.42 + offDiff)
-                && !GroundUtils.heightExists(d)) {
-            Iterator<Double> iterator = jumps.iterator();
-            double value = iterator.next();
-
-            if (Math.abs(value - d) < (diff / 2.0)) { // More strict with the first motion
-                return true;
-            }
-            while (iterator.hasNext()) {
-                value = iterator.next();
-
+    public static boolean isJumping(double d, int jump, double diff) {
+        if (d > 0.0) {
+            for (double value : jumpsValues.get((byte) jump)) {
                 if (Math.abs(value - d) < diff) {
                     return true;
                 }
@@ -356,80 +143,131 @@ public class PlayerUtils {
         return false;
     }
 
-    // Falling
-
-    public static int getFallingTick(double d) {
-        if (d < 0.0) {
-            d = (0.0 - d);
-            double min = Double.MAX_VALUE;
-
-            for (Map.Entry<Integer, Double> entry : gravity.entrySet()) {
-                double newMin = Math.abs(entry.getValue() - d);
-
-                if (newMin < min) {
-                    min = newMin;
-                } else {
-                    if (min < gravityAcceleration) {
-                        return entry.getKey();
-                    } else {
-                        return -1;
-                    }
+    public static boolean justJumped(double d, int jump, double diff) {
+        if (d > 0.0) {
+            for (double value : jumpsValues.get((byte) jump)) {
+                if (Math.abs(value - d) < diff) {
+                    return true;
                 }
             }
+        }
+        return false;
+    }
+
+    public static List<Double> getJumpMotions(int jump) {
+        return jumpsValues.get((byte) jump);
+    }
+
+    public static double getJumpMotionSum(int jump) {
+        return jumpsValues.get((byte) jump).stream().mapToDouble(Double::doubleValue).sum();
+    }
+
+    public static double getJumpMotion(int jump, int tick) {
+        return jumpsValues.get((byte) jump).get(tick);
+    }
+
+    public static int getJumpTicks(int jump) {
+        return getJumpMotions(jump).size();
+    }
+
+    // Falling
+
+    public static int getFallTick(double d) {
+        if (d < 0.0) {
+            double key = AlgebraUtils.cut(d, GroundUtils.maxHeightLength);
+            Integer ticks;
+
+            synchronized (fallTicks) {
+                ticks = fallTicks.get(key);
+            }
+            if (ticks == null) {
+                ticks = 0;
+                double preD = 0;
+
+                while (d < 0.0) {
+                    preD = d;
+                    d = (d + airAcceleration) / airDrag;
+                    ticks++;
+                }
+
+                if (ticks > 0) {
+                    if (Math.abs(preD - airAcceleration) >= GroundUtils.maxHeightLengthRatio) {
+                        boolean found = false;
+
+                        for (List<Double> jumps : jumpsValues.values()) {
+                            double last = jumps.get(jumps.size() - 1);
+
+                            if (Math.abs(last - d) < GroundUtils.maxHeightLengthRatio) {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            ticks = -1;
+                        }
+                    }
+                } else {
+                    ticks = -1;
+                }
+                synchronized (fallTicks) {
+                    fallTicks.put(key, ticks);
+                }
+            }
+            return ticks;
         }
         return -1;
     }
 
-    public static double getFallingMotion(int tick) {
-        return gravity.getOrDefault(tick, -1.0);
+    public static boolean isFalling(double d) {
+        return getFallTick(d) != -1;
     }
 
-    // Handled Effects
-
-    public static boolean isInWaterTunnel(SpartanPlayer p, SpartanLocation location) {
-        return p.movement.wasInLiquids()
-                && hasDolphinsGraceEffect(p)
-                && hasSoulSpeedEnchantment(p, location);
+    public static double calculateNextFallMotion(double motion,
+                                                 double drag, double acceleration,
+                                                 double terminalVelocity) {
+        if (motion > terminalVelocity) {
+            return (motion * drag) - acceleration;
+        } else {
+            return Double.MIN_VALUE;
+        }
     }
 
-    public static boolean hasDolphinsGraceEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                && p.getVehicle() == null
-                && getPotionLevel(p, PotionEffectType.DOLPHINS_GRACE) > 0;
-    }
+    public static Collection<Double> calculateFallMotions(double motion,
+                                                          double drag, double acceleration,
+                                                          double terminalVelocity) {
+        if (motion > terminalVelocity) {
+            int key = Objects.hash(
+                    AlgebraUtils.cut(motion, GroundUtils.maxHeightLength),
+                    drag,
+                    acceleration,
+                    terminalVelocity
+            );
+            Collection<Double> data;
 
-    public static boolean hasSlowFallingEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                && p.getVehicle() == null
-                && getPotionLevel(p, PotionEffectType.SLOW_FALLING) > 0;
-    }
+            synchronized (fallMotions) {
+                data = fallMotions.get(key);
+            }
+            if (data != null) {
+                return data;
+            } else {
+                data = new ArrayList<>();
 
-    public static boolean hasLevitationEffect(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                && getPotionLevel(p, PotionEffectType.LEVITATION) > 0;
-    }
-
-    public static boolean hasBadPotionEffects(SpartanPlayer p) {
-        return p.hasPotionEffect(new PotionEffectType[]{
-                PotionEffectType.POISON,
-                PotionEffectType.HARM
-        });
+                while (motion > terminalVelocity) {
+                    motion = (motion * drag) - acceleration;
+                    data.add(motion);
+                }
+                synchronized (fallMotions) {
+                    fallMotions.put(key, data);
+                }
+                return data;
+            }
+        } else {
+            return new ArrayList<>(0);
+        }
     }
 
     // Inventory
-
-    public static boolean isUsingAnInventory(SpartanPlayer p, int limit) {
-        return (limit == 0 || p.getBuffer().get("player-data=inventory-use") >= limit)
-                && p.getOpenInventory().slots > 46;
-    }
-
-    public static boolean isUsable(Material type) {
-        return CombatUtils.isSword(type)
-                || CombatUtils.isBow(type)
-                || type.isEdible()
-                || type == Material.FISHING_ROD
-                || type == Material.POTION;
-    }
 
     public static boolean isSpadeItem(Material m) {
         return m == diamond_spade
@@ -458,76 +296,17 @@ public class PlayerUtils {
                 || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && m == Material.NETHERITE_AXE;
     }
 
-    // Movement
-
-    public static double calculateLimit(SpartanPlayer entity, SpartanLocation location, double value, double divide, PotionEffectType potionEffectType) {
-        int level;
-
-        if (potionEffectType == PotionEffectType.SPEED) {
-            level = getPotionLevel(entity, potionEffectType);
-
-            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)
-                    && !entity.movement.isGliding()
-                    && !entity.movement.isSwimming()
-                    && !entity.movement.isCrawling()) {
-                ItemStack boots = entity.getInventory().getBoots();
-                Enchantment enchantment;
-
-                if (boots != null && boots.containsEnchantment(enchantment = Enchantment.SOUL_SPEED)) {
-                    SpartanLocation locationM1;
-
-                    if (location.isBlock(Material.SOUL_SAND, BlockUtils.hitbox_max)
-                            || location.isBlock(Material.SOUL_SOIL, BlockUtils.hitbox_max)
-                            || (locationM1 = location.clone().add(0, -1, 0)).isBlock(Material.SOUL_SAND, BlockUtils.hitbox_max)
-                            || locationM1.isBlock(Material.SOUL_SOIL, BlockUtils.hitbox_max)) {
-                        entity.getCooldowns().add("move-utils=soul-speed-blocks", 20);
-                    }
-
-                    if (!entity.getCooldowns().canDo("move-utils=soul-speed-blocks")) {
-                        if (level < 0) {
-                            level = 0;
-                        }
-                        level += boots.getEnchantmentLevel(enchantment);
-                    }
-                }
-            }
-        } else {
-            level = getPotionLevel(entity, potionEffectType);
-        }
-
-        if (level > -1) {
-            value += (level + 1.0) * (value / divide);
-        }
-        return value;
-    }
-
-    public static float getWalkSpeedDifference(SpartanPlayer p) {
-        String key = "player-data=walk-difference";
-        float difference = Math.max(p.getWalkSpeed() - 0.2f, !p.movement.isFlying() ? 0.0f : (p.getFlySpeed() - 0.1f));
-
-        if (difference > 0.0f) {
-            p.getCooldowns().add(key, 2 * 20);
-            p.getDecimals().set(key, difference);
-        } else if (!p.getCooldowns().canDo(key)) {
-            return (float) p.getDecimals().get(key, 1.0);
-        }
-        return Math.max(difference, 0.0f);
-    }
-
     // Collisions
 
-    public static double getNearbyCollisions(SpartanPlayer p) {
-        int max = 30;
-        List<Entity> entities = p.getNearbyEntities(1.0, 1.0, 1.0);
+    public static int getNearbyCollisions(SpartanPlayer player, SpartanLocation location) {
+        List<Entity> entities = player.getNearbyEntities(1.0, 1.0, 1.0);
 
         if (!entities.isEmpty()) {
-            SpartanLocation location = p.movement.getLocation();
             int count = 0;
 
             for (Entity entity : entities) {
                 if (entity instanceof LivingEntity) {
-                    if (CombatUtils.getWidthAndHeight(entity)[0] >=
-                            AlgebraUtils.getHorizontalDistance(location, entity.getLocation())) {
+                    if (CombatUtils.getWidthAndHeight(entity)[0] >= location.distance(entity.getLocation())) {
                         count++;
                     }
                 } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)) {
@@ -537,58 +316,36 @@ public class PlayerUtils {
                             boundingBox.getMaxZ() - boundingBox.getMinZ()
                     );
 
-                    if (width >= AlgebraUtils.getHorizontalDistance(location, entity.getLocation())) {
+                    if (width >= location.distance(entity.getLocation())) {
                         count++;
                     }
                 } else {
                     count++;
                 }
             }
-            return count / ((double) max);
+            return count;
+        } else {
+            return 0;
         }
-        return 0.0;
-    }
-
-    public static boolean hasNearbyCollisions(SpartanPlayer p) {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                && (p.getHandlers().has(Handlers.HandlerType.ExtremeCollision)
-                || getNearbyCollisions(p) > 0.0);
     }
 
     // Potion Effects
 
-    public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
-        Entity vehicle = entity.getVehicle();
-        String key = "player-data=potion-effect=" + potionEffectType.getName() + (vehicle != null ? "=" + vehicle.getEntityId() : "");
-        int extraTicks = handledPotionEffects.getOrDefault(potionEffectType, 0);
-        PotionEffect potionEffect = entity.getPotionEffect(potionEffectType);
-
-        if (potionEffect != null) {
-            int amplifier = potionEffect.getAmplifier();
-
-            if (amplifier < 0) {
-                return 0;
-            }
-            amplifier += 1;
-
-            if (extraTicks > 0) {
-                entity.getDecimals().set(key, amplifier);
-                entity.getCooldowns().add(key, extraTicks);
-            }
-            return amplifier;
-        }
-        if (extraTicks > 0) {
-            return !entity.getCooldowns().canDo(key) ? (int) entity.getDecimals().get(key, 0.0) : 0;
-        }
-        return 0;
+    public static int getPotionEffectExtraTime(PotionEffectType potionEffectType) {
+        return handledPotionEffects.getOrDefault(potionEffectType, 0);
     }
 
-    // Ground
+    public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
+        SpartanPotionEffect potionEffect = entity.getPotionEffect(
+                potionEffectType,
+                getPotionEffectExtraTime(potionEffectType)
+        );
 
-    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, double x, double y, double z) {
-        return x == 0.0 && y == 0.0 && z == 0.0 && loc.player != null
-                ? loc.player.isOnGroundCustom()
-                : GroundUtils.isOnGround(p, loc.clone().add(x, y, z), y, true, true);
+        if (potionEffect != null) {
+            return potionEffect.bukkitEffect.getAmplifier();
+        } else {
+            return -1;
+        }
     }
 
 }

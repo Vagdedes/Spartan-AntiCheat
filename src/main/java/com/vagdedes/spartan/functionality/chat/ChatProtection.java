@@ -53,7 +53,7 @@ public class ChatProtection {
     }
 
     public static boolean runChat(SpartanPlayer p, String msg) {
-        if (Permissions.has(p.getPlayer(), Enums.Permission.CHAT_PROTECTION)) {
+        if (Permissions.has(p, Enums.Permission.CHAT_PROTECTION)) {
             return false;
         }
         UUID uuid = p.uuid;

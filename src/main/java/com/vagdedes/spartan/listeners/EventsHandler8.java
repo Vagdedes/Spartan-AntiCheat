@@ -1,22 +1,26 @@
 package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.identifiers.simple.VehicleAccess;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import me.vagdedes.spartan.system.Enums;
-import org.bukkit.entity.Entity;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.player.PlayerToggleSprintEvent;
-import org.bukkit.event.vehicle.VehicleEnterEvent;
+
+import java.util.Collection;
+import java.util.List;
 
 public class EventsHandler8 implements Listener {
+
+    private static long InventoryMoveItemEventCooldown = 0L;
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void InventoryOpen(InventoryOpenEvent e) {
@@ -58,19 +62,12 @@ public class EventsHandler8 implements Listener {
         if (p == null) {
             return;
         }
+
+        // Objects
         if (e.isCancelled()) {
-            // Objects
             p.movement.setSprinting(n.isSprinting());
         } else {
-            boolean sprinting = e.isSprinting();
-
-            // Utils
-            if (!sprinting) {
-                p.movement.setLastOffSprint();
-            }
-
-            // Objects
-            p.movement.setSprinting(sprinting);
+            p.movement.setSprinting(e.isSprinting());
         }
     }
 
@@ -96,22 +93,38 @@ public class EventsHandler8 implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void VehicleEnter(VehicleEnterEvent e) {
-        Entity en = e.getEntered();
+    public static void InventoryMove(InventoryMoveItemEvent e) {
+        long ms = System.currentTimeMillis();
 
-        if (en instanceof Player) {
-            SpartanPlayer p = SpartanBukkit.getPlayer((Player) en);
+        if (InventoryMoveItemEventCooldown <= ms) {
+            InventoryMoveItemEventCooldown = ms + 50L;
 
-            if (p == null) {
-                return;
-            }
-            if (p.getViolations(Enums.HackType.Speed).prevent()
-                    || p.getViolations(Enums.HackType.IrregularMovements).prevent()) {
-                e.setCancelled(true);
+            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) { // It's faster to loop through Bukkit instead of using Bukkit's search method
+                Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+
+                if (!players.isEmpty()) {
+                    for (Player n : players) {
+                        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+                        if (p != null) {
+                            p.setInventory(n.getInventory(), n.getOpenInventory());
+                        }
+                    }
+                }
             } else {
-                // Handlers
-                VehicleAccess.runEnter(p, e.getEntered(), true);
+                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+
+                if (!players.isEmpty()) {
+                    for (SpartanPlayer p : players) {
+                        Player n = p.getPlayer();
+
+                        if (n != null && n.isOnline()) {
+                            p.setInventory(n.getInventory(), n.getOpenInventory());
+                        }
+                    }
+                }
             }
         }
     }
+
 }

@@ -17,7 +17,7 @@ public class CraftBook {
         if (limit != -1.0) {
             return limit;
         }
-        if (Compatibility.CompatibilityType.CraftBook.isFunctional()) {
+        if (Compatibility.CompatibilityType.CRAFT_BOOK.isFunctional()) {
             File file = new File("plugins/CraftBook/mechanisms.yml");
 
             if (file.exists()) {

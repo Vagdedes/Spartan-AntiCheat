@@ -13,9 +13,9 @@ import org.bukkit.entity.Wolf;
 public class mcMMO {
 
     public static boolean hasGeneralAbility(SpartanPlayer p) {
-        if (Compatibility.CompatibilityType.mcMMO.isFunctional()) {
+        if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
             Player n = p.getPlayer();
-            return n != null && AbilityAPI.isAnyAbilityEnabled(n)
+            return n != null && n.isOnline() && AbilityAPI.isAnyAbilityEnabled(n)
 
                     || PlayerUtils.isAxeItem(p.getItemInHand().getType())
                     && p.getEnemiesNumber(CombatUtils.maxHitDistance, true) > 0
@@ -27,9 +27,9 @@ public class mcMMO {
     }
 
     public static boolean hasTreeFeller(SpartanPlayer p) {
-        if (Compatibility.CompatibilityType.mcMMO.isFunctional()) {
+        if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
             Player n = p.getPlayer();
-            return n != null && AbilityAPI.treeFellerEnabled(n);
+            return n != null && n.isOnline() && AbilityAPI.treeFellerEnabled(n);
         } else {
             return false;
         }

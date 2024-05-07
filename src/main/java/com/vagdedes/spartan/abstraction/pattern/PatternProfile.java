@@ -5,15 +5,9 @@ import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 public abstract class PatternProfile {
 
     final int hash;
-    private final PatternGeneralization generalization;
-    final PatternRepetition repetition;
 
-    PatternProfile(PatternGeneralization patternGeneralization, PlayerProfile profile) {
-        this.hash = Pattern.hash(profile);
-        this.generalization = patternGeneralization;
-        this.repetition = new PatternRepetition();
+    PatternProfile(PlayerProfile profile) {
+        this.hash = Pattern.hashProfile(profile);
     }
-
-    abstract void deleteCustomData();
 
 }

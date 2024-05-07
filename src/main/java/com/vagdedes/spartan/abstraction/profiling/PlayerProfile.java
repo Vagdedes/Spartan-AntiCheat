@@ -10,6 +10,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Random;
 import java.util.UUID;
 
 public class PlayerProfile {
@@ -26,6 +27,20 @@ public class PlayerProfile {
     public final PlayerCombat playerCombat;
 
     // Separator
+
+    public PlayerProfile() {
+        this.uuid = null;
+        this.name = Double.toString(new Random().nextDouble());
+        this.punishmentHistory = null;
+        this.playerCombat = null;
+        this.evidence = null;
+        this.skull = null;
+        this.offlinePlayer = null;
+        this.bedrockPlayer = false;
+        this.bedrockPlayerCheck = true;
+        this.violationHistory = null;
+        this.miningHistory = null;
+    }
 
     public PlayerProfile(String name) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
@@ -122,7 +137,7 @@ public class PlayerProfile {
     }
 
     public Enums.DataType getDataType() {
-        return isBedrockPlayer() ? Enums.DataType.Bedrock : Enums.DataType.Java;
+        return isBedrockPlayer() ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
     }
 
     public boolean isBedrockPlayer() {
@@ -210,20 +225,20 @@ public class PlayerProfile {
     // Separator
 
     public boolean isLegitimate() {
-        return evidence.has(PlayerEvidence.EvidenceType.Legitimate);
+        return evidence.has(PlayerEvidence.EvidenceType.LEGITIMATE);
     }
 
     public boolean isHacker() {
-        return evidence.has(PlayerEvidence.EvidenceType.Hacker);
+        return evidence.has(PlayerEvidence.EvidenceType.HACKER);
     }
 
     public boolean isSuspected() {
-        return evidence.has(PlayerEvidence.EvidenceType.Suspected);
+        return evidence.has(PlayerEvidence.EvidenceType.SUSPECTED);
     }
 
     public boolean isSuspected(Enums.HackType[] hackTypes) {
         synchronized (evidence.live) {
-            if (evidence.has(PlayerEvidence.EvidenceType.Suspected)) {
+            if (evidence.has(PlayerEvidence.EvidenceType.SUSPECTED)) {
                 for (Enums.HackType hackType : hackTypes) {
                     if (evidence.live.containsKey(hackType)
                             || evidence.historical.containsKey(hackType)) {
@@ -237,7 +252,7 @@ public class PlayerProfile {
 
     public boolean isSuspected(Enums.HackType hackType) {
         synchronized (evidence.live) {
-            return evidence.has(PlayerEvidence.EvidenceType.Suspected)
+            return evidence.has(PlayerEvidence.EvidenceType.SUSPECTED)
                     && (evidence.live.containsKey(hackType)
                     || evidence.historical.containsKey(hackType));
         }

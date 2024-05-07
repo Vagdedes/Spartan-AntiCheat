@@ -8,7 +8,6 @@ import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
@@ -20,7 +19,6 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -59,8 +57,8 @@ public class PlayerInfo extends InventoryMenu {
 
             int i = 10;
 
-            for (Enums.CheckType checkType : Enums.CheckType.values()) {
-                if (checkType == Enums.CheckType.EXPLOITS) {
+            for (Enums.HackCategoryType checkType : Enums.HackCategoryType.values()) {
+                if (checkType == Enums.HackCategoryType.EXPLOITS) {
                     addCheck(HackType.Exploits, 15, isOnline, target, playerProfile, lore);
                 } else {
                     addChecks(i, isOnline, target, playerProfile, lore, checkType);
@@ -127,7 +125,7 @@ public class PlayerInfo extends InventoryMenu {
 
     private void addChecks(int slot, boolean isOnline,
                            SpartanPlayer player, PlayerProfile playerProfile,
-                           List<String> lore, Enums.CheckType checkType) {
+                           List<String> lore, Enums.HackCategoryType checkType) {
         lore.clear();
         lore.add("");
         int violations = 0;
@@ -135,7 +133,7 @@ public class PlayerInfo extends InventoryMenu {
 
         if (isOnline) {
             for (HackType hackType : hackTypes) {
-                if (hackType.getCheck().type == checkType) {
+                if (hackType.category == checkType) {
                     violations += player.getViolations(hackType).getTotalLevel();
                 }
             }
@@ -149,23 +147,29 @@ public class PlayerInfo extends InventoryMenu {
 
         // Separator
 
-        double delayNumber = isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0; // Base
         Enums.DataType dataType = isOnline ? player.dataType : playerProfile.getDataType();
-        boolean tpsDropping = isOnline && TPS.areLow(player),
+        boolean serverLag = isOnline && TPS.areLow(player),
                 notChecked = isOnline && !MaximumCheckedPlayers.isChecked(player.uuid),
                 detectionsNotAvailable = !SpartanEdition.hasDetectionsPurchased(dataType),
                 listedChecks = false;
         String cancellableCompatibility = isOnline ? player.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
-            if (hackType.getCheck().type == checkType) {
+            if (hackType.category == checkType) {
                 violations = isOnline ? player.getViolations(hackType).getTotalLevel() : 0;
                 boolean hasViolations = violations > 0,
                         hasData = playerProfile.evidence.has(hackType);
-
-                String state = getDetectionState(player, hackType, dataType, cancellableCompatibility, delayNumber, isOnline,
-                        tpsDropping, notChecked, detectionsNotAvailable, !SpartanEdition.supportsCheck(dataType, hackType),
-                        !hasViolations && !hasData);
+                String state = getDetectionState(
+                        player,
+                        hackType,
+                        dataType,
+                        cancellableCompatibility,
+                        isOnline,
+                        serverLag,
+                        notChecked,
+                        detectionsNotAvailable,
+                        !hasViolations && !hasData
+                );
 
                 if (hasViolations || hasData || state != null) {
                     String color = "§c";
@@ -199,12 +203,10 @@ public class PlayerInfo extends InventoryMenu {
                 hackType,
                 dataType,
                 isOnline ? player.getCancellableCompatibility() : null,
-                isOnline ? AlgebraUtils.roundToHalf(Latency.getDelay(player)) : 0.0,
                 isOnline,
                 isOnline && TPS.areLow(player),
                 isOnline && !MaximumCheckedPlayers.isChecked(player.uuid),
                 !SpartanEdition.hasDetectionsPurchased(dataType),
-                !SpartanEdition.supportsCheck(dataType, hackType),
                 !hasViolations && !hasData);
 
         if (hasViolations || hasData || state != null) {
@@ -223,18 +225,13 @@ public class PlayerInfo extends InventoryMenu {
 
     private String getDetectionState(SpartanPlayer player, HackType hackType, Enums.DataType dataType,
                                      String cancellableCompatibility,
-                                     double delayNumber,
                                      boolean hasPlayer,
-                                     boolean tpsDropping,
+                                     boolean serverLag,
                                      boolean notChecked,
                                      boolean detectionMissing,
-                                     boolean detectionUnsupported,
                                      boolean returnNull) {
         if (!hasPlayer) {
             return returnNull ? null : "Offline";
-        }
-        if (detectionUnsupported) {
-            return "Detection Unsupported";
         }
         if (detectionMissing) {
             return "Detection Missing";
@@ -245,14 +242,13 @@ public class PlayerInfo extends InventoryMenu {
         if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
             return returnNull ? null : "Disabled";
         }
-        String delay = delayNumber == 0.0 ? "" : " (" + (Math.floor(delayNumber) == delayNumber ? String.valueOf((int) delayNumber) : String.valueOf(delayNumber)) + ")";
         CancelCause disabledCause = player.getViolations(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
                 cancellableCompatibility != null ? cancellableCompatibility + " Compatibility" :
                         notChecked ? "Temporarily Not Checked" :
-                                tpsDropping ? "Server Lag" + delay :
+                                serverLag ? "Server Lag" :
                                         disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
-                                                (returnNull ? null : (check.isSilent(worldName) ? "Silent " : "") + "Checking" + delay);
+                                                (returnNull ? null : (check.isSilent(worldName) ? "Silent " : "") + "Checking");
     }
 
     public void refresh(String targetName) {

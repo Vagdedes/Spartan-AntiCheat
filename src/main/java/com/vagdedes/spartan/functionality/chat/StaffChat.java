@@ -16,7 +16,7 @@ public class StaffChat {
 
     public static boolean run(SpartanPlayer p, String msg) {
         if (Permissions.has(p, Enums.Permission.STAFF_CHAT)
-                && (!Compatibility.CompatibilityType.Authentication.isFunctional()
+                && (!Compatibility.CompatibilityType.AUTHENTICATION.isFunctional()
                 || (System.currentTimeMillis() - p.creationTime) > 60_000L)) {
             String character = Config.settings.getString("Chat.staff_chat_character");
 

@@ -1,14 +1,12 @@
 package com.vagdedes.spartan.abstraction.replicates;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.CombatUtils;
-import com.vagdedes.spartan.utils.gameplay.PatternUtils;
 import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.*;
@@ -57,7 +55,6 @@ public class SpartanLocation {
 
                             if ((time - cache.time) >= clearanceTime) {
                                 iterator.remove();
-                                PatternUtils.synchronizeClearance(cache.block);
                             }
                         }
                     }
@@ -305,7 +302,7 @@ public class SpartanLocation {
     }
 
     public float getYaw() {
-        return yaw;
+        return yaw % 360.0f;
     }
 
     public float getPitch() {
@@ -502,6 +499,11 @@ public class SpartanLocation {
         return AlgebraUtils.getDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
     }
 
+    public double distanceSquared(SpartanLocation loc) {
+        this.retrieveDataFrom(loc);
+        return AlgebraUtils.getSquaredDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
+    }
+
     public double distance(Location loc) {
         return AlgebraUtils.getDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
     }
@@ -573,75 +575,34 @@ public class SpartanLocation {
 
     // Surrounding
 
-    public SpartanLocation[] getSurroundingLocations(double x, double y, double z, boolean all) {
-        if (all) {
-            return new SpartanLocation[]{
-                    y == 0.0 ? this.clone() : this.clone().add(0, y, 0),
-                    this.clone().add(x, y, 0),
-                    this.clone().add(-x, y, 0),
-                    this.clone().add(0, y, z),
-                    this.clone().add(0, y, -z),
-                    this.clone().add(x, y, z),
-                    this.clone().add(-x, y, -z),
-                    this.clone().add(x, y, -z),
-                    this.clone().add(-x, y, z)
-            };
-        } else {
-            Map<Double, double[]> distances = new TreeMap<>();
+    public Collection<SpartanLocation> getSurroundingLocations(double x, double y, double z) {
+        Map<Integer, SpartanLocation> locations = new LinkedHashMap<>(10, 1.0f);
+        locations.put(Integer.MIN_VALUE, this.clone().add(0, y, 0));
 
-            for (double[] positions : new double[][]{
-                    {this.x, this.z},
-                    {this.x + x, this.z},
-                    {this.x - x, this.z},
-                    {this.x, this.z + z},
-                    {this.x, this.z - z},
-                    {this.x + x, this.z + z},
-                    {this.x - x, this.z - z},
-                    {this.x + x, this.z - z},
-                    {this.x - x, this.z + z}
-            }) {
-                distances.put(Math.sqrt(
-                        AlgebraUtils.getPreDistance(this.x, Math.floor(positions[0]))
-                                + AlgebraUtils.getPreDistance(this.z, Math.floor(positions[1]))
-                ), positions);
-            }
-            y += this.y;
-            Iterator<double[]> iterator = distances.values().iterator();
-            double[] positions1 = iterator.next();
+        for (double[] positions : new double[][]{
+                {this.x + x, this.z},
+                {this.x - x, this.z},
+                {this.x, this.z + z},
+                {this.x, this.z - z},
+                {this.x + x, this.z + z},
+                {this.x - x, this.z - z},
+                {this.x + x, this.z - z},
+                {this.x - x, this.z + z}
+        }) {
+            SpartanLocation location = new SpartanLocation(
+                    this.player, this.world, this.chunk,
+                    positions[0], this.y + y, positions[1],
+                    this.yaw, this.pitch
+            );
 
-            if (iterator.hasNext()) {
-                double[] positions2 = iterator.next();
-
-                if (iterator.hasNext()) {
-                    double[] positions3 = iterator.next();
-
-                    if (iterator.hasNext()) {
-                        double[] positions4 = iterator.next();
-                        return new SpartanLocation[]{
-                                new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
-                                new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this),
-                                new SpartanLocation(player, world, positions3[0], y, positions3[1], yaw, pitch, this),
-                                new SpartanLocation(player, world, positions4[0], y, positions4[1], yaw, pitch, this)
-                        };
-                    } else {
-                        return new SpartanLocation[]{
-                                new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
-                                new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this),
-                                new SpartanLocation(player, world, positions3[0], y, positions3[1], yaw, pitch, this)
-                        };
-                    }
-                } else {
-                    return new SpartanLocation[]{
-                            new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this),
-                            new SpartanLocation(player, world, positions2[0], y, positions2[1], yaw, pitch, this)
-                    };
-                }
-            } else {
-                return new SpartanLocation[]{
-                        new SpartanLocation(player, world, positions1[0], y, positions1[1], yaw, pitch, this)
-                };
+            if (locations.putIfAbsent(
+                    (AlgebraUtils.integerFloor(positions[0]) * SpartanBukkit.hashCodeMultiplier)
+                            + AlgebraUtils.integerFloor(positions[1]),
+                    location) == null) {
+                location.retrieveDataFrom(this);
             }
         }
+        return locations.values();
     }
 
     @Deprecated
@@ -724,28 +685,6 @@ public class SpartanLocation {
         return array;
     }
 
-    public SpartanLocation[] getSurroundingLocations(double x, double y, double z) {
-        if (player == null
-                || player.bedrockPlayer
-                || player.getVehicle() != null
-                || player.getHandlers().has()
-                || !player.getActivePotionEffects().isEmpty()
-                || BlockUtils.isSolid(player.getItemInHand().getType())) {
-            return getSurroundingLocations(x, y, z, true);
-        } else {
-            PlayerProfile playerProfile = player.getProfile();
-
-            if (playerProfile.isSuspectedOrHacker()) {
-                return getSurroundingLocations(x, y, z, true);
-            } else {
-                return getSurroundingLocations(
-                        x, y, z,
-                        player.getLastViolation().hasLevel()
-                );
-            }
-        }
-    }
-
     public int getSurroundingSolidBlockCount(double x, double z, int cap) {
         int count = 0;
 
@@ -773,7 +712,7 @@ public class SpartanLocation {
     }
 
     public boolean isBlock(Material[] m, double i) {
-        for (SpartanLocation loc : getSurroundingLocations(i, 0, i, true)) {
+        for (SpartanLocation loc : getSurroundingLocations(i, 0, i)) {
             for (Material material : m) {
                 if (loc.isType(material)) {
                     return true;
@@ -797,12 +736,19 @@ public class SpartanLocation {
                 }
             }
         } else {
-            SpartanLocation[] surrounding = getSurroundingLocations(i, 0, i);
+            Collection<SpartanLocation> locations = getSurroundingLocations(i, 0, i);
 
-            for (int x = 1; x < surrounding.length; x++) { // Skip 0
-                for (Material material : m) {
-                    if (!surrounding[x].isType(material)) {
-                        return false;
+            if (locations.size() > 1) { // Ignore 0
+                Iterator<SpartanLocation> iterator = locations.iterator();
+                iterator.next();
+
+                while (iterator.hasNext()) {
+                    SpartanLocation surrounding = iterator.next();
+
+                    for (Material material : m) {
+                        if (!surrounding.isType(material)) {
+                            return false;
+                        }
                     }
                 }
             }

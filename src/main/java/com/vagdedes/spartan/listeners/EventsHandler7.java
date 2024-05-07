@@ -4,19 +4,14 @@ import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
 import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.NoSlowdown;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CombatProcessing;
+import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
-import com.vagdedes.spartan.functionality.tracking.ServerFlying;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
-import com.vagdedes.spartan.utils.java.HashUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
@@ -36,7 +31,6 @@ public class EventsHandler7 implements Listener {
     public static final Enums.HackType[] handledChecks = new Enums.HackType[]{
             NoFall.check,
             IrregularMovements.check,
-            NoSlowdown.check,
             Speed.check,
             MorePackets.check,
             ImpossibleInventory.check,
@@ -88,82 +82,55 @@ public class EventsHandler7 implements Listener {
         if (p == null) {
             return;
         }
-        PlayerUtils.update(p, n, false);
         boolean cancelled = e.isCancelled();
 
-        if (!p.canDo(false)) {
-            ServerFlying.run(p);
-            return;
-        }
         Location nto = e.getTo();
 
         if (nto == null) {
             return;
         }
-        SpartanLocation to = p.movement.setEventLocation(nto),
+        SpartanLocation vehicle = p.movement.getVehicleLocation();
+        SpartanLocation
+                to = vehicle != null ? vehicle : new SpartanLocation(p, nto),
                 from = new SpartanLocation(p, e.getFrom());
-        p.movement.processLastMoveEvent(to, from);
 
         // Objects
         to.retrieveDataFrom(p.movement.getLocation());
         from.retrieveDataFrom(to);
 
-        if (to.getYaw() != from.getYaw() || to.getPitch() != from.getPitch()) {
-            p.movement.setLastHeadMovement();
-        }
-
         // Values
-        double preXZ = AlgebraUtils.getPreDistance(to.getX(), from.getX()) + AlgebraUtils.getPreDistance(to.getZ(), from.getZ()),
+        double preXZ = AlgebraUtils.getSquare(to.getX(), from.getX()) + AlgebraUtils.getSquare(to.getZ(), from.getZ()),
                 toY = to.getY(),
                 fromY = from.getY(),
-                dis = Math.sqrt(preXZ + AlgebraUtils.getPreDistance(toY, fromY)),
+                dis = Math.sqrt(preXZ + AlgebraUtils.getSquare(toY, fromY)),
                 box = toY - to.getBlockY(),
                 ver = toY - fromY,
                 hor = Math.sqrt(preXZ);
         float fall = p.getFallDistance();
 
-        // Detections (Always previous so it counts the previous tick and makes the current tick's prediction)
-        int situation = HashUtils.extendInt(HashUtils.hashPlayer(p), HashUtils.hashEnvironment(p, to));
-
-        // Patterns
-        SpartanBukkit.movementPatterns.learn(p, situation, dis, hor, ver, fall);
-
-        // Handlers
-        MovementProcessing.run(p, dis, hor, ver, box, fall);
-        CombatProcessing.runMove(p, to);
-
-        // Detections
-        p.getExecutor(Enums.HackType.IrregularMovements).handle(false, situation);
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.HEAD);
-        p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
-        p.getExecutor(Enums.HackType.KillAura).run(cancelled);
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, dis);
-
-        if (dis == 0.0) {
-            // Handlers
-            for (Enums.HackType hackType : handledChecks) {
-                if (p.getViolations(hackType).prevent()) {
-                    break;
-                }
-            }
+        if (!p.movement.processLastMoveEvent(to, from, ver)) {
             return;
         }
+        MovementProcessing.run(n, p, to, dis, hor, ver, box, fall);
 
-        // Detections
-        ServerFlying.run(p);
-        p.getExecutor(Enums.HackType.Speed).handle(cancelled, Speed.SPRINT);
-        p.getExecutor(Enums.HackType.NoFall).run(cancelled);
-        p.getExecutor(Enums.HackType.NoSlowdown).run(cancelled);
-        p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
-        p.getExecutor(Enums.HackType.Speed).run(cancelled);
-        p.getExecutor(Enums.HackType.Speed).handle(cancelled, Speed.WATER);
-        p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
-
-        // Handlers
+        // Patterns
         for (Enums.HackType hackType : handledChecks) {
             if (p.getViolations(hackType).prevent()) {
                 break;
             }
+        }
+
+        // Detections
+        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.HEAD);
+        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.MOVEMENT);
+        p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
+        p.getExecutor(Enums.HackType.KillAura).run(cancelled);
+
+        if (dis > 0.0) {
+            p.getExecutor(Enums.HackType.NoFall).run(cancelled);
+            p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
+            p.getExecutor(Enums.HackType.Speed).run(cancelled);
+            p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
         }
     }
 
@@ -180,8 +147,5 @@ public class EventsHandler7 implements Listener {
 
         // Detections
         CheckDelay.cancel(p.uuid, 20);
-
-        // System
-        p.getExecutor(Enums.HackType.MorePackets).handle(false, p.movement.getLocation());
     }
 }

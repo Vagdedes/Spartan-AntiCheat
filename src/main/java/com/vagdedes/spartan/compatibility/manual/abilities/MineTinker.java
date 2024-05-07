@@ -2,8 +2,8 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import de.flo56958.minetinker.events.MTPlayerInteractEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
@@ -19,7 +19,7 @@ public class MineTinker implements Listener {
         if (p == null) {
             return;
         }
-        Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.MineTinker;
+        Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.MINE_TINKER;
 
         if (compatibilityType.isFunctional()) {
             CheckDelay.evadeCommonFalsePositives(p, compatibilityType,

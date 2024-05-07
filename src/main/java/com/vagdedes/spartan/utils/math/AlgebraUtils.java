@@ -9,6 +9,7 @@ import java.util.Random;
 
 public class AlgebraUtils {
 
+    public static final double SQUARE_ROOT_2 = Math.sqrt(2.0);
 
     public static int integerFloor(double d) {
         return NumberConversions.floor(d);
@@ -40,44 +41,36 @@ public class AlgebraUtils {
 
     // Separator
 
-    public static double roundToHalf(double dbl) {
-        return Math.floor(dbl * 2.0) / 2.0;
-    }
-
-    public static double ceilToHalf(double dbl) {
-        return Math.ceil(dbl * 2.0) / 2.0;
-    }
-
-    public static double floorToHalf(double dbl) {
-        return Math.floor(dbl * 2.0) / 2.0;
+    public static double removeBase(double d) {
+        return d - Math.floor(d);
     }
 
     // Separator
 
-    public static int roundToNearest(double number, int nearest) {
-        return (int) (nearest * Math.round(number / (double) nearest));
+    public static double roundToPortion(double dbl, double portion) {
+        return Math.floor(dbl * portion) / portion;
     }
 
-    public static int roundToNearest(int number, int nearest) {
-        return (int) (nearest * Math.round(number / (double) nearest));
+    public static double ceilToPortion(double dbl, double portion) {
+        return Math.ceil(dbl * portion) / portion;
     }
 
-    public static long roundToNearest(long number, int nearest) {
-        return nearest * Math.round(number / (double) nearest);
+    public static double floorToPortion(double dbl, double portion) {
+        return Math.floor(dbl * portion) / portion;
     }
 
     // Separator
 
-    public static int floorToNearest(double number, int nearest) {
-        return (int) (nearest * Math.floor(number / (double) nearest));
+    public static int roundToNearest(Number number, int nearest) {
+        return (int) (nearest * Math.round(number.doubleValue() / (double) nearest));
     }
 
-    public static int floorToNearest(int number, int nearest) {
-        return (int) (nearest * Math.floor(number / (double) nearest));
+    public static int floorToNearest(Number number, int nearest) {
+        return (int) (nearest * Math.floor(number.doubleValue() / (double) nearest));
     }
 
-    public static long floorToNearest(long number, int nearest) {
-        return nearest * Math.round(Math.floor(number / (double) nearest));
+    public static int ceilToNearest(Number number, int nearest) {
+        return (int) (nearest * Math.ceil(number.doubleValue() / (double) nearest));
     }
 
     // Separator
@@ -107,43 +100,17 @@ public class AlgebraUtils {
 
     // Separator
 
-    public static int pow2(int i) {
-        return i * i;
-    }
-
-    public static double pow2(double i) {
-        return i * i;
-    }
-
-    public static double sqrt(double number) {
-        if (number == 0) {
-            return 0;
-        }
-        double t;
-        double squareRoot = number / 2;
-
-        do {
-            t = squareRoot;
-            squareRoot = (t + (number / t)) / 2;
-        } while ((t - squareRoot) != 0);
-        return squareRoot;
-    }
-
-    public static double roundLocation(double d) {
-        return d == 0.0 ? 0.0 :
-                d < 0.0 ? Math.round((0.0 - d) * 10.0) / 10.0 :
-                        Math.round(d * 10.0) / 10.0;
-    }
-
-    // Separator
-
-    public static double getPreDistance(double d1, double d2) {
+    public static double getSquare(double d1, double d2) {
         double d = d1 - d2;
         return d * d;
     }
 
+    public static double getSquaredDistance(double x1, double x2, double y1, double y2, double z1, double z2) {
+        return getSquare(x1, x2) + getSquare(y1, y2) + getSquare(z1, z2);
+    }
+
     public static double getDistance(double x1, double x2, double y1, double y2, double z1, double z2) {
-        return Math.sqrt(getPreDistance(x1, x2) + getPreDistance(y1, y2) + getPreDistance(z1, z2));
+        return Math.sqrt(getSquaredDistance(x1, x2, y1, y2, z1, z2));
     }
 
     // Separator
@@ -161,7 +128,7 @@ public class AlgebraUtils {
     // Separator
 
     public static double getHorizontalDistance(Location loc, Vector vec) {
-        return Math.sqrt(getPreDistance(loc.getX(), vec.getX()) + getPreDistance(loc.getZ(), vec.getZ()));
+        return Math.sqrt(getSquare(loc.getX(), vec.getX()) + getSquare(loc.getZ(), vec.getZ()));
     }
 
     public static double getHorizontalDistance(Vector vec, Location loc) {
@@ -169,7 +136,7 @@ public class AlgebraUtils {
     }
 
     public static double getHorizontalDistance(SpartanLocation loc, Vector vec) {
-        return Math.sqrt(getPreDistance(loc.getX(), vec.getX()) + getPreDistance(loc.getZ(), vec.getZ()));
+        return Math.sqrt(getSquare(loc.getX(), vec.getX()) + getSquare(loc.getZ(), vec.getZ()));
     }
 
     public static double getHorizontalDistance(Vector vec, SpartanLocation loc) {
@@ -177,7 +144,7 @@ public class AlgebraUtils {
     }
 
     public static double getHorizontalDistance(Location loc1, SpartanLocation loc2) {
-        return Math.sqrt(getPreDistance(loc1.getX(), loc2.getX()) + getPreDistance(loc1.getZ(), loc2.getZ()));
+        return Math.sqrt(getSquare(loc1.getX(), loc2.getX()) + getSquare(loc1.getZ(), loc2.getZ()));
     }
 
     public static double getHorizontalDistance(SpartanLocation loc1, Location loc2) {
@@ -185,22 +152,22 @@ public class AlgebraUtils {
     }
 
     public static double getHorizontalDistance(Vector vec1, Vector vec2) {
-        return Math.sqrt(getPreDistance(vec1.getX(), vec2.getX()) + getPreDistance(vec1.getZ(), vec2.getZ()));
+        return Math.sqrt(getSquare(vec1.getX(), vec2.getX()) + getSquare(vec1.getZ(), vec2.getZ()));
     }
 
     public static double getHorizontalDistance(Location loc1, Location loc2) {
-        return Math.sqrt(getPreDistance(loc1.getX(), loc2.getX()) + getPreDistance(loc1.getZ(), loc2.getZ()));
+        return Math.sqrt(getSquare(loc1.getX(), loc2.getX()) + getSquare(loc1.getZ(), loc2.getZ()));
     }
 
     public static double getHorizontalDistance(SpartanLocation loc1, SpartanLocation loc2) {
         loc1.retrieveDataFrom(loc2);
-        return Math.sqrt(getPreDistance(loc1.getX(), loc2.getX()) + getPreDistance(loc1.getZ(), loc2.getZ()));
+        return Math.sqrt(getSquare(loc1.getX(), loc2.getX()) + getSquare(loc1.getZ(), loc2.getZ()));
     }
 
     // Separator
 
     public static double getVerticalDistance(Location loc1, SpartanLocation loc2) {
-        return Math.sqrt(getPreDistance(loc1.getY(), loc2.getY()));
+        return Math.sqrt(getSquare(loc1.getY(), loc2.getY()));
     }
 
     public static double getVerticalDistance(SpartanLocation loc1, Location loc2) {
@@ -208,12 +175,12 @@ public class AlgebraUtils {
     }
 
     public static double getVerticalDistance(Location loc1, Location loc2) {
-        return Math.sqrt(getPreDistance(loc1.getY(), loc2.getY()));
+        return Math.sqrt(getSquare(loc1.getY(), loc2.getY()));
     }
 
     public static double getVerticalDistance(SpartanLocation loc1, SpartanLocation loc2) {
         loc1.retrieveDataFrom(loc2);
-        return Math.sqrt(getPreDistance(loc1.getY(), loc2.getY()));
+        return Math.sqrt(getSquare(loc1.getY(), loc2.getY()));
     }
 
     // Separator
@@ -257,20 +224,6 @@ public class AlgebraUtils {
     }
 
     // Separator
-
-    public static boolean validIntegerHeavy(String s) {
-        if (s == null) {
-            return false;
-        }
-        for (int i = 0; i < s.length(); ++i) {
-            char c = s.charAt(i);
-
-            if (!Character.isDigit(c) && c != '-') {
-                return false;
-            }
-        }
-        return true;
-    }
 
     public static Integer returnValidInteger(String str) {
         try {
@@ -421,20 +374,13 @@ public class AlgebraUtils {
         }
     }
 
-    public static boolean validDecimalHeavy(String s) {
-        if (s == null) {
-            return false;
-        }
-        int length = s.length();
-
-        if (length < 3) {
-            return false;
-        }
-        int index = s.indexOf(".");
-        return index > 0 && index != (length - 1) && validInteger(new StringBuilder(s).deleteCharAt(index).toString());
-    }
-
     public static boolean isExponentVisible(double value) {
         return value < 1e-04;
+    }
+
+    // Separator
+
+    public static double floatDouble(double d) {
+        return (float) d;
     }
 }

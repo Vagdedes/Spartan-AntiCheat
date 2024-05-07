@@ -2,11 +2,11 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.Piston;
-import com.vagdedes.spartan.functionality.identifiers.simple.CheckDelay;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.CheckDelay;
+import com.vagdedes.spartan.functionality.tracking.Piston;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;

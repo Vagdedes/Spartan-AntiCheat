@@ -34,4 +34,8 @@ public class SpartanOpenInventory {
     public boolean isUsingTheCursor() {
         return this.cursor.getType() != Material.AIR;
     }
+
+    public boolean isUsingAnotherInventory() {
+        return this.slots > 46;
+    }
 }

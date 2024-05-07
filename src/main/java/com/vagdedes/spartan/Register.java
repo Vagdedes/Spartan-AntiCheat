@@ -3,9 +3,7 @@ package com.vagdedes.spartan;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.command.CommandTab;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
-import com.vagdedes.spartan.functionality.connection.Piracy;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.identifiers.simple.VehicleAccess;
 import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
@@ -31,7 +29,6 @@ public class Register extends JavaPlugin {
 
     public void onEnable() {
         plugin = this;
-        enable(new Piracy(), Piracy.class);
 
         /*PluginDescriptionFile description = plugin.getDescription();
 
@@ -61,7 +58,6 @@ public class Register extends JavaPlugin {
         // Base
         Config.settings.runOnLogin();
         PlayerLimitPerIP.cache();
-        VehicleAccess.run();
         SuspicionNotifications.run();
 
         // Listeners
@@ -109,8 +105,7 @@ public class Register extends JavaPlugin {
     // Utilities
 
     public static void enable(Listener l, Class<?> c) {
-        if (isPluginEnabled()
-                && listeners.add(c)) {
+        if (isPluginEnabled() && listeners.add(c)) {
             manager.registerEvents(l, plugin);
         }
     }

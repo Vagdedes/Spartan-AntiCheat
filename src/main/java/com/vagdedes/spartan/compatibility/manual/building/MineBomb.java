@@ -18,7 +18,7 @@ public class MineBomb {
     }
 
     public static boolean canUse(SpartanPlayer p) {
-        if (Compatibility.CompatibilityType.MineBomb.isFunctional()) {
+        if (Compatibility.CompatibilityType.MINE_BOMB.isFunctional()) {
             if (cacheCanUse(p)) {
                 return true;
             }

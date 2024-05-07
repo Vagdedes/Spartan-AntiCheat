@@ -127,7 +127,7 @@ public class ManageChecks extends InventoryMenu {
 
         List<String> lore = new ArrayList<>(30);
 
-        for (String s : check.getDescription()) {
+        for (String s : hackType.description) {
             lore.add("§e" + s);
         }
 
@@ -189,6 +189,6 @@ public class ManageChecks extends InventoryMenu {
         if (enabled && silent) {
             item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         }
-        add(colour + check.getName() + " " + secondColour + check.type.toString() + " Check", lore, item, -1);
+        add(colour + check.getName() + " " + secondColour + hackType.category.toString() + " Check", lore, item, -1);
     }
 }

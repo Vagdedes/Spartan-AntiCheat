@@ -110,9 +110,9 @@ public class MainMenu extends InventoryMenu {
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
         lore.add("§7Detections Available§8: "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.Java) ? "§a" : "§c") + Enums.DataType.Java
+                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.JAVA) ? "§a" : "§c") + Enums.DataType.JAVA
                 + " §8/ "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.Bedrock) ? "§a" : "§c") + Enums.DataType.Bedrock);
+                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.BEDROCK) ? "§a" : "§c") + Enums.DataType.BEDROCK);
         lore.add("");
         lore.add("§7Left click to §amanage checks§7.");
         lore.add("§7Right click to §creload the plugin's memory contents§7.");
@@ -124,14 +124,14 @@ public class MainMenu extends InventoryMenu {
         int activeCompatibilitiesSize = activeCompatibilities.size();
 
         lore.add("§7Identified§8:§a " + activeCompatibilitiesSize);
-        lore.add("§7Total§8:§a " + Config.compatibility.getInactiveCompatibilities().size());
+        lore.add("§7Total§8:§a " + Config.compatibility.getTotalCompatibilities().size());
 
         if (activeCompatibilitiesSize > 0) {
             lore.add("");
             lore.add("§7Compatibilities§8:");
 
             for (Compatibility.CompatibilityType compatibility : activeCompatibilities) {
-                lore.add("§a" + compatibility.toString());
+                lore.add("§a" + compatibility.toString().toLowerCase().replace("_", "-"));
             }
         }
         add("§aCompatibilities", lore, new ItemStack(MaterialUtils.get("enchanting_table")), 52);
@@ -174,7 +174,7 @@ public class MainMenu extends InventoryMenu {
             if (!Permissions.has(player, Permission.MANAGE)) {
                 player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
-                if (Compatibility.CompatibilityType.FileGUI.isFunctional()) {
+                if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
                     Player n = player.getPlayer();
 
                     if (n != null && n.isOnline() && n.hasPermission("filegui.modify")) {

@@ -1,8 +1,6 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.criticals.Criticals;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.criticals.CriticalsUtils;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
@@ -44,7 +42,7 @@ public class ResearchEngine {
 
     private static boolean enoughData = false;
 
-    public static final Enums.DataType[] usableDataTypes = new Enums.DataType[]{Enums.DataType.Java, Enums.DataType.Bedrock};
+    public static final Enums.DataType[] usableDataTypes = new Enums.DataType[]{Enums.DataType.JAVA, Enums.DataType.BEDROCK};
     private static StatisticalProgress statisticalProgress = new StatisticalProgress();
 
     private static final Map<String, PlayerProfile> playerProfiles
@@ -104,8 +102,8 @@ public class ResearchEngine {
     public static Enums.DataType[] getDynamicUsableDataTypes(boolean universal) {
         Enums.DataType dataType = SpartanEdition.getMissingDetection();
         return dataType == null ? (universal ? Enums.DataType.values() : usableDataTypes) :
-                dataType == Enums.DataType.Bedrock ? (universal ? new Enums.DataType[]{Enums.DataType.Universal, Enums.DataType.Java} : new Enums.DataType[]{Enums.DataType.Java}) :
-                        (universal ? new Enums.DataType[]{Enums.DataType.Universal, Enums.DataType.Bedrock} : new Enums.DataType[]{Enums.DataType.Bedrock});
+                dataType == Enums.DataType.BEDROCK ? (universal ? new Enums.DataType[]{Enums.DataType.UNIVERSAL, Enums.DataType.JAVA} : new Enums.DataType[]{Enums.DataType.JAVA}) :
+                        (universal ? new Enums.DataType[]{Enums.DataType.UNIVERSAL, Enums.DataType.BEDROCK} : new Enums.DataType[]{Enums.DataType.BEDROCK});
     }
 
     // Separator
@@ -270,11 +268,11 @@ public class ResearchEngine {
             return null;
         }
         Collection<PlayerViolation> list = new ArrayList<>(size);
-        boolean universal = dataType == Enums.DataType.Universal;
+        boolean universal = dataType == Enums.DataType.UNIVERSAL;
 
         // Separator
         for (PlayerProfile playerProfile : profiles) {
-            if (universal || ((dataType == Enums.DataType.Bedrock) == playerProfile.isBedrockPlayer())) {
+            if (universal || ((dataType == Enums.DataType.BEDROCK) == playerProfile.isBedrockPlayer())) {
                 list.addAll(playerProfile.getViolationHistory(hackType).getRawCollection());
             }
         }
@@ -356,11 +354,10 @@ public class ResearchEngine {
         } else {
             profile = getPlayerProfile(playerName);
         }
+        Pattern.deleteFromFile(profile);
 
         if (isStorageMode()) {
             // Clear Files/Database
-            Pattern.deleteFromFile(profile, true);
-
             SpartanBukkit.analysisThread.executeWithPriority(() -> {
                 synchronized (playerProfiles) {
                     playerProfiles.remove(playerName);
@@ -392,8 +389,6 @@ public class ResearchEngine {
                 }
             });
         } else {
-            Pattern.deleteFromFile(profile, true);
-
             synchronized (playerProfiles) {
                 playerProfiles.remove(playerName);
             }
@@ -542,7 +537,6 @@ public class ResearchEngine {
             // Complete Storage
             AntiCheatLogs.refresh();
             Config.sql.refreshDatabase();
-            Criticals.clear();
 
             if (enabledPlugin) {
                 CloudBase.refresh(true);
@@ -592,19 +586,7 @@ public class ResearchEngine {
                             int greatestSplitPosition = 10; // Attention
                             String[] split = data.split(" ", greatestSplitPosition + 1);
 
-                            if (data.contains(CriticalsUtils.criticalHitMessage)) {
-                                if (split.length >= greatestSplitPosition) {
-                                    Material material = Material.getMaterial(split[6].replace("-", "_").toUpperCase());
-
-                                    if (material != null) {
-                                        Double decimal = AlgebraUtils.returnValidDecimal(split[8]);
-
-                                        if (decimal != null) {
-                                            CriticalsUtils.cache(split[0], material, decimal);
-                                        }
-                                    }
-                                }
-                            } else if (data.contains(PunishmentHistory.warningMessage)) {
+                            if (data.contains(PunishmentHistory.warningMessage)) {
                                 getPlayerProfile(split[0]).punishmentHistory.increaseWarnings(null, null);
                             } else if (data.contains(PunishmentHistory.kickMessage)) {
                                 getPlayerProfile(split[0]).punishmentHistory.increaseKicks(null, null);
@@ -723,7 +705,7 @@ public class ResearchEngine {
 
                     for (Enums.DataType dataType : dataTypes) {
                         if (hackType.getCheck().isEnabled(dataType, null, null)) {
-                            boolean bedrock = dataType == Enums.DataType.Bedrock;
+                            boolean bedrock = dataType == Enums.DataType.BEDROCK;
                             Map<Integer, ViolationAnalysis.TimePeriod> averages = new LinkedHashMap<>();
 
                             for (PlayerProfile playerProfile : playerProfiles) {

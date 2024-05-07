@@ -3,9 +3,9 @@ package com.vagdedes.spartan.utils.server;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -234,17 +234,19 @@ public class MaterialUtils {
             }
 
             // Separator
-            int hasteEffect = PlayerUtils.getPotionLevel(player, PotionEffectType.FAST_DIGGING);
+            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectType.FAST_DIGGING, 0);
 
-            if (hasteEffect > 0) {
-                multiplier *= (0.2 * hasteEffect) + 1.0;
+            if (hasteEffect != null
+                    && hasteEffect.isActive()) {
+                multiplier *= (0.2 * hasteEffect.bukkitEffect.getAmplifier()) + 1.0;
             }
 
             // Separator
-            int miningFatigueEffect = PlayerUtils.getPotionLevel(player, PotionEffectType.SLOW_DIGGING);
+            SpartanPotionEffect miningFatigueEffect = player.getPotionEffect(PotionEffectType.SLOW_DIGGING, 0);
 
-            if (miningFatigueEffect > 0) {
-                multiplier *= Math.pow(miningFatigueEffect, 0.3);
+            if (miningFatigueEffect != null
+                    && miningFatigueEffect.isActive()) {
+                multiplier *= Math.pow(miningFatigueEffect.bukkitEffect.getAmplifier(), 0.3);
             }
 
             // Separator
@@ -279,7 +281,7 @@ public class MaterialUtils {
                     multiplier /= 5.0;
                 }
             }
-            if (!player.isOnGround()) {
+            if (!player.isOnGroundDefault()) {
                 multiplier /= 5.0;
             }
 

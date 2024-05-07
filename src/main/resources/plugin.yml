@@ -5,11 +5,11 @@ version: Phase 534
 website: https://www.idealistic.ai
 description: In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning.
 api-version: 1.13
-softdepend: [ProtocolLib, UltimateStatistics, FileGUI, MinigameMaker, AntiAltAccount,
-             mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,
-             aSkyBlock, AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, GrapplingHook,
+softdepend: [mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,
+             aSkyBlock, AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, GrapplingHook, ProtocolLib,
              MagicSpells, MineBomb, MineTinker, MythicMobs, PrinterMode, ProjectKorra, RealDualWield,
-             SmashHit, SuperPickaxe, TreeFeller, Vehicles, WildTools, Geyser-Spigot, floodgate-bukkit]
+             SmashHit, SuperPickaxe, TreeFeller, Vehicles, WildTools, Geyser-Spigot, floodgate-bukkit,
+             FileGUI]
 load: POSTWORLD
 folia-supported: true
 commands:

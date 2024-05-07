@@ -13,11 +13,11 @@ import org.bukkit.event.Listener;
 
 public class Vehicles implements Listener {
 
-    private static final String key = Compatibility.CompatibilityType.Vehicles + "=compatibility=";
+    private static final String key = Compatibility.CompatibilityType.VEHICLES + "=compatibility=";
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(VehicleEnterEvent e) {
-        if (Compatibility.CompatibilityType.Vehicles.isFunctional()) {
+        if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer().getUniqueId());
             VehicleType vehicleType = e.getVehicleType();
 
@@ -31,7 +31,7 @@ public class Vehicles implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Exit(VehicleExitEvent e) {
-        if (Compatibility.CompatibilityType.Vehicles.isFunctional()) {
+        if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer().getUniqueId());
             p.getBuffer().clear(key);
         }

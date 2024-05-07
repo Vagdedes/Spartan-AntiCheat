@@ -113,7 +113,7 @@ public abstract class ConfigurationBuilder {
             return path;
         } else {
             value = ChatColor.translateAlternateColorCodes('&', value)
-                    .replace(prefix, SpartanEdition.getProductName(false));
+                    .replace(prefix, SpartanEdition.getProductName());
         }
         str.put(path, value);
         return value;

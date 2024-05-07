@@ -23,7 +23,6 @@ public class CrossServerInformation {
 
     private static int ticks = 0;
     private static final char colorSyntaxCharacter = '&';
-    private static long cooldown = 0L;
     private static String serverName = null;
     private static final List<String>
             notifications = Collections.synchronizedList(new ArrayList<>()),

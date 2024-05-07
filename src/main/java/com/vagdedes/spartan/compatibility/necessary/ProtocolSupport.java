@@ -8,7 +8,7 @@ import protocolsupport.api.ProtocolSupportAPI;
 public class ProtocolSupport {
 
     static boolean isBedrockPlayer(Player p) {
-        if (Compatibility.CompatibilityType.ProtocolSupport.isFunctional()) {
+        if (Compatibility.CompatibilityType.PROTOCOL_SUPPORT.isFunctional()) {
             try {
                 Connection c = ProtocolSupportAPI.getConnection(p);
                 return c != null && c.getVersion().toString().contains("_PE_");

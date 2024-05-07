@@ -12,7 +12,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums.HackType;
@@ -23,7 +22,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -120,7 +118,6 @@ public class ConfigUtils {
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
         message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
-        message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.lastPlayed), 1000)));
 
         PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
         message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
@@ -161,7 +158,6 @@ public class ConfigUtils {
                 message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
                 message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
                 message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
-                message = replace(message, "{time-online}", String.valueOf(TimeUtils.getDifference(new Timestamp(p.lastPlayed), 1000)));
                 message = replace(message, "{moving}", String.valueOf(p.movement.getCustomDistance() > 0.0));
 
                 PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;

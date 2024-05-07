@@ -3,25 +3,27 @@ package com.vagdedes.spartan.abstraction.math.implementation;
 
 import com.vagdedes.spartan.abstraction.math.AbstractKeyValueMath;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MapMath implements AbstractKeyValueMath {
 
-    private final Map<Float, Map<Integer, Short>> map;
-    private float total, specificTotal;
+    private final Map<Integer, Map<Integer, Short>> map;
+    private double total, specificTotal;
 
     public MapMath() {
-        this(-1);
+        this(2);
     }
 
     public MapMath(int capacity) {
-        this.map = capacity >= 0 ? new HashMap<>(capacity) : new HashMap<>();
+        this.map = new HashMap<>(capacity);
         this.total = 0.0f;
         this.specificTotal = 0.0f;
     }
 
     public MapMath(int capacity, float loadFactor) {
-        this.map = capacity >= 0 ? new HashMap<>(capacity, loadFactor) : new HashMap<>();
+        this.map = new HashMap<>(capacity, loadFactor);
         this.total = 0.0f;
         this.specificTotal = 0.0f;
     }
@@ -34,30 +36,30 @@ public class MapMath implements AbstractKeyValueMath {
     }
 
     @Override
-    public Float removeLeastSignificant() {
+    public Number removeLeastSignificant() {
         if (this.map.isEmpty()) {
             return null;
         } else {
             int min = Integer.MAX_VALUE;
-            Float key = null;
+            Integer key = null;
 
-            for (Map.Entry<Float, Map<Integer, Short>> entry : this.map.entrySet()) {
+            for (Map.Entry<Integer, Map<Integer, Short>> entry : this.map.entrySet()) {
                 if (entry.getValue().size() < min) {
                     min = entry.getValue().size();
                     key = entry.getKey();
 
                     if (min == 1) {
-                        int specific = 0;
-
-                        for (short count : entry.getValue().values()) {
-                            specific += count;
-                        }
-                        this.specificTotal -= specific;
                         break;
                     }
                 }
             }
-            this.map.remove(key);
+            Map<Integer, Short> map = this.map.remove(key);
+            int specific = 0;
+
+            for (short count : map.values()) {
+                specific += count;
+            }
+            this.specificTotal -= specific;
             this.total -= min;
             return key;
         }
@@ -79,14 +81,35 @@ public class MapMath implements AbstractKeyValueMath {
     }
 
     @Override
+    public int getSpecificTotal() {
+        return (int) this.specificTotal;
+    }
+
+    @Override
     public int getCount(Number number) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
+        Map<Integer, Short> map = this.map.get(number.hashCode());
         return map == null ? 0 : map.size();
     }
 
     @Override
+    public int getSpecificCount(Number number) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
+
+        if (map != null) {
+            int total = 0;
+
+            for (short count : map.values()) {
+                total += count;
+            }
+            return total;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
     public int getSpecificCount(Number number, int hash) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
+        Map<Integer, Short> map = this.map.get(number.hashCode());
         return map == null ? 0 : map.getOrDefault(hash, (short) 0);
     }
 
@@ -99,7 +122,7 @@ public class MapMath implements AbstractKeyValueMath {
     }
 
     public void add(Number number, int hash) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
         if (map != null) {
             Short value = map.get(hash);
@@ -113,16 +136,16 @@ public class MapMath implements AbstractKeyValueMath {
                 this.specificTotal++;
             }
         } else {
-            map = new HashMap<>();
+            map = new HashMap<>(2, 1.0f);
             map.put(hash, (short) 1);
-            this.map.put(number.floatValue(), map);
+            this.map.put(number.hashCode(), map);
             this.total++;
             this.specificTotal++;
         }
     }
 
     public boolean remove(Number number, int hash) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
         if (map != null) {
             Short value = map.get(hash);
@@ -134,7 +157,7 @@ public class MapMath implements AbstractKeyValueMath {
                     map.remove(hash);
 
                     if (map.isEmpty()) {
-                        this.map.remove(number.floatValue());
+                        this.map.remove(number.hashCode());
                     }
                     this.total--;
                 } else {
@@ -152,106 +175,79 @@ public class MapMath implements AbstractKeyValueMath {
     // Separator
 
     @Override
-    public double getContribution() {
-        return 1.0 - (1.0 / (this.total + 1.0));
+    public double getGeneralContribution() {
+        return this.total > 0
+                ? 1.0 / this.total
+                : 1.0;
     }
 
     @Override
-    public double getContribution(Number ignoreNumber) {
-        Map<Integer, Short> map = this.map.get(ignoreNumber.floatValue());
-        return 1.0 / (this.total - (map != null ? map.size() : 0) + 1.0);
+    public double getUniqueContribution() {
+        return this.map.isEmpty()
+                ? 1.0
+                : 1.0 / this.map.size();
     }
 
     @Override
-    public double getContribution(Number number, int ignoreHash) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
+    public double getGeneralContribution(Number ignoreNumber) {
+        Map<Integer, Short> map = this.map.get(ignoreNumber.hashCode());
+        return map != null && map.size() > this.total
+                ? 1.0 / this.total - map.size()
+                : 1.0;
+    }
+
+    @Override
+    public double getGeneralContribution(Number number, int ignoreHash) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
         if (map != null) {
-            return 1.0 / (this.total + (map.containsKey(ignoreHash) ? -1.0 : 0.0) + 1.0);
+            int remove = map.containsKey(ignoreHash) ? 1 : 0;
+            return this.total > remove
+                    ? 1.0 / (this.total - remove)
+                    : 1.0;
         } else {
-            return 1.0 / (this.total + 1.0);
+            return this.total > 0
+                    ? 1.0 / this.total
+                    : 1.0;
         }
     }
 
     @Override
-    public double getRatio(Number number, double defaultValue) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
-        return map != null ? map.size() / this.total : defaultValue;
+    public double getPersonalContribution(Number number) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
+        return map != null
+                ? 1.0 / map.size()
+                : 1.0;
     }
 
     @Override
-    public double getDistance(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
+    public double getPersonalContribution(Number number, int ignoreHash) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
-            if (selfMap != null) {
-                double average = this.total / (double) this.map.size();
-                Set<Double> rank = new TreeSet<>();
-
-                for (Map<Integer, Short> map : this.map.values()) {
-                    rank.add(Math.abs(map.size() - average));
-                }
-                average = Math.abs(selfMap.size() - average);
-                int position = 0;
-
-                for (double distance : rank) {
-                    if (distance == average) {
-                        return position / (double) rank.size();
-                    } else {
-                        position++;
-                    }
-                }
-            }
+        if (map != null) {
+            int remove = map.containsKey(ignoreHash) ? 1 : 0;
+            return map.size() > remove
+                    ? 1.0 / (map.size() - remove)
+                    : 1.0;
+        } else {
+            return 1.0;
         }
-        return defaultValue;
     }
 
     @Override
-    public double getSlopeProbability(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
+    public double getProbability(Number number, double defaultValue) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
-            if (selfMap != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
-
-                for (Map<Integer, Short> map : this.map.values()) {
-                    double distance = Math.abs(map.size() - average);
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                }
-                return rank.get(Math.abs(selfMap.size() - average)) / (double) rank.size();
-            }
+        if (map != null) {
+            return map.size() / this.total;
+        } else {
+            return defaultValue;
         }
-        return defaultValue;
     }
 
     @Override
-    public double getCurveProbability(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
-
-            if (selfMap != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
-
-                for (Map<Integer, Short> map : this.map.values()) {
-                    double distance = map.size() - average;
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                }
-                return rank.get(selfMap.size() - average) / (double) rank.size();
-            }
-        }
-        return defaultValue;
-    }
-
-    @Override
-    public double getSpecificContribution() {
-        return 1.0 / (this.specificTotal + 1.0);
-    }
-
-    @Override
-    public double getSpecificContribution(Number ignoreNumber) {
-        Map<Integer, Short> map = this.map.get(ignoreNumber.floatValue());
+    public double getSpecificProbability(Number number, double defaultValue) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
         if (map != null) {
             int total = 0;
@@ -259,111 +255,153 @@ public class MapMath implements AbstractKeyValueMath {
             for (short count : map.values()) {
                 total += count;
             }
-            return 1.0 / (this.specificTotal - total + 1.0);
-        } else {
-            return 1.0 / (this.specificTotal + 1.0);
-        }
-    }
-
-    @Override
-    public double getSpecificContribution(Number number, int ignoreHash) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
-
-        if (map != null) {
-            Short count = map.get(ignoreHash);
-            return 1.0 / (this.specificTotal + (count != null ? -count : 0.0) + 1.0);
-        } else {
-            return 1.0 / (this.specificTotal + 1.0);
-        }
-    }
-
-    @Override
-    public double getSpecificRatio(Number number, int hash, double defaultValue) {
-        Map<Integer, Short> map = this.map.get(number.floatValue());
-
-        if (map != null) {
-            Short count = map.get(hash);
-            return count != null ? count / this.specificTotal : defaultValue;
+            return total / this.specificTotal;
         } else {
             return defaultValue;
         }
     }
 
     @Override
-    public double getSpecificDistance(Number number, int hash, double defaultValue) {
-        if (!this.map.isEmpty()) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
+    public double getPersonalProbability(Number number, int hash, double defaultValue) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
 
-            if (selfMap != null && selfMap.size() > 1) {
-                Short selfCount = selfMap.get(hash);
+        if (map != null) {
+            Short selfCount = map.get(hash);
 
-                if (selfCount != null) {
-                    double average = this.specificTotal / (double) selfMap.size();
-                    Set<Double> rank = new TreeSet<>();
+            if (selfCount != null) {
+                int total = 0;
 
-                    for (short count : selfMap.values()) {
-                        rank.add(Math.abs(count - average));
-                    }
-                    average = Math.abs(selfCount - average);
-                    int position = 0;
-
-                    for (double distance : rank) {
-                        if (distance == average) {
-                            return position / (double) rank.size();
-                        } else {
-                            position++;
-                        }
-                    }
+                for (short count : map.values()) {
+                    total += count;
                 }
+                return total > 0
+                        ? selfCount / (double) total
+                        : defaultValue;
+            } else {
+                return defaultValue;
+            }
+        } else {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public double getCumulativeProbability(Number number, double defaultValue) {
+        return this.getCumulativeProbability(this.getZScore(number, defaultValue));
+    }
+
+    @Override
+    public double getZScore(Number number, double defaultValue) {
+        if (this.map.size() > 1) {
+            Map<Integer, Short> selfMap = this.map.get(number.hashCode());
+
+            if (selfMap != null) {
+                int selfCount = 0;
+
+                for (short count : selfMap.values()) {
+                    selfCount += count;
+                }
+                double mean = this.specificTotal / (double) this.map.size(),
+                        sumSquaredDifferences = 0.0;
+
+                for (Map<Integer, Short> loopMap : this.map.values()) {
+                    int loopCount = 0;
+
+                    for (short count : loopMap.values()) {
+                        loopCount += count;
+                    }
+                    double difference = loopCount - mean;
+                    sumSquaredDifferences += difference * difference;
+                }
+                return (selfCount - mean) / Math.sqrt(sumSquaredDifferences / this.map.size());
             }
         }
         return defaultValue;
     }
 
     @Override
-    public double getSpecificSlopeProbability(Number number, int hash, double defaultValue) {
-        if (!this.map.isEmpty()) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
-
-            if (selfMap != null && selfMap.size() > 1) {
-                Short selfCount = selfMap.get(hash);
-
-                if (selfCount != null) {
-                    double average = this.specificTotal / (double) selfMap.size();
-                    Map<Double, Integer> rank = new HashMap<>();
-
-                    for (short count : selfMap.values()) {
-                        double distance = Math.abs(count - average);
-                        rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                    }
-                    return rank.get(Math.abs(selfCount - average)) / (double) rank.size();
-                }
-            }
+    public double getSpecificGeneralContribution() {
+        if (this.specificTotal > 0) {
+            return 1.0 / this.specificTotal;
+        } else {
+            return 1.0;
         }
-        return defaultValue;
     }
 
     @Override
-    public double getSpecificCurveProbability(Number number, int hash, double defaultValue) {
-        if (!this.map.isEmpty()) {
-            Map<Integer, Short> selfMap = this.map.get(number.floatValue());
+    public double getSpecificGeneralContribution(Number ignoreNumber) {
+        Map<Integer, Short> map = this.map.get(ignoreNumber.hashCode());
 
-            if (selfMap != null && selfMap.size() > 1) {
-                Short selfCount = selfMap.get(hash);
+        if (map != null) {
+            int total = 0;
 
-                if (selfCount != null) {
-                    double average = this.specificTotal / (double) selfMap.size();
-                    Map<Double, Integer> rank = new HashMap<>();
-
-                    for (short count : selfMap.values()) {
-                        double distance = count - average;
-                        rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                    }
-                    return rank.get(selfCount - average) / (double) rank.size();
-                }
+            for (short count : map.values()) {
+                total += count;
             }
+            return total > this.specificTotal
+                    ? 1.0 / (this.specificTotal - total)
+                    : 1.0;
+        } else {
+            return this.specificTotal > 0
+                    ? 1.0 / this.specificTotal
+                    : 1.0;
         }
-        return defaultValue;
+    }
+
+    @Override
+    public double getSpecificGeneralContribution(Number number, int ignoreHash) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
+
+        if (map != null) {
+            Short remove = map.get(ignoreHash);
+            return this.specificTotal > remove
+                    ? 1.0 / (this.specificTotal - remove)
+                    : 1.0;
+        } else {
+            return this.specificTotal > 0
+                    ? 1.0 / this.specificTotal
+                    : 1.0;
+        }
+    }
+
+    @Override
+    public double getSpecificPersonalContribution(Number number) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
+
+        if (map != null) {
+            int total = 0;
+
+            for (short count : map.values()) {
+                total += count;
+            }
+            return 1.0 / total;
+        } else {
+            return 1.0;
+        }
+    }
+
+    @Override
+    public double getSpecificPersonalContribution(Number number, int ignoreHash) {
+        Map<Integer, Short> map = this.map.get(number.hashCode());
+
+        if (map != null) {
+            Short count = map.get(ignoreHash);
+
+            if (count != null) {
+                int total = 0;
+
+                for (short loopCount : map.values()) {
+                    total += loopCount;
+                }
+                return total > count
+                        ? 1.0 / (total - count)
+                        : 1.0;
+            } else {
+                return 1.0;
+            }
+        } else {
+            return 1.0;
+        }
     }
 
 }

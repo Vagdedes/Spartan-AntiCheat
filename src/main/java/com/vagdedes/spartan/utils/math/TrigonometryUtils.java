@@ -31,42 +31,6 @@ public class TrigonometryUtils {
 
     // Separator
 
-    public static class Side {
-
-        public final double x, y;
-        private int hash;
-
-        public Side(double x, double y) {
-            this.x = x;
-            this.y = y;
-            this.hash = 0;
-        }
-
-        public int hash() {
-            return hash != 0 ? hash : (hash = Objects.hash(x, y));
-        }
-
-        public boolean equals(Side side) {
-            return side.hash() == this.hash();
-        }
-
-        public double distanceX(double x) {
-            return Math.abs(this.x - x);
-        }
-
-        public double distanceY(double y) {
-            return Math.abs(this.y - y);
-        }
-
-        public double distanceXY() {
-            return Math.abs(x - y);
-        }
-
-        public double distance(Side side) {
-            return Math.sqrt(AlgebraUtils.getPreDistance(this.x, side.x) + AlgebraUtils.getPreDistance(this.y, side.y));
-        }
-    }
-
     public static class Triangle {
 
         public final double side1, side2, side3;
@@ -77,10 +41,6 @@ public class TrigonometryUtils {
             this.side2 = side2;
             this.side3 = side3;
             this.hash = 0;
-        }
-
-        public Triangle(Side side1, Side side2, Side side3) {
-            this(side1.distanceXY(), side2.distanceXY(), side3.distanceXY());
         }
 
         public int hash() {
@@ -135,9 +95,9 @@ public class TrigonometryUtils {
 
         public double distance(Triangle triangle) {
             return Math.sqrt(
-                    AlgebraUtils.getPreDistance(this.side1, triangle.side1)
-                            + AlgebraUtils.getPreDistance(this.side2, triangle.side2)
-                            + AlgebraUtils.getPreDistance(this.side3, triangle.side3)
+                    AlgebraUtils.getSquare(this.side1, triangle.side1)
+                            + AlgebraUtils.getSquare(this.side2, triangle.side2)
+                            + AlgebraUtils.getSquare(this.side3, triangle.side3)
             );
         }
     }

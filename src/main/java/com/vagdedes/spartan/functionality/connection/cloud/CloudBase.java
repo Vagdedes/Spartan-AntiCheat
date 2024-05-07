@@ -4,7 +4,7 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.IDs;
-import com.vagdedes.spartan.functionality.connection.Piracy;
+import com.vagdedes.spartan.functionality.connection.JarVerification;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -34,25 +34,26 @@ public class CloudBase {
             allDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
 
     // Functionality
-    private static long connectionFailedCooldown = 0L;
+    private static long
+            connectionFailedCooldown = 0L,
+            refreshTime = 60_000L;
     private static final long[] connectionRefreshCooldown = new long[2];
-    private static int outdatedVersion = AutoUpdater.NOT_CHECKED;
+    private static int outdatedVersion = AutoUpdater.NOT_CHECKED,
+            detectionSlots;
 
     // Parameters
     static String identification = "", token = null;
-    static final double version = Math.abs(Piracy.version);
+    static final double version = Math.abs(JarVerification.version);
     public static final String separator = ">@#&!%<;=";
 
     static {
         clear(false);
 
         if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                SpartanBukkit.connectionThread.execute(() -> {
-                    refresh(true);
-                    refresh(false);
-                });
-            }, 1L, 1L);
+            SpartanBukkit.runRepeatingTask(() -> SpartanBukkit.connectionThread.execute(() -> {
+                refresh(true);
+                refresh(false);
+            }), 1L, refreshTime);
         }
     }
 
@@ -68,6 +69,12 @@ public class CloudBase {
 
     public static String getRawToken() {
         return token;
+    }
+
+    // Separator
+
+    public static int getDetectionSlots() {
+        return detectionSlots;
     }
 
     // Separator
@@ -131,7 +138,7 @@ public class CloudBase {
         long ms = System.currentTimeMillis();
 
         if (connectionFailedCooldown >= ms) {
-            connectionFailedCooldown = ms + 60_000L;
+            connectionFailedCooldown = ms + refreshTime;
 
             if (AwarenessNotifications.areEnabled()) {
                 AwarenessNotifications.forcefullySend("(" + function + ") Failed to connect to the Game Cloud.");
@@ -155,26 +162,19 @@ public class CloudBase {
         long ms = System.currentTimeMillis();
 
         if (connectionRefreshCooldown[independent ? 0 : 1] <= ms) {
-            connectionRefreshCooldown[independent ? 0 : 1] = ms + 60_000L;
-            boolean async = !SpartanBukkit.isSynchronised();
+            connectionRefreshCooldown[independent ? 0 : 1] = ms + refreshTime;
 
             // Separator
             if (independent) {
-                if (async) {
-                    SpartanEdition.refresh();
-                } else {
-                    SpartanBukkit.connectionThread.execute(SpartanEdition::refresh);
-                }
-            } else if (async) {
-                CloudConnections.punishPlayers();
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(SpartanEdition::refresh);
             } else {
-                SpartanBukkit.connectionThread.execute(CloudConnections::punishPlayers);
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(CloudConnections::punishPlayers);
             }
 
             // Separator
             if (independent
                     && outdatedVersion == AutoUpdater.NOT_CHECKED) {
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
                                 + "&action=get&data=outdatedVersionCheck&version=" + version);
@@ -201,18 +201,12 @@ public class CloudBase {
                     } catch (Exception e) {
                         throwError(e, "outdatedVersionCheck:GET");
                     }
-                };
-
-                if (async) {
-                    runnable.run();
-                } else {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                }
+                });
             }
 
             // Separator
             if (independent && Config.settings.getBoolean(Settings.cloudSynchroniseFilesOption)) {
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
                                 + "&action=get&data=automaticConfigurationChanges&version=" + version + "&value=" + Bukkit.getPort());
@@ -270,18 +264,12 @@ public class CloudBase {
                     } catch (Exception e) {
                         throwError(e, "automaticConfigurationChanges:GET");
                     }
-                };
-
-                if (async) {
-                    runnable.run();
-                } else {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                }
+                });
             }
 
             // Separator
             if (!independent) {
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
                                 + "&action=get&data=customerSupportCommands&version=" + version + "&value=" + Bukkit.getPort());
@@ -304,13 +292,7 @@ public class CloudBase {
                     } catch (Exception e) {
                         throwError(e, "customerSupportCommand:GET");
                     }
-                };
-
-                if (async) {
-                    runnable.run();
-                } else {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                }
+                });
             }
 
             // Separator
@@ -320,8 +302,7 @@ public class CloudBase {
                         hiddenDisabledDetections = new LinkedHashMap<>(),
                         allDisabledDetections = new LinkedHashMap<>();
 
-                // Doesn't need ID validation due to its unique anti-piracy purpose
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
                                 + "&action=get&data=disabledDetections&version=" + version + "&value=" + MultiVersion.versionString());
@@ -382,18 +363,12 @@ public class CloudBase {
                     } catch (Exception e) {
                         throwError(e, "disabledDetections:GET");
                     }
-                };
-
-                if (async) {
-                    runnable.run();
-                } else {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                }
+                });
             }
 
             // Separator
             if (independent) {
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                     if (announcements.length > 0) {
@@ -413,13 +388,14 @@ public class CloudBase {
                             }
                         }
                     }
-                };
+                });
+            }
 
-                if (async) {
-                    runnable.run();
-                } else {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                }
+            // Separator
+            if (independent) {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(
+                        () -> detectionSlots = CloudConnections.getDetectionSlots()
+                );
             }
         } else {
             clear(true);

@@ -2,20 +2,24 @@ package com.vagdedes.spartan.abstraction.math;
 
 public interface AbstractKeyValueMath extends AbstractKeyMath {
 
+    int getSpecificTotal();
+
+    int getSpecificCount(Number number);
+
     int getSpecificCount(Number number, int hash);
 
-    double getSpecificContribution();
+    double getSpecificProbability(Number number, double defaultValue);
 
-    double getSpecificContribution(Number ignoreNumber);
+    double getPersonalProbability(Number number, int hash, double defaultValue);
 
-    double getSpecificContribution(Number number, int ignoreHash);
+    double getSpecificGeneralContribution();
 
-    double getSpecificRatio(Number number, int hash, double defaultValue);
+    double getSpecificGeneralContribution(Number ignoreNumber);
 
-    double getSpecificDistance(Number number, int hash, double defaultValue);
+    double getSpecificGeneralContribution(Number number, int ignoreHash);
 
-    double getSpecificSlopeProbability(Number number, int hash, double defaultValue);
+    double getSpecificPersonalContribution(Number number);
 
-    double getSpecificCurveProbability(Number number, int hash, double defaultValue);
+    double getSpecificPersonalContribution(Number number, int ignoreHash);
 }
 

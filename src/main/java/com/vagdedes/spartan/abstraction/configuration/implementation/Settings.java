@@ -9,6 +9,7 @@ import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -75,7 +76,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Chat.staff_chat_character", "@");
 
         addOption(tpsProtectionOption, true); // test server
-        addOption(maxSupportedLatencyOption, 500); // test server
+        addOption(maxSupportedLatencyOption, TPS.tickTimeInteger * 100); // test server
         addOption("Protections.avoid_self_bow_damage", true);
         addOption("Protections.player_limit_per_ip", 0);
         addOption("Protections.disallowed_building", true); // test server

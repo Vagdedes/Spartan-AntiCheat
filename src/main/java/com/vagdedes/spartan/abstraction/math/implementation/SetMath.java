@@ -6,20 +6,20 @@ import java.util.*;
 
 public class SetMath implements AbstractKeyMath {
 
-    private final Map<Float, Set<Integer>> map;
-    private float total;
+    private final Map<Integer, Set<Integer>> map;
+    private double total;
 
     public SetMath() {
-        this(-1);
+        this(2);
     }
 
     public SetMath(int capacity) {
-        this.map = capacity >= 0 ? new HashMap<>(capacity) : new HashMap<>();
+        this.map = new HashMap<>(capacity);
         this.total = 0.0f;
     }
 
     public SetMath(int capacity, float loadFactor) {
-        this.map = capacity >= 0 ? new HashMap<>(capacity, loadFactor) : new HashMap<>();
+        this.map = new HashMap<>(capacity, loadFactor);
         this.total = 0.0f;
     }
 
@@ -30,14 +30,14 @@ public class SetMath implements AbstractKeyMath {
     }
 
     @Override
-    public Float removeLeastSignificant() {
+    public Number removeLeastSignificant() {
         if (this.map.isEmpty()) {
             return null;
         } else {
             int min = Integer.MAX_VALUE;
-            Float key = null;
+            Integer key = null;
 
-            for (Map.Entry<Float, Set<Integer>> entry : this.map.entrySet()) {
+            for (Map.Entry<Integer, Set<Integer>> entry : this.map.entrySet()) {
                 if (entry.getValue().size() < min) {
                     min = entry.getValue().size();
                     key = entry.getKey();
@@ -70,7 +70,7 @@ public class SetMath implements AbstractKeyMath {
 
     @Override
     public int getCount(Number number) {
-        Set<Integer> set = this.map.get(number.floatValue());
+        Set<Integer> set = this.map.get(number.hashCode());
         return set == null ? 0 : set.size();
     }
 
@@ -83,26 +83,26 @@ public class SetMath implements AbstractKeyMath {
     }
 
     public void add(Number number, int hash) {
-        Set<Integer> set = this.map.get(number.floatValue());
+        Set<Integer> set = this.map.get(number.hashCode());
 
         if (set != null) {
             if (set.add(hash)) {
                 this.total++;
             }
         } else {
-            set = new HashSet<>();
+            set = new HashSet<>(2);
             set.add(hash);
-            this.map.put(number.floatValue(), set);
+            this.map.put(number.hashCode(), set);
             this.total++;
         }
     }
 
     public boolean remove(Number number, int hash) {
-        Set<Integer> set = this.map.get(number.floatValue());
+        Set<Integer> set = this.map.get(number.hashCode());
 
         if (set != null && set.remove(hash)) {
             if (set.isEmpty()) {
-                this.map.remove(number.floatValue());
+                this.map.remove(number.hashCode());
             }
             this.total--;
             return true;
@@ -114,93 +114,90 @@ public class SetMath implements AbstractKeyMath {
     // Separator
 
     @Override
-    public double getContribution() {
-        return 1.0 / (this.total + 1.0);
+    public double getGeneralContribution() {
+        return this.total > 0
+                ? 1.0 / this.total
+                : 1.0;
     }
 
     @Override
-    public double getContribution(Number ignoreNumber) {
-        Set<Integer> set = this.map.get(ignoreNumber.floatValue());
-        return 1.0 / (this.total - (set != null ? set.size() : 0) + 1.0);
+    public double getUniqueContribution() {
+        return this.map.isEmpty()
+                ? 1.0
+                : 1.0 / this.map.size();
     }
 
     @Override
-    public double getContribution(Number number, int ignoreHash) {
-        Set<Integer> set = this.map.get(number.floatValue());
+    public double getGeneralContribution(Number ignoreNumber) {
+        Set<Integer> set = this.map.get(ignoreNumber.hashCode());
+        return set != null && set.size() > this.total
+                ? 1.0 / (this.total - set.size())
+                : 1.0;
+    }
+
+    @Override
+    public double getGeneralContribution(Number number, int ignoreHash) {
+        Set<Integer> set = this.map.get(number.hashCode());
 
         if (set != null) {
-            return 1.0 / (this.total + (set.contains(ignoreHash) ? -1.0 : 0.0) + 1.0);
+            int remove = set.contains(ignoreHash) ? 1 : 0;
+            return this.total > remove
+                    ? 1.0 / (this.total - remove)
+                    : 1.0;
         } else {
-            return 1.0 / (this.total + 1.0);
+            return this.total > 0
+                    ? 1.0 / this.total
+                    : 1.0;
         }
     }
 
     @Override
-    public double getRatio(Number number, double defaultValue) {
-        Set<Integer> set = this.map.get(number.floatValue());
+    public double getPersonalContribution(Number number) {
+        Set<Integer> set = this.map.get(number.hashCode());
+        return set != null
+                ? 1.0 / set.size()
+                : 1.0;
+    }
+
+    @Override
+    public double getPersonalContribution(Number number, int ignoreHash) {
+        Set<Integer> set = this.map.get(number.hashCode());
+
+        if (set != null) {
+            int remove = set.contains(ignoreHash) ? 1 : 0;
+            return set.size() > remove
+                    ? 1.0 / (set.size() - remove)
+                    : 1.0;
+        } else {
+            return 1.0;
+        }
+    }
+
+    @Override
+    public double getProbability(Number number, double defaultValue) {
+        Set<Integer> set = this.map.get(number.hashCode());
         return set != null ? set.size() / this.total : defaultValue;
     }
 
     @Override
-    public double getDistance(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Set<Integer> selfSet = this.map.get(number.floatValue());
-
-            if (selfSet != null) {
-                double average = this.total / (double) this.map.size();
-                Set<Double> rank = new TreeSet<>();
-
-                for (Set<Integer> set : this.map.values()) {
-                    rank.add(Math.abs(set.size() - average));
-                }
-                average = Math.abs(selfSet.size() - average);
-                int position = 0;
-
-                for (double distance : rank) {
-                    if (distance == average) {
-                        return position / (double) rank.size();
-                    } else {
-                        position++;
-                    }
-                }
-            }
-        }
-        return defaultValue;
+    public double getCumulativeProbability(Number number, double defaultValue) {
+        return this.getCumulativeProbability(this.getZScore(number, defaultValue));
     }
 
     @Override
-    public double getSlopeProbability(Number number, double defaultValue) {
+    public double getZScore(Number number, double defaultValue) {
         if (this.map.size() > 1) {
-            Set<Integer> selfSet = this.map.get(number.floatValue());
+            Set<Integer> selfSet = this.map.get(number.hashCode());
 
             if (selfSet != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
+                double mean = this.total / (double) this.map.size(),
+                        sumSquaredDifferences = 0.0;
 
-                for (Set<Integer> set : this.map.values()) {
-                    double distance = Math.abs(set.size() - average);
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
+                for (Set<Integer> loopSet : this.map.values()) {
+                    double difference = loopSet.size() - mean;
+                    sumSquaredDifferences += difference * difference;
                 }
-                return rank.get(Math.abs(selfSet.size() - average)) / (double) rank.size();
-            }
-        }
-        return defaultValue;
-    }
-
-    @Override
-    public double getCurveProbability(Number number, double defaultValue) {
-        if (this.map.size() > 1) {
-            Set<Integer> selfSet = this.map.get(number.floatValue());
-
-            if (selfSet != null) {
-                double average = this.total / (double) this.map.size();
-                Map<Double, Integer> rank = new HashMap<>();
-
-                for (Set<Integer> set : this.map.values()) {
-                    double distance = set.size() - average;
-                    rank.put(distance, rank.getOrDefault(distance, 0) + 1);
-                }
-                return rank.get(selfSet.size() - average) / (double) rank.size();
+                return (selfSet.size() - mean) / Math.sqrt(sumSquaredDifferences / (double) this.map.size());
             }
         }
         return defaultValue;

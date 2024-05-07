@@ -17,7 +17,7 @@ public class ItemsAdder {
     private static final boolean classExists = ReflectionUtils.classExists("me.libraryaddict.disguise.DisguiseAPI");
 
     public static boolean is(SpartanPlayer player) {
-        if (classExists && Compatibility.CompatibilityType.ItemsAdder.isFunctional()) {
+        if (classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
             SpartanInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
@@ -31,17 +31,17 @@ public class ItemsAdder {
     }
 
     public static boolean is(Block block) {
-        return classExists && Compatibility.CompatibilityType.ItemsAdder.isFunctional()
+        return classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()
                 && CustomBlock.byAlreadyPlaced(block) != null;
     }
 
     private static boolean is(ItemStack itemStack) {
-        return classExists && Compatibility.CompatibilityType.ItemsAdder.isFunctional()
+        return classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()
                 && CustomStack.getInstance(itemStack.getType().toString()) != null;
     }
 
     public static boolean is(Entity entity) {
-        return classExists && Compatibility.CompatibilityType.ItemsAdder.isFunctional()
+        return classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()
                 && CustomMob.byAlreadySpawned(entity) != null;
     }
 }

@@ -3,6 +3,7 @@ package com.vagdedes.spartan.abstraction.replicates;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
+import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -70,12 +71,16 @@ public class SpartanBlock {
         return chunk;
     }
 
-    public boolean isLiquidOrWaterLogged() {
-        return liquid || waterLogged;
+    public boolean isLiquidOrWaterLogged(boolean lava) {
+        return liquid && (lava || material != MaterialUtils.get("lava")) || waterLogged;
     }
 
-    public boolean isNonWaterLoggedLiquid() {
-        return liquid && !waterLogged;
+    public boolean isNonWaterLoggedLiquid(boolean lava) {
+        return liquid && !waterLogged && (lava || material != MaterialUtils.get("lava"));
+    }
+
+    public boolean isLiquid(Material material) {
+        return liquid && this.material == material;
     }
 
     public SpartanLocation getLocation() {

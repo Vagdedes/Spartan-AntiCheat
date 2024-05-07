@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 public class EcoEnchants {
 
     public static boolean has(SpartanPlayer player) {
-        if (Compatibility.CompatibilityType.EcoEnchants.isFunctional()) {
+        if (Compatibility.CompatibilityType.ECO_ENCHANTS.isFunctional()) {
             SpartanInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {

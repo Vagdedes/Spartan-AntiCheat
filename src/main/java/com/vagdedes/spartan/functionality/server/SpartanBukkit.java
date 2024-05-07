@@ -2,11 +2,10 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Threads;
-import com.vagdedes.spartan.abstraction.pattern.implementation.MovementPatterns;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.packet.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.IDs;
-import com.vagdedes.spartan.functionality.connection.Piracy;
+import com.vagdedes.spartan.functionality.connection.JarVerification;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.utils.server.ReflectionUtils;
 import org.bukkit.Bukkit;
@@ -18,10 +17,10 @@ import java.util.*;
 public class SpartanBukkit {
 
     public static final boolean
-            testMode = !Piracy.enabled && !IDs.isBuiltByBit() && !IDs.isPolymart()
+            testMode = !JarVerification.enabled && !IDs.isBuiltByBit() && !IDs.isPolymart()
             && Bukkit.getMotd().contains(Register.plugin.getName()),
             supportedFork = MultiVersion.fork().equals("Spigot") || MultiVersion.fork().equals("Paper"),
-            canAdvertise = !Piracy.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
+            canAdvertise = !JarVerification.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
@@ -30,9 +29,6 @@ public class SpartanBukkit {
             playerThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             chunkThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             detectionThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L);
-
-    public static final MovementPatterns
-            movementPatterns = new MovementPatterns();
 
     public static final int hashCodeMultiplier = 31;
     private static final Map<UUID, SpartanPlayer> players =

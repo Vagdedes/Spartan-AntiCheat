@@ -44,7 +44,7 @@ public class HackPrevention {
             player.safeTeleport(this.location);
         }
         if (this.groundTeleport) {
-            player.groundTeleport(true);
+            player.groundTeleport();
         }
         if (this.damage > 0.0) {
             player.applyFallDamage(this.damage);

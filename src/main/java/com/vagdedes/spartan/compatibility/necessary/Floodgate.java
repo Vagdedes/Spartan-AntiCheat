@@ -39,7 +39,7 @@ public class Floodgate {
     }
 
     static boolean isBedrockPlayer(UUID uuid, String name) {
-        return Compatibility.CompatibilityType.Floodgate.isFunctional()
+        return Compatibility.CompatibilityType.FLOODGATE.isFunctional()
                 && FloodgateApi.getInstance().isFloodgatePlayer(uuid)
 
                 || name != null && isBedrockPlayer(name);

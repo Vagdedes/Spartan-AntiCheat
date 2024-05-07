@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.vanilla;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Handlers;
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
@@ -17,7 +17,7 @@ public class DragonPhases implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Event(EnderDragonChangePhaseEvent e) {
-        if (Compatibility.CompatibilityType.DragonPhases.isFunctional()) {
+        if (Compatibility.CompatibilityType.DRAGON_PHASES.isFunctional()) {
             EnderDragon.Phase phase = e.getNewPhase();
 
             if (phase == EnderDragon.Phase.BREATH_ATTACK || phase == EnderDragon.Phase.ROAR_BEFORE_ATTACK || phase == EnderDragon.Phase.CHARGE_PLAYER
@@ -30,9 +30,9 @@ public class DragonPhases implements Listener {
                         SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
 
                         if (p != null) {
-                            p.getHandlers().add(
-                                    Handlers.HandlerType.Velocity,
-                                    !p.isOnGround() || !p.isOnGroundCustom() ? 120 : 60
+                            p.getTrackers().add(
+                                    Trackers.TrackerType.ABSTRACT_VELOCITY,
+                                    !p.isOnGround() ? 120 : 60
                             );
                         }
                     }

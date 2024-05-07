@@ -1,7 +1,6 @@
 package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.data.Handlers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.IDs;
 import com.vagdedes.spartan.functionality.connection.Latency;
@@ -12,7 +11,6 @@ import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.gameplay.GroundUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -173,16 +171,12 @@ public class BackgroundAPI {
 
     @Deprecated
     static void reloadPermissions() {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
-        }
+        AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
     }
 
     @Deprecated
     static void reloadPermissions(Player p) {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
-        }
+        AwarenessNotifications.forcefullySend("The API method 'reloadPermissions' has been removed.");
     }
 
     static void enableCheck(HackType HackType) {
@@ -314,7 +308,6 @@ public class BackgroundAPI {
     @Deprecated
     static boolean isBanned(UUID uuid) {
         AwarenessNotifications.forcefullySend("The API method 'isBanned' has been removed.");
-
         return false;
     }
 
@@ -458,26 +451,14 @@ public class BackgroundAPI {
         }
     }
 
+    @Deprecated
     static void disableVelocityProtection(Player p, int ticks) {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            SpartanPlayer player = SpartanBukkit.getPlayer(p);
-
-            if (player != null) {
-                Handlers handlers = player.getHandlers();
-                handlers.disable(Handlers.HandlerType.Velocity, ticks);
-                handlers.remove(Handlers.HandlerType.Velocity);
-            }
-        }
+        AwarenessNotifications.forcefullySend("The API method 'disableVelocityProtection' has been removed.");
     }
 
+    @Deprecated
     static void setOnGround(Player p, int ticks) {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            SpartanPlayer player = SpartanBukkit.getPlayer(p);
-
-            if (player != null) {
-                GroundUtils.setOnGround(player, ticks);
-            }
-        }
+        AwarenessNotifications.forcefullySend("The API method 'setOnGround' has been removed.");
     }
 
     @Deprecated

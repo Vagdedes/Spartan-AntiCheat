@@ -12,7 +12,7 @@ public class AureliumSkills implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(TerraformBlockBreakEvent e) {
-        if (Compatibility.CompatibilityType.AureliumSkills.isEnabled()) {
+        if (Compatibility.CompatibilityType.AURELIUM_SKILLS.isEnabled()) {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
             if (p == null) {
@@ -23,7 +23,7 @@ public class AureliumSkills implements Listener {
     }
 
     public static boolean canCancel(SpartanPlayer p) {
-        return Compatibility.CompatibilityType.AureliumSkills.isFunctional()
+        return Compatibility.CompatibilityType.AURELIUM_SKILLS.isFunctional()
                 && !p.getCooldowns().canDo("aureliumskills=compatibility");
     }
 }

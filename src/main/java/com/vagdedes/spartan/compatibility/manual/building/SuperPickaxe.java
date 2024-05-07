@@ -7,7 +7,7 @@ import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 public class SuperPickaxe {
 
     public static boolean canCancel(SpartanPlayer p) {
-        return Compatibility.CompatibilityType.SuperPickaxe.isFunctional()
+        return Compatibility.CompatibilityType.SUPER_PICKAXE.isFunctional()
                 && PlayerUtils.isPickaxeItem(p.getItemInHand().getType());
     }
 

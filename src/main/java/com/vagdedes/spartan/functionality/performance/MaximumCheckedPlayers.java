@@ -2,6 +2,7 @@ package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 
@@ -19,7 +20,7 @@ public class MaximumCheckedPlayers {
     static {
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
-                int optionAmount = Config.settings.getInteger(option);
+                int optionAmount = getOptionValue();
 
                 if (optionAmount > 0) {
                     if (ticks == 0) {
@@ -124,17 +125,33 @@ public class MaximumCheckedPlayers {
     }
 
     public static boolean add(SpartanPlayer player) {
-        int optionAmount = Config.settings.getInteger(option);
+        int optionAmount = getOptionValue();
         return optionAmount > 0 && add(player.uuid, optionAmount);
     }
 
     public static boolean isChecked(UUID uuid) {
-        int optionAmount = Config.settings.getInteger(option);
+        int optionAmount = getOptionValue();
 
         if (optionAmount <= 0) {
             return true;
         } else {
             return add(uuid, optionAmount);
+        }
+    }
+
+    private static int getOptionValue() {
+        int value = Config.settings.getInteger(option);
+
+        if (value <= 0) {
+            return CloudBase.getDetectionSlots();
+        } else {
+            int detectionSlots = CloudBase.getDetectionSlots();
+
+            if (detectionSlots <= 0) {
+                return value;
+            } else {
+                return Math.min(value, detectionSlots);
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ public class ProtocolLib {
     private static Class<?> temporaryPlayer = null;
 
     public static boolean isTemporaryPLayer(Player p) {
-        return Compatibility.CompatibilityType.ProtocolLib.isFunctional()
+        return Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional()
                 && temporaryPlayer != null
                 && p.getClass().isInstance(temporaryPlayer);
     }

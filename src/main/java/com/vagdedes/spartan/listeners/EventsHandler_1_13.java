@@ -1,9 +1,8 @@
 package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.identifiers.complex.unpredictable.TridentUse;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import me.vagdedes.spartan.system.Enums;
+import com.vagdedes.spartan.functionality.tracking.TridentUse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,12 +26,10 @@ public class EventsHandler_1_13 implements Listener {
                 return;
             }
             // Objects
-            boolean swimming = e.isCancelled() ? n.isSwimming() : n.isSwimming() || e.isSwimming();
-            p.movement.setSwimming(swimming, 0);
-
-            if (swimming) {
-                p.movement.setLastLiquidTime();
-            }
+            p.movement.setSwimming(
+                    e.isCancelled() ? n.isSwimming() : n.isSwimming() || e.isSwimming(),
+                    0
+            );
         }
     }
 
@@ -61,12 +58,7 @@ public class EventsHandler_1_13 implements Listener {
                     return;
                 }
                 // Objects
-                p.setActivePotionEffects(n.getActivePotionEffects());
-
-                // Detections
-                if (!e.isCancelled()) {
-                    p.getExecutor(Enums.HackType.NoSlowdown).handle(e.isCancelled(), e);
-                }
+                p.setStoredPotionEffects(n.getActivePotionEffects());
             }
         }
     }

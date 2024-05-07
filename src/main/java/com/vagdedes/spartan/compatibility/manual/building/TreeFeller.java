@@ -9,7 +9,7 @@ import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 public class TreeFeller {
 
     public static boolean canCancel(SpartanPlayer p, SpartanBlock b) {
-        return (Compatibility.CompatibilityType.TreeFeller.isFunctional() || mcMMO.hasTreeFeller(p))
+        return (Compatibility.CompatibilityType.TREE_FELLER.isFunctional() || mcMMO.hasTreeFeller(p))
                 && BlockUtils.areWoods(b.material);
     }
 }
