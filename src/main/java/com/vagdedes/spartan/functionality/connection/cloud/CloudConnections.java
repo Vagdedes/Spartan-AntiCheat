@@ -30,7 +30,7 @@ public class CloudConnections {
 
     // Once
 
-    public static int getUserIdentification() {
+    static int getUserIdentification() {
         try {
             File path = new File("plugins/");
 
@@ -94,7 +94,7 @@ public class CloudConnections {
         return -1;
     }
 
-    public static void logServerSpecifications() {
+    static void logServerSpecifications() {
         SpartanBukkit.connectionThread.execute(() -> {
             Runtime runtime = Runtime.getRuntime();
             String motd = StringUtils.getClearColorString(Bukkit.getMotd());
@@ -115,7 +115,7 @@ public class CloudConnections {
         });
     }
 
-    public static boolean ownsProduct(String productID) { // Once
+    static boolean ownsProduct(String productID) { // Once
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                     + "&action=get&data=ownsProduct&version=" + CloudBase.version + "&value=" + productID);
@@ -131,7 +131,7 @@ public class CloudConnections {
 
     // Multiple
 
-    public static int getDetectionSlots() { // Once
+    static int getDetectionSlots() { // Once
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                     + "&action=get&data=detectionSlots&version=" + CloudBase.version
@@ -169,7 +169,7 @@ public class CloudConnections {
         }
     }
 
-    public static String[][] getStaffAnnouncements() { // Once
+    static String[][] getStaffAnnouncements() { // Once
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                     + "&action=get&data=staffAnnouncements&version=" + CloudBase.version);
@@ -189,7 +189,7 @@ public class CloudConnections {
         return new String[][]{};
     }
 
-    public static void sendCrossServerInformation(String type, String name, String[] array) {
+    static void sendCrossServerInformation(String type, String name, String[] array) {
         try {
             StringBuilder information = new StringBuilder();
 

@@ -512,10 +512,6 @@ public class SpartanPlayer {
         return executors[hackType.ordinal()];
     }
 
-    public void setExecutor(Enums.HackType hackType, CheckExecutor executor) {
-        executors[hackType.ordinal()] = executor;
-    }
-
     // Separator
 
     public Trackers getTrackers() {

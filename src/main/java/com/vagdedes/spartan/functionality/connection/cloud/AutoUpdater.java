@@ -49,7 +49,7 @@ public class AutoUpdater {
         }
     }
 
-    public static boolean downloadFile(String token) {
+    static boolean downloadFile(String token) {
         File directoryFile = Register.plugin.getDataFolder();
         String pluginName = Register.plugin.getName(),
                 downloadedFileName = directoryFile.toString().replace(pluginName, pluginName + "Updated" + token + fileType);
