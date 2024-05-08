@@ -231,14 +231,15 @@ public class CombatUtils {
         location.setPitch(0.0f);
         SpartanLocation multipliedLocation = new SpartanLocation(null, entity.getLocation().clone().add(location.getDirection().multiply(1.0)));
 
-        if (BlockUtils.isSolid(multipliedLocation)) {
+        if (BlockUtils.isSolid(multipliedLocation.getBlock().material)) {
             return true;
         }
         double height = getWidthAndHeight(entity)[1];
 
         if (height > 1.0) {
             for (int position = 1; position < AlgebraUtils.integerCeil(height); position++) {
-                if (BlockUtils.isSolid(multipliedLocation.add(0, 1, 0))) { // We add one instead of the position because we no longer clone the location
+                // We add one instead of the position because we no longer clone the location
+                if (BlockUtils.isSolid(multipliedLocation.add(0, 1, 0).getBlock().material)) {
                     return true;
                 }
             }

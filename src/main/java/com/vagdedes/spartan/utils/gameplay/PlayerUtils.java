@@ -4,6 +4,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
@@ -57,7 +58,7 @@ public class PlayerUtils {
             fallDamageAboveBlocks = 3;
 
     private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
-    private static final Map<Double, Integer>
+    private static final Map<Integer, Integer>
             fallTicks = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Map<Integer, Collection<Double>> fallMotions = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Map<PotionEffectType, Integer> handledPotionEffects = new LinkedHashMap<>();
@@ -172,55 +173,62 @@ public class PlayerUtils {
 
     // Falling
 
-    public static int getFallTick(double d) {
+    public static int getFallTick(double d, double precision, int jump) {
         if (d < 0.0) {
-            double key = AlgebraUtils.cut(d, GroundUtils.maxHeightLength);
+            int key = (Double.hashCode(precision) * SpartanBukkit.hashCodeMultiplier)
+                    + Double.hashCode(AlgebraUtils.cut(d, GroundUtils.maxHeightLength));
+            key = (key * SpartanBukkit.hashCodeMultiplier) + jump;
             Integer ticks;
 
             synchronized (fallTicks) {
                 ticks = fallTicks.get(key);
-            }
-            if (ticks == null) {
-                ticks = 0;
-                double preD = 0;
 
-                while (d < 0.0) {
-                    preD = d;
-                    d = (d + airAcceleration) / airDrag;
-                    ticks++;
-                }
+                if (ticks == null) {
+                    ticks = 0;
+                    double preD = 0.0;
 
-                if (ticks > 0) {
-                    if (Math.abs(preD - airAcceleration) >= GroundUtils.maxHeightLengthRatio) {
-                        boolean found = false;
+                    while (d < 0.0) {
+                        preD = d;
+                        d = (d + airAcceleration) / airDrag;
+                        ticks++;
+                    }
 
-                        for (List<Double> jumps : jumpsValues.values()) {
-                            double last = jumps.get(jumps.size() - 1);
+                    if (ticks > 0) {
+                        if (Math.abs(preD - airAcceleration) >= precision) {
+                            boolean found = false;
 
-                            if (Math.abs(last - d) < GroundUtils.maxHeightLengthRatio) {
-                                found = true;
-                                break;
+                            if (jump == 0) {
+                                List<Double> motions = getJumpMotions(0);
+                                double last = motions.get(motions.size() - 1);
+
+                                if (Math.abs(last - d) < precision) {
+                                    found = true;
+                                }
+                            } else {
+                                for (int i : new int[]{jump, 0}) {
+                                    List<Double> motions = getJumpMotions(i);
+                                    double last = motions.get(motions.size() - 1);
+
+                                    if (Math.abs(last - d) < precision) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!found) {
+                                ticks = -1;
                             }
                         }
-
-                        if (!found) {
-                            ticks = -1;
-                        }
+                    } else {
+                        ticks = -1;
                     }
-                } else {
-                    ticks = -1;
-                }
-                synchronized (fallTicks) {
                     fallTicks.put(key, ticks);
                 }
             }
             return ticks;
         }
         return -1;
-    }
-
-    public static boolean isFalling(double d) {
-        return getFallTick(d) != -1;
     }
 
     public static double calculateNextFallMotion(double motion,

@@ -1,11 +1,5 @@
 package com.vagdedes.spartan.listeners;
 
-import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
-import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
@@ -29,12 +23,12 @@ import org.bukkit.event.server.ServerCommandEvent;
 public class EventsHandler7 implements Listener {
 
     public static final Enums.HackType[] handledChecks = new Enums.HackType[]{
-            NoFall.check,
-            IrregularMovements.check,
-            Speed.check,
-            MorePackets.check,
-            ImpossibleInventory.check,
-            Exploits.check
+            Enums.HackType.NoFall,
+            Enums.HackType.IrregularMovements,
+            Enums.HackType.Speed,
+            Enums.HackType.MorePackets,
+            Enums.HackType.ImpossibleInventory,
+            Enums.HackType.Exploits
     };
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -106,12 +100,11 @@ public class EventsHandler7 implements Listener {
                 box = toY - to.getBlockY(),
                 ver = toY - fromY,
                 hor = Math.sqrt(preXZ);
-        float fall = p.getFallDistance();
 
         if (!p.movement.processLastMoveEvent(to, from, ver)) {
             return;
         }
-        MovementProcessing.run(n, p, to, dis, hor, ver, box, fall);
+        MovementProcessing.run(n, p, to, dis, hor, ver, box);
 
         // Patterns
         for (Enums.HackType hackType : handledChecks) {
@@ -121,17 +114,13 @@ public class EventsHandler7 implements Listener {
         }
 
         // Detections
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.HEAD);
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, Exploits.MOVEMENT);
+        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, null);
         p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
         p.getExecutor(Enums.HackType.KillAura).run(cancelled);
-
-        if (dis > 0.0) {
-            p.getExecutor(Enums.HackType.NoFall).run(cancelled);
-            p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
-            p.getExecutor(Enums.HackType.Speed).run(cancelled);
-            p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
-        }
+        p.getExecutor(Enums.HackType.NoFall).run(cancelled);
+        p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
+        p.getExecutor(Enums.HackType.Speed).run(cancelled);
+        p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

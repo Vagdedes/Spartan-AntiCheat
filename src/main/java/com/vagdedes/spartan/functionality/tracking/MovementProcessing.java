@@ -46,8 +46,7 @@ public class MovementProcessing {
     public static void run(Player n, SpartanPlayer player,
                            SpartanLocation to,
                            double distance, double horizontal,
-                           double vertical, double box,
-                           float fall) {
+                           double vertical, double box) {
         if (player.refreshOnGround(new SpartanLocation[]{to, player.movement.getLocation()})) {
             player.movement.resetAirTicks();
         }
@@ -72,7 +71,7 @@ public class MovementProcessing {
             player.movement.setSprinting(false);
             player.movement.setSneaking(n.isSneaking());
         }
-        player.movement.setNmsDistance(distance, horizontal, vertical, box, fall);
+        player.movement.setNmsDistance(distance, horizontal, vertical, box);
         player.setFallDistance(n.getFallDistance(), false);
         player.setWalkSpeed(n.getWalkSpeed());
         player.setFlySpeed(n.getFlySpeed());

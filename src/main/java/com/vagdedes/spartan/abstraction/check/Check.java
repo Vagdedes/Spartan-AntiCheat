@@ -289,10 +289,6 @@ public class Check {
 
     // Separator
 
-    public int ordinal() {
-        return hackType.hashCode();
-    }
-
     public String getName() {
         return name;
     }

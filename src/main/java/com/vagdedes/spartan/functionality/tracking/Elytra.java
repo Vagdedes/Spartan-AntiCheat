@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
@@ -19,7 +18,7 @@ public class Elytra {
                 if (i.getType() == Material.ELYTRA) {
                     if (i.getDurability() < 432) {
                         if (!event
-                                || !p.getExecutor(Enums.HackType.Exploits).handle(false, Exploits.ELYTRA_GLIDE_SPAM)) {
+                                || !p.getExecutor(Enums.HackType.Exploits).handle(false, Elytra.class)) {
                             p.movement.setGliding(gliding, false);
                             Cooldowns cooldowns = p.getCooldowns();
                             cooldowns.add("elytra-wear", 2);

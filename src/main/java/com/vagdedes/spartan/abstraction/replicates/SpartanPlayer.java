@@ -871,9 +871,10 @@ public class SpartanPlayer {
     public SpartanBlock getIllegalTargetBlock(SpartanBlock clickedBlock) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
             SpartanLocation clickedBlockLocation = clickedBlock.getLocation();
-            boolean editableClickedBlock = BlockUtils.isChangeable(clickedBlockLocation);
+            boolean editableClickedBlock = BlockUtils.isChangeable(clickedBlockLocation.getBlock().material);
 
-            if (!editableClickedBlock && !BlockUtils.isSolid(clickedBlockLocation)) {
+            if (!editableClickedBlock
+                    && !BlockUtils.isSolid(clickedBlockLocation.getBlock().material)) {
                 return null;
             }
             double distance = movement.getLocation().distance(clickedBlockLocation);
@@ -892,7 +893,7 @@ public class SpartanPlayer {
                                 || targetBlock.z != clickedBlock.z)
 
                                 && (editableClickedBlock && !targetBlockLocation.getBlock().isLiquidOrWaterLogged(true)
-                                || BlockUtils.isFullSolid(targetBlockLocation))) {
+                                || BlockUtils.isFullSolid(targetBlockLocation.getBlock().material))) {
                             return targetBlock;
                         }
                     }
@@ -1392,8 +1393,9 @@ public class SpartanPlayer {
         SpartanLocation location = this.movement.getLocation(),
                 locationP1 = location.clone().add(0, 1, 0);
 
-        if (BlockUtils.isSolid(locationP1)
-                && !(BlockUtils.areWalls(locationP1) || BlockUtils.canClimb(locationP1))) {
+        if (BlockUtils.isSolid(locationP1.getBlock().material)
+                && !(BlockUtils.areWalls(locationP1.getBlock().material)
+                || BlockUtils.canClimb(locationP1.getBlock().material))) {
             return false;
         }
         World world = getWorld();

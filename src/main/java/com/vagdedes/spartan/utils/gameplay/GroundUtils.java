@@ -102,7 +102,7 @@ public class GroundUtils {
                 correlatedBlockHeights.put(m, new double[]{0.375});
             } else if (m == Material.SNOW
                     || BlockUtils.areShulkerBoxes(m)
-                    || BlockUtils.isInteractiveAndPassable(m)
+                    || BlockUtils.isInteractiveAndPassable(null, m)
                     || v1_9 && m == Material.END_ROD
                     || v1_15 && m == Material.HONEY_BLOCK
                     || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_19) && m == Material.MUD) {

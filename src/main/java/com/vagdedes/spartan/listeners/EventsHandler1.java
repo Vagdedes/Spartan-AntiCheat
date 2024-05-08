@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.listeners;
 
-import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
@@ -78,7 +77,7 @@ public class EventsHandler1 implements Listener {
         }
         // Detections
         p.getExecutor(Enums.HackType.AutoRespawn).run(false);
-        p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, ImpossibleInventory.DEATH);
+        p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, null);
 
         // Objects
         Player killer = n.getKiller();

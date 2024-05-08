@@ -31,13 +31,11 @@ public class SpartanPlayerMovement {
     private final List<Double>
             nmsDistance, nmsHorizontalDistance, nmsVerticalDistance,
             nmsBox;
-    private final List<Float> nmsFall;
     private long
             swimmingTime,
             lastLiquidTicks,
             lastOnGround,
-            lastVanillaOnGround,
-            ignoreUntilTick;
+            lastVanillaOnGround;
     private Material
             lastLiquidMaterial;
     private int
@@ -58,12 +56,9 @@ public class SpartanPlayerMovement {
         this.nmsVerticalDistance = Collections.synchronizedList(new LinkedList<>());
         this.nmsBox = Collections.synchronizedList(new LinkedList<>());
 
-        this.nmsFall = Collections.synchronizedList(new LinkedList<>());
-
         this.swimmingTime = 0L;
         this.lastLiquidTicks = 0L;
         this.lastLiquidMaterial = Material.AIR;
-        this.ignoreUntilTick = 0L;
         this.lastOnGround = 0L;
         this.lastVanillaOnGround = 0;
 
@@ -114,20 +109,17 @@ public class SpartanPlayerMovement {
     public synchronized void setNmsDistance(double distance,
                                             double horizontal,
                                             double vertical,
-                                            double box,
-                                            float fall) {
+                                            double box) {
         this.nmsDistance.add(distance);
         this.nmsHorizontalDistance.add(horizontal);
         this.nmsVerticalDistance.add(vertical);
         this.nmsBox.add(box);
-        this.nmsFall.add(fall);
 
         for (List list : new List[]{
                 nmsDistance,
                 nmsHorizontalDistance,
                 nmsVerticalDistance,
-                nmsBox,
-                nmsFall
+                nmsBox
         }) {
             if (list.size() > 2) {
                 list.remove(0);
@@ -138,10 +130,6 @@ public class SpartanPlayerMovement {
     // Separator
 
     public double getValueOrDefault(Double value, double def) {
-        return value == null ? def : value;
-    }
-
-    public float getValueOrDefault(Float value, float def) {
         return value == null ? def : value;
     }
 
@@ -206,22 +194,6 @@ public class SpartanPlayerMovement {
         synchronized (nmsBox) {
             int size = nmsBox.size();
             return size > 1 ? nmsBox.get(size - 2) : null;
-        }
-    }
-
-    // Separator
-
-    public Float getNmsFall() {
-        synchronized (nmsFall) {
-            int size = nmsFall.size();
-            return size > 0 ? nmsFall.get(size - 1) : null;
-        }
-    }
-
-    public Float getPreviousNmsFall() {
-        synchronized (nmsFall) {
-            int size = nmsFall.size();
-            return size > 1 ? nmsFall.get(size - 2) : null;
         }
     }
 
@@ -311,6 +283,20 @@ public class SpartanPlayerMovement {
                 PlayerUtils.getPotionLevel(this.parent, PotionEffectType.JUMP) + 1,
                 GroundUtils.maxHeightLengthRatio
         );
+    }
+
+    // Separator
+
+    public int getFallTick(double d, double precision) {
+        return PlayerUtils.getFallTick(
+                d,
+                precision,
+                PlayerUtils.getPotionLevel(this.parent, PotionEffectType.JUMP) + 1
+        );
+    }
+
+    public boolean isFalling(double d, double precision) {
+        return getFallTick(d, precision) != -1;
     }
 
     // Separator

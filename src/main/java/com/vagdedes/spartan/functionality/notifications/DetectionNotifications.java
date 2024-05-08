@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.implementation.world.XRay;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
@@ -165,7 +164,7 @@ public class DetectionNotifications {
                             log,
                             null,
                             block.material,
-                            XRay.check,
+                            Enums.HackType.XRay,
                             true,
                             -1
                     );
