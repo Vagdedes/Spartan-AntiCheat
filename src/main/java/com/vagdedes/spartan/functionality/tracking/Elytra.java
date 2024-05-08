@@ -17,8 +17,9 @@ public class Elytra {
             if (i != null) {
                 if (i.getType() == Material.ELYTRA) {
                     if (i.getDurability() < 432) {
-                        if (!event
-                                || !p.getExecutor(Enums.HackType.Exploits).handle(false, Elytra.class)) {
+                        if (event) {
+                            p.getExecutor(Enums.HackType.Exploits).handle(false, Elytra.class);
+                        } else {
                             p.movement.setGliding(gliding, false);
                             Cooldowns cooldowns = p.getCooldowns();
                             cooldowns.add("elytra-wear", 2);

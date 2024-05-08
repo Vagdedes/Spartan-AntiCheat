@@ -39,78 +39,86 @@ public class InformationAnalysis {
     public InformationAnalysis(Enums.HackType hackType, String information) {
         String[] array = information.split(" ");
 
-        String detection = array[1];
-        this.detection = detection.substring(0, detection.length() - 1); // Remove comma
-        this.hash = (hackType.hashCode() * SpartanBukkit.hashCodeMultiplier) + detection.hashCode();
+        if (array.length == 1) {
+            this.detection = array[0];
+            this.hash = (hackType.hashCode() * SpartanBukkit.hashCodeMultiplier) + detection.hashCode();
+            this.isOption = false;
+            this.numbers = new ArrayList<>(0);
+            this.identity = this.hash;
+        } else {
+            String detection = array[1];
+            this.detection = detection.substring(0, detection.length() - 1); // Remove comma
+            this.hash = (hackType.hashCode() * SpartanBukkit.hashCodeMultiplier) + detection.hashCode();
 
-        // Separator
+            // Separator
 
-        Collection<String> configKeys = hackType.getCheck().getOptionKeys();
-        int configKeyCount = configKeys.size();
-        StoredInformation data;
+            Collection<String> configKeys = hackType.getCheck().getOptionKeys();
+            int configKeyCount = configKeys.size();
+            StoredInformation data;
 
-        synchronized (map) {
-            data = map.get(this.hash);
+            synchronized (map) {
+                data = map.get(this.hash);
 
-            if (data == null) {
-                List<String> foundDetections = new ArrayList<>(configKeyCount);
+                if (data == null) {
+                    List<String> foundDetections = new ArrayList<>(configKeyCount);
 
-                for (String keyword : this.removeDetectionDetails(detection).split("-")) {
-                    for (String configKey : configKeys) {
-                        if (this.containsDetection(configKey, keyword)) {
-                            foundDetections.add(configKey);
+                    for (String keyword : this.removeDetectionDetails(detection).split("-")) {
+                        for (String configKey : configKeys) {
+                            if (this.containsDetection(configKey, keyword)) {
+                                foundDetections.add(configKey);
+                            }
                         }
                     }
-                }
 
-                data = new StoredInformation(foundDetections.size() == 1);
-                Map<Integer, Number> positionsAndNumbers = this.identifyAndShowNumbers(array, array.length);
-                data.positions.put(array.length, positionsAndNumbers.keySet());
-                this.numbers = positionsAndNumbers.values();
-                int delete = map.size() - max;
-
-                if (delete > 0) {
-                    Iterator<Integer> iterator = map.keySet().iterator();
-
-                    while (iterator.hasNext()) {
-                        iterator.next();
-                        iterator.remove();
-
-                        if (--delete == 0) {
-                            break;
-                        }
-                    }
-                }
-                map.put(this.hash, data);
-            } else {
-                Set<Integer> positions = data.positions.get(array.length);
-
-                if (positions != null) {
-                    this.numbers = this.showNumbers(array, array.length, positions);
-                } else {
+                    data = new StoredInformation(foundDetections.size() == 1);
                     Map<Integer, Number> positionsAndNumbers = this.identifyAndShowNumbers(array, array.length);
                     data.positions.put(array.length, positionsAndNumbers.keySet());
                     this.numbers = positionsAndNumbers.values();
-                }
-            }
-        }
-        this.isOption = data.isOption;
+                    int delete = map.size() - max;
 
-        // Separator
+                    if (delete > 0) {
+                        Iterator<Integer> iterator = map.keySet().iterator();
 
-        int identity = this.hash;
+                        while (iterator.hasNext()) {
+                            iterator.next();
+                            iterator.remove();
 
-        if (!this.numbers.isEmpty()) {
-            for (Number number : this.numbers) {
-                if (number instanceof Double) {
-                    identity = (identity * SpartanBukkit.hashCodeMultiplier)
-                            + Double.hashCode(AlgebraUtils.cut(number.doubleValue(), MovementProcessing.quantumPrecision));
+                            if (--delete == 0) {
+                                break;
+                            }
+                        }
+                    }
+                    map.put(this.hash, data);
                 } else {
-                    identity = (identity * SpartanBukkit.hashCodeMultiplier) + number.intValue();
+                    Set<Integer> positions = data.positions.get(array.length);
+
+                    if (positions != null) {
+                        this.numbers = this.showNumbers(array, array.length, positions);
+                    } else {
+                        Map<Integer, Number> positionsAndNumbers = this.identifyAndShowNumbers(array, array.length);
+                        data.positions.put(array.length, positionsAndNumbers.keySet());
+                        this.numbers = positionsAndNumbers.values();
+                    }
                 }
             }
+            this.isOption = data.isOption;
+
+            // Separator
+
+            int identity = this.hash;
+
+            if (!this.numbers.isEmpty()) {
+                for (Number number : this.numbers) {
+                    if (number instanceof Double) {
+                        identity = (identity * SpartanBukkit.hashCodeMultiplier)
+                                + Double.hashCode(AlgebraUtils.cut(number.doubleValue(), MovementProcessing.quantumPrecision));
+                    } else {
+                        identity = (identity * SpartanBukkit.hashCodeMultiplier) + number.intValue();
+                    }
+                }
+            }
+            this.identity = identity;
         }
-        this.identity = identity;
     }
 
     // Separator

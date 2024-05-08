@@ -43,9 +43,11 @@ public class EventsHandler3 implements Listener {
             boolean cancelled = e.isCancelled();
             String msg = e.getMessage();
 
+            // Detections
+            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, msg);
+
             // Protections
-            if (p.getExecutor(Enums.HackType.Exploits).handle(cancelled, msg) // Detections
-                    || !cancelled && StaffChat.run(p, msg) // Features
+            if (!cancelled && StaffChat.run(p, msg) // Features
                     || !cancelled && ChatProtection.runChat(p, msg)) { // Features
                 e.setCancelled(true);
             }

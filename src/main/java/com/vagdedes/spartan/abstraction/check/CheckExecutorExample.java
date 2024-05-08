@@ -1,6 +1,8 @@
 package com.vagdedes.spartan.abstraction.check;
 
-public class EmptyCheckExecutor extends CheckExecutor {
+import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+
+public class CheckExecutorExample extends CheckExecutor {
 
     // This is the list of all checks/detections that are implemented in the plugin's code.
     // The developer has not made the following classes available to you, so you should
@@ -37,8 +39,8 @@ public class EmptyCheckExecutor extends CheckExecutor {
             "com.vagdedes.spartan.abstraction.check.implementation.world.XRay",
     };
 
-    public EmptyCheckExecutor() {
-        super(null, null);
+    public CheckExecutorExample(SpartanPlayer player) {
+        super(null, player);
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can
@@ -47,7 +49,7 @@ public class EmptyCheckExecutor extends CheckExecutor {
     }
 
     @Override
-    public boolean handleInternal(boolean cancelled, Object object) {
+    public void handleInternal(boolean cancelled, Object object) {
         // This method should be used to run a check/detection when information
         // needs to be inserted via the method being called. It is recommended
         // to try to maintain the information needed via objects or static methods
@@ -58,18 +60,16 @@ public class EmptyCheckExecutor extends CheckExecutor {
         // or by another plugin. Based on configuration, a user of this plugin may
         // choose for cancelled events to not go through, thus causing this method to
         // not be called at all.
-        return false;
     }
 
     @Override
-    public boolean runInternal(boolean cancelled) {
+    public void runInternal(boolean cancelled) {
         // This method should be used to run a check/detection when no information
         // needs to be inserted via the method being called and is all available in
         // the class or via methods of other classes.
         //
         // The boolean "cancelled" works the same as in the "handleInternal" method
         // which is where you can find its documentation.
-        return false;
     }
 
     @Override
