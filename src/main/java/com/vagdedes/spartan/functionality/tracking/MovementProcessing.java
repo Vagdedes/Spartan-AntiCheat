@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Decimals;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
@@ -76,7 +75,6 @@ public class MovementProcessing {
         player.setWalkSpeed(n.getWalkSpeed());
         player.setFlySpeed(n.getFlySpeed());
         player.setEyeHeight(n.getEyeHeight());
-        player.setUsingItem(n.isBlocking());
         player.setVehicle(n.getVehicle());
 
         // Separator
@@ -89,22 +87,6 @@ public class MovementProcessing {
             calculateBouncing(player, to, vertical);
         }
         calculateExtremeCollision(player, to);
-
-        // Separator
-
-        String key = "player-data=extra-packets";
-        double difference = player.movement.getCustomDistance() - distance;
-        player.getDecimals().add(key, difference, AlgebraUtils.integerRound(TPS.maximum));
-
-        if (player.getBuffer().increase(key, 1) >= TPS.maximum) {
-            player.getBuffer().remove(key);
-
-            if (player.getDecimals().get(key, 0.0, Decimals.CALCULATE_AVERAGE) >= 0.01) {
-                player.movement.setExtraPackets(player.movement.getExtraPackets() + 1);
-            } else {
-                player.movement.setExtraPackets(0);
-            }
-        }
 
         // Separator
 
@@ -238,9 +220,8 @@ public class MovementProcessing {
                                    boolean elytra, boolean velocity, boolean flight) {
         if ((elytra || !player.getTrackers().has(Trackers.TrackerType.ELYTRA_USE))
                 && (flight || !player.getTrackers().has(Trackers.TrackerType.FLIGHT))
-                && (velocity || !AbstractVelocity.hasCooldown(player))
-                && !Attributes.has(player, Attributes.GENERIC_MOVEMENT_SPEED)
-                && player.canRunChecks(true)) {
+                && (velocity || !player.getTrackers().has(Trackers.TrackerType.ABSTRACT_VELOCITY))
+                && !Attributes.has(player, Attributes.GENERIC_MOVEMENT_SPEED)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()
                     || Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
                 List<Entity> entities = player.getNearbyEntities(

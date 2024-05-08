@@ -6,9 +6,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.TrigonometryUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -18,21 +16,8 @@ import java.util.List;
 public class CombatUtils {
 
     public static final long combatTimeRequirement = 2_500L;
-
-    private static final Material
-            gold_sword = MaterialUtils.get("gold_sword"),
-            wood_sword = MaterialUtils.get("wood_sword");
-    public static final int defaultFightTicks = 11,
-            maximumNoDamageTicks = 20;
-    public static final double
-            playerSneakingHeight = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14) ? 1.5 : 1.65,
-            maxHitDistance = 6.0,
-            fightTicksRatio = defaultFightTicks / ((double) maximumNoDamageTicks); // 11 is the recorded fight ticks when the maximum-no-damage-ticks is at its default 20
+    public static final double maxHitDistance = 6.0;
     public static final double[] playerWidthAndHeight = new double[]{0.6, 1.8};
-
-    public static int getFightTicks(SpartanPlayer player) {
-        return AlgebraUtils.integerCeil(Math.min(player.getMaximumNoDamageTicks(), maximumNoDamageTicks * 2) * fightTicksRatio);
-    }
 
     public static Vector getDirection(float yaw, float pitch) {
         double rotX = Math.toRadians((double) yaw),
@@ -252,22 +237,10 @@ public class CombatUtils {
                 && !Compatibility.CompatibilityType.OLD_COMBAT_MECHANICS.isFunctional();
     }
 
-    public static boolean isSword(Material type) {
-        return type == Material.DIAMOND_SWORD
-                || type == gold_sword
-                || type == Material.IRON_SWORD
-                || type == Material.STONE_SWORD
-                || type == wood_sword
-                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && type == Material.NETHERITE_SWORD;
-    }
-
-    public static boolean isBow(Material type) {
-        return type == Material.BOW
-                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14) && type == Material.CROSSBOW;
-    }
-
     public static boolean isNewPvPMechanic(SpartanPlayer p, Entity entity) {
-        if (newPvPMechanicsEnabled() && !p.hasAttackCooldown() && isSword(p.getItemInHand().getType())) {
+        if (newPvPMechanicsEnabled()
+                && !p.hasAttackCooldown()
+                && PlayerUtils.isSwordItem(p.getItemInHand().getType())) {
             double distance = 4.0;
             List<Entity> nearbyEntities = entity.getNearbyEntities(distance, distance, distance);
             nearbyEntities.remove(p.getPlayer());

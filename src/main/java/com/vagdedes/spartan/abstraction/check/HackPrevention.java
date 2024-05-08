@@ -41,7 +41,7 @@ public class HackPrevention {
 
     void handle(SpartanPlayer player) {
         if (this.location != null) {
-            player.safeTeleport(this.location);
+            player.teleport(this.location);
         }
         if (this.groundTeleport) {
             player.groundTeleport();

@@ -5,6 +5,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -219,7 +220,9 @@ public class Check {
             return false;
         }
         return (world == null || isEnabledOnWorld(world))
-                && (player == null || player.getViolations(hackType).getDisableCause() == null);
+                && (player == null
+                || player.getViolations(hackType).getDisableCause() == null
+                && !Permissions.isBypassing(player, hackType));
     }
 
     public void setEnabled(Enums.DataType dataType, boolean b) {

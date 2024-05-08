@@ -393,7 +393,7 @@ public class CommandExecution implements CommandExecutor {
                                 sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                                 return true;
                             }
-                            t.kick(sender, argumentsToString);
+                            t.punishments.kick(sender, argumentsToString);
 
                         } else if (args[0].equalsIgnoreCase("Warn")) {
                             if (isPlayer && !Permissions.has(player, Permission.WARN)) {
@@ -410,7 +410,7 @@ public class CommandExecution implements CommandExecutor {
                                 sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                                 return true;
                             }
-                            t.warn(sender, argumentsToString);
+                            t.punishments.warn(sender, argumentsToString);
 
                         } else if (args[0].equalsIgnoreCase("Bypass")) {
                             boolean noSeconds = args.length == 3;

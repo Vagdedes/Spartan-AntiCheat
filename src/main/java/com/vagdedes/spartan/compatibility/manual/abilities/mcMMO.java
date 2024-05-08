@@ -18,7 +18,10 @@ public class mcMMO {
             return n != null && n.isOnline() && AbilityAPI.isAnyAbilityEnabled(n)
 
                     || PlayerUtils.isAxeItem(p.getItemInHand().getType())
-                    && p.getEnemiesNumber(CombatUtils.maxHitDistance, true) > 0
+                    && !p.getNearbyEntities(
+                    CombatUtils.maxHitDistance,
+                    CombatUtils.maxHitDistance,
+                    CombatUtils.maxHitDistance).isEmpty()
 
                     || hasTamingAbility(p);
         } else {

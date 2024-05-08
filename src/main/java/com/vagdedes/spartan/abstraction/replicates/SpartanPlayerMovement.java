@@ -36,10 +36,7 @@ public class SpartanPlayerMovement {
             lastLiquidTicks,
             lastOnGround,
             lastVanillaOnGround;
-    private Material
-            lastLiquidMaterial;
-    private int
-            extraPackets;
+    private Material lastLiquidMaterial;
     private boolean gliding, swimming, sprinting, sneaking, flying;
     private SpartanLocation location, nmsTo, nmsFrom, detectionLocation;
     SpartanLocation customFromLocation;
@@ -61,8 +58,6 @@ public class SpartanPlayerMovement {
         this.lastLiquidMaterial = Material.AIR;
         this.lastOnGround = 0L;
         this.lastVanillaOnGround = 0;
-
-        this.extraPackets = 0;
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             this.gliding = p.isGliding();
@@ -334,16 +329,6 @@ public class SpartanPlayerMovement {
         if (flying) {
             this.parent.getTrackers().add(Trackers.TrackerType.FLIGHT, (int) TPS.maximum);
         }
-    }
-
-    // Separator
-
-    public int getExtraPackets() {
-        return this.parent.isUsingItem() ? 0 : extraPackets;
-    }
-
-    public synchronized void setExtraPackets(int number) {
-        this.extraPackets = number;
     }
 
     // Separator

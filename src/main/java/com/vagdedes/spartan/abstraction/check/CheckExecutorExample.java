@@ -73,7 +73,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void scheduler() {
+    public void schedulerInternal() {
         // Checks/detections support scheduling. This method is called every
         // 1 tick which is worth approximately 50 milliseconds. This method runs
         // as the server runs, so it is called approximately 20 times per second.

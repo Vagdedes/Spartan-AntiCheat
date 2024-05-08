@@ -25,7 +25,7 @@ public class ServerFlying {
 
             if (nmsDistance != null && nmsDistance >= limit
                     || p.movement.getCustomDistance() >= limit) {
-                p.safeTeleport(p.movement.getDetectionLocation());
+                p.teleport(p.movement.getDetectionLocation());
             }
         }
     }

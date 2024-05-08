@@ -79,17 +79,14 @@ public class EventsHandler8 implements Listener {
         if (p == null) {
             return;
         }
-        if (e.isCancelled()) {
-            // Objects
-            p.movement.setSneaking(false);
-            p.setEyeHeight(n.getEyeHeight());
-        } else {
-            boolean sneaking = e.isSneaking();
 
-            // Objects
-            p.movement.setSneaking(sneaking);
-            p.setEyeHeight(n.getEyeHeight());
+        // Objects
+        if (e.isCancelled()) {
+            p.movement.setSneaking(n.isSneaking());
+        } else {
+            p.movement.setSneaking(e.isSneaking());
         }
+        p.setEyeHeight(n.getEyeHeight());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

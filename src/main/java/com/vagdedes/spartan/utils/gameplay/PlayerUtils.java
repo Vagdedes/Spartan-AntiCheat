@@ -29,6 +29,8 @@ public class PlayerUtils {
             soulSpeed = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16),
             levitation = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9);
     private static final Material
+            gold_sword = MaterialUtils.get("gold_sword"),
+            wood_sword = MaterialUtils.get("wood_sword"),
             gold_axe = MaterialUtils.get("gold_axe"),
             wood_axe = MaterialUtils.get("wood_axe"),
             gold_pickaxe = MaterialUtils.get("gold_pickaxe"),
@@ -302,6 +304,15 @@ public class PlayerUtils {
                 || m == gold_axe
                 || m == wood_axe
                 || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && m == Material.NETHERITE_AXE;
+    }
+
+    public static boolean isSwordItem(Material type) {
+        return type == Material.DIAMOND_SWORD
+                || type == gold_sword
+                || type == Material.IRON_SWORD
+                || type == Material.STONE_SWORD
+                || type == wood_sword
+                || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && type == Material.NETHERITE_SWORD;
     }
 
     // Collisions
