@@ -74,11 +74,6 @@ public class SpartanBukkit {
         return player == null ? null : getPlayer(player);
     }
 
-    public static Player getRealPlayer(UUID uuid) {
-        Player player = realPlayers.get(uuid);
-        return player != null && player.isOnline() ? player : null;
-    }
-
     public static SpartanPlayer getPlayer(Player real) {
         if (!ProtocolLib.isTemporaryPLayer(real)) { // Temporary players have no UUIDs
             UUID uuid = real.getUniqueId();
@@ -115,6 +110,21 @@ public class SpartanBukkit {
         synchronized (players) {
             return new ArrayList<>(players.values());
         }
+    }
+
+    // Separator
+
+    public static Player getRealPlayer(UUID uuid) {
+        Player player = realPlayers.get(uuid);
+        return player != null && player.isOnline() ? player : null;
+    }
+
+    public static void addRealPlayer(Player player) {
+        realPlayers.put(player.getUniqueId(), player);
+    }
+
+    public static void removeRealPlayer(Player player) {
+        realPlayers.remove(player.getUniqueId());
     }
 
     // Separator

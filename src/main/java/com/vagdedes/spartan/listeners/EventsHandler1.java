@@ -25,6 +25,7 @@ public class EventsHandler1 implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Join(PlayerJoinEvent e) {
         Player n = e.getPlayer();
+        SpartanBukkit.addRealPlayer(n);
 
         // Utils
         if (PlayerLimitPerIP.add(n)) {
@@ -51,6 +52,7 @@ public class EventsHandler1 implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Leave(PlayerQuitEvent e) {
         Player n = e.getPlayer();
+        SpartanBukkit.removeRealPlayer(n);
         SpartanPlayer p = SpartanBukkit.removePlayer(n);
 
         if (p == null) {
