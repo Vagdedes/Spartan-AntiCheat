@@ -57,7 +57,8 @@ public class CrossServerInformation {
                             if (file.exists()) {
                                 String key = split[1];
 
-                                if (!key.equals(Settings.cloudServerNameOption)) {
+                                if (!key.equals(Settings.cloudServerNameOption)
+                                        && ConfigUtils.has(file, key)) {
                                     String value = split[2];
 
                                     if (value.equals("NULL")) {
@@ -81,19 +82,6 @@ public class CrossServerInformation {
                     }
                     Config.refreshFields(false);
                     Config.createConfigurations(true);
-                }
-
-                // Separator
-                type = "log";
-
-                if (!logs.isEmpty()) {
-                    String[] logsArray;
-
-                    synchronized (logs) {
-                        logsArray = logs.toArray(new String[0]);
-                        logs.clear();
-                    }
-                    CloudConnections.sendCrossServerInformation(type, serverName, logsArray);
                 }
             }
         } else {

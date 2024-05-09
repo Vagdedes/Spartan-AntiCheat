@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
-import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
@@ -27,13 +26,10 @@ public class SpartanEdition {
     private static final String
             type = "{type}",
             product = "{product}",
-            disableMessage = "\nSet '" + Settings.showEcosystemOption.replace(".", " -> ") + "' to 'false' via '" + Config.settings.getFile().getName() + "' to disable this notification.",
             versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections."
-                    + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §rto §lfix this§r." : "")
-                    + disableMessage,
+                    + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §rto §lfix this§r." : ""),
             limitNotificationMessage = "\nHey, just a heads up! You have more online players than the anti-cheat can check at once."
-                    + "\nClick §nhttps://www.idealistic.ai/patreon§r to learn how §lDetection Slots §rwork."
-                    + disableMessage;
+                    + "\nClick §nhttps://www.idealistic.ai/patreon§r to learn how §lDetection Slots §rwork.";
     private static boolean
             notifyCache = false,
             alternativeVersion = false;
@@ -86,69 +82,67 @@ public class SpartanEdition {
         if (alternativeVersion) {
             return "Spartan AntiCheat: Java & Bedrock Edition";
         } else {
-            return "Spartan AntiCheat: " + dataType + " Edition";
+            return "Spartan AntiCheat: " + dataType.name + " Edition";
         }
     }
 
     // Notifications
 
     public static void attemptNotification(SpartanPlayer player) {
-        if (Config.settings.getBoolean(Settings.showEcosystemOption)) {
-            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (players.size() <= CloudBase.getDetectionSlots()
-                    || !sendLimitNotification(player)) {
-                Enums.DataType missingDetection = getMissingDetection();
+        if (players.size() <= CloudBase.getDetectionSlots()
+                || !sendLimitNotification(player)) {
+            Enums.DataType missingDetection = getMissingDetection();
 
-                if (missingDetection != null) {
-                    if (notifyCache) {
-                        sendVersionNotification(player, missingDetection);
-                    } else {
-                        long time = System.currentTimeMillis();
+            if (missingDetection != null) {
+                if (notifyCache) {
+                    sendVersionNotification(player, missingDetection);
+                } else {
+                    long time = System.currentTimeMillis();
 
-                        if ((time - checkTime) >= 60_000L) {
-                            checkTime = time;
-                            boolean bedrockIsMissingDetection = missingDetection == Enums.DataType.BEDROCK;
+                    if ((time - checkTime) >= 60_000L) {
+                        checkTime = time;
+                        boolean bedrockIsMissingDetection = missingDetection == Enums.DataType.BEDROCK;
 
-                            if (bedrockIsMissingDetection == player.bedrockPlayer) {
-                                notifyCache = true;
-                                sendVersionNotification(player, missingDetection);
+                        if (bedrockIsMissingDetection == player.bedrockPlayer) {
+                            notifyCache = true;
+                            sendVersionNotification(player, missingDetection);
+                        } else {
+                            players.remove(player);
+                            int size = players.size();
+                            List<PlayerProfile> checkedProfiles;
+
+                            if (size > 0) {
+                                checkedProfiles = new ArrayList<>(size);
+
+                                for (SpartanPlayer otherPlayer : players) {
+                                    if (bedrockIsMissingDetection == otherPlayer.bedrockPlayer) {
+                                        notifyCache = true;
+                                        sendVersionNotification(player, missingDetection);
+                                        return;
+                                    } else {
+                                        checkedProfiles.add(player.getProfile());
+                                    }
+                                }
                             } else {
-                                players.remove(player);
-                                int size = players.size();
-                                List<PlayerProfile> checkedProfiles;
+                                checkedProfiles = new ArrayList<>(0);
+                            }
 
-                                if (size > 0) {
-                                    checkedProfiles = new ArrayList<>(size);
+                            // Separator
 
-                                    for (SpartanPlayer otherPlayer : players) {
-                                        if (bedrockIsMissingDetection == otherPlayer.bedrockPlayer) {
+                            List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+
+                            if (!playerProfiles.isEmpty()) {
+                                playerProfiles.remove(player.getProfile());
+                                playerProfiles.removeAll(checkedProfiles);
+
+                                if (!playerProfiles.isEmpty()) {
+                                    for (PlayerProfile profile : playerProfiles) {
+                                        if (bedrockIsMissingDetection == profile.isBedrockPlayer()) {
                                             notifyCache = true;
                                             sendVersionNotification(player, missingDetection);
                                             return;
-                                        } else {
-                                            checkedProfiles.add(player.getProfile());
-                                        }
-                                    }
-                                } else {
-                                    checkedProfiles = new ArrayList<>(0);
-                                }
-
-                                // Separator
-
-                                List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
-
-                                if (!playerProfiles.isEmpty()) {
-                                    playerProfiles.remove(player.getProfile());
-                                    playerProfiles.removeAll(checkedProfiles);
-
-                                    if (!playerProfiles.isEmpty()) {
-                                        for (PlayerProfile profile : playerProfiles) {
-                                            if (bedrockIsMissingDetection == profile.isBedrockPlayer()) {
-                                                notifyCache = true;
-                                                sendVersionNotification(player, missingDetection);
-                                                return;
-                                            }
                                         }
                                     }
                                 }

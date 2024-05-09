@@ -25,7 +25,7 @@ public class Register extends JavaPlugin {
     public static Plugin plugin = null;
 
     public static final PluginManager manager = Bukkit.getPluginManager();
-    private static final Set<Class<?>> listeners = new LinkedHashSet<>(40);
+    private static final Set<Class<?>> listeners = new LinkedHashSet<>(2);
 
     public void onEnable() {
         plugin = this;

@@ -196,6 +196,10 @@ public class ConfigUtils {
         }
     }
 
+    public static boolean has(File file, String path) {
+        return YamlConfiguration.loadConfiguration(file).contains(path);
+    }
+
     public static void set(File file, String path, Object value) {
         if (!file.exists()) {
             try {

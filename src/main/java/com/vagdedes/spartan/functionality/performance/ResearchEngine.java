@@ -1,14 +1,11 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.profiling.*;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.management.Cache;
@@ -27,8 +24,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class ResearchEngine {
@@ -434,32 +429,8 @@ public class ResearchEngine {
     public static Map<String, String> getLogs() {
         Map<String, String> cache = new LinkedHashMap<>();
         int byteSize = 0;
-        boolean isFull = false;
-        boolean continueWithYAML = false;
-
-        // Separator
-        if (Config.settings.getBoolean(Settings.cloudSynchroniseFilesOption)) {
-            String crossServerInformationOption = CrossServerInformation.getOptionValue();
-
-            if (CrossServerInformation.isOptionValid(crossServerInformationOption)) {
-                String[] incomingInformation = CloudConnections.getCrossServerInformation("log", crossServerInformationOption);
-
-                if (incomingInformation.length > 0) {
-                    String key = AntiCheatLogs.syntaxDate(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss").format(LocalDateTime.now()), new Random().nextInt());
-
-                    for (String information : incomingInformation) {
-                        AntiCheatLogs.logInfo(null, information, null, null, null, false, -1);
-                        cache.put(key, information);
-                        byteSize += key.length() + information.length();
-
-                        if (byteSize >= Cache.maxBytes) {
-                            isFull = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+        boolean isFull = false,
+                continueWithYAML = false;
 
         // Separator
 

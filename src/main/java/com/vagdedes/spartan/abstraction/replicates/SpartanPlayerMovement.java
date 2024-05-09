@@ -341,6 +341,10 @@ public class SpartanPlayerMovement {
         );
     }
 
+    public int getDefaultTicksOnAir() {
+        return (int) (TPS.getTick(this.parent) - this.lastVanillaOnGround);
+    }
+
     public synchronized void resetAirTicks() {
         this.lastOnGround = TPS.getTick(this.parent);
     }

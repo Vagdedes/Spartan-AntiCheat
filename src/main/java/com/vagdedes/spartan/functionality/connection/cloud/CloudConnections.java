@@ -3,7 +3,6 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.profiling.ViolationHistory;
@@ -92,27 +91,6 @@ public class CloudConnections {
             return 0;
         }
         return -1;
-    }
-
-    static void logServerSpecifications() {
-        SpartanBukkit.connectionThread.execute(() -> {
-            Runtime runtime = Runtime.getRuntime();
-            String motd = StringUtils.getClearColorString(Bukkit.getMotd());
-
-            String specs = MultiVersion.versionString() + CloudBase.separator
-                    + Bukkit.getPort() + CloudBase.separator
-                    + runtime.availableProcessors() + CloudBase.separator
-                    + (runtime.totalMemory() / 1024 / 1024) + CloudBase.separator
-                    + Register.manager.getPlugins().length + CloudBase.separator
-                    + Base64.getEncoder().encodeToString(motd.getBytes());
-
-            try {
-                RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification + "&action=add&data=serverSpecifications"
-                        + "&value=" + URLEncoder.encode(specs, "UTF-8") + "&version=" + CloudBase.version);
-            } catch (Exception e) {
-                CloudBase.throwError(e, "serverSpecifications:ADD");
-            }
-        });
     }
 
     static boolean ownsProduct(String productID) { // Once
@@ -291,8 +269,7 @@ public class CloudConnections {
                                         + y + CloudBase.separator
                                         + z + CloudBase.separator
                                         + StringUtils.getClearColorString(type) + CloudBase.separator
-                                        + StringUtils.getClearColorString(information) + CloudBase.separator
-                                        + Config.settings.getBoolean(Settings.showEcosystemOption), "UTF-8"));
+                                        + StringUtils.getClearColorString(information), "UTF-8"));
                     } catch (Exception e) {
                         CloudBase.throwError(e, "discordWebhooks:ADD");
                     }
@@ -308,18 +285,6 @@ public class CloudConnections {
     }
 
     // Manual
-
-    public static String getAiAssistance(String question) {
-        try {
-            String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
-                    + "&action=get&data=aiAssistance&version=" + CloudBase.version + "&value="
-                    + URLEncoder.encode(question, "UTF-8"));
-            return results.length > 0 ? results[0] : null;
-        } catch (Exception e) {
-            CloudBase.throwError(e, "aiAssistance:GET");
-            return null;
-        }
-    }
 
     private static String sendCustomerSupport(String contactPlatform, String contactInformation,
                                               String columnType, String columnInformation,

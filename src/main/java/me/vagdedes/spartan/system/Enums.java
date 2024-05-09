@@ -301,18 +301,21 @@ public class Enums {
     public enum DataType {
         JAVA, BEDROCK, UNIVERSAL;
 
-        public final String lowerCase;
+        public final String lowerCase, name;
 
         DataType() {
             switch (this.ordinal()) {
                 case 0:
                     lowerCase = "java";
+                    name = "Java";
                     break;
                 case 1:
                     lowerCase = "bedrock";
+                    name = "Bedrock";
                     break;
                 default:
                     lowerCase = "universal";
+                    name = "Universal";
                     break;
             }
         }

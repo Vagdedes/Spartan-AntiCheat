@@ -2,7 +2,6 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
@@ -126,8 +125,6 @@ public class EventsHandler1 implements Listener {
         if (p == null) {
             return;
         }
-        // Compatibility
-        NoHitDelay.runVelocity(p);
 
         // Object
         p.addReceivedVelocity(e);

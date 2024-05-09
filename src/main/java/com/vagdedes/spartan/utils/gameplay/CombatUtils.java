@@ -255,4 +255,5 @@ public class CombatUtils {
         }
         return false;
     }
+
 }

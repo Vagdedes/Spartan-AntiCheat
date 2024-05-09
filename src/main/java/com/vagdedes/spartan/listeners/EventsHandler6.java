@@ -4,7 +4,6 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
-import com.vagdedes.spartan.compatibility.manual.damage.NoHitDelay;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -84,16 +83,12 @@ public class EventsHandler6 implements Listener {
 
                 if (entityIsPlayer || defaultEntity instanceof LivingEntity) {
                     boolean cancelled = e.isCancelled();
-                    LivingEntity entity = (LivingEntity) defaultEntity;
 
-                    if (!cancelled) {
-                        // Compatibility
-                        NoHitDelay.runDealDamage(p, entity);
-                    }
                     if (!p.uuid.equals(defaultEntity.getUniqueId())
                             && !mcMMO.hasGeneralAbility(p)
                             && !MythicMobs.is(defaultEntity)
                             && !ItemsAdder.is(defaultEntity)) {
+                        LivingEntity entity = (LivingEntity) defaultEntity;
                         double[] utility = CombatUtils.get_X_Y_Distance(p, entity);
 
                         // Detections

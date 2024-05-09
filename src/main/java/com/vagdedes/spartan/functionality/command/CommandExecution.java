@@ -80,7 +80,6 @@ public class CommandExecution implements CommandExecutor {
                                 "Click this command to open the plugin's inventory menu.");
                     }
                     if (!isPlayer || Permissions.has(player, Permission.ADMIN)) {
-                        ClickableMessage.sendCommand(sender, ChatColor.GREEN + "/" + command + " ai-assistance <question>", "This command can be used to ask our AI Assistant about most of the help you may need.", null);
                         ClickableMessage.sendCommand(sender, ChatColor.GREEN + "/" + command + " customer-support <check> <discord-tag> [explanation]", "This command can be used to provide crucial details to the developers about a check.", null);
                     }
                     if (manage) {
@@ -225,32 +224,7 @@ public class CommandExecution implements CommandExecutor {
                     completeMessage(sender, "default");
                 }
             } else {
-                if (args[0].equalsIgnoreCase("AI-Assistance")) {
-                    if (isPlayer && !Permissions.has(player, Permission.ADMIN)) {
-                        sender.sendMessage(Config.messages.getColorfulString("no_permission"));
-                        return true;
-                    }
-                    StringBuilder argumentsToStringBuilder = new StringBuilder();
-                    for (int i = 1; i < args.length; i++) {
-                        argumentsToStringBuilder.append(args[i]).append(" ");
-                    }
-                    String argumentsToString = argumentsToStringBuilder.substring(0, argumentsToStringBuilder.length() - 1);
-
-                    if (isPlayer ? argumentsToString.length() > player.getMaxChatLength() : argumentsToString.length() > maxConnectedArgumentLength) {
-                        sender.sendMessage(Config.messages.getColorfulString("massive_command_reason"));
-                        return true;
-                    }
-                    sender.sendMessage(AwarenessNotifications.getNotification("Please wait..."));
-                    SpartanBukkit.connectionThread.execute(() -> {
-                        String assistance = CloudConnections.getAiAssistance(argumentsToStringBuilder.toString());
-
-                        if (assistance != null && !assistance.isEmpty()) {
-                            sender.sendMessage(AwarenessNotifications.getNotification(assistance));
-                        } else {
-                            sender.sendMessage(Config.messages.getColorfulString("failed_command"));
-                        }
-                    });
-                } else if (args[0].equalsIgnoreCase("Proxy-Command")) {
+                if (args[0].equalsIgnoreCase("Proxy-Command")) {
                     if (isPlayer && !Permissions.has(player, Permission.ADMIN)) {
                         sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                         return true;

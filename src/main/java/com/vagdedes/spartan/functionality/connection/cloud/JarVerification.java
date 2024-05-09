@@ -41,7 +41,6 @@ public class JarVerification {
         }
 
         SpartanEdition.refresh();
-        CloudConnections.logServerSpecifications();
 
         // Separator
         long delay = 1200L;

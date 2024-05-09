@@ -38,11 +38,11 @@ public class Compatibility {
 
     public enum CompatibilityType {
         ADVANCED_ABILITIES, CRACK_SHOT, CRACK_SHOT_PLUS, CRAFT_BOOK, MAGIC_SPELLS, PROTOCOL_LIB,
-        MC_MMO, NO_HIT_DELAY, TREE_FELLER, VEIN_MINER, GRAPPLING_HOOK, RECENT_PVP_MECHANICS,
+        MC_MMO, AUTHENTICATION, TREE_FELLER, VEIN_MINER, GRAPPLING_HOOK, RECENT_PVP_MECHANICS,
         MINE_BOMB, SUPER_PICKAXE, REAL_DUAL_WIELD, MYTHIC_MOBS, ITEM_ATTRIBUTES, PRINTER_MODE,
         VEHICLES, MINE_TINKER, WILD_TOOLS, DRAGON_PHASES, AURELIUM_SKILLS, KNOCKBACK_MASTER,
         MY_PET, CUSTOM_ENCHANTS_PLUS, ECO_ENCHANTS, ITEMS_ADDER, RAMPEN_DRILLS, OLD_COMBAT_MECHANICS,
-        CUSTOM_KNOCKBACK, PROJECT_KORRA, ACID_RAIN, FILE_GUI, FLOODGATE, PROTOCOL_SUPPORT, AUTHENTICATION;
+        CUSTOM_KNOCKBACK, PROJECT_KORRA, ACID_RAIN, FILE_GUI, FLOODGATE, PROTOCOL_SUPPORT;
 
         private boolean enabled, forced, functional;
 
@@ -348,9 +348,6 @@ public class Compatibility {
                 () -> Register.enable(new AureliumSkills(), AureliumSkills.class)
         );
         CompatibilityType.ITEMS_ADDER.setFunctional();
-        CompatibilityType.NO_HIT_DELAY.setFunctional(
-                new String[]{""}
-        );
         MainMenu.refresh();
     }
 

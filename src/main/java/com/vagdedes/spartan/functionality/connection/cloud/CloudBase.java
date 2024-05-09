@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
@@ -203,11 +202,11 @@ public class CloudBase {
             }
 
             // Separator
-            if (independent && Config.settings.getBoolean(Settings.cloudSynchroniseFilesOption)) {
+            if (independent) {
                 SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
-                                + "&action=get&data=automaticConfigurationChanges&version=" + version + "&value=" + Bukkit.getPort());
+                                + "&action=get&data=automaticConfigurationChanges&version=" + version);
 
                         if (results.length > 0) {
                             boolean changed = false;

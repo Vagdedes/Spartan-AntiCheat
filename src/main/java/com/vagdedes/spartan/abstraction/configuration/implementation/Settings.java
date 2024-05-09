@@ -27,7 +27,6 @@ public class Settings extends ConfigurationBuilder {
     }
 
     public static final String
-            showEcosystemOption = "Important.show_ecosystem",
             tpsProtectionOption = "Protections.use_tps_protection",
             maxSupportedLatencyOption = "Protections.max_supported_player_latency",
             cloudServerNameOption = "Cloud.server_name",
@@ -87,7 +86,6 @@ public class Settings extends ConfigurationBuilder {
         addOption("Important.modify_server_configuration", false);
         addOption("Important.refresh_inventory_menu", true);
         addOption("Important.enable_developer_api", true);
-        addOption(showEcosystemOption, true);
         addOption("Important.bedrock_player_prefix", ".");
         addOption("Important.inventory_menu_empty_heads", true);
 
