@@ -115,16 +115,22 @@ public class SpartanBukkit {
     // Separator
 
     public static Player getRealPlayer(UUID uuid) {
-        Player player = realPlayers.get(uuid);
-        return player != null && player.isOnline() ? player : null;
+        synchronized (realPlayers) {
+            Player player = realPlayers.get(uuid);
+            return player != null && player.isOnline() ? player : null;
+        }
     }
 
     public static void addRealPlayer(Player player) {
-        realPlayers.put(player.getUniqueId(), player);
+        synchronized (realPlayers) {
+            realPlayers.put(player.getUniqueId(), player);
+        }
     }
 
     public static void removeRealPlayer(Player player) {
-        realPlayers.remove(player.getUniqueId());
+        synchronized (realPlayers) {
+            realPlayers.remove(player.getUniqueId());
+        }
     }
 
     // Separator
