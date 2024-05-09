@@ -2,23 +2,20 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.chat.ChatProtection;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
-import org.bukkit.event.server.ServerCommandEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 
 public class EventsHandler7 implements Listener {
 
@@ -30,43 +27,6 @@ public class EventsHandler7 implements Listener {
             Enums.HackType.ImpossibleInventory,
             Enums.HackType.Exploits
     };
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void PlayerFlight(PlayerToggleFlightEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-        if (p == null) {
-            return;
-        }
-
-        // Objects
-        p.movement.setFlying(e.isCancelled() ? n.isFlying() : e.isFlying() || n.isFlying());
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void TabCompletion(PlayerChatTabCompleteEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
-        // Protections
-        if (ChatProtection.runCommand(p, e.getChatMessage(), true)) {
-            e.getTabCompletions().clear();
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void Command(ServerCommandEvent e) {
-        CommandSender s = e.getSender();
-        String msg = e.getCommand();
-
-        // Protections
-        if (ChatProtection.runConsoleCommand(s, msg)) {
-            e.setCancelled(true);
-        }
-    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Move(PlayerMoveEvent e) {
@@ -101,7 +61,7 @@ public class EventsHandler7 implements Listener {
                 ver = toY - fromY,
                 hor = Math.sqrt(preXZ);
 
-        if (!p.movement.processLastMoveEvent(to, from, ver)) {
+        if (!p.movement.processLastMoveEvent(to, from)) {
             return;
         }
         MovementProcessing.run(n, p, to, dis, hor, ver, box);
@@ -123,18 +83,23 @@ public class EventsHandler7 implements Listener {
         p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void WorldChange(PlayerChangedWorldEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+    @EventHandler
+    private void PluginEnable(PluginEnableEvent e) {
 
-        if (p == null) {
-            return;
-        }
-        // Object
-        p.resetHandlers();
+        // Utils
+        PluginUtils.clear();
 
-        // Detections
-        CheckDelay.cancel(p.uuid, 20);
+        // System
+        Config.compatibility.fastClear();
+    }
+
+    @EventHandler
+    private void PluginDisable(PluginDisableEvent e) {
+
+        // Utils
+        PluginUtils.clear();
+
+        // System
+        Config.compatibility.fastClear();
     }
 }

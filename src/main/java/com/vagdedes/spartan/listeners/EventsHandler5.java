@@ -45,10 +45,6 @@ public class EventsHandler5 implements Listener {
 
             if (p.getViolations(Enums.HackType.FastEat).prevent()) {
                 e.setCancelled(true);
-                p.setFoodLevel(n.getFoodLevel(), false);
-            } else {
-                // Objects (Always after detections)
-                p.setFoodLevel(e.getFoodLevel(), false);
             }
         }
     }
@@ -64,8 +60,6 @@ public class EventsHandler5 implements Listener {
             if (p == null) {
                 return;
             }
-            // Objects
-            p.setHealth(n.getHealth());
 
             // Detections
             p.getExecutor(Enums.HackType.FastHeal).handle(e.isCancelled(), e);

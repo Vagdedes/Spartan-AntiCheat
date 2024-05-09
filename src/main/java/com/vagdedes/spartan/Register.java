@@ -68,8 +68,6 @@ public class Register extends JavaPlugin {
         enable(new EventsHandler5(), EventsHandler5.class);
         enable(new EventsHandler6(), EventsHandler6.class);
         enable(new EventsHandler7(), EventsHandler7.class);
-        enable(new EventsHandler8(), EventsHandler8.class);
-        enable(new EventsHandler9(), EventsHandler9.class);
 
         if (!MultiVersion.folia) {
             enable(new EventsHandler_non_folia(), EventsHandler_non_folia.class);

@@ -57,20 +57,14 @@ public class SpartanPlayer {
     private static final Map<World, List<Entity>> worldEntities
             = Collections.synchronizedMap(new LinkedHashMap<>(Math.max(Bukkit.getWorlds().size(), 1)));
 
-    private float walkSpeed, flySpeed, fallDistance;
-    private boolean frozen, onGroundCustom, dead, sleeping;
-    private int ping, maximumNoDamageTicks, foodLevel;
-    private double eyeHeight, health;
-    private GameMode gameMode;
     public final boolean bedrockPlayer;
+    private boolean onGroundCustom;
     public final long creationTime;
     public final String name;
     public final UUID uuid;
     public final String ipAddress;
     private final Map<PotionEffectType, SpartanPotionEffect> potionEffects;
     public final Enums.DataType dataType;
-    private SpartanInventory inventory;
-    private SpartanOpenInventory openInventory;
     public final SpartanPlayerMovement movement;
     public final SpartanPunishments punishments;
     private final Map<EntityDamageEvent.DamageCause, SpartanPlayerDamage> damageReceived, damageDealt;
@@ -85,7 +79,7 @@ public class SpartanPlayer {
     private final Cooldowns[] cooldowns;
     private final CheckExecutor[] executors;
     private final LiveViolation[] violations;
-    final Trackers trackers;
+    private final Trackers trackers;
     private LiveViolation lastViolation;
 
     // Cache
@@ -100,12 +94,106 @@ public class SpartanPlayer {
     static {
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
-                if (MultiVersion.folia) {
-                    run(false);
-                } else if (!SpartanBukkit.playerThread.executeIfFree(() -> run(false))) {
-                    SpartanBukkit.detectionThread.executeIfFreeElseHere(() -> run(false));
+                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+
+                boolean clearCache, hasPlayers = !players.isEmpty();
+
+                if (syncTicks == 0) {
+                    clearCache = true;
+                    syncTicks = tickFrequency;
+
+                    if (!MultiVersion.folia) {
+                        synchronized (worldEntities) {
+                            worldEntities.clear();
+
+                            if (hasPlayers) {
+                                for (World world : Bukkit.getWorlds()) {
+                                    worldEntities.put(
+                                            world,
+                                            new ArrayList<>(world.getEntities())
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    clearCache = false;
+                    syncTicks--;
+
+                    if (!MultiVersion.folia && syncTicks % 20 == 0) {
+                        synchronized (worldEntities) {
+                            worldEntities.clear();
+
+                            if (hasPlayers) {
+                                for (World world : Bukkit.getWorlds()) {
+                                    worldEntities.put(
+                                            world,
+                                            new ArrayList<>(world.getEntities())
+                                    );
+                                }
+                            }
+                        }
+                    }
                 }
-                run(true);
+
+                if (hasPlayers) {
+                    for (SpartanPlayer p : players) {
+                        if (clearCache) {
+                            for (Enums.HackType hackType : Enums.HackType.values()) {
+                                if (!p.getViolations(hackType).hasLevel()) {
+                                    p.getBuffer(hackType).clear();
+                                    p.getTimer(hackType).clear();
+                                    p.getDecimals(hackType).clear();
+                                    p.getCooldowns(hackType).clear();
+                                }
+                            }
+                        }
+                        if (p.refreshOnGround(new SpartanLocation[]{p.movement.getLocation()})) {
+                            p.movement.resetAirTicks();
+                        }
+                        if (p.isOnGroundDefault()) {
+                            p.movement.resetVanillaAirTicks();
+                        }
+                        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+                            Elytra.judge(p, false);
+                        }
+                        p.playerProfile.playerCombat.track();
+                        p.nearbyEntitiesDistance = 0;
+                        p.movement.setDetectionLocation(false);
+
+                        // Separator
+                        SpartanBukkit.runTask(p, () -> {
+                            Player n = p.getPlayer();
+
+                            if (n != null) {
+                                Collection<PotionEffect> potionEffects = n.getActivePotionEffects();
+                                p.setStoredPotionEffects(potionEffects); // Bad
+                                SpartanLocation to = p.movement.getLocation(),
+                                        from = p.movement.getCustomFromLocation();
+
+                                if (from != null) {
+                                    p.movement.setCustomDistance(
+                                            to.distance(from),
+                                            AlgebraUtils.getHorizontalDistance(to, from),
+                                            to.getY() - from.getY()
+                                    );
+                                }
+                                p.movement.customFromLocation = to;
+
+                                for (CheckExecutor executor : p.executors) {
+                                    executor.scheduler();
+                                }
+                            }
+
+                            // Preventions
+                            for (Enums.HackType hackType : EventsHandler7.handledChecks) {
+                                if (p.getViolations(hackType).prevent()) {
+                                    break;
+                                }
+                            }
+                        });
+                    }
+                }
             }, 1L, 1L);
         }
     }
@@ -147,153 +235,10 @@ public class SpartanPlayer {
         }
     }
 
-    private static void run(boolean sync) {
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-
-        if (sync) {
-            boolean clearCache, hasPlayers = !players.isEmpty();
-
-            if (syncTicks == 0) {
-                clearCache = true;
-                syncTicks = tickFrequency;
-
-                if (!MultiVersion.folia) {
-                    synchronized (worldEntities) {
-                        worldEntities.clear();
-
-                        if (hasPlayers) {
-                            for (World world : Bukkit.getWorlds()) {
-                                worldEntities.put(
-                                        world,
-                                        new ArrayList<>(world.getEntities())
-                                );
-                            }
-                        }
-                    }
-                }
-            } else {
-                clearCache = false;
-                syncTicks--;
-
-                if (!MultiVersion.folia && syncTicks % 20 == 0) {
-                    synchronized (worldEntities) {
-                        worldEntities.clear();
-
-                        if (hasPlayers) {
-                            for (World world : Bukkit.getWorlds()) {
-                                worldEntities.put(
-                                        world,
-                                        new ArrayList<>(world.getEntities())
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (hasPlayers) {
-                for (SpartanPlayer p : players) {
-                    if (clearCache) {
-                        for (Enums.HackType hackType : Enums.HackType.values()) {
-                            if (!p.getViolations(hackType).hasLevel()) {
-                                p.getBuffer(hackType).clear();
-                                p.getTimer(hackType).clear();
-                                p.getDecimals(hackType).clear();
-                                p.getCooldowns(hackType).clear();
-                            }
-                        }
-                    }
-                    if (p.refreshOnGround(new SpartanLocation[]{p.movement.getLocation()})) {
-                        p.movement.resetAirTicks();
-                    }
-                    if (p.isOnGroundDefault()) {
-                        p.movement.resetVanillaAirTicks();
-                    }
-                    p.nearbyEntitiesDistance = 0;
-
-                    // Separator
-                    SpartanBukkit.runTask(p, () -> {
-                        Player n = p.getPlayer();
-
-                        if (n != null) {
-                            Collection<PotionEffect> potionEffects = n.getActivePotionEffects();
-                            p.setStoredPotionEffects(potionEffects); // Bad
-                            SpartanLocation to = p.movement.getLocation(),
-                                    from = p.movement.getCustomFromLocation();
-
-                            if (from != null) {
-                                p.movement.setCustomDistance(
-                                        to.distance(from),
-                                        AlgebraUtils.getHorizontalDistance(to, from),
-                                        to.getY() - from.getY()
-                                );
-                            }
-                            p.movement.customFromLocation = to;
-
-                            for (CheckExecutor executor : p.executors) {
-                                executor.scheduler();
-                            }
-                        }
-
-                        // Preventions
-                        for (Enums.HackType hackType : EventsHandler7.handledChecks) {
-                            if (p.getViolations(hackType).prevent()) {
-                                break;
-                            }
-                        }
-                    });
-                }
-            }
-        } else if (!players.isEmpty()) {
-            for (SpartanPlayer p : players) {
-                SpartanBukkit.runTask(p, () -> {
-                    if (p != null) {
-                        // Ground Identification Cache
-                        p.movement.setDetectionLocation(false);
-                        Player n = p.getPlayer();
-
-                        if (n != null) {
-                            // Only
-                            p.ping = Latency.ping(n);
-                            p.setFrozen(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17) && n.isFrozen());
-
-                            // Bad
-                            p.setHealth(n.getHealth());
-                            p.setSleeping(n.isSleeping());
-                            p.setInventory(n.getInventory(), n.getOpenInventory());
-
-                            // Good
-                            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-                                Elytra.judge(p, n.isGliding(), false);
-                            }
-                            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-                                p.movement.setSwimming(n.isSwimming(), 0);
-                            }
-                            p.setGameMode(n.getGameMode());
-                            p.movement.setFlying(n.isFlying());
-                            p.setFoodLevel(n.getFoodLevel(), false);
-                            p.setDead(n.isDead());
-                            p.maximumNoDamageTicks = n.getMaximumNoDamageTicks();
-                            p.playerProfile.playerCombat.track();
-                        }
-                    }
-                });
-            }
-        }
-    }
-
     // Object
 
     public SpartanPlayer(Player p, UUID uuid) {
-        PlayerInventory inv = p.getInventory();
-        InventoryView openInventory = p.getOpenInventory();
-        SpartanOpenInventory spartanOpenInv = new SpartanOpenInventory(
-                openInventory.getCursor(),
-                openInventory.countSlots(),
-                openInventory.getTopInventory().getContents(),
-                openInventory.getBottomInventory().getContents());
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        ItemStack itemInHand = p.getItemInHand();
 
         this.uuid = uuid;
         this.nearbyEntities = Collections.synchronizedList(new ArrayList<>());
@@ -304,22 +249,9 @@ public class SpartanPlayer {
 
         this.ipAddress = PlayerLimitPerIP.get(p);
         this.name = p.getName();
-        this.dead = p.isDead();
-        this.sleeping = p.isSleeping();
-        this.walkSpeed = p.getWalkSpeed();
-        this.eyeHeight = p.getEyeHeight();
-        this.flySpeed = p.getFlySpeed();
-        this.gameMode = p.getGameMode();
-        this.health = p.getHealth();
-        this.openInventory = spartanOpenInv;
-        this.maximumNoDamageTicks = p.getMaximumNoDamageTicks();
-        this.fallDistance = p.getFallDistance();
-        this.foodLevel = p.getFoodLevel();
         this.potionEffects = Collections.synchronizedMap(
                 SpartanPotionEffect.mapFromBukkit(this, p.getActivePotionEffects())
         );
-        this.ping = Latency.ping(p);
-        this.frozen = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17) && p.isFrozen();
         this.playerProfile = ResearchEngine.getPlayerProfile(this);
         this.clicks = new Clicks();
         this.vehicle = p.getVehicle();
@@ -346,11 +278,6 @@ public class SpartanPlayer {
                     damageCause,
                     this.lastDamageReceived
             );
-        }
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            this.inventory = new SpartanInventory(inv.getContents(), new ItemStack[]{inv.getHelmet(), inv.getChestplate(), inv.getLeggings(), inv.getBoots()}, itemInHand, inv.getItemInOffHand());
-        } else {
-            this.inventory = new SpartanInventory(inv.getContents(), new ItemStack[]{inv.getHelmet(), inv.getChestplate(), inv.getLeggings(), inv.getBoots()}, itemInHand, null);
         }
         this.creationTime = System.currentTimeMillis();
 
@@ -579,7 +506,7 @@ public class SpartanPlayer {
         if (inventory != null) {
             Player p = getPlayer();
 
-            if (p != null && p.isOnline()) {
+            if (p != null) {
                 p.openInventory(inventory);
             }
         }
@@ -588,39 +515,27 @@ public class SpartanPlayer {
     public Inventory createInventory(int size, String title) {
         Player p = getPlayer();
 
-        if (p != null && p.isOnline()) {
+        if (p != null) {
             return Bukkit.createInventory(p, size, title);
         }
         return null;
     }
 
-    public SpartanOpenInventory getOpenInventory() {
-        return openInventory;
+    public InventoryView getOpenInventory() {
+        Player p = getPlayer();
+        return p == null ? null : p.getOpenInventory();
     }
 
     // Separator
 
-    public SpartanInventory getInventory() {
-        return inventory;
+    public PlayerInventory getInventory() {
+        Player p = getPlayer();
+        return p == null ? null : p.getInventory();
     }
 
     public ItemStack getItemInHand() {
-        return inventory.itemInHand;
-    }
-
-    public synchronized void setInventory(PlayerInventory inv, InventoryView openInventory) {
-        this.inventory = new SpartanInventory(inv.getContents(),
-                new ItemStack[]{inv.getHelmet(), inv.getChestplate(), inv.getLeggings(), inv.getBoots()},
-                inv.getItemInHand(), MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? inv.getItemInOffHand() : null);
-
-        if (openInventory != null) {
-            this.openInventory = new SpartanOpenInventory(openInventory.getCursor(),
-                    openInventory.countSlots(),
-                    openInventory.getTopInventory().getContents(),
-                    openInventory.getBottomInventory().getContents());
-        } else {
-            this.openInventory = new SpartanOpenInventory();
-        }
+        PlayerInventory inventory = getInventory();
+        return inventory == null ? new ItemStack(Material.AIR) : inventory.getItemInHand();
     }
 
     // Separator
@@ -634,7 +549,7 @@ public class SpartanPlayer {
     // Separator
 
     public Player getPlayer() {
-        return Bukkit.getPlayer(uuid);
+        return SpartanBukkit.getRealPlayer(uuid);
     }
 
     public boolean isOp() {
@@ -650,21 +565,15 @@ public class SpartanPlayer {
     // Separator
 
     public boolean isDead() {
-        return dead;
-    }
-
-    public synchronized void setDead(boolean dead) {
-        this.dead = dead;
+        Player p = getPlayer();
+        return p != null && p.isDead();
     }
 
     // Separator
 
     public boolean isSleeping() {
-        return sleeping;
-    }
-
-    public synchronized void setSleeping(boolean sleeping) {
-        this.sleeping = sleeping;
+        Player p = getPlayer();
+        return p != null && p.isSleeping();
     }
 
     // Separator
@@ -776,99 +685,77 @@ public class SpartanPlayer {
     // Separator
 
     public float getWalkSpeed() {
-        return walkSpeed;
-    }
-
-    public synchronized void setWalkSpeed(float walkSpeed) {
-        this.walkSpeed = walkSpeed;
+        Player p = getPlayer();
+        return p == null ? 0.0f : p.getWalkSpeed();
     }
 
     // Separator
 
     public float getFlySpeed() {
-        return flySpeed;
-    }
-
-    public synchronized void setFlySpeed(float flySpeed) {
-        this.flySpeed = flySpeed;
+        Player p = getPlayer();
+        return p == null ? 0.0f : p.getFlySpeed();
     }
 
     // Separator
 
     public int getFoodLevel() {
-        return foodLevel;
+        Player p = getPlayer();
+        return p == null ? 0 : p.getFoodLevel();
     }
 
-    public synchronized void setFoodLevel(int foodLevel, boolean modify) {
-        if (modify) {
-            Player p = getPlayer();
+    public synchronized void setFoodLevel(int foodLevel) {
+        Player p = getPlayer();
 
-            if (p != null && p.isOnline()) {
-                p.setFoodLevel(foodLevel);
-                this.foodLevel = foodLevel;
-            }
-        } else {
-            this.foodLevel = foodLevel;
+        if (p != null) {
+            p.setFoodLevel(foodLevel);
         }
     }
 
     // Separator
 
     public double getHealth() {
-        return health;
-    }
-
-    public synchronized void setHealth(double health) {
-        this.health = health;
+        Player p = getPlayer();
+        return p == null ? 0.0 : p.getHealth();
     }
 
     // Separator
 
     public float getFallDistance() {
-        return fallDistance;
+        Player p = getPlayer();
+        return p == null ? 0.0f : p.getFallDistance();
     }
 
-    public synchronized void setFallDistance(float fallDistance, boolean modify) {
-        if (modify) {
-            Player p = getPlayer();
+    public synchronized void setFallDistance(float fallDistance) {
+        Player p = getPlayer();
 
-            if (p != null && p.isOnline()) {
-                p.setFallDistance(fallDistance);
-                this.fallDistance = fallDistance;
-            }
-        } else {
-            this.fallDistance = fallDistance;
+        if (p != null) {
+            p.setFallDistance(fallDistance);
         }
     }
 
     // Separator
 
     public GameMode getGameMode() {
-        return gameMode;
-    }
-
-    public synchronized void setGameMode(GameMode gameMode) {
-        this.gameMode = gameMode;
+        Player p = getPlayer();
+        return p == null ? GameMode.SURVIVAL : p.getGameMode();
     }
 
     // Separator
 
     public double getEyeHeight() {
-        return eyeHeight;
-    }
-
-    public synchronized void setEyeHeight(double eyeHeight) {
-        this.eyeHeight = eyeHeight;
+        Player p = getPlayer();
+        return p == null ? 0.0 : p.getEyeHeight();
     }
 
     // Separator
 
     public boolean isFrozen() {
-        return frozen;
-    }
-
-    public synchronized void setFrozen(boolean frozen) {
-        this.frozen = frozen;
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
+            Player p = getPlayer();
+            return p != null && p.isFrozen();
+        } else {
+            return false;
+        }
     }
 
     // Separator
@@ -983,10 +870,6 @@ public class SpartanPlayer {
         }
     }
 
-    public int getMaximumNoDamageTicks() {
-        return maximumNoDamageTicks;
-    }
-
     // Separator
 
     public boolean hasAttackCooldown() {
@@ -995,10 +878,11 @@ public class SpartanPlayer {
 
     public float getAttackCooldown() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            Player player = getPlayer();
-            return player == null ? 1.0f : player.getAttackCooldown();
+            Player p = getPlayer();
+            return p == null ? 1.0f : p.getAttackCooldown();
+        } else {
+            return 1.0f;
         }
-        return 1.0f;
     }
 
     // Separator
@@ -1040,17 +924,6 @@ public class SpartanPlayer {
         synchronized (this.potionEffects) {
             for (PotionEffect effect : effects) {
                 this.potionEffects.put(effect.getType(), new SpartanPotionEffect(this, effect));
-            }
-        }
-    }
-
-    public void removePotionEffect(PotionEffectType potionEffectType) {
-        if (this.hasPotionEffect(potionEffectType, 0)) {
-            Player p = getPlayer();
-
-            if (p != null && p.isOnline()) {
-                p.removePotionEffect(potionEffectType);
-                setStoredPotionEffects(p.getActivePotionEffects());
             }
         }
     }
@@ -1171,9 +1044,9 @@ public class SpartanPlayer {
 
     // Teleport
 
-    public boolean groundTeleport() {
+    public void groundTeleport() {
         if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection") || this.onGroundCustom) {
-            return false;
+            return;
         }
         SpartanLocation location = this.movement.getLocation(),
                 locationP1 = location.clone().add(0, 1, 0);
@@ -1181,10 +1054,9 @@ public class SpartanPlayer {
         if (BlockUtils.isSolid(locationP1.getBlock().material)
                 && !(BlockUtils.areWalls(locationP1.getBlock().material)
                 || BlockUtils.canClimb(locationP1.getBlock().material))) {
-            return false;
+            return;
         }
         World world = getWorld();
-        float countedDamage = 0.0f;
         double startY = Math.min(BlockUtils.getMaxHeight(world), location.getY()),
                 box = startY - Math.floor(startY);
         int iterations = 0;
@@ -1201,7 +1073,6 @@ public class SpartanPlayer {
                     && (BlockUtils.canClimb(material)
                     || BlockUtils.areWalls(material)
                     || !BlockUtils.isSolid(material))) {
-                countedDamage++;
                 iterations++;
             } else {
                 double blockBox = GroundUtils.getMaxHeight(material);
@@ -1215,36 +1086,26 @@ public class SpartanPlayer {
                 break;
             }
         }
-        countedDamage--; // Ignoring the first check of the current location
 
-        if (Config.settings.getBoolean("Detections.fall_damage_on_teleport")) { // Damage
-            if (countedDamage >= Math.max(fallDistance, 4.0)) { // Greater than fall
-                setFallDistance(0.0f, true);
+        if (iterations > 0) {
+            setFallDistance(0.0f);
 
-                if (playerProfile.isSuspectedOrHacker()) {
-                    applyFallDamage(countedDamage);
-                }
-            } else if (countedDamage > 0.0f) {
-                setFallDistance(0.0f, true);
+            if (Config.settings.getBoolean("Detections.fall_damage_on_teleport")
+                    && iterations > PlayerUtils.fallDamageAboveBlocks
+                    && playerProfile.isSuspectedOrHacker()) { // Damage
+                applyFallDamage(Math.max(getFallDistance(), iterations));
             }
-        } else if (countedDamage > 0.0f) {
-            setFallDistance(0.0f, true);
         }
-        return true;
     }
 
     public boolean teleport(SpartanLocation location) {
         if (this.getWorld().equals(location.world)) {
             Player p = getPlayer();
 
-            if (p != null && p.isOnline()) {
+            if (p != null) {
                 if (SpartanBukkit.isSynchronised()) {
                     p.leaveVehicle();
                 }
-                this.movement.setSprinting(false);
-                this.movement.setSneaking(false);
-                this.movement.setSwimming(false, 0);
-                this.movement.setGliding(false, false);
                 this.movement.removeLastLiquidTime();
                 this.trackers.removeMany(Trackers.TrackerFamily.VELOCITY);
 
@@ -1272,7 +1133,7 @@ public class SpartanPlayer {
     private boolean damage(double amount, EntityDamageEvent.DamageCause damageCause) {
         Player p = getPlayer();
 
-        if (p != null && p.isOnline()) {
+        if (p != null) {
             EntityDamageEvent event = new EntityDamageEvent(p, damageCause, amount);
             p.damage(amount);
             p.setLastDamageCause(event);
@@ -1311,16 +1172,17 @@ public class SpartanPlayer {
 
     public boolean canSee(Player target) {
         if (SpartanBukkit.supportedFork) {
-            Player player = getPlayer();
+            Player p = getPlayer();
 
-            if (player != null) {
-                return player.canSee(target);
+            if (p != null) {
+                return p.canSee(target);
             }
         }
-        return true;
+        return false;
     }
 
     public int getPing() {
-        return ping;
+        Player p = getPlayer();
+        return p == null ? 0 : Latency.ping(p);
     }
 }

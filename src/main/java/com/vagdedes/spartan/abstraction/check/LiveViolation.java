@@ -202,7 +202,7 @@ public class LiveViolation {
         if (SpartanBukkit.isSynchronised()) {
             Player player = this.player.getPlayer();
 
-            if (player != null && player.isOnline()) {
+            if (player != null) {
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
                     event = new ViolationResetEvent(player, this.hackType);
                     Register.manager.callEvent(event);
@@ -276,7 +276,7 @@ public class LiveViolation {
             if (!commands.isEmpty()) {
                 Player n = player.getPlayer();
 
-                if (n != null && n.isOnline()) {
+                if (n != null) {
                     boolean performed = false, found = false;
                     int index = 0;
 

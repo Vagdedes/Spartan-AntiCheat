@@ -12,7 +12,7 @@ public class ClickableMessage {
     public static boolean sendDescription(SpartanPlayer p, String message, String preview) {
         Player n = p.getPlayer();
 
-        if (n != null && n.isOnline()) {
+        if (n != null) {
             return sendDescription(n, message, preview);
         }
         return false;
@@ -21,7 +21,7 @@ public class ClickableMessage {
     public static boolean sendCommand(SpartanPlayer p, String message, String preview, String command) {
         Player n = p.getPlayer();
 
-        if (n != null && n.isOnline()) {
+        if (n != null) {
             return sendCommand(n, message, preview, command);
         }
         return false;
@@ -30,7 +30,7 @@ public class ClickableMessage {
     public static boolean sendURL(SpartanPlayer p, String message, String preview, String url) {
         Player n = p.getPlayer();
 
-        if (n != null && n.isOnline()) {
+        if (n != null) {
             return sendURL(n, message, preview, url);
         }
         return false;

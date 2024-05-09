@@ -63,19 +63,7 @@ public class MovementProcessing {
 
         // Separator
 
-        if (n.isSprinting()) {
-            player.movement.setSprinting(true);
-            player.movement.setSneaking(false);
-        } else {
-            player.movement.setSprinting(false);
-            player.movement.setSneaking(n.isSneaking());
-        }
         player.movement.setNmsDistance(distance, horizontal, vertical, box);
-        player.setFallDistance(n.getFallDistance(), false);
-        player.setWalkSpeed(n.getWalkSpeed());
-        player.setFlySpeed(n.getFlySpeed());
-        player.setEyeHeight(n.getEyeHeight());
-        player.setVehicle(n.getVehicle());
 
         // Separator
 
@@ -149,7 +137,7 @@ public class MovementProcessing {
 
             if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                     && player.movement.isLowEyeHeight()) {
-                player.movement.setSwimming(false, (int) (TPS.maximum / 2.0));
+                player.movement.setArtificialSwimming();
             }
             calculateBubbleWater(player, location);
             return true;
@@ -164,7 +152,7 @@ public class MovementProcessing {
 
                         if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                                 && player.movement.isLowEyeHeight()) {
-                            player.movement.setSwimming(false, (int) (TPS.maximum / 2.0));
+                            player.movement.setArtificialSwimming();
                         }
                         calculateBubbleWater(player, locationModified);
                         return true;

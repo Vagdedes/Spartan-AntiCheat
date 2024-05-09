@@ -22,7 +22,7 @@ public class SpartanPunishments {
     public void kick(CommandSender punisher, String reason) {
         Player target = this.parent.getPlayer();
 
-        if (target != null && target.isOnline()) {
+        if (target != null) {
             String punisherName = punisher instanceof ConsoleCommandSender
                     ? Config.messages.getColorfulString("console_name")
                     : punisher.getName(),
@@ -59,7 +59,7 @@ public class SpartanPunishments {
     public void warn(CommandSender punisher, String reason) {
         Player target = this.parent.getPlayer();
 
-        if (target != null && target.isOnline()) {
+        if (target != null) {
             String punisherName = punisher instanceof ConsoleCommandSender
                     ? Config.messages.getColorfulString("console_name")
                     : punisher.getName(),

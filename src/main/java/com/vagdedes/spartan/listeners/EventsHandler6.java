@@ -11,7 +11,6 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.gameplay.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,8 +18,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerChatTabCompleteEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 
@@ -164,18 +163,15 @@ public class EventsHandler6 implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public static void InventoryInteract(InventoryInteractEvent e) {
-        HumanEntity he = e.getWhoClicked();
+    public void TabCompletion(PlayerChatTabCompleteEvent e) {
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
-        if (he instanceof Player) {
-            Player n = (Player) he;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-            if (p == null) {
-                return;
-            }
-            // Objects
-            p.setInventory(n.getInventory(), n.getOpenInventory());
+        if (p == null) {
+            return;
+        }
+        // Protections
+        if (ChatProtection.runCommand(p, e.getChatMessage(), true)) {
+            e.getTabCompletions().clear();
         }
     }
 }

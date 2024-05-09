@@ -72,8 +72,6 @@ public class EventsHandler3 implements Listener {
                     || gameMode == GameMode.ADVENTURE);
 
             // Objects
-            p.setFallDistance(n.getFallDistance(), false);
-            p.setHealth(n.getHealth());
             p.addReceivedDamage(e);
 
             // Handlers
@@ -91,8 +89,6 @@ public class EventsHandler3 implements Listener {
 
                         if (p != null) {
                             // Objects
-                            p.setFallDistance(n.getFallDistance(), false);
-                            p.setHealth(n.getHealth());
                             p.addReceivedDamage(e);
                         }
                     }

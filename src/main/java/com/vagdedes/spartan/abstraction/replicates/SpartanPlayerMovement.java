@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.replicates;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -9,7 +8,6 @@ import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.GroundUtils;
 import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -32,12 +30,11 @@ public class SpartanPlayerMovement {
             nmsDistance, nmsHorizontalDistance, nmsVerticalDistance,
             nmsBox;
     private long
-            swimmingTime,
+            artificialSwimming,
             lastLiquidTicks,
             lastOnGround,
             lastVanillaOnGround;
     private Material lastLiquidMaterial;
-    private boolean gliding, swimming, sprinting, sneaking, flying;
     private SpartanLocation location, nmsTo, nmsFrom, detectionLocation;
     SpartanLocation customFromLocation;
     private Vector clampVector;
@@ -53,22 +50,11 @@ public class SpartanPlayerMovement {
         this.nmsVerticalDistance = Collections.synchronizedList(new LinkedList<>());
         this.nmsBox = Collections.synchronizedList(new LinkedList<>());
 
-        this.swimmingTime = 0L;
+        this.artificialSwimming = 0L;
         this.lastLiquidTicks = 0L;
         this.lastLiquidMaterial = Material.AIR;
         this.lastOnGround = 0L;
         this.lastVanillaOnGround = 0;
-
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            this.gliding = p.isGliding();
-            this.swimming = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && p.isSwimming();
-        } else {
-            this.gliding = false;
-            this.swimming = false;
-        }
-        this.sprinting = p.isSprinting();
-        this.sneaking = p.isSneaking();
-        this.flying = p.isFlying();
 
         this.location = new SpartanLocation(this.parent, p.getLocation());
         this.customFromLocation = this.location;
@@ -195,7 +181,8 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean wasInLiquids() {
-        return TPS.getTick(this.parent) - this.lastLiquidTicks <=
+        return this.isSwimming()
+                || TPS.getTick(this.parent) - this.lastLiquidTicks <=
                 Math.max(Latency.getRoundedDelay(this.parent), 5L);
     }
 
@@ -215,15 +202,18 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isSwimming() {
-        return swimming || swimmingTime >= TPS.getTick(this.parent);
+        if (artificialSwimming >= TPS.getTick(this.parent)) {
+            return true;
+        } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+            Player p = this.parent.getPlayer();
+            return p != null && p.isSwimming();
+        } else {
+            return false;
+        }
     }
 
-    public synchronized void setSwimming(boolean swimming, int ticks) {
-        this.swimming = swimming;
-
-        if (ticks > 0) {
-            this.swimmingTime = TPS.getTick(this.parent) + ticks;
-        }
+    public synchronized void setArtificialSwimming() {
+        this.artificialSwimming = TPS.getTick(this.parent) + 1;
     }
 
     public boolean isLowEyeHeight() {
@@ -235,31 +225,27 @@ public class SpartanPlayerMovement {
     }
 
     public boolean isWalkJumping(double vertical) {
-        return !sprinting && this.isJumping(vertical);
+        return !this.isSprinting()
+                && this.getNmsDistance() > 0.0
+                && this.isJumping(vertical);
     }
 
     // Separator
 
     public boolean isSneaking() {
-        return sneaking;
-    }
-
-    public synchronized void setSneaking(boolean sneaking) {
-        this.sneaking = sneaking;
+        Player p = this.parent.getPlayer();
+        return p != null && p.isSneaking();
     }
 
     // Separator
 
     public boolean isSprinting() {
-        return sprinting;
+        Player p = this.parent.getPlayer();
+        return p != null && p.isSprinting();
     }
 
     public boolean isSprintJumping(double vertical) {
-        return sprinting && this.isJumping(vertical);
-    }
-
-    public synchronized void setSprinting(boolean sprinting) {
-        this.sprinting = sprinting;
+        return this.isSprinting() && this.isJumping(vertical);
     }
 
     // Separator
@@ -297,13 +283,16 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isGliding() {
-        return gliding;
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+            Player p = this.parent.getPlayer();
+            return p != null && p.isGliding();
+        } else {
+            return false;
+        }
     }
 
-    public synchronized void setGliding(boolean gliding, boolean modify) {
-        this.gliding = gliding;
-
-        if (modify && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+    public synchronized void setGliding(boolean gliding) {
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             Player p = this.parent.getPlayer();
 
             if (p != null) {
@@ -316,18 +305,12 @@ public class SpartanPlayerMovement {
 
     public boolean isFlying() {
         Entity vehicle = this.parent.getVehicle();
-        return vehicle != null ? vehicle instanceof Player && ((Player) vehicle).isFlying() : flying;
-    }
 
-    public synchronized void setFlying(boolean flying) {
-        if (!flying) {
-            flying = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
-                    && this.parent.getGameMode() == GameMode.SPECTATOR;
-        }
-        this.flying = flying;
-
-        if (flying) {
-            this.parent.getTrackers().add(Trackers.TrackerType.FLIGHT, (int) TPS.maximum);
+        if (vehicle != null) {
+            return vehicle instanceof Player && ((Player) vehicle).isFlying();
+        } else {
+            Player p = this.parent.getPlayer();
+            return p != null && p.isFlying();
         }
     }
 
@@ -443,7 +426,7 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    public boolean processLastMoveEvent(SpartanLocation to, SpartanLocation from, double vertical) {
+    public boolean processLastMoveEvent(SpartanLocation to, SpartanLocation from) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
                     y = clampMin(to.getY(), -2.0E7D, 2.0E7D),

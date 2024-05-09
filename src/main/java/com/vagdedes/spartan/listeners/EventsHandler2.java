@@ -2,6 +2,7 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -10,7 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -44,15 +45,9 @@ public class EventsHandler2 implements Listener {
         if (p == null) {
             return;
         }
-        boolean cancelled = e.isCancelled();
-
-        // Objects
-        if (!cancelled) {
-            p.setInventory(n.getInventory(), n.getOpenInventory());
-        }
 
         // Detections
-        p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
+        p.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -74,23 +69,6 @@ public class EventsHandler2 implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void GameMode(PlayerGameModeChangeEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-        if (p == null) {
-            return;
-        }
-        if (!e.isCancelled()) {
-            // Objects
-            p.setGameMode(e.getNewGameMode());
-        }
-
-        // Objects
-        p.movement.setFlying(n.isFlying());
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void VehicleEnter(VehicleEnterEvent e) {
         Entity en = e.getEntered();
@@ -106,5 +84,20 @@ public class EventsHandler2 implements Listener {
                 e.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void WorldChange(PlayerChangedWorldEvent e) {
+        Player n = e.getPlayer();
+        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+        if (p == null) {
+            return;
+        }
+        // Object
+        p.resetHandlers();
+
+        // Detections
+        CheckDelay.cancel(p.uuid, 20);
     }
 }

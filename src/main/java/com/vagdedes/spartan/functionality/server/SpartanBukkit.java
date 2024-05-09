@@ -26,12 +26,13 @@ public class SpartanBukkit {
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
             dataThread = new Threads.ThreadPool(1L),
             analysisThread = new Threads.ThreadPool(1L),
-            playerThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             chunkThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
             detectionThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L);
 
     public static final int hashCodeMultiplier = 31;
     private static final Map<UUID, SpartanPlayer> players =
+            Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
+    private static final Map<UUID, Player> realPlayers =
             Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
     public static final Class<?> craftPlayer = ReflectionUtils.getClass(
             ReflectionUtils.class.getPackage().getName().substring(0, 19) // Package
@@ -41,6 +42,9 @@ public class SpartanBukkit {
     public static void clear() {
         synchronized (players) {
             players.clear();
+        }
+        synchronized (realPlayers) {
+            realPlayers.clear();
         }
     }
 
@@ -68,6 +72,11 @@ public class SpartanBukkit {
     public static SpartanPlayer getPlayer(UUID uuid) {
         Player player = Bukkit.getPlayer(uuid);
         return player == null ? null : getPlayer(player);
+    }
+
+    public static Player getRealPlayer(UUID uuid) {
+        Player player = realPlayers.get(uuid);
+        return player != null && player.isOnline() ? player : null;
     }
 
     public static SpartanPlayer getPlayer(Player real) {

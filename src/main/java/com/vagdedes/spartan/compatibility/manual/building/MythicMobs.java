@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -10,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
@@ -56,14 +56,16 @@ public class MythicMobs {
 
     public static boolean is(SpartanPlayer player) {
         if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()) {
-            SpartanInventory inventory = player.getInventory();
+            PlayerInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
                 if (armor != null && is(armor)) {
                     return true;
                 }
             }
-            return is(inventory.itemInHand) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && is(inventory.itemInOffHand);
+            return is(inventory.getItemInHand())
+                    || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                    && is(inventory.getItemInOffHand());
         }
         return false;
     }

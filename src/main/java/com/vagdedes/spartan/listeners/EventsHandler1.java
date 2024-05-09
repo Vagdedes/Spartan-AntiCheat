@@ -94,9 +94,6 @@ public class EventsHandler1 implements Listener {
         }
         p.resetHandlers();
         p.movement.setDetectionLocation(true);
-        p.setDead(true);
-        p.setSleeping(false);
-        p.setHealth(n.getHealth());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -110,9 +107,6 @@ public class EventsHandler1 implements Listener {
 
         // Objects
         p.movement.setDetectionLocation(true);
-        p.setDead(false);
-        p.setSleeping(false);
-        p.setHealth(n.getMaxHealth());
 
         // Protections
         p.resetHandlers(); // Always First

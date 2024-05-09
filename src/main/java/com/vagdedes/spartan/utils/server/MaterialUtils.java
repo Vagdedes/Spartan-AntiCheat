@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.utils.server;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -10,6 +9,7 @@ import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -264,15 +264,18 @@ public class MaterialUtils {
                 if (itemStack.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
                     aquaInfinity = true;
                 } else {
-                    SpartanInventory inventory = player.getInventory();
-                    List<ItemStack> items = new ArrayList<>(4 + 1);
-                    items.addAll(Arrays.asList(inventory.getArmorContents()));
-                    items.add(inventory.itemInOffHand);
+                    PlayerInventory inventory = player.getInventory();
 
-                    for (ItemStack item : items) {
-                        if (item != null && item.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
-                            aquaInfinity = true;
-                            break;
+                    if (inventory != null) {
+                        List<ItemStack> items = new ArrayList<>(4 + 1);
+                        items.addAll(Arrays.asList(inventory.getArmorContents()));
+                        items.add(inventory.getItemInHand());
+
+                        for (ItemStack item : items) {
+                            if (item != null && item.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
+                                aquaInfinity = true;
+                                break;
+                            }
                         }
                     }
                 }

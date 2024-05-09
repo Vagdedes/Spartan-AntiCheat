@@ -177,7 +177,7 @@ public class MainMenu extends InventoryMenu {
                 if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
                     Player n = player.getPlayer();
 
-                    if (n != null && n.isOnline() && n.hasPermission("filegui.modify")) {
+                    if (n != null && n.hasPermission("filegui.modify")) {
                         FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                     } else {
                         player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));

@@ -83,7 +83,7 @@ public class PlayerLimitPerIP {
                 if (ip != null) {
                     Player n = p.getPlayer();
 
-                    if (n != null && n.isOnline()) {
+                    if (n != null) {
                         memory.put(n, new Storage(ip));
                     }
                 }
@@ -130,7 +130,7 @@ public class PlayerLimitPerIP {
         if (ip != null) {
             Player n = p.getPlayer();
 
-            if (n != null && n.isOnline()) {
+            if (n != null) {
                 memory.remove(n);
             }
         }

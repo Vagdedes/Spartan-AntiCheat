@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanInventory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.server.ReflectionUtils;
@@ -11,6 +10,7 @@ import dev.lone.itemsadder.api.CustomStack;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 public class ItemsAdder {
 
@@ -18,14 +18,16 @@ public class ItemsAdder {
 
     public static boolean is(SpartanPlayer player) {
         if (classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
-            SpartanInventory inventory = player.getInventory();
+            PlayerInventory inventory = player.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
                 if (armor != null && is(armor)) {
                     return true;
                 }
             }
-            return is(inventory.itemInHand) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) && is(inventory.itemInOffHand);
+            return is(inventory.getItemInHand())
+                    || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                    && is(inventory.getItemInOffHand());
         }
         return false;
     }

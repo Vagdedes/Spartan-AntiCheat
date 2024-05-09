@@ -12,7 +12,7 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 
 public class EventsHandler_1_9 implements Listener {
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void GlideEvent(EntityToggleGlideEvent e) {
         Entity entity = e.getEntity();
 
@@ -23,10 +23,7 @@ public class EventsHandler_1_9 implements Listener {
             if (p == null) {
                 return;
             }
-            boolean gliding = e.isCancelled() ? n.isGliding() : n.isGliding() || e.isGliding();
-
-            // Objects
-            Elytra.judge(p, gliding, true);
+            Elytra.judge(p, true);
         }
     }
 }
