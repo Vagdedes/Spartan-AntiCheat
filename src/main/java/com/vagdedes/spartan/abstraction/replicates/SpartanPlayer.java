@@ -52,14 +52,13 @@ import java.util.*;
 
 public class SpartanPlayer {
 
-    private static final int tickFrequency = 5 * 1200;
-    private static int syncTicks = 0;
+    private static int schedulerTicks = 0;
     private static final Map<World, List<Entity>> worldEntities
             = Collections.synchronizedMap(new LinkedHashMap<>(Math.max(Bukkit.getWorlds().size(), 1)));
 
     public final boolean bedrockPlayer;
-    private boolean onGroundCustom;
-    public final long creationTime;
+    boolean onGroundCustom;
+    private final long creationTime;
     public final String name;
     public final UUID uuid;
     public final String ipAddress;
@@ -95,65 +94,27 @@ public class SpartanPlayer {
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                schedulerTicks++;
 
-                boolean clearCache, hasPlayers = !players.isEmpty();
+                if (!MultiVersion.folia && schedulerTicks % 20 == 0) {
+                    synchronized (worldEntities) {
+                        worldEntities.clear();
 
-                if (syncTicks == 0) {
-                    clearCache = true;
-                    syncTicks = tickFrequency;
-
-                    if (!MultiVersion.folia) {
-                        synchronized (worldEntities) {
-                            worldEntities.clear();
-
-                            if (hasPlayers) {
-                                for (World world : Bukkit.getWorlds()) {
-                                    worldEntities.put(
-                                            world,
-                                            new ArrayList<>(world.getEntities())
-                                    );
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    clearCache = false;
-                    syncTicks--;
-
-                    if (!MultiVersion.folia && syncTicks % 20 == 0) {
-                        synchronized (worldEntities) {
-                            worldEntities.clear();
-
-                            if (hasPlayers) {
-                                for (World world : Bukkit.getWorlds()) {
-                                    worldEntities.put(
-                                            world,
-                                            new ArrayList<>(world.getEntities())
-                                    );
-                                }
+                        if (!players.isEmpty()) {
+                            for (World world : Bukkit.getWorlds()) {
+                                worldEntities.put(
+                                        world,
+                                        new ArrayList<>(world.getEntities())
+                                );
                             }
                         }
                     }
                 }
 
-                if (hasPlayers) {
+                if (!players.isEmpty()) {
                     for (SpartanPlayer p : players) {
-                        if (clearCache) {
-                            for (Enums.HackType hackType : Enums.HackType.values()) {
-                                if (!p.getViolations(hackType).hasLevel()) {
-                                    p.getBuffer(hackType).clear();
-                                    p.getTimer(hackType).clear();
-                                    p.getDecimals(hackType).clear();
-                                    p.getCooldowns(hackType).clear();
-                                }
-                            }
-                        }
-                        if (p.refreshOnGround(new SpartanLocation[]{p.movement.getLocation()})) {
-                            p.movement.resetAirTicks();
-                        }
-                        if (p.isOnGroundDefault()) {
-                            p.movement.resetVanillaAirTicks();
-                        }
+                        p.movement.judgeGround(p.movement.getLocation());
+
                         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
                             Elytra.judge(p, false);
                         }
@@ -169,16 +130,12 @@ public class SpartanPlayer {
                                 Collection<PotionEffect> potionEffects = n.getActivePotionEffects();
                                 p.setStoredPotionEffects(potionEffects); // Bad
                                 SpartanLocation to = p.movement.getLocation(),
-                                        from = p.movement.getCustomFromLocation();
+                                        from = p.movement.getSchedulerFromLocation();
 
                                 if (from != null) {
-                                    p.movement.setCustomDistance(
-                                            to.distance(from),
-                                            AlgebraUtils.getHorizontalDistance(to, from),
-                                            to.getY() - from.getY()
-                                    );
+                                    p.movement.schedulerDistance = to.distance(from);
                                 }
-                                p.movement.customFromLocation = to;
+                                p.movement.schedulerFrom = to;
 
                                 for (CheckExecutor executor : p.executors) {
                                     executor.scheduler();
@@ -199,31 +156,6 @@ public class SpartanPlayer {
     }
 
     // Separator
-
-    public static void clear() {
-        synchronized (worldEntities) {
-            worldEntities.clear();
-        }
-        SpartanLocation.clear();
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-
-        if (!players.isEmpty()) {
-            for (SpartanPlayer p : players) {
-                for (Buffer buffer : p.buffer) {
-                    buffer.clear();
-                }
-                for (Timer timer : p.timer) {
-                    timer.clear();
-                }
-                for (Decimals decimals : p.decimals) {
-                    decimals.clear();
-                }
-                for (Cooldowns cooldowns : p.cooldowns) {
-                    cooldowns.clear();
-                }
-            }
-        }
-    }
 
     public static void cacheEntity(Entity entity) {
         synchronized (worldEntities) {
@@ -552,6 +484,10 @@ public class SpartanPlayer {
         return SpartanBukkit.getRealPlayer(uuid);
     }
 
+    public long timePassedSinceCreation() {
+        return System.currentTimeMillis() - creationTime;
+    }
+
     public boolean isOp() {
         Player p = this.getPlayer();
         return p != null && p.isOp();
@@ -583,7 +519,7 @@ public class SpartanPlayer {
     }
 
     public boolean isOnGround(SpartanLocation location) {
-        return GroundUtils.isOnGround(this, location, 0.0, false, true);
+        return GroundUtils.isOnGround(this, location, 0.0);
     }
 
     public boolean isOnGroundDefault() {
@@ -597,22 +533,13 @@ public class SpartanPlayer {
         }
     }
 
-    public boolean refreshOnGround(SpartanLocation[] locations) {
-        for (SpartanLocation location : locations) {
-            if (GroundUtils.isOnGround(this, location, 0.0, false, true)) {
-                return this.onGroundCustom = true;
-            }
-        }
-        return this.onGroundCustom = false;
-    }
-
     // Separator
 
     public PlayerProfile getProfile() {
         return playerProfile;
     }
 
-    public synchronized void setProfile(PlayerProfile playerProfile) {
+    public void setProfile(PlayerProfile playerProfile) {
         this.playerProfile = playerProfile;
     }
 
@@ -624,10 +551,14 @@ public class SpartanPlayer {
                 Player n = getPlayer();
 
                 if (n != null) {
-                    Block block = n.getTargetBlock(null, (int) distance);
+                    List<Block> list = n.getLineOfSight(null, (int) distance);
 
-                    if (block != null) {
-                        return new SpartanBlock(this, block);
+                    if (!list.isEmpty()) {
+                        for (Block block : list) {
+                            if (BlockUtils.isFullSolid(block.getType())) {
+                                return new SpartanBlock(this, block);
+                            }
+                        }
                     }
                 }
             } catch (Exception ignored) {
@@ -636,50 +567,11 @@ public class SpartanPlayer {
         return null;
     }
 
-    public SpartanBlock getIllegalTargetBlock(SpartanBlock clickedBlock) { // todo improve
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
-            SpartanLocation clickedBlockLocation = clickedBlock.getLocation();
-            boolean editableClickedBlock = BlockUtils.isChangeable(clickedBlockLocation.getBlock().material);
-
-            if (!editableClickedBlock
-                    && !BlockUtils.isSolid(clickedBlockLocation.getBlock().material)) {
-                return null;
-            }
-            double distance = movement.getLocation().distance(clickedBlockLocation);
-
-            if (distance >= 0.5) {
-                try {
-                    SpartanBlock targetBlock = getTargetBlock(Math.max(Math.floor(distance), 1.0));
-
-                    if (targetBlock != null && BlockUtils.isSolid(targetBlock.material)) {
-                        SpartanLocation targetBlockLocation = targetBlock.getLocation();
-
-                        if (clickedBlockLocation.distance(targetBlockLocation) >= (trackers.has(Trackers.TrackerType.ELYTRA_USE) ? 2.5 : BlockUtils.areEggs(getItemInHand().getType()) ? 2.0 : 1.0)
-
-                                && (targetBlock.x != clickedBlock.x
-                                || targetBlock.y != clickedBlock.y
-                                || targetBlock.z != clickedBlock.z)
-
-                                && (editableClickedBlock && !targetBlockLocation.getBlock().isLiquidOrWaterLogged(true)
-                                || BlockUtils.isFullSolid(targetBlockLocation.getBlock().material))) {
-                            return targetBlock;
-                        }
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        }
-        return null;
-    }
-
     // Separator
 
     public Entity getVehicle() {
-        return vehicle;
-    }
-
-    public synchronized void setVehicle(Entity vehicle) {
-        this.vehicle = vehicle;
+        Player p = getPlayer();
+        return p == null ? null : p.getVehicle();
     }
 
     // Separator
@@ -703,7 +595,7 @@ public class SpartanPlayer {
         return p == null ? 0 : p.getFoodLevel();
     }
 
-    public synchronized void setFoodLevel(int foodLevel) {
+    public void setFoodLevel(int foodLevel) {
         Player p = getPlayer();
 
         if (p != null) {
@@ -725,7 +617,7 @@ public class SpartanPlayer {
         return p == null ? 0.0f : p.getFallDistance();
     }
 
-    public synchronized void setFallDistance(float fallDistance) {
+    public void setFallDistance(float fallDistance) {
         Player p = getPlayer();
 
         if (p != null) {
@@ -978,7 +870,7 @@ public class SpartanPlayer {
                         nearbyEntities.addAll(entities);
                         return entities;
                     } else {
-                        SpartanLocation loc = this.movement.getLocation();
+                        SpartanLocation loc = this.movement.getEventToLocation();
                         List<Entity> entities;
 
                         synchronized (worldEntities) {
@@ -1016,7 +908,7 @@ public class SpartanPlayer {
                     return new ArrayList<>(0);
                 }
             } else if (!nearbyEntities.isEmpty()) {
-                SpartanLocation loc = this.movement.getLocation();
+                SpartanLocation loc = this.movement.getEventToLocation();
                 List<Entity> entities = new ArrayList<>(nearbyEntities);
                 Entity vehicle = this.getVehicle();
 
@@ -1053,7 +945,7 @@ public class SpartanPlayer {
 
         if (BlockUtils.isSolid(locationP1.getBlock().material)
                 && !(BlockUtils.areWalls(locationP1.getBlock().material)
-                || BlockUtils.canClimb(locationP1.getBlock().material))) {
+                || BlockUtils.canClimb(locationP1.getBlock().material, false))) {
             return;
         }
         World world = getWorld();
@@ -1070,7 +962,7 @@ public class SpartanPlayer {
             Material material = loopLocation.getBlock().material;
 
             if (iterations != PlayerUtils.chunk
-                    && (BlockUtils.canClimb(material)
+                    && (BlockUtils.canClimb(material, false)
                     || BlockUtils.areWalls(material)
                     || !BlockUtils.isSolid(material))) {
                 iterations++;

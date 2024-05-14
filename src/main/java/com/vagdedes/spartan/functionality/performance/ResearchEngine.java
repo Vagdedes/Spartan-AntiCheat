@@ -296,7 +296,7 @@ public class ResearchEngine {
                 synchronized (playerProfiles) {
                     for (PlayerProfile playerProfile : playerProfiles.values()) {
                         playerProfile.getViolationHistory(hackType).clear();
-                        playerProfile.evidence.remove(hackType, true, true, true);
+                        playerProfile.evidence.remove(hackType, true, true, true, true);
                     }
                 }
             }
@@ -740,7 +740,7 @@ public class ResearchEngine {
                 }
             }
 
-            // Separator (Calculate mining statistics)
+            // Separator
 
             if (!legitimatePlayers.isEmpty()) {
                 for (Enums.MiningOre ore : Enums.MiningOre.values()) {

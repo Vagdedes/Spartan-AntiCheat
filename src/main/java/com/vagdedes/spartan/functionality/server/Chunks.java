@@ -43,12 +43,6 @@ public class Chunks {
         return (SpartanBukkit.hashCodeMultiplier * world) + z;
     }
 
-    public static int positionIdentifier(double x, double y, double z) {
-        int hash = SpartanBukkit.hashCodeMultiplier + Double.hashCode(x);
-        hash = (SpartanBukkit.hashCodeMultiplier * hash) + Double.hashCode(y);
-        return (SpartanBukkit.hashCodeMultiplier * hash) + Double.hashCode(z);
-    }
-
     private static int chunkIdentifier(int x, int z) {
         return (SpartanBukkit.hashCodeMultiplier * x) + z;
     }

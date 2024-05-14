@@ -22,7 +22,7 @@ public class AureliumSkills implements Listener {
         }
     }
 
-    public static boolean canCancel(SpartanPlayer p) {
+    public static boolean isUsing(SpartanPlayer p) {
         return Compatibility.CompatibilityType.AURELIUM_SKILLS.isFunctional()
                 && !p.getCooldowns().canDo("aureliumskills=compatibility");
     }

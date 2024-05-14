@@ -3,9 +3,10 @@ package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import me.DeeCaaD.CrackShotPlus.Events.WeaponSecondScopeEvent;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -24,7 +25,15 @@ public class CrackShotPlus implements Listener {
             }
             if (!e.isCancelled()) {
                 Buffer buffer = p.getBuffer();
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT_PLUS, 20);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        20
+                );
 
                 if (e.isZoomIn()) {
                     buffer.set("crackshotplus=compatibility=scope", 1);
@@ -43,7 +52,15 @@ public class CrackShotPlus implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getEntity().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT_PLUS, 60);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        60
+                );
             }
         }
     }
@@ -54,7 +71,15 @@ public class CrackShotPlus implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getDamager().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT_PLUS, 30);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        30
+                );
             }
         }
     }

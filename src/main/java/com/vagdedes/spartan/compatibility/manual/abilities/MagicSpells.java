@@ -4,8 +4,9 @@ import com.nisovin.magicspells.events.SpellCastEvent;
 import com.nisovin.magicspells.events.SpellCastedEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,7 +19,15 @@ public class MagicSpells implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getCaster().getUniqueId());
 
             if (p != null) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.MAGIC_SPELLS, 40);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.MAGIC_SPELLS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        40
+                );
             }
         }
     }
@@ -29,7 +38,15 @@ public class MagicSpells implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getCaster().getUniqueId());
 
             if (p != null) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.MAGIC_SPELLS, 40);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.MAGIC_SPELLS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        40
+                );
             }
         }
     }

@@ -18,7 +18,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.java.StringUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -101,7 +100,7 @@ public class PlayerInfo extends InventoryMenu {
             if (isOnline) {
                 lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType() + " (" + target.dataType + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().name + " (" + target.dataType.name + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK, 1), information);
 
                 lore.clear();
@@ -110,7 +109,7 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§cRight click to delete the player's stored data.");
                 add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             } else {
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType() + " (" + playerProfile.getDataType() + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().name + " (" + playerProfile.getDataType().name + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK), information);
 
                 lore.clear();
@@ -158,7 +157,7 @@ public class PlayerInfo extends InventoryMenu {
             if (hackType.category == checkType) {
                 violations = isOnline ? player.getViolations(hackType).getTotalLevel() : 0;
                 boolean hasViolations = violations > 0,
-                        hasData = playerProfile.evidence.has(hackType);
+                        hasData = playerProfile.evidence.has(hackType, true);
                 String state = getDetectionState(
                         player,
                         hackType,
@@ -173,7 +172,7 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (hasViolations || hasData || state != null) {
                     String color = "§c";
-                    String data = playerProfile.evidence.getKnowledge(hackType, color);
+                    String data = playerProfile.evidence.getKnowledge(hackType, color, true);
                     listedChecks = true;
                     lore.add("§6" + hackType.getCheck().getName() + "§8[§e" + state + "§8] " + color
                             + (hasData ? data : hasViolations ? violations + " " + (violations == 1 ? "violation" : "violations") : "")
@@ -197,7 +196,7 @@ public class PlayerInfo extends InventoryMenu {
                 new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
                 new ItemStack(Material.QUARTZ_BLOCK);
         boolean hasViolations = violations > 0,
-                hasData = playerProfile.evidence.has(hackType);
+                hasData = playerProfile.evidence.has(hackType, true);
         Enums.DataType dataType = isOnline ? player.dataType : playerProfile.getDataType();
         String state = getDetectionState(player,
                 hackType,
@@ -215,7 +214,7 @@ public class PlayerInfo extends InventoryMenu {
 
             if (hasData) {
                 String color = "§c";
-                lore.add(color + playerProfile.evidence.getKnowledge(hackType, color));
+                lore.add(color + playerProfile.evidence.getKnowledge(hackType, color, true));
             }
         } else {
             lore.add("§c" + PlayerStateLists.noDataAvailable);
@@ -265,15 +264,6 @@ public class PlayerInfo extends InventoryMenu {
                         InventoryView inventoryView = no.getOpenInventory();
 
                         if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)) {
-                            boolean back = false;
-
-                            for (ItemStack itemStack : inventoryView.getTopInventory().getContents()) {
-                                if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()
-                                        && StringUtils.getClearColorString(itemStack.getItemMeta().getDisplayName()).equals("Back")) {
-                                    back = true;
-                                    break;
-                                }
-                            }
                             InteractiveInventory.playerInfo.open(o, targetName);
                         }
                     }

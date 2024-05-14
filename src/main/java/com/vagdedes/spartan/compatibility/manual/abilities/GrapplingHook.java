@@ -3,9 +3,10 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 import com.snowgears.grapplinghook.api.HookAPI;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.utils.server.PluginUtils;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -38,9 +39,25 @@ public class GrapplingHook implements Listener {
 
                 if (p != null && t != null && !p.equals(t) && isItem(t.getItemInHand())) {
                     if (PluginUtils.exists("grapplinghook")) {
-                        CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GRAPPLING_HOOK, 40);
+                        Config.compatibility.evadeFalsePositives(
+                                p,
+                                Compatibility.CompatibilityType.GRAPPLING_HOOK,
+                                new Enums.HackCategoryType[]{
+                                        Enums.HackCategoryType.MOVEMENT,
+                                        Enums.HackCategoryType.COMBAT
+                                },
+                                40
+                        );
                     } else {
-                        CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.GRAPPLING_HOOK, 10);
+                        Config.compatibility.evadeFalsePositives(
+                                p,
+                                Compatibility.CompatibilityType.GRAPPLING_HOOK,
+                                new Enums.HackCategoryType[]{
+                                        Enums.HackCategoryType.MOVEMENT,
+                                        Enums.HackCategoryType.COMBAT
+                                },
+                                10
+                        );
                     }
                 }
             }

@@ -19,7 +19,6 @@ import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +28,6 @@ public class MovementProcessing {
     private static final boolean
             v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8),
             v1_9 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9);
-    private static final int roundedFall = AlgebraUtils.integerCeil(PlayerUtils.terminalVelocity);
     private static final Material
             MAGMA_BLOCK = MaterialUtils.get("magma"),
             WATER = MaterialUtils.get("water"),
@@ -42,28 +40,15 @@ public class MovementProcessing {
             );
     public static final double maxPrecisionHeightLengthRatio = 1.0 / Math.pow(10, heightPrecision);
 
-    public static void run(Player n, SpartanPlayer player,
+    public static void run(SpartanPlayer player,
                            SpartanLocation to,
-                           double distance, double horizontal,
                            double vertical, double box) {
-        if (player.refreshOnGround(new SpartanLocation[]{to, player.movement.getLocation()})) {
-            player.movement.resetAirTicks();
-        }
-        if (player.isOnGroundDefault()) {
-            player.movement.resetVanillaAirTicks();
-        }
-        // Separator
-
         GameMode current = player.getGameMode();
 
         if (current == GameMode.CREATIVE
                 || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8) && current == GameMode.SPECTATOR) {
             player.getTrackers().add(Trackers.TrackerType.GAME_MODE, (int) TPS.maximum);
         }
-
-        // Separator
-
-        player.movement.setNmsDistance(distance, horizontal, vertical, box);
 
         // Separator
 
@@ -117,11 +102,11 @@ public class MovementProcessing {
     private static void calculateBouncing(SpartanPlayer player, SpartanLocation location,
                                           double vertical) {
         if (v1_8 && vertical != 0.0) {
-            if (BlockUtils.isSlime(player, location, roundedFall)) {
+            if (BlockUtils.isSlime(player, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
                 player.getTrackers().add(Trackers.TrackerType.BOUNCING_BLOCKS, time);
                 player.getTrackers().add(Trackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
-            } else if (BlockUtils.isBed(player, location, roundedFall)) {
+            } else if (BlockUtils.isBed(player, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
                 player.getTrackers().add(Trackers.TrackerType.BOUNCING_BLOCKS, time);
                 player.getTrackers().add(Trackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
@@ -207,7 +192,7 @@ public class MovementProcessing {
     public static boolean canCheck(SpartanPlayer player,
                                    boolean elytra, boolean velocity, boolean flight) {
         if ((elytra || !player.getTrackers().has(Trackers.TrackerType.ELYTRA_USE))
-                && (flight || !player.getTrackers().has(Trackers.TrackerType.FLIGHT))
+                && (flight || !player.movement.isFlying())
                 && (velocity || !player.getTrackers().has(Trackers.TrackerType.ABSTRACT_VELOCITY))
                 && !Attributes.has(player, Attributes.GENERIC_MOVEMENT_SPEED)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()

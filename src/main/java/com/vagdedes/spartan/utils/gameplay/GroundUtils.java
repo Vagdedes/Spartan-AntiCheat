@@ -180,7 +180,7 @@ public class GroundUtils {
 
     // Method
 
-    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, double y, boolean liquid, boolean climbable) { // todo fix beds
+    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, double y) {
         boolean original = y == 0;
 
         if (original) {
@@ -192,19 +192,32 @@ public class GroundUtils {
         }
         SpartanBlock block = loc.getBlock();
 
-        if (liquid && block.isLiquidOrWaterLogged(true)
-                || climbable && BlockUtils.canClimb(block.material)) {
-            if (original) {
-                return true;
-            }
+        if (BlockUtils.canClimb(block.material, false)
+                || original
+                && p.isOnGroundDefault()
+                && block.isLiquidOrWaterLogged(true)) {
             return true;
         }
-        original &= p.getVehicle() == null && !p.bedrockPlayer;
-        double box = loc.getY() - loc.getBlockY();
+        Entity vehicle = p.getVehicle();
+        boolean hasVehicle = vehicle != null;
+        original &= !hasVehicle && !p.bedrockPlayer;
+        double box = loc.getY() - loc.getBlockY(), distribution;
 
-        for (SpartanLocation loopLocation : loc.getSurroundingLocations(BlockUtils.boundingBox, 0, BlockUtils.boundingBox)) {
-            for (double position : new double[]{-(box + minPossibleStep), 0.0}) {
-                Material type = loopLocation.clone().add(0.0, position, 0.0).getBlock().material;
+        if (hasVehicle) {
+            distribution = Math.max(
+                    CombatUtils.getWidthAndHeight(vehicle)[0],
+                    BlockUtils.boundingBox
+            );
+        } else {
+            distribution = BlockUtils.boundingBox;
+        }
+        for (double position : new double[]{-(box + minPossibleStep), 0.0}) {
+            for (SpartanLocation loopLocation : loc.getSurroundingLocations(
+                    distribution,
+                    position,
+                    distribution
+            )) {
+                Material type = loopLocation.getBlock().material;
 
                 if (BlockUtils.isSolid(type)) {
                     if (original) {
@@ -254,6 +267,23 @@ public class GroundUtils {
                 }
             }
             return max;
+        }
+    }
+
+    public static double getMinHeight(Material m) {
+        double[] heights = correlatedBlockHeights.getOrDefault(m, new double[]{0.0});
+
+        if (heights.length == 1) {
+            return heights[0];
+        } else {
+            double min = Double.MAX_VALUE;
+
+            for (double height : heights) {
+                if (height < min) {
+                    min = height;
+                }
+            }
+            return min;
         }
     }
 

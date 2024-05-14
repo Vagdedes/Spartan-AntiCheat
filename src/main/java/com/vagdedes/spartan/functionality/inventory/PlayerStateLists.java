@@ -14,8 +14,6 @@ import java.util.*;
 
 public class PlayerStateLists {
 
-    private static final int maxPages = 999;
-
     public static final String
             hackerPlayers = "Identified Hackers",
             suspectedPlayers = "Suspected Players",
@@ -37,14 +35,6 @@ public class PlayerStateLists {
             36, 44,
             45, 46, 47, 48, 49, 50, 51, 52, 53
     };
-    /*private static final int[] ignoredSlots = new int[]{
-            0, 8,
-            9, 17,
-            18, 26,
-            27, 35,
-            36, 44,
-            45, 53
-    };*/
 
     private static final Map<UUID, Integer> cache = Cache.store(new LinkedHashMap<>());
 
@@ -74,7 +64,7 @@ public class PlayerStateLists {
     public static boolean nextPage(UUID uuid) {
         int page = getPage(uuid);
 
-        if (page < maxPages) {
+        if (page < 999) {
             cache.put(uuid, page + 1);
             return true;
         }
@@ -105,7 +95,7 @@ public class PlayerStateLists {
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList();
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
 
                             if (!evidenceDetails.isEmpty()) {
                                 lore.clear();
@@ -127,7 +117,7 @@ public class PlayerStateLists {
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList();
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
 
                             if (!evidenceDetails.isEmpty()) {
                                 lore.clear();
@@ -149,7 +139,16 @@ public class PlayerStateLists {
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
+                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(true);
                             lore.clear();
+
+                            if (!evidenceDetails.isEmpty()) {
+                                lore.add("§7Evaluated for§8:");
+
+                                for (Enums.HackType hackType : evidenceDetails) {
+                                    lore.add("§4" + hackType.getCheck().getName());
+                                }
+                            }
                             fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
                             slotPosition++;
                         }
@@ -213,7 +212,7 @@ public class PlayerStateLists {
 
     private static <E> List<E> subList(List<E> list, int startIndex, int toIndex) {
         int size = list.size();
-        return startIndex >= size ? new ArrayList<>(0) :
-                list.subList(startIndex, Math.min(toIndex, size - 1));
+        return startIndex > size ? new ArrayList<>(0) :
+                list.subList(startIndex, Math.min(toIndex, size));
     }
 }

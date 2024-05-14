@@ -26,14 +26,12 @@ public class CloudBase {
 
     // Cache
     private static final Map<Enums.HackType, String[]>
-            disabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
-            specificDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length),
-            allDisabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
+            disabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
 
     // Functionality
     private static long
-            connectionFailedCooldown = 0L,
-            refreshTime = 60_000L;
+            connectionFailedCooldown = 0L;
+    private static final long refreshTime = 60_000L;
     private static final long[] connectionRefreshCooldown = new long[2];
     private static int outdatedVersion = AutoUpdater.NOT_CHECKED,
             detectionSlots;
@@ -80,23 +78,17 @@ public class CloudBase {
         return disabledDetections.get(check);
     }
 
-    private static boolean isInformationCancelled(String[] disabledDetections, String info) {
-        if (disabledDetections != null) {
-            for (String detection : disabledDetections) {
+    public static boolean isInformationCancelled(Enums.HackType hackType, String info) {
+        String[] detections = disabledDetections.get(hackType);
+
+        if (detections != null) {
+            for (String detection : detections) {
                 if (info.contains(detection)) {
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    public static boolean isInformationCancelled(Enums.HackType hackType, String info) {
-        return isInformationCancelled(specificDisabledDetections.get(hackType), info);
-    }
-
-    public static boolean isPublicInformationCancelled(Enums.HackType hackType, String info) {
-        return isInformationCancelled(allDisabledDetections.get(hackType), info);
     }
 
     public static void announce(SpartanPlayer player) {
@@ -148,8 +140,6 @@ public class CloudBase {
     public static void clear(boolean cache) {
         if (cache) {
             disabledDetections.clear();
-            specificDisabledDetections.clear();
-            allDisabledDetections.clear();
         } else {
             identification = "identification=" + IDs.user() + "|" + IDs.nonce();
         }
@@ -294,10 +284,7 @@ public class CloudBase {
 
             // Separator
             if (independent) {
-                Map<Enums.HackType, String[]>
-                        disabledDetections = new LinkedHashMap<>(),
-                        hiddenDisabledDetections = new LinkedHashMap<>(),
-                        allDisabledDetections = new LinkedHashMap<>();
+                Map<Enums.HackType, String[]> disabledDetections = new LinkedHashMap<>();
 
                 SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
@@ -307,10 +294,7 @@ public class CloudBase {
                         if (results.length > 0) {
                             for (String data : results) {
                                 Enums.HackType hackType = null;
-                                Set<String>
-                                        detections = new LinkedHashSet<>(),
-                                        hiddenDetections = new LinkedHashSet<>(),
-                                        allDetections = new LinkedHashSet<>();
+                                Set<String> detections = new LinkedHashSet<>();
 
                                 for (String detection : data.split("\\|")) {
                                     if (hackType == null) {
@@ -326,36 +310,17 @@ public class CloudBase {
                                             break;
                                         }
                                     } else {
-                                        detection = detection.replace("__", " ");
-
-                                        if (detection.startsWith(" ")) {
-                                            hiddenDetections.add(detection);
-                                        } else {
-                                            detections.add(detection);
-                                        }
-                                        allDetections.add(detection);
+                                        detections.add(detection.replace("__", " "));
                                     }
                                 }
                                 if (!detections.isEmpty()) {
                                     disabledDetections.put(hackType, detections.toArray(new String[0]));
                                 }
-                                if (!hiddenDetections.isEmpty()) {
-                                    hiddenDisabledDetections.put(hackType, hiddenDetections.toArray(new String[0]));
-                                }
-                                if (!allDetections.isEmpty()) {
-                                    allDisabledDetections.put(hackType, allDetections.toArray(new String[0]));
-                                }
                             }
                             CloudBase.disabledDetections.clear();
                             CloudBase.disabledDetections.putAll(disabledDetections);
-                            CloudBase.specificDisabledDetections.clear();
-                            CloudBase.specificDisabledDetections.putAll(hiddenDisabledDetections);
-                            CloudBase.allDisabledDetections.clear();
-                            CloudBase.allDisabledDetections.putAll(allDisabledDetections);
                         } else {
                             CloudBase.disabledDetections.clear();
-                            CloudBase.specificDisabledDetections.clear();
-                            CloudBase.allDisabledDetections.clear();
                         }
                     } catch (Exception e) {
                         throwError(e, "disabledDetections:GET");

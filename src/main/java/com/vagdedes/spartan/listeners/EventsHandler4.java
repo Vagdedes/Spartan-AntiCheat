@@ -2,16 +2,15 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.functionality.tracking.Piston;
+import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
+import com.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,16 +19,11 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.server.ServerCommandEvent;
-import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class EventsHandler4 implements Listener {
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void WorldSave(WorldSaveEvent e) {
-        CheckDelay.cancel(60, 30);
-    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void ItemDrop(PlayerDropItemEvent e) {
@@ -58,7 +52,7 @@ public class EventsHandler4 implements Listener {
     private void InventoryClick(InventoryClickEvent e) {
         ItemStack item = e.getCurrentItem();
 
-        if (item != null && item.getType() != Material.AIR) {
+        if (BlockUtils.hasMaterial(item)) {
             Player n = (Player) e.getWhoClicked();
             SpartanPlayer p = SpartanBukkit.getPlayer(n);
 
@@ -89,14 +83,24 @@ public class EventsHandler4 implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void Command(ServerCommandEvent e) {
-        CommandSender s = e.getSender();
-        String msg = e.getCommand();
+    @EventHandler
+    private void PluginEnable(PluginEnableEvent e) {
 
-        // Protections
-        if (ChatProtection.runConsoleCommand(s, msg)) {
-            e.setCancelled(true);
-        }
+        // Utils
+        PluginUtils.clear();
+
+        // System
+        Config.compatibility.fastClear();
     }
+
+    @EventHandler
+    private void PluginDisable(PluginDisableEvent e) {
+
+        // Utils
+        PluginUtils.clear();
+
+        // System
+        Config.compatibility.fastClear();
+    }
+
 }

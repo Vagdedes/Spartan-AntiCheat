@@ -158,7 +158,6 @@ public class ConfigUtils {
                 message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
                 message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
                 message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
-                message = replace(message, "{moving}", String.valueOf(p.movement.getCustomDistance() > 0.0));
 
                 PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
                 message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));

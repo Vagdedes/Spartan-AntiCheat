@@ -14,7 +14,6 @@ import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Chunks;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
 import com.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.api.API;
@@ -177,9 +176,6 @@ public class Config {
             AwarenessNotifications.clear();
         }
 
-        // Objects
-        SpartanPlayer.clear();
-
         // System
         PluginUtils.clear();
         Cache.clearStorage(!enabledPlugin);
@@ -211,16 +207,12 @@ public class Config {
     // Separator
 
     public static void enableChecks() {
-        CheckDelay.cancel(20, 0);
-
         for (HackType hackType : Enums.HackType.values()) {
             hackType.getCheck().setEnabled(null, true);
         }
     }
 
     public static void disableChecks() {
-        CheckDelay.cancel(20, 0);
-
         for (HackType hackType : Enums.HackType.values()) {
             hackType.getCheck().setEnabled(null, false);
         }
@@ -229,16 +221,12 @@ public class Config {
     // Separator
 
     public static void enableSilentChecking() {
-        CheckDelay.cancel(20, 0);
-
         for (HackType hackType : Enums.HackType.values()) {
             hackType.getCheck().setSilent(true);
         }
     }
 
     public static void disableSilentChecking() {
-        CheckDelay.cancel(20, 0);
-
         for (HackType hackType : Enums.HackType.values()) {
             hackType.getCheck().setSilent(false);
         }

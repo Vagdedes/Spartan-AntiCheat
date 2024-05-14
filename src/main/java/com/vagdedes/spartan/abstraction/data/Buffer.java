@@ -107,18 +107,6 @@ public class Buffer {
         return obj != null ? obj.decrease(amount) : 0;
     }
 
-    public int count(String name, int maxTicks) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.computeIfAbsent(name, k -> new BufferChild(this));
-        }
-        if (obj.ticksPassed() > maxTicks) {
-            obj.reset();
-        }
-        return obj.increase(1);
-    }
-
     public int getRemainingTicks(String name, int maxTicks) {
         BufferChild obj;
 
@@ -133,7 +121,19 @@ public class Buffer {
         }
     }
 
-    public double start(String name, int minimumTicks, int maxTicks) {
+    public int count(String name, int maxTicks) {
+        BufferChild obj;
+
+        synchronized (storage) {
+            obj = storage.computeIfAbsent(name, k -> new BufferChild(this));
+        }
+        if (obj.ticksPassed() > maxTicks) {
+            obj.reset();
+        }
+        return obj.increase(1);
+    }
+
+    public double ratio(String name, int minimumTicks, int maxTicks) {
         BufferChild obj;
 
         synchronized (storage) {

@@ -63,14 +63,9 @@ public class SpartanLocation {
         }
     }
 
-    static void clear() {
-        synchronized (memory) {
-            memory.clear();
-        }
-    }
-
     // Object
 
+    public final long creation;
     public final SpartanPlayer player;
     public final World world;
     private Chunk chunk;
@@ -94,7 +89,8 @@ public class SpartanLocation {
 
     private SpartanLocation(SpartanPlayer player, World world, Chunk chunk,
                             double x, double y, double z,
-                            float yaw, float pitch) { // Used for inititation
+                            float yaw, float pitch) { // Used for initiation
+        this.creation = System.currentTimeMillis();
         this.player = player;
         this.world = world;
         this.chunk = chunk;
@@ -421,6 +417,12 @@ public class SpartanLocation {
         }
     }
 
+    public void removeBlockCache() {
+        synchronized (memory) {
+            memory.remove(identifier);
+        }
+    }
+
     public SpartanBlock getBlock() {
         if (block == null) {
             int blockY = getBlockY();
@@ -456,6 +458,14 @@ public class SpartanLocation {
             }
         }
         return block;
+    }
+
+    public SpartanLocation getBlockLocation() {
+        SpartanLocation location = this.clone();
+        location.setX(location.getBlockX());
+        location.setY(location.getBlockY());
+        location.setZ(location.getBlockZ());
+        return location;
     }
 
     public void retrieveDataFrom(SpartanLocation other) {
@@ -577,28 +587,22 @@ public class SpartanLocation {
 
     public Collection<SpartanLocation> getSurroundingLocations(double x, double y, double z) {
         Map<Integer, SpartanLocation> locations = new LinkedHashMap<>(10, 1.0f);
-        locations.put(Integer.MIN_VALUE, this.clone().add(0, y, 0));
+        SpartanLocation yOnly = this.clone().add(0, y, 0);
+        locations.put(yOnly.identifier, yOnly);
 
         for (double[] positions : new double[][]{
-                {this.x + x, this.z},
-                {this.x - x, this.z},
-                {this.x, this.z + z},
-                {this.x, this.z - z},
-                {this.x + x, this.z + z},
-                {this.x - x, this.z - z},
-                {this.x + x, this.z - z},
-                {this.x - x, this.z + z}
+                {x, 0.0},
+                {-x, 0.0},
+                {0.0, z},
+                {0.0, -z},
+                {x, z},
+                {-x, -z},
+                {x, -z},
+                {-x, z}
         }) {
-            SpartanLocation location = new SpartanLocation(
-                    this.player, this.world, this.chunk,
-                    positions[0], this.y + y, positions[1],
-                    this.yaw, this.pitch
-            );
+            SpartanLocation location = this.clone().add(positions[0], y, positions[1]);
 
-            if (locations.putIfAbsent(
-                    (AlgebraUtils.integerFloor(positions[0]) * SpartanBukkit.hashCodeMultiplier)
-                            + AlgebraUtils.integerFloor(positions[1]),
-                    location) == null) {
+            if (locations.putIfAbsent(location.identifier, location) == null) {
                 location.retrieveDataFrom(this);
             }
         }

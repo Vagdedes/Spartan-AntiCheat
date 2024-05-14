@@ -48,7 +48,7 @@ public class SuspicionNotifications {
             } else if (profile.isSuspected()) {
                 shouldList = false;
 
-                for (Enums.HackType hackType : profile.evidence.getKnowledgeList()) {
+                for (Enums.HackType hackType : profile.evidence.getKnowledgeList(false)) {
                     if (player.getViolations(hackType).hasLevel()) {
                         shouldList = true;
                         break;
@@ -60,7 +60,7 @@ public class SuspicionNotifications {
 
             if (shouldList) {
                 StringBuilder evidence = new StringBuilder();
-                Collection<Enums.HackType> evidenceDetails = profile.evidence.getKnowledgeList();
+                Collection<Enums.HackType> evidenceDetails = profile.evidence.getKnowledgeList(false);
 
                 if (!evidenceDetails.isEmpty()) {
                     size++;

@@ -64,6 +64,12 @@ public class SpartanBlock {
         }
     }
 
+    public void removeBlockCache() {
+        synchronized (SpartanLocation.memory) {
+            SpartanLocation.memory.remove(identifier);
+        }
+    }
+
     public Chunk getChunk() {
         if (chunk == null) {
             chunk = getLocation().getChunk();

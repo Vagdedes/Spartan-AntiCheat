@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.replicates;
 
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.gameplay.GroundUtils;
@@ -17,95 +16,66 @@ import org.bukkit.entity.Vehicle;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class SpartanPlayerMovement {
 
     private final SpartanPlayer parent;
-    private double
-            customDistance, customHorizontalDistance, customVerticalDistance;
+    double schedulerDistance;
     private final List<Double>
-            nmsDistance, nmsHorizontalDistance, nmsVerticalDistance,
+            nmsDistance,
+            nmsHorizontalDistance,
+            nmsVerticalDistance,
             nmsBox;
+    private final Map<Long, List<SpartanLocation>> locations;
+    private int
+            airTicks,
+            vanillaAirTicks;
     private long
             artificialSwimming,
-            lastLiquidTicks,
-            lastOnGround,
-            lastVanillaOnGround;
+            lastLiquidTicks;
     private Material lastLiquidMaterial;
-    private SpartanLocation location, nmsTo, nmsFrom, detectionLocation;
-    SpartanLocation customFromLocation;
+    private SpartanLocation
+            location,
+            eventTo,
+            eventFrom,
+            detectionLocation;
+    SpartanLocation schedulerFrom;
     private Vector clampVector;
 
     SpartanPlayerMovement(SpartanPlayer parent, Player p) {
         this.parent = parent;
-        this.customDistance = 0.0;
-        this.customHorizontalDistance = 0.0;
-        this.customVerticalDistance = 0.0;
+        this.schedulerDistance = 0.0;
 
         this.nmsDistance = Collections.synchronizedList(new LinkedList<>());
         this.nmsHorizontalDistance = Collections.synchronizedList(new LinkedList<>());
         this.nmsVerticalDistance = Collections.synchronizedList(new LinkedList<>());
         this.nmsBox = Collections.synchronizedList(new LinkedList<>());
 
+        this.airTicks = 0;
+        this.vanillaAirTicks = 0;
+
         this.artificialSwimming = 0L;
         this.lastLiquidTicks = 0L;
         this.lastLiquidMaterial = Material.AIR;
-        this.lastOnGround = 0L;
-        this.lastVanillaOnGround = 0;
 
-        this.location = new SpartanLocation(this.parent, p.getLocation());
-        this.customFromLocation = this.location;
-        this.nmsTo = this.location;
-        this.nmsFrom = this.location;
-        this.detectionLocation = this.location;
+        SpartanLocation location = new SpartanLocation(this.parent, p.getLocation());
+        this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
+        List<SpartanLocation> list = new ArrayList<>();
+        list.add(location);
+        this.locations.put(TPS.getTick(this.parent), list);
+
+        this.location = location;
+        this.eventTo = location;
+        this.eventFrom = location;
+        this.schedulerFrom = location;
+        this.detectionLocation = location;
 
         this.clampVector = new Vector();
     }
 
-    public double getCustomDistance() {
-        return customDistance;
-    }
-
-    public double getCustomHorizontalDistance() {
-        return customHorizontalDistance;
-    }
-
-    public double getCustomVerticalDistance() {
-        return customVerticalDistance;
-    }
-
-    // Separator
-
-    public synchronized void setCustomDistance(double distance,
-                                               double horizontal,
-                                               double vertical) {
-        this.customDistance = distance;
-        this.customHorizontalDistance = horizontal;
-        this.customVerticalDistance = vertical;
-    }
-
-    public synchronized void setNmsDistance(double distance,
-                                            double horizontal,
-                                            double vertical,
-                                            double box) {
-        this.nmsDistance.add(distance);
-        this.nmsHorizontalDistance.add(horizontal);
-        this.nmsVerticalDistance.add(vertical);
-        this.nmsBox.add(box);
-
-        for (List list : new List[]{
-                nmsDistance,
-                nmsHorizontalDistance,
-                nmsVerticalDistance,
-                nmsBox
-        }) {
-            if (list.size() > 2) {
-                list.remove(0);
-            }
-        }
+    public double getSchedulerDistance() {
+        return schedulerDistance;
     }
 
     // Separator
@@ -226,7 +196,7 @@ public class SpartanPlayerMovement {
 
     public boolean isWalkJumping(double vertical) {
         return !this.isSprinting()
-                && this.getNmsDistance() > 0.0
+                && this.getValueOrDefault(this.getNmsDistance(), 0.0) > 0.0
                 && this.isJumping(vertical);
     }
 
@@ -268,16 +238,23 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    public int getFallTick(double d, double precision) {
+    public int getFallTick(double d, double acceleration, double drag, double precision) {
         return PlayerUtils.getFallTick(
                 d,
+                acceleration,
+                drag,
                 precision,
                 PlayerUtils.getPotionLevel(this.parent, PotionEffectType.JUMP) + 1
         );
     }
 
-    public boolean isFalling(double d, double precision) {
-        return getFallTick(d, precision) != -1;
+    public boolean isFalling(double d, double acceleration, double drag, double precision) {
+        return getFallTick(
+                d,
+                -acceleration,
+                drag,
+                precision
+        ) != -1;
     }
 
     // Separator
@@ -317,90 +294,91 @@ public class SpartanPlayerMovement {
     // Separator
 
     public int getTicksOnAir() {
-        long airTicks = TPS.getTick(this.parent) - this.lastOnGround,
-                vanillaAirTicks = TPS.getTick(this.parent) - this.lastVanillaOnGround;
         return AlgebraUtils.integerRound(
-                Math.sqrt(((airTicks * airTicks) + (vanillaAirTicks * vanillaAirTicks)) / 2.0)
+                Math.sqrt((airTicks * airTicks + vanillaAirTicks * vanillaAirTicks) / 2.0)
         );
     }
 
     public int getDefaultTicksOnAir() {
-        return (int) (TPS.getTick(this.parent) - this.lastVanillaOnGround);
-    }
-
-    public synchronized void resetAirTicks() {
-        this.lastOnGround = TPS.getTick(this.parent);
-    }
-
-    public synchronized void resetVanillaAirTicks() {
-        this.lastVanillaOnGround = TPS.getTick(this.parent);
+        return vanillaAirTicks;
     }
 
     // Separator
 
     public SpartanLocation getLocation() {
-        SpartanLocation vehicle = getVehicleLocation();
+        Player p = this.parent.getPlayer();
 
-        if (vehicle != null) {
-            return vehicle;
-        } else {
-            if (SpartanBukkit.isSynchronised()) {
-                Player p = this.parent.getPlayer();
+        if (p != null) {
+            SpartanLocation location = getVehicleLocation(p);
 
-                if (p != null) {
-                    Location bukkitLocation = p.getLocation();
-
-                    if (this.location.getX() != bukkitLocation.getX()
-                            || this.location.getY() != bukkitLocation.getY()
-                            || this.location.getZ() != bukkitLocation.getZ()
-                            || this.location.getYaw() != bukkitLocation.getYaw()
-                            || this.location.getPitch() != bukkitLocation.getPitch()) {
-                        SpartanLocation from = this.location.clone();
-                        this.location = new SpartanLocation(this.parent, bukkitLocation);
-                        this.location.retrieveDataFrom(from);
-                    }
-                }
+            if (location == null) {
+                location = new SpartanLocation(this.parent, p.getLocation());
             }
-            return this.location;
+            if (this.location.getX() != location.getX()
+                    || this.location.getY() != location.getY()
+                    || this.location.getZ() != location.getZ()
+                    || this.location.getYaw() != location.getYaw()
+                    || this.location.getPitch() != location.getPitch()) {
+                SpartanLocation from = this.location.clone();
+                this.setLocation(location);
+                location.retrieveDataFrom(from);
+            }
         }
+        return this.location;
     }
 
-    public SpartanLocation getCustomFromLocation() {
-        return customFromLocation;
+    public SpartanLocation getSchedulerFromLocation() {
+        return schedulerFrom;
     }
 
-    public SpartanLocation getNmsToLocation() {
-        return nmsTo;
+    public SpartanLocation getEventToLocation() {
+        return eventTo;
     }
 
-    public SpartanLocation getNmsFromLocation() {
-        return nmsFrom;
+    public SpartanLocation getEventFromLocation() {
+        return eventFrom;
+    }
+
+    public List<SpartanLocation> getLocations() {
+        List<SpartanLocation> toReturn = new ArrayList<>();
+
+        synchronized (this.locations) {
+            for (List<SpartanLocation> list : locations.values()) {
+                toReturn.addAll(list);
+            }
+        }
+        return toReturn;
+    }
+
+    public Set<Map.Entry<Long, List<SpartanLocation>>> getLocationEntries() {
+        synchronized (this.locations) {
+            return new HashSet<>(locations.entrySet());
+        }
     }
 
     public SpartanLocation getDetectionLocation() {
         return detectionLocation;
     }
 
-    public SpartanLocation getVehicleLocation() {
-        Entity vehicle = this.parent.getVehicle();
+    public SpartanLocation getVehicleLocation(Player player) {
+        Entity vehicle = player.getVehicle();
 
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
-            Location vehicleLocation = vehicle.getLocation();
-            SpartanLocation playerLocation = this.location;
-            boolean isNull = playerLocation == null;
+            Location playerLocation = player.getLocation();
             return new SpartanLocation(this.parent,
-                    vehicleLocation,
-                    isNull ? vehicleLocation.getYaw() : playerLocation.getYaw(),
-                    isNull ? vehicleLocation.getPitch() : playerLocation.getPitch());
+                    vehicle.getLocation(),
+                    playerLocation.getYaw(),
+                    playerLocation.getPitch());
         }
         return null;
     }
 
     public void setDetectionLocation(boolean force) {
+        SpartanLocation location = this.getLocation();
+
         if (force
-                || !this.location.world.equals(this.detectionLocation.world)
-                || this.location.distance(this.detectionLocation) > PlayerUtils.terminalVelocity) {
-            SpartanLocation location = this.getLocation();
+                || !location.world.equals(this.detectionLocation.world)
+                || location.distance(this.detectionLocation) > 4.0) {
             int minHeight = BlockUtils.getMinHeight(location.world);
 
             if (location.getBlockY() < minHeight) {
@@ -414,19 +392,32 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean positionChanged() {
-        return this.nmsTo.getX() != this.nmsFrom.getX()
-                || this.nmsTo.getY() != this.nmsFrom.getY()
-                || this.nmsTo.getZ() != this.nmsFrom.getZ();
+        return this.eventTo.getX() != this.eventFrom.getX()
+                || this.eventTo.getY() != this.eventFrom.getY()
+                || this.eventTo.getZ() != this.eventFrom.getZ();
     }
 
     public boolean directionChanged() {
-        return this.nmsTo.getYaw() != this.nmsFrom.getYaw()
-                || this.nmsTo.getPitch() != this.nmsFrom.getPitch();
+        return this.eventTo.getYaw() != this.eventFrom.getYaw()
+                || this.eventTo.getPitch() != this.eventFrom.getPitch();
     }
 
     // Separator
 
-    public boolean processLastMoveEvent(SpartanLocation to, SpartanLocation from) {
+    private void setLocation(SpartanLocation location) {
+        synchronized (this.locations) {
+            if (this.locations.size() == TPS.maximum) {
+                Iterator<Long> iterator = this.locations.keySet().iterator();
+                iterator.next();
+                iterator.remove();
+            }
+            this.locations.computeIfAbsent(TPS.getTick(this.parent), k -> new ArrayList<>()).add(location);
+        }
+        this.location = location;
+    }
+
+    public boolean processLastMoveEvent(SpartanLocation to, SpartanLocation from,
+                                        double distance, double horizontal, double vertical, double box) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
                     y = clampMin(to.getY(), -2.0E7D, 2.0E7D),
@@ -439,15 +430,48 @@ public class SpartanPlayerMovement {
                 return false;
             }
         }
-        this.nmsTo = to;
-        this.nmsFrom = from;
+        this.setLocation(to);
+        this.eventTo = to;
+        this.eventFrom = from;
+        this.nmsDistance.add(distance);
+        this.nmsHorizontalDistance.add(horizontal);
+        this.nmsVerticalDistance.add(vertical);
+        this.nmsBox.add(box);
+
+        for (List list : new List[]{
+                nmsDistance,
+                nmsHorizontalDistance,
+                nmsVerticalDistance,
+                nmsBox
+        }) {
+            if (list.size() > 2) {
+                list.remove(0);
+            }
+        }
+        this.judgeGround(to, true);
         return true;
     }
 
-    private double clampMin(double d, double d2, double d3) {
-        if (d < d2) {
-            return d2;
+    private void judgeGround(SpartanLocation location, boolean increase) {
+        if (this.parent.isOnGround(location)) {
+            this.parent.onGroundCustom = true;
+            this.airTicks = 0;
+        } else if (increase) {
+            this.parent.onGroundCustom = false;
+            this.airTicks++;
         }
-        return Math.min(d, d3);
+        if (this.parent.isOnGroundDefault()) {
+            this.vanillaAirTicks = 0;
+        } else if (increase) {
+            this.vanillaAirTicks++;
+        }
+    }
+
+    public void judgeGround(SpartanLocation location) {
+        this.judgeGround(location, false);
+    }
+
+    private double clampMin(double d, double d2, double d3) {
+        return d < d2 ? d2 : Math.min(d, d3);
     }
 }

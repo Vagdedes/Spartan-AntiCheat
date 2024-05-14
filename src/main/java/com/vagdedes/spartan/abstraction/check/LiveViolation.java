@@ -17,7 +17,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.server.ConfigUtils;
@@ -52,20 +51,20 @@ public class LiveViolation {
 
     // Separator
 
-    void run(HackPrevention newPrevention, String information, long time) {
+    void run(HackPrevention newPrevention, String information, double violations, long time) {
         synchronized (this) {
-            if (!CheckDelay.hasCooldown(player)
-                    && !CloudBase.isPublicInformationCancelled(hackType, information)
+            if (!CloudBase.isInformationCancelled(hackType, information)
                     && (disableCause == null
                     || !disableCause.pointerMatches(information))) {
                 InformationAnalysis analysis = new InformationAnalysis(hackType, information);
+                int violationsInt = AlgebraUtils.integerRound(violations);
                 PlayerViolation playerViolation = new PlayerViolation(
                         time,
                         hackType,
                         information,
                         Math.max(
-                                this.getLevel(analysis.identity) + 1,
-                                AlgebraUtils.integerRound(Math.sqrt(this.getTotalLevel() + 1))
+                                this.getLevel(analysis.identity) + violationsInt,
+                                AlgebraUtils.integerRound(Math.sqrt(this.getTotalLevel() + violationsInt))
                         ),
                         analysis
                 );
@@ -174,7 +173,7 @@ public class LiveViolation {
     }
 
     private void increaseLevel(int hash) {
-        int multiplier = 1 + player.getProfile().evidence.getKnowledgeList().size();
+        int multiplier = 1 + player.getProfile().evidence.getKnowledgeList(false).size();
 
         synchronized (this.level) {
             Long time = this.level.get(hash);
@@ -223,7 +222,7 @@ public class LiveViolation {
         }
 
         // Always last
-        player.getProfile().evidence.remove(hackType, true, false, true);
+        player.getProfile().evidence.remove(hackType, true, false, false, true);
         InteractiveInventory.playerInfo.refresh(player.name);
     }
 
@@ -381,7 +380,11 @@ public class LiveViolation {
 
             if (DetectionNotifications.canAcceptMessages(player, divisor, false)
                     && isDivisorValid(playerViolation.level, divisor)) { // Attention
-                ClickableMessage.sendCommand(player, message, "Command: " + command, command);
+                Player realPlayer = player.getPlayer();
+
+                if (realPlayer != null) {
+                    ClickableMessage.sendCommand(realPlayer, message, "Command: " + command, command);
+                }
             }
         } else {
             List<SpartanPlayer> notificationPlayers = DetectionNotifications.getPlayers(false);
@@ -392,12 +395,16 @@ public class LiveViolation {
                             playerViolation.level,
                             NotifyViolation.get(staff, player, ignoredViolations)
                     )) {
-                        ClickableMessage.sendCommand(
-                                staff,
-                                message,
-                                "Command: " + command,
-                                command
-                        );
+                        Player realPlayer = staff.getPlayer();
+
+                        if (realPlayer != null) {
+                            ClickableMessage.sendCommand(
+                                    realPlayer,
+                                    message,
+                                    "Command: " + command,
+                                    command
+                            );
+                        }
                     }
                 }
             }

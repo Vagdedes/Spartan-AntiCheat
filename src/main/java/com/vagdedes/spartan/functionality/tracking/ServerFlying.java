@@ -24,7 +24,7 @@ public class ServerFlying {
             Double nmsDistance = p.movement.getNmsDistance();
 
             if (nmsDistance != null && nmsDistance >= limit
-                    || p.movement.getCustomDistance() >= limit) {
+                    || p.movement.getSchedulerDistance() >= limit) {
                 p.teleport(p.movement.getDetectionLocation());
             }
         }

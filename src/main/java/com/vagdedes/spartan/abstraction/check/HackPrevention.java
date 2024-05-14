@@ -23,7 +23,8 @@ public class HackPrevention {
         this.expiration = 0L;
     }
 
-    HackPrevention(SpartanPlayer player, Enums.HackType hackType, String information,
+    HackPrevention(SpartanPlayer player, Enums.HackType hackType,
+                   String information, double violations,
                    SpartanLocation location, int cancelTicks, boolean groundTeleport,
                    double damage) {
         long time = System.currentTimeMillis();
@@ -32,7 +33,7 @@ public class HackPrevention {
         this.groundTeleport = groundTeleport;
         this.damage = damage;
         this.expiration = TPS.getTick(player) + cancelTicks;
-        player.getViolations(hackType).run(this, information, time);
+        player.getViolations(hackType).run(this, information, violations, time);
     }
 
     boolean hasExpired(long tick) {

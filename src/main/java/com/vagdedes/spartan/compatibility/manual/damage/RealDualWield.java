@@ -3,8 +3,8 @@ package com.vagdedes.spartan.compatibility.manual.damage;
 import com.evill4mer.RealDualWield.Api.PlayerOffhandAnimationEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,12 +22,16 @@ public class RealDualWield implements Listener {
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.REAL_DUAL_WIELD;
 
         if (compatibilityType.isFunctional()) {
-            CheckDelay.evadeCommonFalsePositives(p, compatibilityType,
+            Config.compatibility.evadeFalsePositives(
+                    p,
+                    compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,
                             Enums.HackType.HitReach,
                             Enums.HackType.Criticals,
-                    }, 5);
+                    },
+                    5
+            );
         }
     }
 }

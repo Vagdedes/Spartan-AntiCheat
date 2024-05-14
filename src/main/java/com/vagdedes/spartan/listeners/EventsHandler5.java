@@ -7,10 +7,8 @@ import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.Building;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -86,7 +84,7 @@ public class EventsHandler5 implements Listener {
             p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
             p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
             p.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, b);
         }
 
         // Detections
@@ -111,16 +109,13 @@ public class EventsHandler5 implements Listener {
         }
         Block nb = e.getBlock();
         SpartanBlock b = new SpartanBlock(p, nb);
+        b.removeBlockCache();
+        p.movement.judgeGround(p.movement.getLocation());
 
         if (n.getWorld() != b.world) {
             return;
         }
-        Block rba = e.getBlockAgainst();
-        BlockFace blockFace = nb.getFace(rba);
         boolean cancelled = e.isCancelled();
-
-        // Protections
-        Building.runPlace(p, b, blockFace, cancelled);
 
         // Detections
         if (!ItemsAdder.is(nb)) {

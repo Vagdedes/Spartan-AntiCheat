@@ -20,7 +20,7 @@ public class Trackers {
         DAMAGE(TrackerFamily.VELOCITY),
 
         GAME_MODE(TrackerFamily.MOTION), ELYTRA_USE(TrackerFamily.MOTION),
-        FLIGHT(TrackerFamily.MOTION);
+        VEHICLE(TrackerFamily.MOTION);
 
         public final TrackerFamily family;
 

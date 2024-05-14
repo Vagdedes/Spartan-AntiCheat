@@ -78,7 +78,7 @@ public class ViolationAnalysis {
                                Enums.DataType dataType) {
         for (PlayerProfile profile : playerProfiles) {
             if (profile.getDataType() == dataType) {
-                profile.evidence.remove(hackType, false, true, false);
+                profile.evidence.remove(hackType, false, true, true, false);
             }
         }
     }
@@ -143,7 +143,7 @@ public class ViolationAnalysis {
             }
         } else if (!playerProfiles.isEmpty()) {
             for (PlayerProfile profile : playerProfiles) {
-                profile.evidence.clear(false, true, false);
+                profile.evidence.clear(false, true, true, false);
             }
         }
     }
@@ -231,10 +231,31 @@ public class ViolationAnalysis {
                                         "Probability: " + AlgebraUtils.cut(probability * 100.0, 2) + "%",
                                         false,
                                         true,
+                                        false,
                                         false
                                 );
                             } else {
-                                profile.evidence.remove(hackType, false, true, false);
+                                profile.evidence.remove(hackType, false, true, false, false);
+
+                                if (probability < 1.0) {
+                                    profile.evidence.add(
+                                            hackType,
+                                            "Probability: " + AlgebraUtils.cut(probability * 100.0, 2) + "%",
+                                            false,
+                                            false,
+                                            true,
+                                            false
+                                    );
+                                } else {
+                                    profile.evidence.add(
+                                            hackType,
+                                            "Probability: Insufficient",
+                                            false,
+                                            false,
+                                            true,
+                                            false
+                                    );
+                                }
                             }
                         }
                     }

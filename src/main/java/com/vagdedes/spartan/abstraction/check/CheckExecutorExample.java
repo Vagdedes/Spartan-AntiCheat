@@ -44,22 +44,29 @@ public class CheckExecutorExample extends CheckExecutor {
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can
-        // separate the functionality by using the "DetectionExecutor" class and
-        // connect them all via the "CheckExecutor" class.
+        // separate the functionality by using the 'DetectionExecutor' class and
+        // connect them all via the 'CheckExecutor' class.
     }
 
     @Override
     public void handleInternal(boolean cancelled, Object object) {
-        // This method should be used to run a check/detection when information
-        // needs to be inserted via the method being called. It is recommended
-        // to try to maintain the information needed via objects or static methods
-        // because this method may produce overhead due to the casting needed to
-        // precisely define what the "object" is.
+        // This method should be used to handle data for a check/detection when
+        // the information is not directly available via the class or other classes.
+        // You may also use this method to run checks/detections, although it is best
+        // you use the 'runInternal' method for that purpose.
         //
-        // The boolean "cancelled" is 'true' when an event is cancelled by the server
+        // The boolean 'cancelled' is 'true' when an event is cancelled by the server
         // or by another plugin. Based on configuration, a user of this plugin may
         // choose for cancelled events to not go through, thus causing this method to
         // not be called at all.
+    }
+
+    @Override
+    public void cannotHandle(boolean cancelled, Object object) {
+        // This method will be called when the 'handleInternal' method cannot run.
+        // Reasons for the method being unable to run can vary, such as the check
+        // being disabled, the player being in a certain game mode, a compatibility
+        // blocking the check, etc.
     }
 
     @Override
@@ -68,8 +75,16 @@ public class CheckExecutorExample extends CheckExecutor {
         // needs to be inserted via the method being called and is all available in
         // the class or via methods of other classes.
         //
-        // The boolean "cancelled" works the same as in the "handleInternal" method
+        // The boolean 'cancelled' works the same as in the 'handleInternal' method
         // which is where you can find its documentation.
+    }
+
+    @Override
+    public void cannotRun(boolean cancelled) {
+        // This method will be called when the 'runInternal' method cannot run.
+        // Reasons for the method being unable to run can vary, such as the check
+        // being disabled, the player being in a certain game mode, a compatibility
+        // blocking the check, etc.
     }
 
     @Override
@@ -83,10 +98,20 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    protected boolean canDo() {
+    public void cannotSchedule() {
+        // This method will be called when the 'schedulerInternal' method cannot run.
+        // Reasons for the method being unable to run can vary, such as the check
+        // being disabled, the player being in a certain game mode, a compatibility
+        // blocking the check, etc.
+    }
+
+    @Override
+    protected boolean canRun() {
         // This method should be used to judge whether a check should run or not.
         // However, each check/detection may have different requirements, so use
         // this method for the requirements all checks/detections have in common.
+        // Keep in mind that basic factors such as the check being enabled are
+        // already accounted for prior to running this method.
         return false;
     }
 

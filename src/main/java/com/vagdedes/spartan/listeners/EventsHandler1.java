@@ -41,6 +41,9 @@ public class EventsHandler1 implements Listener {
         MaximumCheckedPlayers.add(p);
         SpartanEdition.attemptNotification(p);
 
+        // Detection
+        p.getExecutor(Enums.HackType.Speed).handle(false, e);
+
         SpartanBukkit.runDelayedTask(p, () -> {
             if (p != null) {
                 Config.settings.runOnLogin(p);
@@ -126,6 +129,8 @@ public class EventsHandler1 implements Listener {
         p.addReceivedVelocity(e);
 
         // Detections
+        p.getExecutor(Enums.HackType.Speed).handle(e.isCancelled(), e);
+
         if (p.getViolations(Enums.HackType.Velocity).prevent()) {
             e.setCancelled(true);
         }

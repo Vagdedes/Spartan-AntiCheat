@@ -1,21 +1,22 @@
 package com.vagdedes.spartan.listeners;
 
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.PluginUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.server.PluginDisableEvent;
-import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 
 public class EventsHandler7 implements Listener {
 
@@ -36,20 +37,15 @@ public class EventsHandler7 implements Listener {
         if (p == null) {
             return;
         }
-        boolean cancelled = e.isCancelled();
-
         Location nto = e.getTo();
 
         if (nto == null) {
             return;
         }
-        SpartanLocation vehicle = p.movement.getVehicleLocation();
+        SpartanLocation vehicle = p.movement.getVehicleLocation(n);
         SpartanLocation
                 to = vehicle != null ? vehicle : new SpartanLocation(p, nto),
                 from = new SpartanLocation(p, e.getFrom());
-
-        // Objects
-        to.retrieveDataFrom(p.movement.getLocation());
         from.retrieveDataFrom(to);
 
         // Values
@@ -61,10 +57,10 @@ public class EventsHandler7 implements Listener {
                 ver = toY - fromY,
                 hor = Math.sqrt(preXZ);
 
-        if (!p.movement.processLastMoveEvent(to, from)) {
+        if (!p.movement.processLastMoveEvent(to, from, dis, hor, ver, box)) {
             return;
         }
-        MovementProcessing.run(n, p, to, dis, hor, ver, box);
+        MovementProcessing.run(p, to, ver, box);
 
         // Patterns
         for (Enums.HackType hackType : handledChecks) {
@@ -74,6 +70,7 @@ public class EventsHandler7 implements Listener {
         }
 
         // Detections
+        boolean cancelled = e.isCancelled();
         p.getExecutor(Enums.HackType.Exploits).handle(cancelled, null);
         p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
         p.getExecutor(Enums.HackType.KillAura).run(cancelled);
@@ -83,23 +80,50 @@ public class EventsHandler7 implements Listener {
         p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
     }
 
-    @EventHandler
-    private void PluginEnable(PluginEnableEvent e) {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    private void Death(EntityDeathEvent e) {
+        Entity entity = e.getEntity();
+        Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                ? entity.getPassengers().toArray(new Entity[0])
+                : new Entity[]{entity.getPassenger()};
 
-        // Utils
-        PluginUtils.clear();
+        if (passengers.length > 0) {
+            Enums.HackType[] hackTypes = new Enums.HackType[]{
+                    Enums.HackType.NoFall,
+                    Enums.HackType.IrregularMovements,
+            };
 
-        // System
-        Config.compatibility.fastClear();
+            for (Entity passenger : passengers) {
+                if (passenger instanceof Player) {
+                    Player n = (Player) passenger;
+                    SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+                    if (p != null) {
+                        for (Enums.HackType hackType : hackTypes) {
+                            p.getViolations(hackType).addDisableCause(
+                                    hackType.toString(),
+                                    null,
+                                    1
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    @EventHandler
-    private void PluginDisable(PluginDisableEvent e) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void Vehicle(VehicleEnterEvent e) {
+        Entity entity = e.getEntered();
 
-        // Utils
-        PluginUtils.clear();
+        if (entity instanceof Player) {
+            SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
 
-        // System
-        Config.compatibility.fastClear();
+            if (p == null) {
+                return;
+            }
+            p.getTrackers().add(Trackers.TrackerType.VEHICLE, "enter", 5);
+        }
     }
+
 }

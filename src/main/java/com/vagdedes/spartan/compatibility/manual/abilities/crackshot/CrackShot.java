@@ -7,8 +7,9 @@ import com.shampaggon.crackshot.events.WeaponShootEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.CheckDelay;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -27,7 +28,15 @@ public class CrackShot implements Listener {
             }
             if (!e.isCancelled()) {
                 Buffer buffer = p.getBuffer();
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 20);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        20
+                );
 
                 if (e.isZoomIn()) {
                     buffer.set("crackshot=compatibility=scope", 1);
@@ -48,7 +57,15 @@ public class CrackShot implements Listener {
             if (p == null) {
                 return;
             }
-            CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 40);
+            Config.compatibility.evadeFalsePositives(
+                    p,
+                    Compatibility.CompatibilityType.CRACK_SHOT,
+                    new Enums.HackCategoryType[]{
+                            Enums.HackCategoryType.MOVEMENT,
+                            Enums.HackCategoryType.COMBAT
+                    },
+                    40
+            );
         }
     }
 
@@ -60,7 +77,15 @@ public class CrackShot implements Listener {
             if (p == null) {
                 return;
             }
-            CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 40);
+            Config.compatibility.evadeFalsePositives(
+                    p,
+                    Compatibility.CompatibilityType.CRACK_SHOT,
+                    new Enums.HackCategoryType[]{
+                            Enums.HackCategoryType.MOVEMENT,
+                            Enums.HackCategoryType.COMBAT
+                    },
+                    40
+            );
         }
     }
 
@@ -70,7 +95,15 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getVictim().getUniqueId());
 
             if (p != null) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 60);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        60
+                );
             }
         }
     }
@@ -81,7 +114,15 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getEntity().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 60);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        60
+                );
             }
         }
     }
@@ -92,7 +133,15 @@ public class CrackShot implements Listener {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getDamager().getUniqueId());
 
             if (p != null && isUsingScope(p)) {
-                CheckDelay.evadeStandardCombatFPs(p, Compatibility.CompatibilityType.CRACK_SHOT, 60);
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.CRACK_SHOT,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        60
+                );
             }
         }
     }

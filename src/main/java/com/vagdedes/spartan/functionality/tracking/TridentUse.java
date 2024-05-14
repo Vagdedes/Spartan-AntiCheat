@@ -1,10 +1,12 @@
 package com.vagdedes.spartan.functionality.tracking;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.SpeedAction;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -28,8 +30,10 @@ public class TridentUse {
 
                             if (level > riptideMaxSafeLevel) {
                                 p.getTrackers().add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
+                                p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE_UNSAFE);
                             } else {
                                 p.getTrackers().add(Trackers.TrackerType.TRIDENT, ticks);
+                                p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE);
                             }
                         }
                         break;

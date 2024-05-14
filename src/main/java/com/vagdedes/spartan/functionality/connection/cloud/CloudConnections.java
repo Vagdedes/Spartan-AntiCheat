@@ -113,7 +113,7 @@ public class CloudConnections {
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                     + "&action=get&data=detectionSlots&version=" + CloudBase.version
-                    + "&value=" + Bukkit.getPort() + CloudBase.separator + SpartanBukkit.getPlayerCount());
+                    + "&value=" + URLEncoder.encode(Bukkit.getPort() + CloudBase.separator + SpartanBukkit.getPlayerCount(), "UTF-8"));
 
             if (results.length == 1 && AlgebraUtils.validInteger(results[0])) {
                 return Integer.parseInt(results[0]);

@@ -28,14 +28,21 @@ public abstract class CheckExecutor extends DetectionExecutor {
         }
     }
 
-    // Run detections when no parameters are needed
     public final void run(boolean cancelled) {
-        if (function && (!cancelled || hackType.getCheck().handleCancelledEvents)) {
+        if (canFunctionOrJustImplemented() && (!cancelled || hackType.getCheck().handleCancelledEvents)) {
             runInternal(cancelled);
+        } else {
+            cannotRun(cancelled);
         }
     }
 
-    protected abstract void runInternal(boolean cancelled);
+    protected void cannotRun(boolean cancelled) {
+
+    }
+
+    protected void runInternal(boolean cancelled) {
+
+    }
 
     public final void scheduler() {
         function = !TPS.areLow(player)
@@ -43,24 +50,49 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
                 || player.getGameMode() != GameMode.SPECTATOR)
                 && player.getCancellableCompatibility() == null
-                && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player);
-        schedulerInternal();
-    }
+                && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
+                && canRun();
 
-    protected abstract void schedulerInternal();
-
-    // Run handlers or detections when parameters are needed
-    public final void handle(boolean cancelled, Object object) {
-        if (function && (!cancelled || hackType.getCheck().handleCancelledEvents)) {
-            handleInternal(cancelled, object);
+        if (canFunctionOrJustImplemented()) {
+            schedulerInternal();
+        } else {
+            cannotSchedule();
         }
     }
 
-    protected abstract void handleInternal(boolean cancelled, Object object);
+    protected void cannotSchedule() {
 
-    abstract protected boolean canDo();
+    }
 
-    protected final boolean canFunction() {
+    protected void schedulerInternal() {
+
+    }
+
+    public final void handle(boolean cancelled, Object object) {
+        if (canFunctionOrJustImplemented() && (!cancelled || hackType.getCheck().handleCancelledEvents)) {
+            handleInternal(cancelled, object);
+        } else {
+            cannotHandle(cancelled, object);
+        }
+    }
+
+    protected void cannotHandle(boolean cancelled, Object object) {
+
+    }
+
+    protected void handleInternal(boolean cancelled, Object object) {
+
+    }
+
+    protected boolean canRun() {
+        return true;
+    }
+
+    private boolean canFunctionOrJustImplemented() {
+        return function || player.timePassedSinceCreation() <= (TPS.maximum * TPS.tickTime);
+    }
+
+    final boolean canFunction() {
         return function;
     }
 }
