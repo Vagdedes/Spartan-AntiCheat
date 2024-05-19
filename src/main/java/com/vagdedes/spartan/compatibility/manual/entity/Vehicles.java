@@ -33,13 +33,12 @@ public class Vehicles implements Listener {
     private void Exit(VehicleExitEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
             SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer().getUniqueId());
-            p.getBuffer().clear(key);
+            p.buffer.clear(key);
         }
     }
 
     private static void add(SpartanPlayer p, String type) {
-        Cooldowns cooldowns = p.getCooldowns();
-        cooldowns.add(key + type, 20);
+        p.cooldowns.add(key + type, 20);
     }
 
     private static boolean has(Cooldowns cooldowns, String type) {
@@ -47,14 +46,12 @@ public class Vehicles implements Listener {
     }
 
     public static boolean has(SpartanPlayer p, String type) {
-        return has(p.getCooldowns(), type);
+        return has(p.cooldowns, type);
     }
 
     public static boolean has(SpartanPlayer p, String[] types) {
-        Cooldowns cooldowns = p.getCooldowns();
-
         for (String type : types) {
-            if (has(cooldowns, type)) {
+            if (has(p.cooldowns, type)) {
                 return true;
             }
         }

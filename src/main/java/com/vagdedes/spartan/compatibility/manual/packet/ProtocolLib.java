@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.packet;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.utils.server.ReflectionUtils;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.entity.Player;
 
 public class ProtocolLib {

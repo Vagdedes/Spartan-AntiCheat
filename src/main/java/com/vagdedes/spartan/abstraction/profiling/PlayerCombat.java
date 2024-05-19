@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.utils.gameplay.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;

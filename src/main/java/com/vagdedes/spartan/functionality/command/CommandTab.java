@@ -81,7 +81,7 @@ public class CommandTab implements TabCompleter {
                 player &= p != null;
 
                 for (SpartanPlayer o : players) {
-                    Player on = o.getPlayer();
+                    Player on = o.getInstance();
 
                     if (on != null && (!player || p.canSee(on))) {
                         String name = o.name;

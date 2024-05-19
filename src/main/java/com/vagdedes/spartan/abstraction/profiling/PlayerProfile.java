@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.profiling;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -81,7 +81,7 @@ public class PlayerProfile {
         Enums.HackType[] hackTypes = Enums.HackType.values();
         this.uuid = player.uuid;
         this.name = player.name;
-        this.offlinePlayer = player.getPlayer(); // Attention
+        this.offlinePlayer = player.getInstance(); // Attention
         this.punishmentHistory = new PunishmentHistory();
         this.playerCombat = new PlayerCombat(this);
         this.evidence = new PlayerEvidence();
@@ -123,7 +123,7 @@ public class PlayerProfile {
                 if (spartanPlayer == null) {
                     return InventoryUtils.getHead();
                 } else {
-                    Player player = spartanPlayer.getPlayer();
+                    Player player = spartanPlayer.getInstance();
 
                     if (player == null) {
                         return InventoryUtils.getHead();

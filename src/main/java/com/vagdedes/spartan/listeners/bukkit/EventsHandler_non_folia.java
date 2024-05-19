@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.listeners;
+package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.functionality.server.Chunks;
 import org.bukkit.event.EventHandler;

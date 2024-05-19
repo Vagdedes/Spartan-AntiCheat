@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.gameplay;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
@@ -6,7 +6,6 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -52,8 +51,8 @@ public class PlayerUtils {
             slowFallAcceleration = 0.01,
             liquidAcceleration = 0.02,
             chunk = 16.0,
-            climbingDefault = 0.11760,
-            climbingScaffoldingMax = climbingDefault + 0.2,
+            climbingUpDefault = 0.12 * airDrag, // 0.11760
+            climbingDownDefault = AlgebraUtils.floatDouble(0.15),
             maxJumpingMotionDifference;
 
     public static final int
@@ -68,13 +67,15 @@ public class PlayerUtils {
 
     static {
         handledPotionEffects.put(JUMP, 100);
-        handledPotionEffects.put(SPEED, 60);
+        handledPotionEffects.put(SPEED, 40);
 
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            handledPotionEffects.put(DOLPHINS_GRACE, 30);
+        if (slowFall) {
             handledPotionEffects.put(SLOW_FALLING, 20);
         }
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+        if (dolphinsGrace) {
+            handledPotionEffects.put(DOLPHINS_GRACE, 30);
+        }
+        if (levitation) {
             handledPotionEffects.put(LEVITATION, 10);
         }
 
@@ -249,11 +250,15 @@ public class PlayerUtils {
         return -1;
     }
 
+    public static double calculateTerminalVelocity(double drag, double acceleration) {
+        return ((1.0 / (1.0 - drag)) * acceleration);
+    }
+
     public static double calculateNextFallMotion(double motion,
                                                  double acceleration, double drag) {
-        double terminalVelocity = ((1.0 / (1.0 - drag)) * acceleration);
+        double terminalVelocity = calculateTerminalVelocity(acceleration, drag);
 
-        if (motion >= terminalVelocity) {
+        if (motion >= -terminalVelocity) {
             return (motion + acceleration) * drag;
         } else {
             return Double.MIN_VALUE;

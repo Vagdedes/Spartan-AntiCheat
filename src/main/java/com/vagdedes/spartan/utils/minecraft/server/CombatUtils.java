@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.gameplay;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
@@ -214,7 +214,7 @@ public class CombatUtils {
     public static boolean hasBlockBehind(SpartanPlayer p, LivingEntity entity) {
         SpartanLocation location = p.movement.getLocation().clone();
         location.setPitch(0.0f);
-        SpartanLocation multipliedLocation = new SpartanLocation(null, entity.getLocation().clone().add(location.getDirection().multiply(1.0)));
+        SpartanLocation multipliedLocation = new SpartanLocation(entity.getLocation().clone().add(location.getDirection().multiply(1.0)));
 
         if (BlockUtils.isSolid(multipliedLocation.getBlock().material)) {
             return true;
@@ -243,7 +243,7 @@ public class CombatUtils {
                 && PlayerUtils.isSwordItem(p.getItemInHand().getType())) {
             double distance = 4.0;
             List<Entity> nearbyEntities = entity.getNearbyEntities(distance, distance, distance);
-            nearbyEntities.remove(p.getPlayer());
+            nearbyEntities.remove(p.getInstance());
             int i = 0;
 
             for (Entity e : nearbyEntities) {

@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.listeners;
+package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;

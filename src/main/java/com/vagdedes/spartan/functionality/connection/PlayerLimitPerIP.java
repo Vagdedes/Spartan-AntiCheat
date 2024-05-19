@@ -5,7 +5,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 
@@ -81,7 +81,7 @@ public class PlayerLimitPerIP {
                 String ip = p.ipAddress;
 
                 if (ip != null) {
-                    Player n = p.getPlayer();
+                    Player n = p.getInstance();
 
                     if (n != null) {
                         memory.put(n, new Storage(ip));
@@ -128,7 +128,7 @@ public class PlayerLimitPerIP {
         String ip = p.ipAddress;
 
         if (ip != null) {
-            Player n = p.getPlayer();
+            Player n = p.getInstance();
 
             if (n != null) {
                 memory.remove(n);

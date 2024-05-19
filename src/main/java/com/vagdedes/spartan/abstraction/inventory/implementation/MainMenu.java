@@ -18,8 +18,8 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.InventoryUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
@@ -49,7 +49,7 @@ public class MainMenu extends InventoryMenu {
                 if (!players.isEmpty()) {
                     for (SpartanPlayer p : players) {
                         SpartanBukkit.runTask(p, () -> {
-                            Player n = p.getPlayer();
+                            Player n = p.getInstance();
 
                             if (n != null) {
                                 String title = n.getOpenInventory().getTitle();
@@ -113,9 +113,9 @@ public class MainMenu extends InventoryMenu {
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
         lore.add("§7Detections Available§8: "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.JAVA) ? "§a" : "§c") + Enums.DataType.JAVA
+                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.JAVA) ? "§a" : "§c") + Enums.DataType.JAVA.name
                 + " §8/ "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.BEDROCK) ? "§a" : "§c") + Enums.DataType.BEDROCK);
+                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.BEDROCK) ? "§a" : "§c") + Enums.DataType.BEDROCK.name);
         lore.add("");
         lore.add("§7Left click to §amanage checks§7.");
         lore.add("§7Right click to §creload the plugin's memory contents§7.");
@@ -178,7 +178,7 @@ public class MainMenu extends InventoryMenu {
                 player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
                 if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
-                    Player n = player.getPlayer();
+                    Player n = player.getInstance();
 
                     if (n != null && n.hasPermission("filegui.modify")) {
                         FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);

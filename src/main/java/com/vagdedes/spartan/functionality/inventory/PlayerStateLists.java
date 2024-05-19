@@ -4,7 +4,7 @@ import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import com.vagdedes.spartan.utils.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;

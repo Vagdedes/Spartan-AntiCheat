@@ -7,7 +7,7 @@ import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.List;

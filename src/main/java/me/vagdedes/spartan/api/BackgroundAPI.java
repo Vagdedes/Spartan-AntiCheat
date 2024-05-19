@@ -350,7 +350,7 @@ public class BackgroundAPI {
 
     static int getCPS(Player p) {
         SpartanPlayer player = SpartanBukkit.getPlayer(p);
-        return player == null ? 0 : player.getClicks().getCount();
+        return player == null ? 0 : player.clicks.getCount();
     }
 
     @Deprecated

@@ -1,9 +1,8 @@
 package com.vagdedes.spartan.abstraction.replicates;
 
-import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -13,38 +12,30 @@ import org.bukkit.block.data.Waterlogged;
 
 public class SpartanBlock {
 
-    public final SpartanPlayer player;
     public final Material material;
-    public final World world;
-    private Chunk chunk;
     public final byte data;
-    public final int x, z, identifier;
+    public final int x, z;
     public final short y;
     public final boolean liquid, waterLogged;
+    private final SpartanLocation location;
 
-    SpartanBlock(SpartanPlayer player, World world, Chunk chunk, Material material, byte data, int identifier, int x, int y, int z, boolean liquid, boolean waterLogged) {
-        this.player = player;
-        this.world = world;
+    SpartanBlock(World world, Chunk chunk, Material material, byte data, int x, int y, int z, boolean liquid, boolean waterLogged) {
         this.material = material;
-        this.chunk = chunk;
         this.data = data;
         this.x = x;
         this.y = (short) y;
         this.z = z;
         this.liquid = liquid;
         this.waterLogged = waterLogged;
-        this.identifier = identifier;
+        this.location = new SpartanLocation(world, chunk, this.x, this.y, this.z, 0.0f, 0.0f);
     }
 
-    public SpartanBlock(SpartanPlayer player, Block block) {
-        this.player = player;
-        this.world = block.getWorld();
+    public SpartanBlock(Block block) {
         this.material = block.getType();
-        this.chunk = null;
         this.x = block.getX();
         this.y = (short) block.getY();
         this.z = block.getZ();
-        this.identifier = Chunks.locationIdentifier(world.hashCode(), x, y, z);
+        this.location = new SpartanLocation(block.getWorld(), null, this.x, this.y, this.z, 0.0f, 0.0f);
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             Object blockData = block.getBlockData();
@@ -66,15 +57,16 @@ public class SpartanBlock {
 
     public void removeBlockCache() {
         synchronized (SpartanLocation.memory) {
-            SpartanLocation.memory.remove(identifier);
+            SpartanLocation.memory.remove(this.location.getIdentifier());
         }
     }
 
+    public World getWorld() {
+        return this.location.world;
+    }
+
     public Chunk getChunk() {
-        if (chunk == null) {
-            chunk = getLocation().getChunk();
-        }
-        return chunk;
+        return this.location.getChunk();
     }
 
     public boolean isLiquidOrWaterLogged(boolean lava) {
@@ -90,11 +82,6 @@ public class SpartanBlock {
     }
 
     public SpartanLocation getLocation() {
-        return new SpartanLocation(this.player, this.world, this.chunk, this.x, this.y, this.z, 0.0f, 0.0f, this);
-    }
-
-    public Block getBlock() {
-        SpartanLocation loc = getLocation();
-        return loc.world.getBlockAt(loc.getLimitedBukkitLocation());
+        return this.location;
     }
 }

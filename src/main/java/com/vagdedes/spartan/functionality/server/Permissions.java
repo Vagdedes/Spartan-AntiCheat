@@ -31,7 +31,7 @@ public class Permissions {
     // Separator
 
     public static boolean has(SpartanPlayer p, Enums.Permission permission) {
-        Player n = p.getPlayer();
+        Player n = p.getInstance();
         return n != null && has(n, permission);
     }
 
@@ -50,7 +50,7 @@ public class Permissions {
     // Separator
 
     public static boolean onlyHas(SpartanPlayer p, Enums.Permission permission) {
-        Player n = p.getPlayer();
+        Player n = p.getInstance();
         return n != null && onlyHas(n, permission);
     }
 
@@ -64,7 +64,7 @@ public class Permissions {
         if (p.isOp()) {
             return Config.settings.getBoolean("Important.op_bypass");
         } else {
-            Player n = p.getPlayer();
+            Player n = p.getInstance();
             return n != null
                     && (isBypassing(n, null)
                     || hackType != null && isBypassing(n, hackType));
@@ -83,7 +83,7 @@ public class Permissions {
             return true;
         } else {
             for (Enums.Permission permission : staffPermissions) {
-                Player realPlayer = player.getPlayer();
+                Player realPlayer = player.getInstance();
 
                 if (realPlayer != null
                         && realPlayer.hasPermission(permission.getKey())) {

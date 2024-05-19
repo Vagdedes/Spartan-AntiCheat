@@ -16,10 +16,8 @@ public class Trackers {
     public enum TrackerType {
         ABSTRACT_VELOCITY(TrackerFamily.VELOCITY), BOUNCING_BLOCKS(TrackerFamily.VELOCITY),
         PISTON(TrackerFamily.VELOCITY), BUBBLE_WATER(TrackerFamily.VELOCITY),
-        EXTREME_COLLISION(TrackerFamily.VELOCITY), TRIDENT(TrackerFamily.VELOCITY),
-        DAMAGE(TrackerFamily.VELOCITY),
+        TRIDENT(TrackerFamily.VELOCITY), DAMAGE(TrackerFamily.VELOCITY),
 
-        GAME_MODE(TrackerFamily.MOTION), ELYTRA_USE(TrackerFamily.MOTION),
         VEHICLE(TrackerFamily.MOTION);
 
         public final TrackerFamily family;

@@ -5,10 +5,10 @@ import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.CombatUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -33,7 +33,7 @@ public class SpartanLocation {
     }
 
     static final Map<Integer, BlockCache> memory = Collections.synchronizedMap(new LinkedHashMap<>());
-    public static final long clearanceTick = 4L;
+    public static final long clearanceTick = 2L;
     private static final long clearanceTime = clearanceTick * TPS.tickTime;
     private static final boolean
             v_1_9 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9),
@@ -55,6 +55,8 @@ public class SpartanLocation {
 
                             if ((time - cache.time) >= clearanceTime) {
                                 iterator.remove();
+                            } else {
+                                break;
                             }
                         }
                     }
@@ -66,7 +68,6 @@ public class SpartanLocation {
     // Object
 
     public final long creation;
-    public final SpartanPlayer player;
     public final World world;
     private Chunk chunk;
     private int identifier;
@@ -78,7 +79,7 @@ public class SpartanLocation {
     // Utilities
 
     private SpartanBlock loadBlock(Material material, byte data, boolean liquid, boolean waterLogged) {
-        return this.block = new SpartanBlock(this.player, this.world, this.chunk, material, data, this.identifier, getBlockX(), getBlockY(), getBlockZ(), liquid, waterLogged);
+        return this.block = new SpartanBlock(this.world, this.chunk, material, data, getBlockX(), getBlockY(), getBlockZ(), liquid, waterLogged);
     }
 
     private void loadEmptyBlock(boolean air) {
@@ -87,11 +88,10 @@ public class SpartanLocation {
 
     // Base
 
-    private SpartanLocation(SpartanPlayer player, World world, Chunk chunk,
+    public SpartanLocation(World world, Chunk chunk,
                             double x, double y, double z,
                             float yaw, float pitch) { // Used for initiation
         this.creation = System.currentTimeMillis();
-        this.player = player;
         this.world = world;
         this.chunk = chunk;
         this.x = x;
@@ -99,30 +99,16 @@ public class SpartanLocation {
         this.z = z;
         this.yaw = yaw;
         this.pitch = pitch;
-        this.vector = null;
+        this.identifier = Chunks.locationIdentifier(world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
     }
 
-    SpartanLocation() { // Used as a backup
-        this(null, Bukkit.getWorlds().get(0), null, 0, 0, 0, 0, 0);
-        this.identifier = Chunks.locationIdentifier(world.hashCode(), 0, 0, 0);
+    public SpartanLocation() {
+        this(Bukkit.getWorlds().get(0), null, 0, 0, 0, 0, 0);
         loadEmptyBlock(false);
     }
 
-    SpartanLocation(SpartanPlayer player, World world, Chunk chunk, double x, double y, double z, float yaw, float pitch, SpartanBlock block) { // Used for objects
-        this(player, world, chunk, x, y, z, yaw, pitch);
-
-        if (block != null) {
-            loadBlock(block.material, block.data, block.liquid, block.waterLogged);
-        } else {
-            this.block = null;
-        }
-        this.identifier = Chunks.locationIdentifier(this.world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
-    }
-
-    // Native
-
-    SpartanLocation(SpartanPlayer player, Location loc, float yaw, float pitch) { // Used for vehicles
-        this(player, loc.getWorld(), null, loc.getX(), loc.getY(), loc.getZ(), yaw, pitch);
+    SpartanLocation(Location loc, float yaw, float pitch) { // Used for vehicles
+        this(loc.getWorld(), null, loc.getX(), loc.getY(), loc.getZ(), yaw, pitch);
 
         if (!v_1_9) { // 1.8 or older
             if (SpartanBukkit.isSynchronised()) {
@@ -134,23 +120,16 @@ public class SpartanLocation {
         } else {
             this.block = null;
         }
-        this.identifier = Chunks.locationIdentifier(world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
     }
 
-    public SpartanLocation(SpartanPlayer player, World world, double x, double y, double z, float yaw, float pitch, SpartanLocation nearby) { // Used globally
-        this(player, world, null, x, y, z, yaw, pitch, null);
-        this.retrieveDataFrom(nearby);
-    }
-
-    public SpartanLocation(SpartanPlayer player, Location loc) { // Used globally
-        this(player, loc, loc.getYaw(), loc.getPitch());
+    public SpartanLocation(Location loc) { // Used globally
+        this(loc, loc.getYaw(), loc.getPitch());
     }
 
     private SpartanLocation(SpartanLocation loc) { // Used for copying
-        this(loc.player, loc.world, loc.chunk, loc.x, loc.y, loc.z, loc.yaw, loc.pitch);
+        this(loc.world, loc.chunk, loc.x, loc.y, loc.z, loc.yaw, loc.pitch);
         this.block = loc.block;
         this.vector = loc.vector;
-        this.identifier = loc.identifier;
     }
 
     // Methods
@@ -264,20 +243,12 @@ public class SpartanLocation {
     }
 
     public void setYaw(float yaw) {
-        if (yaw > 360.0f) {
-            this.yaw = 360.0f;
-        } else {
-            this.yaw = Math.max(yaw, 0.0f);
-        }
+        this.yaw = yaw;
         this.vector = null;
     }
 
     public void setPitch(float pitch) {
-        if (pitch > 90.0f) {
-            this.pitch = 90.0f;
-        } else {
-            this.pitch = Math.max(pitch, -90.0f);
-        }
+        this.pitch = pitch;
         this.vector = null;
     }
 

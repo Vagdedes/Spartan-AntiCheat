@@ -11,7 +11,7 @@ import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.io.File;
@@ -82,7 +82,6 @@ public class Settings extends ConfigurationBuilder {
 
         addOption("Important.op_bypass", false);
         addOption("Important.bedrock_client_permission", false);
-        addOption("Important.violations_reset_on_kick", false); // test server
         addOption("Important.modify_server_configuration", false);
         addOption("Important.refresh_inventory_menu", true);
         addOption("Important.enable_developer_api", true);

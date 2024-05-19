@@ -2,7 +2,7 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.Bukkit;
 
 public class MultiVersion {

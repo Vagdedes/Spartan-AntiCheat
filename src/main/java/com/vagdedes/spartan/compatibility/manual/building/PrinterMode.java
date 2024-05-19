@@ -8,6 +8,6 @@ public class PrinterMode {
 
     public static boolean isUsing(SpartanPlayer p) {
         return Compatibility.CompatibilityType.PRINTER_MODE.isFunctional()
-                && PrinterModeAPI.isInPrinterMode(p.getPlayer());
+                && PrinterModeAPI.isInPrinterMode(p.getInstance());
     }
 }

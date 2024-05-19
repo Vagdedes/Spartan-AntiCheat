@@ -1,5 +1,24 @@
 package com.vagdedes.spartan.abstraction.check;
 
+import com.vagdedes.spartan.abstraction.check.implementation.combat.Criticals;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.FastBow;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.HitReach;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.Velocity;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks;
+import com.vagdedes.spartan.abstraction.check.implementation.combat.killaura.KillAura;
+import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
+import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
+import com.vagdedes.spartan.abstraction.check.implementation.inventory.InventoryClicks;
+import com.vagdedes.spartan.abstraction.check.implementation.inventory.ItemDrops;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
+import com.vagdedes.spartan.abstraction.check.implementation.player.AutoRespawn;
+import com.vagdedes.spartan.abstraction.check.implementation.player.FastEat;
+import com.vagdedes.spartan.abstraction.check.implementation.player.FastHeal;
+import com.vagdedes.spartan.abstraction.check.implementation.player.NoSwing;
+import com.vagdedes.spartan.abstraction.check.implementation.world.*;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 
 public class CheckExecutorExample extends CheckExecutor {
@@ -7,36 +26,36 @@ public class CheckExecutorExample extends CheckExecutor {
     // This is the list of all checks/detections that are implemented in the plugin's code.
     // The developer has not made the following classes available to you, so you should
     // remove their paths from the list and add the paths of the classes you may implement.
-    public static final String[] executors = new String[]{
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.killaura.KillAura",
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks",
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.Criticals",
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.FastBow",
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.HitReach",
-            "com.vagdedes.spartan.abstraction.check.implementation.combat.Velocity",
+    public static final Class<?>[] executors = new Class[]{
+            KillAura.class,
+            FastClicks.class,
+            Criticals.class,
+            FastBow.class,
+            HitReach.class,
+            Velocity.class,
 
-            "com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements",
-            "com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed",
-            "com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets",
-            "com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall",
+            IrregularMovements.class,
+            Speed.class,
+            MorePackets.class,
+            NoFall.class,
 
-            "com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits",
+            Exploits.class,
 
-            "com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory",
-            "com.vagdedes.spartan.abstraction.check.implementation.inventory.InventoryClicks",
-            "com.vagdedes.spartan.abstraction.check.implementation.inventory.ItemDrops",
+            ImpossibleInventory.class,
+            InventoryClicks.class,
+            ItemDrops.class,
 
-            "com.vagdedes.spartan.abstraction.check.implementation.player.AutoRespawn",
-            "com.vagdedes.spartan.abstraction.check.implementation.player.FastEat",
-            "com.vagdedes.spartan.abstraction.check.implementation.player.FastHeal",
-            "com.vagdedes.spartan.abstraction.check.implementation.player.NoSwing",
+            AutoRespawn.class,
+            FastEat.class,
+            FastHeal.class,
+            NoSwing.class,
 
-            "com.vagdedes.spartan.abstraction.check.implementation.world.BlockReach",
-            "com.vagdedes.spartan.abstraction.check.implementation.world.FastBreak",
-            "com.vagdedes.spartan.abstraction.check.implementation.world.FastPlace",
-            "com.vagdedes.spartan.abstraction.check.implementation.world.GhostHand",
-            "com.vagdedes.spartan.abstraction.check.implementation.world.ImpossibleActions",
-            "com.vagdedes.spartan.abstraction.check.implementation.world.XRay",
+            BlockReach.class,
+            FastBreak.class,
+            FastPlace.class,
+            GhostHand.class,
+            ImpossibleActions.class,
+            XRay.class,
     };
 
     public CheckExecutorExample(SpartanPlayer player) {
@@ -49,7 +68,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void handleInternal(boolean cancelled, Object object) {
+    protected void handleInternal(boolean cancelled, Object object) {
         // This method should be used to handle data for a check/detection when
         // the information is not directly available via the class or other classes.
         // You may also use this method to run checks/detections, although it is best
@@ -62,7 +81,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void cannotHandle(boolean cancelled, Object object) {
+    protected void cannotHandle(boolean cancelled, Object object) {
         // This method will be called when the 'handleInternal' method cannot run.
         // Reasons for the method being unable to run can vary, such as the check
         // being disabled, the player being in a certain game mode, a compatibility
@@ -70,7 +89,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void runInternal(boolean cancelled) {
+    protected void runInternal(boolean cancelled) {
         // This method should be used to run a check/detection when no information
         // needs to be inserted via the method being called and is all available in
         // the class or via methods of other classes.
@@ -80,7 +99,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void cannotRun(boolean cancelled) {
+    protected void cannotRun(boolean cancelled) {
         // This method will be called when the 'runInternal' method cannot run.
         // Reasons for the method being unable to run can vary, such as the check
         // being disabled, the player being in a certain game mode, a compatibility
@@ -88,7 +107,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void schedulerInternal() {
+    protected void schedulerInternal() {
         // Checks/detections support scheduling. This method is called every
         // 1 tick which is worth approximately 50 milliseconds. This method runs
         // as the server runs, so it is called approximately 20 times per second.
@@ -98,7 +117,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    public void cannotSchedule() {
+    protected void cannotSchedule() {
         // This method will be called when the 'schedulerInternal' method cannot run.
         // Reasons for the method being unable to run can vary, such as the check
         // being disabled, the player being in a certain game mode, a compatibility
@@ -112,7 +131,7 @@ public class CheckExecutorExample extends CheckExecutor {
         // this method for the requirements all checks/detections have in common.
         // Keep in mind that basic factors such as the check being enabled are
         // already accounted for prior to running this method.
-        return false;
+        return true;
     }
 
     // Here you can add more methods since you are extending an abstract class.

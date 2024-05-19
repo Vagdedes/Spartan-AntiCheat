@@ -12,15 +12,14 @@ import com.vagdedes.spartan.compatibility.manual.damage.RealDualWield;
 import com.vagdedes.spartan.compatibility.manual.entity.CraftBook;
 import com.vagdedes.spartan.compatibility.manual.entity.Vehicles;
 import com.vagdedes.spartan.compatibility.manual.packet.ProtocolLib;
-import com.vagdedes.spartan.compatibility.manual.vanilla.DragonPhases;
 import com.vagdedes.spartan.compatibility.manual.world.AcidRain;
 import com.vagdedes.spartan.compatibility.necessary.Floodgate;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
-import com.vagdedes.spartan.utils.server.PluginUtils;
-import com.vagdedes.spartan.utils.server.ReflectionUtils;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -42,7 +41,7 @@ public class Compatibility {
         ADVANCED_ABILITIES, CRACK_SHOT, CRACK_SHOT_PLUS, CRAFT_BOOK, MAGIC_SPELLS, PROTOCOL_LIB,
         MC_MMO, AUTHENTICATION, TREE_FELLER, VEIN_MINER, GRAPPLING_HOOK, RECENT_PVP_MECHANICS,
         MINE_BOMB, SUPER_PICKAXE, REAL_DUAL_WIELD, MYTHIC_MOBS, ITEM_ATTRIBUTES, PRINTER_MODE,
-        VEHICLES, MINE_TINKER, WILD_TOOLS, DRAGON_PHASES, AURELIUM_SKILLS, KNOCKBACK_MASTER,
+        VEHICLES, MINE_TINKER, WILD_TOOLS, AURELIUM_SKILLS, KNOCKBACK_MASTER,
         MY_PET, CUSTOM_ENCHANTS_PLUS, ECO_ENCHANTS, ITEMS_ADDER, RAMPEN_DRILLS, OLD_COMBAT_MECHANICS,
         CUSTOM_KNOCKBACK, PROJECT_KORRA, ACID_RAIN, FILE_GUI, FLOODGATE, PROTOCOL_SUPPORT;
 
@@ -181,7 +180,7 @@ public class Compatibility {
                     int count = 0, desired = 0;
 
                     for (String pluginOrClass : pluginsOrClasses) {
-                        if (pluginOrClass.length() == 0) {
+                        if (pluginOrClass.isEmpty()) {
                             function = true;
                             break;
                         } else {
@@ -222,6 +221,7 @@ public class Compatibility {
                     if (runnable != null) {
                         try {
                             runnable.run();
+                            this.functional = true;
                         } catch (Exception ex) {
                             this.functional = false;
                             AwarenessNotifications.forcefullySend("Compatibility '" + this + "' failed to load.");
@@ -281,12 +281,6 @@ public class Compatibility {
                 () -> Register.enable(new AdvancedAbilities(), AdvancedAbilities.class)
         );
         CompatibilityType.OLD_COMBAT_MECHANICS.setFunctional();
-        CompatibilityType.DRAGON_PHASES.setFunctional(
-                new String[]{
-                        "org.bukkit.event.entity.EnderDragonChangePhaseEvent"
-                },
-                () -> Register.enable(new DragonPhases(), DragonPhases.class)
-        );
         CompatibilityType.VEIN_MINER.setFunctional(VeinMiner::reload);
         CompatibilityType.PROJECT_KORRA.setFunctional(
                 () -> Register.enable(new ProjectKorra(), ProjectKorra.class)

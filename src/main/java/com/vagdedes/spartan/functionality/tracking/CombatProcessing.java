@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayerDamage;
 import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.server.TPS;
+import org.bukkit.GameMode;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 public class CombatProcessing {
@@ -43,12 +43,18 @@ public class CombatProcessing {
     // Separator
 
     public static boolean canCheck(SpartanPlayer player) {
-        return !player.movement.isCrawling()
+        if (!player.movement.isCrawling()
                 && !player.movement.isFlying()
-                && !player.getTrackers().has(Trackers.TrackerType.GAME_MODE)
-                && !player.getTrackers().has(Trackers.TrackerType.ELYTRA_USE)
+                && !player.movement.isGliding()
                 && player.getVehicle() == null
                 && !mcMMO.hasGeneralAbility(player)
-                && !Attributes.has(player, Attributes.GENERIC_ARMOR);
+                && !Attributes.has(player, Attributes.GENERIC_ARMOR)) {
+            GameMode gameMode = player.getGameMode();
+            return gameMode == GameMode.SURVIVAL
+                    || gameMode == GameMode.ADVENTURE
+                    || gameMode == GameMode.CREATIVE;
+        } else {
+            return false;
+        }
     }
 }

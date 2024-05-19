@@ -1,14 +1,16 @@
-package com.vagdedes.spartan.listeners;
+package com.vagdedes.spartan.listeners.bukkit;
 
+import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
+import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.gameplay.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -18,43 +20,92 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
-import org.bukkit.event.player.PlayerChatTabCompleteEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
-public class EventsHandler6 implements Listener {
+public class EventsHandler1 implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void Command(PlayerCommandPreprocessEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+    private void Leave(PlayerQuitEvent e) {
+        Player n = e.getPlayer();
+        SpartanBukkit.removeRealPlayer(n);
+        SpartanPlayer p = SpartanBukkit.removePlayer(n);
 
         if (p == null) {
             return;
         }
-        String msg = e.getMessage();
+        // Features
+        MaximumCheckedPlayers.remove(p);
 
-        if (ChatProtection.runCommand(p, msg, false)) {
-            e.setCancelled(true);
-        }
+        // Utils
+        PlayerLimitPerIP.remove(p);
+
+        // Features
+        ChatProtection.remove(p);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void KickEvent(PlayerKickEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void Death(PlayerDeathEvent e) {
+        Player n = e.getEntity();
+        SpartanPlayer p = SpartanBukkit.getPlayer(n);
 
         if (p == null) {
             return;
         }
-        // System
-        if (Config.settings.getBoolean("Important.violations_reset_on_kick")) {
-            for (Enums.HackType hackType : Enums.HackType.values()) {
-                p.getViolations(hackType).reset();
+        // Detections
+        p.getExecutor(Enums.HackType.AutoRespawn).run(false);
+        p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, null);
+        p.getExecutor(Enums.HackType.NoFall).handle(false, null);
+
+        // Objects
+        Player killer = n.getKiller();
+
+        if (killer != null && killer.isOnline()) {
+            SpartanPlayer p2 = SpartanBukkit.getPlayer(killer);
+
+            if (p2 != null) {
+                PlayerFight fight = p.getProfile().playerCombat.getFight(p2);
+
+                if (fight != null) {
+                    fight.setWinner(p2);
+                }
             }
         }
+        p.resetTrackers();
+        p.movement.setDetectionLocation(true);
     }
 
-    // Separator
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void Respawn(PlayerRespawnEvent e) {
+        Player n = e.getPlayer();
+        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+
+        if (p == null) {
+            return;
+        }
+
+        // Objects
+        p.movement.setDetectionLocation(true);
+
+        // Protections
+        p.resetTrackers();
+
+        // Detections
+        p.getExecutor(Enums.HackType.NoFall).handle(false, null);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void Animation(PlayerAnimationEvent e) {
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+        if (p == null) {
+            return;
+        }
+        // Detections
+        p.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Damage(EntityDamageByEntityEvent e) {
@@ -75,7 +126,7 @@ public class EventsHandler6 implements Listener {
 
             // Detections
             if (cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-                    p.calculateClicks(null, true);
+                p.calculateClicks(null, true);
 
                 if (entityIsPlayer || defaultEntity instanceof LivingEntity) {
                     boolean cancelled = e.isCancelled();
@@ -152,27 +203,4 @@ public class EventsHandler6 implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void Animation(PlayerAnimationEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
-        // Detections
-        p.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void TabCompletion(PlayerChatTabCompleteEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
-        // Protections
-        if (ChatProtection.runCommand(p, e.getChatMessage(), true)) {
-            e.getTabCompletions().clear();
-        }
-    }
 }

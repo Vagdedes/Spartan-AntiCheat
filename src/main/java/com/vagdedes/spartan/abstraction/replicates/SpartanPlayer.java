@@ -5,8 +5,10 @@ import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.check.CheckExecutorExample;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Timer;
-import com.vagdedes.spartan.abstraction.data.*;
+import com.vagdedes.spartan.abstraction.data.Buffer;
+import com.vagdedes.spartan.abstraction.data.Clicks;
+import com.vagdedes.spartan.abstraction.data.Cooldowns;
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
@@ -22,21 +24,17 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.Elytra;
-import com.vagdedes.spartan.listeners.EventsHandler7;
-import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.CombatUtils;
-import com.vagdedes.spartan.utils.gameplay.GroundUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
+import com.vagdedes.spartan.listeners.protocol.ProtocolStorage;
+import com.vagdedes.spartan.listeners.protocol.Shared;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.PluginUtils;
+import com.vagdedes.spartan.utils.minecraft.server.*;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -52,13 +50,7 @@ import java.util.*;
 
 public class SpartanPlayer {
 
-    private static int schedulerTicks = 0;
-    private static final Map<World, List<Entity>> worldEntities
-            = Collections.synchronizedMap(new LinkedHashMap<>(Math.max(Bukkit.getWorlds().size(), 1)));
-
     public final boolean bedrockPlayer;
-    boolean onGroundCustom;
-    private final long creationTime;
     public final String name;
     public final UUID uuid;
     public final String ipAddress;
@@ -66,69 +58,46 @@ public class SpartanPlayer {
     public final Enums.DataType dataType;
     public final SpartanPlayerMovement movement;
     public final SpartanPunishments punishments;
-    private final Map<EntityDamageEvent.DamageCause, SpartanPlayerDamage> damageReceived, damageDealt;
+    public final Buffer buffer;
+    public final Cooldowns cooldowns;
+    public final Trackers trackers;
+    public final Clicks clicks;
+
+    private final long creationTime;
+    private final Map<EntityDamageEvent.DamageCause, SpartanPlayerDamage>
+            damageReceived,
+            damageDealt;
     private final List<SpartanPlayerVelocity> velocityReceived;
-    private SpartanPlayerDamage lastDamageReceived, lastDamageDealt;
-
-    // Data
-
-    private final Buffer[] buffer;
-    private final Timer[] timer;
-    private final Decimals[] decimals;
-    private final Cooldowns[] cooldowns;
     private final CheckExecutor[] executors;
     private final LiveViolation[] violations;
-    private final Trackers trackers;
-    private LiveViolation lastViolation;
 
-    // Cache
-
+    private SpartanPlayerDamage
+            lastDamageReceived,
+            lastDamageDealt;
     private PlayerProfile playerProfile;
-    private final Clicks clicks;
-
-    private Entity vehicle;
-    private final List<Entity> nearbyEntities;
-    private double nearbyEntitiesDistance;
 
     static {
         if (Register.isPluginLoaded()) {
             SpartanBukkit.runRepeatingTask(() -> {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-                schedulerTicks++;
-
-                if (!MultiVersion.folia && schedulerTicks % 20 == 0) {
-                    synchronized (worldEntities) {
-                        worldEntities.clear();
-
-                        if (!players.isEmpty()) {
-                            for (World world : Bukkit.getWorlds()) {
-                                worldEntities.put(
-                                        world,
-                                        new ArrayList<>(world.getEntities())
-                                );
-                            }
-                        }
-                    }
-                }
 
                 if (!players.isEmpty()) {
                     for (SpartanPlayer p : players) {
-                        p.movement.judgeGround(p.movement.getLocation());
+                        p.movement.judgeGround();
+                        p.movement.getLocation();
 
                         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
                             Elytra.judge(p, false);
                         }
                         p.playerProfile.playerCombat.track();
-                        p.nearbyEntitiesDistance = 0;
                         p.movement.setDetectionLocation(false);
 
                         // Separator
                         SpartanBukkit.runTask(p, () -> {
-                            Player n = p.getPlayer();
+                            Player n = p.getInstance();
 
                             if (n != null) {
-                                Collection<PotionEffect> potionEffects = n.getActivePotionEffects();
-                                p.setStoredPotionEffects(potionEffects); // Bad
+                                p.setStoredPotionEffects(n.getActivePotionEffects()); // Bad
                                 SpartanLocation to = p.movement.getLocation(),
                                         from = p.movement.getSchedulerFromLocation();
 
@@ -143,7 +112,7 @@ public class SpartanPlayer {
                             }
 
                             // Preventions
-                            for (Enums.HackType hackType : EventsHandler7.handledChecks) {
+                            for (Enums.HackType hackType : Shared.handledChecks) {
                                 if (p.getViolations(hackType).prevent()) {
                                     break;
                                 }
@@ -155,26 +124,12 @@ public class SpartanPlayer {
         }
     }
 
-    // Separator
-
-    public static void cacheEntity(Entity entity) {
-        synchronized (worldEntities) {
-            List<Entity> collection = worldEntities.get(entity.getWorld());
-
-            if (collection != null) {
-                collection.add(entity);
-            }
-        }
-    }
-
     // Object
 
     public SpartanPlayer(Player p, UUID uuid) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
 
         this.uuid = uuid;
-        this.nearbyEntities = Collections.synchronizedList(new ArrayList<>());
-        this.nearbyEntitiesDistance = 0;
         this.bedrockPlayer = BedrockCompatibility.isPlayer(p);
         this.dataType = bedrockPlayer ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
         this.trackers = new Trackers(this);
@@ -186,7 +141,6 @@ public class SpartanPlayer {
         );
         this.playerProfile = ResearchEngine.getPlayerProfile(this);
         this.clicks = new Clicks();
-        this.vehicle = p.getVehicle();
         this.movement = new SpartanPlayerMovement(this, p);
         this.punishments = new SpartanPunishments(this);
         this.velocityReceived = Collections.synchronizedList(new LinkedList<>());
@@ -213,42 +167,31 @@ public class SpartanPlayer {
         }
         this.creationTime = System.currentTimeMillis();
 
-        this.buffer = new Buffer[hackTypes.length + 1];
-        this.timer = new Timer[hackTypes.length + 1];
-        this.decimals = new Decimals[hackTypes.length + 1];
-        this.cooldowns = new Cooldowns[hackTypes.length + 1];
+        this.buffer = new Buffer(this);
+        this.cooldowns = new Cooldowns(this);
         this.executors = new CheckExecutor[hackTypes.length];
         this.violations = new LiveViolation[hackTypes.length];
 
         for (Enums.HackType hackType : hackTypes) {
             int id = hackType.ordinal();
-            this.buffer[id] = new Buffer(this);
-            this.timer[id] = new Timer();
-            this.decimals[id] = new Decimals();
-            this.cooldowns[id] = new Cooldowns(this);
             this.violations[id] = new LiveViolation(this, hackType);
             this.executors[id] = new CheckExecutorExample(this);
         }
         if (CheckExecutorExample.executors.length > 0) {
-            for (String executorClass : CheckExecutorExample.executors) {
+            for (Class<?> executorClass : CheckExecutorExample.executors) {
                 try {
-                    CheckExecutor executor = (CheckExecutor) Class.forName(executorClass).getConstructor(SpartanPlayer.class).newInstance(this);
+                    CheckExecutor executor = (CheckExecutor) executorClass.getConstructor(SpartanPlayer.class).newInstance(this);
                     this.executors[executor.hackType.ordinal()] = executor;
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         }
-        this.lastViolation = this.violations[0];
-        this.buffer[hackTypes.length] = new Buffer(this);
-        this.timer[hackTypes.length] = new Timer();
-        this.decimals[hackTypes.length] = new Decimals();
-        this.cooldowns[hackTypes.length] = new Cooldowns(this);
     }
 
     public boolean debug(boolean function, boolean broadcast, boolean cutDecimals, Object... message) {
         if (function && SpartanBukkit.testMode) {
-            Player p = getPlayer();
+            Player p = getInstance();
 
             if (p != null && p.isWhitelisted()) {
                 String string = "§f" + p.getName() + " ";
@@ -284,7 +227,7 @@ public class SpartanPlayer {
                     } else {
                         for (SpartanPlayer o : players) {
                             if (o != null && o.isOp()) {
-                                Player no = o.getPlayer();
+                                Player no = o.getInstance();
 
                                 if (no != null) {
                                     no.sendMessage(string);
@@ -302,49 +245,11 @@ public class SpartanPlayer {
 
     // Separator
 
-    public Buffer getBuffer() {
-        return buffer[Enums.HackType.values().length];
-    }
-
-    public Timer getTimer() {
-        return timer[Enums.HackType.values().length];
-    }
-
-    public Decimals getDecimals() {
-        return decimals[Enums.HackType.values().length];
-    }
-
-    public Cooldowns getCooldowns() {
-        return cooldowns[Enums.HackType.values().length];
-    }
-
-    public Buffer getBuffer(Enums.HackType hackType) {
-        return buffer[hackType.ordinal()];
-    }
-
-    public Timer getTimer(Enums.HackType hackType) {
-        return timer[hackType.ordinal()];
-    }
-
-    public Decimals getDecimals(Enums.HackType hackType) {
-        return decimals[hackType.ordinal()];
-    }
-
-    public Cooldowns getCooldowns(Enums.HackType hackType) {
-        return cooldowns[hackType.ordinal()];
-    }
-
     public CheckExecutor getExecutor(Enums.HackType hackType) {
         return executors[hackType.ordinal()];
     }
 
-    // Separator
-
-    public Trackers getTrackers() {
-        return trackers;
-    }
-
-    public void resetHandlers() {
+    public void resetTrackers() {
         for (Trackers.TrackerType handlerType : Trackers.TrackerType.values()) {
             trackers.remove(handlerType);
         }
@@ -352,27 +257,11 @@ public class SpartanPlayer {
 
     // Separator
 
-    public LiveViolation[] getViolations() {
-        return violations;
-    }
-
     public LiveViolation getViolations(Enums.HackType hackType) {
         return violations[hackType.ordinal()];
     }
 
-    public LiveViolation getLastViolation() {
-        return lastViolation;
-    }
-
-    public void setLastViolation(LiveViolation liveViolation) {
-        this.lastViolation = liveViolation;
-    }
-
     // Separator
-
-    public Clicks getClicks() {
-        return clicks;
-    }
 
     public void calculateClicks(Action action, boolean runRegardless) {
         if (!runRegardless) {
@@ -398,12 +287,14 @@ public class SpartanPlayer {
 
     public int getMaxChatLength() {
         return bedrockPlayer ? 512 :
-                MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11) || PluginUtils.exists("viaversion") || PluginUtils.exists("protocolsupport") ? 256 :
+                MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11)
+                        || PluginUtils.exists("viaversion")
+                        || Compatibility.CompatibilityType.PROTOCOL_SUPPORT.isFunctional() ? 256 :
                         100;
     }
 
     public void sendMessage(String message) {
-        Player p = getPlayer();
+        Player p = getInstance();
 
         if (p != null) {
             p.sendMessage(message);
@@ -411,7 +302,7 @@ public class SpartanPlayer {
     }
 
     public void sendInventoryCloseMessage(String message) {
-        Player p = getPlayer();
+        Player p = getInstance();
 
         if (p != null) {
             if (message != null) {
@@ -422,7 +313,7 @@ public class SpartanPlayer {
     }
 
     public void sendImportantMessage(String message) {
-        Player p = getPlayer();
+        Player p = getInstance();
 
         if (p != null) {
             p.sendMessage("");
@@ -436,7 +327,7 @@ public class SpartanPlayer {
 
     public void openInventory(Inventory inventory) {
         if (inventory != null) {
-            Player p = getPlayer();
+            Player p = getInstance();
 
             if (p != null) {
                 p.openInventory(inventory);
@@ -445,7 +336,7 @@ public class SpartanPlayer {
     }
 
     public Inventory createInventory(int size, String title) {
-        Player p = getPlayer();
+        Player p = getInstance();
 
         if (p != null) {
             return Bukkit.createInventory(p, size, title);
@@ -454,14 +345,14 @@ public class SpartanPlayer {
     }
 
     public InventoryView getOpenInventory() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? null : p.getOpenInventory();
     }
 
     // Separator
 
     public PlayerInventory getInventory() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? null : p.getInventory();
     }
 
@@ -480,7 +371,7 @@ public class SpartanPlayer {
 
     // Separator
 
-    public Player getPlayer() {
+    public Player getInstance() {
         return SpartanBukkit.getRealPlayer(uuid);
     }
 
@@ -488,48 +379,31 @@ public class SpartanPlayer {
         return System.currentTimeMillis() - creationTime;
     }
 
-    public boolean isOp() {
-        Player p = this.getPlayer();
-        return p != null && p.isOp();
-    }
-
-    public boolean isWhitelisted() {
-        Player p = this.getPlayer();
-        return p != null && p.isWhitelisted();
-    }
-
     // Separator
-
-    public boolean isDead() {
-        Player p = getPlayer();
-        return p != null && p.isDead();
-    }
-
-    // Separator
-
-    public boolean isSleeping() {
-        Player p = getPlayer();
-        return p != null && p.isSleeping();
-    }
-
-    // Separator
-
-    public boolean isOnGround() {
-        return onGroundCustom;
-    }
 
     public boolean isOnGround(SpartanLocation location) {
-        return GroundUtils.isOnGround(this, location, 0.0);
+        Player p = this.getInstance();
+        return GroundUtils.isOnGround(
+                this,
+                location,
+                p != null && p.isOnGround()
+        );
     }
 
-    public boolean isOnGroundDefault() {
+    public boolean isOnGround() {
         Entity vehicle = getVehicle();
 
         if (vehicle != null) {
             return vehicle.isOnGround();
+        } else if (SpartanBukkit.packetsEnabled()) {
+            return ProtocolStorage.isOnGround(this)
+                    || bedrockPlayer
+                    && GroundUtils.isOnGround(this, movement.getLocation(), false);
         } else {
-            Player p = this.getPlayer();
-            return p != null && p.isOnGround();
+            Player p = this.getInstance();
+            return p != null && p.isOnGround()
+                    || bedrockPlayer
+                    && GroundUtils.isOnGround(this, movement.getLocation(), false);
         }
     }
 
@@ -548,7 +422,7 @@ public class SpartanPlayer {
     public SpartanBlock getTargetBlock(double distance) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
             try {
-                Player n = getPlayer();
+                Player n = getInstance();
 
                 if (n != null) {
                     List<Block> list = n.getLineOfSight(null, (int) distance);
@@ -556,7 +430,7 @@ public class SpartanPlayer {
                     if (!list.isEmpty()) {
                         for (Block block : list) {
                             if (BlockUtils.isFullSolid(block.getType())) {
-                                return new SpartanBlock(this, block);
+                                return new SpartanBlock(block);
                             }
                         }
                     }
@@ -569,81 +443,64 @@ public class SpartanPlayer {
 
     // Separator
 
-    public Entity getVehicle() {
-        Player p = getPlayer();
-        return p == null ? null : p.getVehicle();
+    public boolean isOp() {
+        Player p = this.getInstance();
+        return p != null && p.isOp();
     }
 
-    // Separator
+    public boolean isDead() {
+        Player p = getInstance();
+        return p != null && p.isDead();
+    }
+
+    public boolean isSleeping() {
+        Player p = getInstance();
+        return p != null && p.isSleeping();
+    }
 
     public float getWalkSpeed() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0.0f : p.getWalkSpeed();
     }
 
-    // Separator
-
     public float getFlySpeed() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0.0f : p.getFlySpeed();
     }
 
-    // Separator
+    public Entity getVehicle() {
+        Player p = getInstance();
+        return p == null ? null : p.getVehicle();
+    }
 
     public int getFoodLevel() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0 : p.getFoodLevel();
     }
 
-    public void setFoodLevel(int foodLevel) {
-        Player p = getPlayer();
-
-        if (p != null) {
-            p.setFoodLevel(foodLevel);
-        }
-    }
-
-    // Separator
-
     public double getHealth() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0.0 : p.getHealth();
     }
 
-    // Separator
-
     public float getFallDistance() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0.0f : p.getFallDistance();
     }
 
-    public void setFallDistance(float fallDistance) {
-        Player p = getPlayer();
-
-        if (p != null) {
-            p.setFallDistance(fallDistance);
-        }
-    }
-
-    // Separator
-
     public GameMode getGameMode() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? GameMode.SURVIVAL : p.getGameMode();
     }
 
-    // Separator
-
     public double getEyeHeight() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0.0 : p.getEyeHeight();
     }
 
-    // Separator
-
     public boolean isFrozen() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            Player p = getPlayer();
+            Player p = getInstance();
             return p != null && p.isFrozen();
         } else {
             return false;
@@ -770,7 +627,7 @@ public class SpartanPlayer {
 
     public float getAttackCooldown() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            Player p = getPlayer();
+            Player p = getInstance();
             return p == null ? 1.0f : p.getAttackCooldown();
         } else {
             return 1.0f;
@@ -849,95 +706,25 @@ public class SpartanPlayer {
     // Separator
 
     public List<Entity> getNearbyEntities(double x, double y, double z) {
-        double max = Math.max(Math.max(x, y), z);
+        Player p = this.getInstance();
 
-        synchronized (nearbyEntities) {
-            if (max > nearbyEntitiesDistance) {
-                Player p = this.getPlayer();
-
-                if (p != null) {
-                    nearbyEntitiesDistance = max;
-
-                    if (MultiVersion.folia) {
-                        SpartanBukkit.runTask(this, () -> {
-                            nearbyEntities.clear();
-                            nearbyEntities.addAll(p.getNearbyEntities(x, y, z));
-                        });
-                        return new ArrayList<>(nearbyEntities);
-                    } else if (SpartanBukkit.isSynchronised()) {
-                        List<Entity> entities = p.getNearbyEntities(x, y, z);
-                        nearbyEntities.clear();
-                        nearbyEntities.addAll(entities);
-                        return entities;
-                    } else {
-                        SpartanLocation loc = this.movement.getEventToLocation();
-                        List<Entity> entities;
-
-                        synchronized (worldEntities) {
-                            entities = worldEntities.get(loc.world);
-                        }
-                        if (entities != null && !entities.isEmpty()) {
-                            entities = new ArrayList<>(entities);
-                            Entity vehicle = this.getVehicle();
-
-                            if (vehicle != null) {
-                                entities.remove(vehicle);
-                            }
-                            entities.remove(p);
-                            Iterator<Entity> iterator = entities.iterator();
-
-                            while (iterator.hasNext()) {
-                                Entity entity = iterator.next();
-
-                                if ((entity instanceof LivingEntity ? entity.isDead() : !(entity instanceof Vehicle))
-                                        || !loc.isNearbyChunk(entity.getLocation())
-                                        || loc.distance(entity.getLocation()) > max) {
-                                    iterator.remove();
-                                }
-                            }
-                            nearbyEntities.clear();
-                            nearbyEntities.addAll(entities);
-                            return entities;
-                        } else {
-                            nearbyEntities.clear();
-                            return new ArrayList<>(0);
-                        }
-                    }
-                } else {
-                    nearbyEntities.clear();
-                    return new ArrayList<>(0);
-                }
-            } else if (!nearbyEntities.isEmpty()) {
-                SpartanLocation loc = this.movement.getEventToLocation();
-                List<Entity> entities = new ArrayList<>(nearbyEntities);
-                Entity vehicle = this.getVehicle();
-
-                if (vehicle != null) {
-                    entities.remove(vehicle);
-                }
-                Iterator<Entity> iterator = entities.iterator();
-
-                while (iterator.hasNext()) {
-                    Entity entity = iterator.next();
-
-                    if (entity instanceof LivingEntity && entity.isDead()
-                            || loc.distance(entity.getLocation()) > max) {
-                        iterator.remove();
-                    }
-                }
-                nearbyEntities.clear();
-                nearbyEntities.addAll(entities);
-                return entities;
-            } else {
-                return new ArrayList<>(0);
-            }
+        if (p != null) {
+            List<Entity> nearbyEntities = new ArrayList<>();
+            SpartanBukkit.transferTask(
+                    this,
+                    () -> nearbyEntities.addAll(p.getNearbyEntities(x, y, z))
+            );
+            return nearbyEntities;
+        } else {
+            return new ArrayList<>(0);
         }
     }
 
     // Teleport
 
     public void groundTeleport() {
-        if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection") || this.onGroundCustom) {
+        if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection")
+                || this.isOnGround()) {
             return;
         }
         SpartanLocation location = this.movement.getLocation(),
@@ -980,8 +767,11 @@ public class SpartanPlayer {
         }
 
         if (iterations > 0) {
-            setFallDistance(0.0f);
+            Player p = getInstance();
 
+            if (p != null) {
+                p.setFallDistance(0.0f);
+            }
             if (Config.settings.getBoolean("Detections.fall_damage_on_teleport")
                     && iterations > PlayerUtils.fallDamageAboveBlocks
                     && playerProfile.isSuspectedOrHacker()) { // Damage
@@ -992,7 +782,7 @@ public class SpartanPlayer {
 
     public boolean teleport(SpartanLocation location) {
         if (this.getWorld().equals(location.world)) {
-            Player p = getPlayer();
+            Player p = getInstance();
 
             if (p != null) {
                 if (SpartanBukkit.isSynchronised()) {
@@ -1023,7 +813,7 @@ public class SpartanPlayer {
     }
 
     private boolean damage(double amount, EntityDamageEvent.DamageCause damageCause) {
-        Player p = getPlayer();
+        Player p = getInstance();
 
         if (p != null) {
             EntityDamageEvent event = new EntityDamageEvent(p, damageCause, amount);
@@ -1064,17 +854,14 @@ public class SpartanPlayer {
 
     public boolean canSee(Player target) {
         if (SpartanBukkit.supportedFork) {
-            Player p = getPlayer();
-
-            if (p != null) {
-                return p.canSee(target);
-            }
+            Player p = getInstance();
+            return p != null && p.canSee(target);
         }
         return false;
     }
 
     public int getPing() {
-        Player p = getPlayer();
+        Player p = getInstance();
         return p == null ? 0 : Latency.ping(p);
     }
 }

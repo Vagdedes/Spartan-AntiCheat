@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.listeners;
+package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
@@ -73,8 +73,11 @@ public class EventsHandler3 implements Listener {
 
             // Handlers
             if (!cancelled) {
-                p.getTrackers().disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 2);
+                p.trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 2);
             }
+
+            // Detections
+            p.getExecutor(Enums.HackType.NoFall).handle(cancelled, e.getCause());
         } else {
             Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                     ? entity.getPassengers().toArray(new Entity[0])

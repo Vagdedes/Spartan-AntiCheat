@@ -29,10 +29,10 @@ public class TridentUse {
                             int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
 
                             if (level > riptideMaxSafeLevel) {
-                                p.getTrackers().add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
+                                p.trackers.add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
                                 p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE_UNSAFE);
                             } else {
-                                p.getTrackers().add(Trackers.TrackerType.TRIDENT, ticks);
+                                p.trackers.add(Trackers.TrackerType.TRIDENT, ticks);
                                 p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE);
                             }
                         }

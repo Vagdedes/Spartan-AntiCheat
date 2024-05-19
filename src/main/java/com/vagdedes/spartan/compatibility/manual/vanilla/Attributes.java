@@ -29,7 +29,7 @@ public class Attributes {
         if (Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
             try {
                 Attribute attribute = Attribute.valueOf(attributeString);
-                Player n = p.getPlayer();
+                Player n = p.getInstance();
 
                 if (n != null) {
                     AttributeInstance instance = n.getAttribute(attribute);
@@ -44,14 +44,14 @@ public class Attributes {
                         }
 
                         if (modifiers > 0) {
-                            p.getCooldowns().add(key, 60);
+                            p.cooldowns.add(key, 60);
                             return true;
                         }
                     }
                 }
             } catch (Exception ignored) {
             }
-            return !p.getCooldowns().canDo(key);
+            return !p.cooldowns.canDo(key);
         }
         return false;
     }

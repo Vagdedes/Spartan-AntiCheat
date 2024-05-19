@@ -8,6 +8,6 @@ public class KnockbackMaster {
 
     public static boolean isUsing(SpartanPlayer p) {
         return Compatibility.CompatibilityType.KNOCKBACK_MASTER.isFunctional()
-                && KnockbackMasterAPI.isInComboMode(p.getPlayer());
+                && KnockbackMasterAPI.isInComboMode(p.getInstance());
     }
 }

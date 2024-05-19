@@ -158,7 +158,7 @@ public class SpartanEdition {
         if (Permissions.isStaff(player)) {
             String message = AwarenessNotifications.getNotification(
                     versionNotificationMessage
-                            .replace(type, dataType.toString())
+                            .replace(type, dataType.name)
                             .replace(
                                     product,
                                     IDs.isBuiltByBit()

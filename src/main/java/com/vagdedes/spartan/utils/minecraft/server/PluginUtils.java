@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.server;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
 import org.bukkit.plugin.Plugin;

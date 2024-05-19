@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.listeners;
+package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
@@ -7,9 +7,9 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.Piston;
-import com.vagdedes.spartan.utils.gameplay.BlockUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.server.PluginUtils;
+import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

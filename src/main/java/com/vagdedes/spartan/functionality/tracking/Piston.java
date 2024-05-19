@@ -5,8 +5,8 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
@@ -53,7 +53,7 @@ public class Piston {
     private static boolean run(SpartanPlayer player, double preX, double diffY, double preZ) {
         if (Math.sqrt(preX + preZ) <= horizontalDistance
                 && Math.abs(diffY) <= verticalDistance) {
-            player.getTrackers().add(Trackers.TrackerType.PISTON, (int) TPS.maximum);
+            player.trackers.add(Trackers.TrackerType.PISTON, (int) TPS.maximum);
             return true;
         }
         return false;

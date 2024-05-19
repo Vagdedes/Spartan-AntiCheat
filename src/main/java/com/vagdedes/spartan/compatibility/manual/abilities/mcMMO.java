@@ -3,8 +3,8 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 import com.gmail.nossr50.api.AbilityAPI;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.utils.gameplay.CombatUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -14,7 +14,7 @@ public class mcMMO {
 
     public static boolean hasGeneralAbility(SpartanPlayer p) {
         if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
-            Player n = p.getPlayer();
+            Player n = p.getInstance();
             return n != null && AbilityAPI.isAnyAbilityEnabled(n)
 
                     || PlayerUtils.isAxeItem(p.getItemInHand().getType())
@@ -31,7 +31,7 @@ public class mcMMO {
 
     public static boolean hasTreeFeller(SpartanPlayer p) {
         if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
-            Player n = p.getPlayer();
+            Player n = p.getInstance();
             return n != null && AbilityAPI.treeFellerEnabled(n);
         } else {
             return false;

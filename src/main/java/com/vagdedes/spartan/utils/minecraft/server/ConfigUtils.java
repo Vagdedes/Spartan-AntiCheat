@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.server;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
@@ -117,7 +117,7 @@ public class ConfigUtils {
         message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
-        message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
+        message = replace(message, "{cps}", String.valueOf(p.clicks.getCount()));
 
         PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
         message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
@@ -157,7 +157,7 @@ public class ConfigUtils {
                 message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
                 message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
                 message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
-                message = replace(message, "{cps}", String.valueOf(p.getClicks().getCount()));
+                message = replace(message, "{cps}", String.valueOf(p.clicks.getCount()));
 
                 PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
                 message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));

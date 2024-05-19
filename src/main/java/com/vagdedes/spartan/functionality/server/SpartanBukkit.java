@@ -2,12 +2,13 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Threads;
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.packet.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.JarVerification;
 import com.vagdedes.spartan.functionality.management.Config;
-import com.vagdedes.spartan.utils.server.ReflectionUtils;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -153,6 +154,12 @@ public class SpartanBukkit {
             }
         }
         return -1;
+    }
+
+    // Separator
+
+    public static boolean packetsEnabled() {
+        return Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
     }
 
     // Separator

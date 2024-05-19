@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Buffer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -24,7 +23,6 @@ public class CrackShotPlus implements Listener {
                 return;
             }
             if (!e.isCancelled()) {
-                Buffer buffer = p.getBuffer();
                 Config.compatibility.evadeFalsePositives(
                         p,
                         Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
@@ -36,12 +34,12 @@ public class CrackShotPlus implements Listener {
                 );
 
                 if (e.isZoomIn()) {
-                    buffer.set("crackshotplus=compatibility=scope", 1);
+                    p.buffer.set("crackshotplus=compatibility=scope", 1);
                 } else {
-                    buffer.remove("crackshotplus=compatibility=scope");
+                    p.buffer.remove("crackshotplus=compatibility=scope");
                 }
             } else {
-                p.getBuffer().remove("crackshotplus=compatibility=scope");
+                p.buffer.remove("crackshotplus=compatibility=scope");
             }
         }
     }
@@ -86,7 +84,7 @@ public class CrackShotPlus implements Listener {
 
     static boolean isUsingScope(SpartanPlayer p) {
         return Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()
-                && p.getBuffer().get("crackshotplus=compatibility=scope") != 0;
+                && p.buffer.get("crackshotplus=compatibility=scope") != 0;
     }
 }
 

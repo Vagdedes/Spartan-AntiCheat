@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.server;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import org.bukkit.Material;

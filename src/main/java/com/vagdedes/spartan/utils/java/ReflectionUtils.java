@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.server;
+package com.vagdedes.spartan.utils.java;
 
 import java.lang.reflect.Field;
 

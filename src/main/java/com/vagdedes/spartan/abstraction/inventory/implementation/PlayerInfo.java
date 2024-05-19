@@ -98,7 +98,7 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
 
             if (isOnline) {
-                lore.add("§7CPS (Clicks Per Second)§8:§a " + target.getClicks().getCount());
+                lore.add("§7CPS (Clicks Per Second)§8:§a " + target.clicks.getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
                 lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().name + " (" + target.dataType.name + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK, 1), information);
@@ -258,7 +258,7 @@ public class PlayerInfo extends InventoryMenu {
 
             if (!players.isEmpty()) {
                 for (SpartanPlayer o : players) {
-                    Player no = o.getPlayer();
+                    Player no = o.getInstance();
 
                     if (no != null) {
                         InventoryView inventoryView = no.getOpenInventory();

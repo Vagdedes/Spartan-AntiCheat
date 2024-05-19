@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.replicates;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -20,7 +20,7 @@ public class SpartanPunishments {
     }
 
     public void kick(CommandSender punisher, String reason) {
-        Player target = this.parent.getPlayer();
+        Player target = this.parent.getInstance();
 
         if (target != null) {
             String punisherName = punisher instanceof ConsoleCommandSender
@@ -57,7 +57,7 @@ public class SpartanPunishments {
     }
 
     public void warn(CommandSender punisher, String reason) {
-        Player target = this.parent.getPlayer();
+        Player target = this.parent.getInstance();
 
         if (target != null) {
             String punisherName = punisher instanceof ConsoleCommandSender

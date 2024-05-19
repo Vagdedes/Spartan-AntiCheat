@@ -6,7 +6,7 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.command.CommandSender;
 
@@ -68,8 +68,8 @@ public class ChatProtection {
             }
         }
 
-        if (!p.getCooldowns().canDo("chat=cooldown=delay")) {
-            double seconds = (double) p.getCooldowns().get("chat=cooldown=delay") / 20.0;
+        if (!p.cooldowns.canDo("chat=cooldown=delay")) {
+            double seconds = (double) p.cooldowns.get("chat=cooldown=delay") / 20.0;
             String message = Config.messages.getColorfulString("chat_cooldown_message").replace("{time}", String.valueOf(seconds));
             p.sendMessage(ConfigUtils.replaceWithSyntax(p, message, null));
             return true;
@@ -93,7 +93,7 @@ public class ChatProtection {
         int seconds = Config.settings.getInteger("Chat.message_cooldown");
 
         if (seconds > 0) {
-            p.getCooldowns().add("chat=cooldown=delay", Math.min(60, seconds) * 20);
+            p.cooldowns.add("chat=cooldown=delay", Math.min(60, seconds) * 20);
         }
         previous.put(uuid, doubleLessMsg.toString());
         return false;
@@ -103,8 +103,8 @@ public class ChatProtection {
         if (Permissions.has(p, Enums.Permission.CHAT_PROTECTION)) {
             return false;
         }
-        if (!p.getCooldowns().canDo("command=cooldown=delay") && !tab) {
-            double seconds = (double) p.getCooldowns().get("command=cooldown=delay") / 20.0;
+        if (!p.cooldowns.canDo("command=cooldown=delay") && !tab) {
+            double seconds = (double) p.cooldowns.get("command=cooldown=delay") / 20.0;
             String message = Config.messages.getColorfulString("command_cooldown_message").replace("{time}", String.valueOf(seconds));
             p.sendMessage(ConfigUtils.replaceWithSyntax(p, message, null));
             return true;
@@ -113,7 +113,7 @@ public class ChatProtection {
             int seconds = Config.settings.getInteger("Chat.command_cooldown");
 
             if (seconds > 0) {
-                p.getCooldowns().add("command=cooldown=delay", Math.min(seconds, 60) * 20);
+                p.cooldowns.add("command=cooldown=delay", Math.min(seconds, 60) * 20);
             }
         }
         if (isBlocked(StringUtils.substring(msg, 1, msg.length()), "blocked_commands")) {

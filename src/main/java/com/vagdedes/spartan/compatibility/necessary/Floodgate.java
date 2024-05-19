@@ -5,7 +5,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.utils.server.PluginUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.List;

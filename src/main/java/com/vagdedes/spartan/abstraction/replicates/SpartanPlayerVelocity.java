@@ -20,7 +20,7 @@ public class SpartanPlayerVelocity {
         this.location = location.clone();
 
         if (!event.isCancelled()) {
-            player.getTrackers().add(
+            player.trackers.add(
                     Trackers.TrackerType.ABSTRACT_VELOCITY,
                     (int) (Math.ceil(event.getVelocity().length()) * TPS.maximum)
             );

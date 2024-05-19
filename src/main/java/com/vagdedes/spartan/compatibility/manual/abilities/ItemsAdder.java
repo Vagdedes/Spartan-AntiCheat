@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.server.ReflectionUtils;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import dev.lone.itemsadder.api.CustomBlock;
 import dev.lone.itemsadder.api.CustomMob;
 import dev.lone.itemsadder.api.CustomStack;

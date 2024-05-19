@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.inventory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.utils.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;

@@ -1,10 +1,9 @@
-package com.vagdedes.spartan.utils.gameplay;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -29,8 +28,6 @@ public class BlockUtils {
             fence, fence_gate, heads, leaves, egg, coral_fan, pot, anvil, cobble_walls, terracotta, concrete, candle,
             candleCake, dripleaf, ores, wood, wool, wire, semi_solid, changeable, walls, interactive_bushes, scaffolding,
             interactive_snow, interactive_and_passable, honey_block, slime_block, web;
-
-    public static final double boundingBox = 0.301;
 
     public static boolean endsWith(String s, String ending) {
         return s.endsWith(ending) && !s.contains("LEGACY_");
@@ -1450,7 +1447,7 @@ public class BlockUtils {
     }
 
     public static String blockToString(SpartanBlock b) {
-        return toString(b.getBlock().getType());
+        return toString(b.material.toString());
     }
 
     public static String materialToString(Material m) {

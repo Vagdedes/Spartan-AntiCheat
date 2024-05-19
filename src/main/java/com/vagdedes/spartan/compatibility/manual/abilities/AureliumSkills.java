@@ -18,12 +18,12 @@ public class AureliumSkills implements Listener {
             if (p == null) {
                 return;
             }
-            p.getCooldowns().add("aureliumskills=compatibility", 20);
+            p.cooldowns.add("aureliumskills=compatibility", 20);
         }
     }
 
     public static boolean isUsing(SpartanPlayer p) {
         return Compatibility.CompatibilityType.AURELIUM_SKILLS.isFunctional()
-                && !p.getCooldowns().canDo("aureliumskills=compatibility");
+                && !p.cooldowns.canDo("aureliumskills=compatibility");
     }
 }

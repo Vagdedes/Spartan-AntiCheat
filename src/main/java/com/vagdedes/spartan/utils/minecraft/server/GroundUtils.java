@@ -1,11 +1,10 @@
-package com.vagdedes.spartan.utils.gameplay;
+package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.server.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -26,6 +25,7 @@ public class GroundUtils {
             v1_15 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_15),
             v1_20 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_20);
     public static final double
+            boundingBox = 0.305,
             maxPossibleStep = 0.9375, // Attention, serious usage
             minPossibleStep = 0.015625,  // Attention, serious usage
             maxPlayerStep = 0.5625,
@@ -180,36 +180,33 @@ public class GroundUtils {
 
     // Method
 
-    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, double y) {
-        boolean original = y == 0;
+    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, boolean defaultOnGround) {
+        if (p.trackers.has(Trackers.TrackerType.PISTON)
+                || stepsOnBoats(p)
+                || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p))) {
+            return true;
+        }
+        double box = loc.getY() - loc.getBlockY(), distribution;
 
-        if (original) {
-            if (p.getTrackers().has(Trackers.TrackerType.PISTON)
-                    || stepsOnBoats(p)
-                    || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p))) {
+        if (defaultOnGround
+                && blockHeightExists(box)) {
+            SpartanBlock block = loc.getBlock();
+
+            if (block.isLiquidOrWaterLogged(true)
+                    || BlockUtils.canClimb(block.material, false)) {
                 return true;
             }
         }
-        SpartanBlock block = loc.getBlock();
-
-        if (BlockUtils.canClimb(block.material, false)
-                || original
-                && p.isOnGroundDefault()
-                && block.isLiquidOrWaterLogged(true)) {
-            return true;
-        }
         Entity vehicle = p.getVehicle();
         boolean hasVehicle = vehicle != null;
-        original &= !hasVehicle && !p.bedrockPlayer;
-        double box = loc.getY() - loc.getBlockY(), distribution;
 
         if (hasVehicle) {
             distribution = Math.max(
                     CombatUtils.getWidthAndHeight(vehicle)[0],
-                    BlockUtils.boundingBox
+                    boundingBox
             );
         } else {
-            distribution = BlockUtils.boundingBox;
+            distribution = boundingBox;
         }
         for (double position : new double[]{-(box + minPossibleStep), 0.0}) {
             for (SpartanLocation loopLocation : loc.getSurroundingLocations(
@@ -220,25 +217,21 @@ public class GroundUtils {
                 Material type = loopLocation.getBlock().material;
 
                 if (BlockUtils.isSolid(type)) {
-                    if (original) {
-                        double[] heights = correlatedBlockHeights.get(type);
+                    double[] heights = correlatedBlockHeights.get(type);
 
-                        if (heights != null) {
-                            if (heights.length == 1) {
-                                if (heights[0] == -1.0 || heights[0] == box) {
+                    if (heights != null) {
+                        if (heights.length == 1) {
+                            if (heights[0] == -1.0 || heights[0] == box) {
+                                return true;
+                            }
+                        } else {
+                            for (double height : heights) {
+                                if (height == box) {
                                     return true;
                                 }
-                            } else {
-                                for (double height : heights) {
-                                    if (height == box) {
-                                        return true;
-                                    }
-                                }
                             }
-                        } else if (box == 0.0) {
-                            return true;
                         }
-                    } else {
+                    } else if (box == 0.0) {
                         return true;
                     }
                 }

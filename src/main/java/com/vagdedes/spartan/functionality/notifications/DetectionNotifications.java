@@ -11,8 +11,8 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
-import com.vagdedes.spartan.utils.gameplay.BlockUtils;
-import com.vagdedes.spartan.utils.gameplay.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import me.vagdedes.spartan.api.PlayerFoundOreEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.GameMode;
@@ -152,7 +152,7 @@ public class DetectionNotifications {
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(player.getPlayer(), log, location.getLimitedBukkitLocation(), block.material);
+                    event = new PlayerFoundOreEvent(player.getInstance(), log, location.getLimitedBukkitLocation(), block.material);
                     Register.manager.callEvent(event);
                 } else {
                     event = null;

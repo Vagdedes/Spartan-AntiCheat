@@ -7,6 +7,6 @@ import de.Keyle.MyPet.MyPetApi;
 public class MyPet {
 
     public static boolean isUsing(SpartanPlayer p) {
-        return Compatibility.CompatibilityType.MY_PET.isFunctional() && MyPetApi.getPlayerManager().isMyPetPlayer(p.getPlayer());
+        return Compatibility.CompatibilityType.MY_PET.isFunctional() && MyPetApi.getPlayerManager().isMyPetPlayer(p.getInstance());
     }
 }
