@@ -13,28 +13,27 @@ import java.util.*;
 public class PlayerEvidence {
 
     public enum EvidenceType {
-        HACKER(2),
-        SUSPECTED(1),
-        LEGITIMATE(0);
+        LEGITIMATE, SUSPECTED, HACKER;
+        private final String string;
 
-        private final int requirement;
-        public final String name;
-
-        EvidenceType(int requirement) {
-            this.requirement = requirement;
-
+        EvidenceType() {
             switch (this.ordinal()) {
                 case 0:
-                    this.name = "Legitimate";
+                    this.string = "Legitimate";
                     break;
                 case 1:
-                    this.name = "Suspected";
+                    this.string = "Suspected";
                     break;
                 default:
-                    this.name = "Hacker";
+                    this.string = "Hacker";
                     break;
 
             }
+        }
+
+        @Override
+        public String toString() {
+            return string;
         }
     }
 
@@ -216,12 +215,8 @@ public class PlayerEvidence {
         EvidenceType type = this.type;
 
         for (EvidenceType evidenceType : EvidenceType.values()) {
-            if (count >= evidenceType.requirement) {
+            if (count >= evidenceType.ordinal()) {
                 type = evidenceType;
-
-                if (evidenceType != EvidenceType.LEGITIMATE) {
-                    break;
-                }
             }
         }
         this.type = type;

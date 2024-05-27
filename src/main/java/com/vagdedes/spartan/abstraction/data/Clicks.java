@@ -2,10 +2,7 @@ package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.functionality.server.TPS;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 public class Clicks {
 
@@ -13,12 +10,15 @@ public class Clicks {
     private final Cooldowns cooldowns;
 
     public Clicks() {
-        this.clicks = new LinkedList<>();
+        this.clicks = Collections.synchronizedList(new LinkedList<>());
         this.cooldowns = new Cooldowns(null);
     }
 
     public void calculate() {
-        this.clicks.add(System.currentTimeMillis());
+        synchronized (this.clicks) {
+            this.remove();
+            this.clicks.add(System.currentTimeMillis());
+        }
     }
 
     public int getCount() {
@@ -35,11 +35,10 @@ public class Clicks {
     }
 
     private void remove() {
-        long time = System.currentTimeMillis();
         Iterator<Long> iterator = this.clicks.iterator();
 
         while (iterator.hasNext()) {
-            if (time - iterator.next() > 1_000L) {
+            if (System.currentTimeMillis() - iterator.next() > 1_000L) {
                 iterator.remove();
             } else {
                 break;
@@ -49,7 +48,9 @@ public class Clicks {
 
     private Collection<Long> getRawData() {
         if (!this.clicks.isEmpty()) {
-            this.remove();
+            synchronized (this.clicks) {
+                this.remove();
+            }
             return this.clicks;
         } else {
             return new ArrayList<>(0);
@@ -58,7 +59,9 @@ public class Clicks {
 
     public Collection<Long> getData() {
         if (!this.clicks.isEmpty()) {
-            this.remove();
+            synchronized (this.clicks) {
+                this.remove();
+            }
             return new ArrayList<>(this.clicks);
         } else {
             return new ArrayList<>(0);

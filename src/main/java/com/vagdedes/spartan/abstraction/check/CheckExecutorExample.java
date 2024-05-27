@@ -1,65 +1,12 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.check.implementation.combat.Criticals;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.FastBow;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.HitReach;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.Velocity;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks;
-import com.vagdedes.spartan.abstraction.check.implementation.combat.killaura.KillAura;
-import com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits;
-import com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory;
-import com.vagdedes.spartan.abstraction.check.implementation.inventory.InventoryClicks;
-import com.vagdedes.spartan.abstraction.check.implementation.inventory.ItemDrops;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed;
-import com.vagdedes.spartan.abstraction.check.implementation.player.AutoRespawn;
-import com.vagdedes.spartan.abstraction.check.implementation.player.FastEat;
-import com.vagdedes.spartan.abstraction.check.implementation.player.FastHeal;
-import com.vagdedes.spartan.abstraction.check.implementation.player.NoSwing;
-import com.vagdedes.spartan.abstraction.check.implementation.world.*;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import me.vagdedes.spartan.system.Enums;
 
 public class CheckExecutorExample extends CheckExecutor {
 
-    // This is the list of all checks/detections that are implemented in the plugin's code.
-    // The developer has not made the following classes available to you, so you should
-    // remove their paths from the list and add the paths of the classes you may implement.
-    public static final Class<?>[] executors = new Class[]{
-            KillAura.class,
-            FastClicks.class,
-            Criticals.class,
-            FastBow.class,
-            HitReach.class,
-            Velocity.class,
-
-            IrregularMovements.class,
-            Speed.class,
-            MorePackets.class,
-            NoFall.class,
-
-            Exploits.class,
-
-            ImpossibleInventory.class,
-            InventoryClicks.class,
-            ItemDrops.class,
-
-            AutoRespawn.class,
-            FastEat.class,
-            FastHeal.class,
-            NoSwing.class,
-
-            BlockReach.class,
-            FastBreak.class,
-            FastPlace.class,
-            GhostHand.class,
-            ImpossibleActions.class,
-            XRay.class,
-    };
-
-    public CheckExecutorExample(SpartanPlayer player) {
-        super(null, player);
+    public CheckExecutorExample(Enums.HackType hackType, SpartanPlayer player) {
+        super(hackType, player);
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can

@@ -18,7 +18,7 @@ public class Pattern {
 
     private static final int storageLimit = 1024 * 1024 * 1024;
     static final int
-            testingNotificationDivisor = 69,
+            testingNotificationDivisorFrequency = 69_420,
             globalDataLimit = 320_000,
             globalDataBase = 625,
             individualDataLimit = 8_192,
@@ -398,14 +398,14 @@ public class Pattern {
         if (this.loaded) {
             long time = System.currentTimeMillis();
             PlayerProfile profile = player.getProfile();
-            Integer divisor = DetectionNotifications.getDivisor(player, false);
-            boolean notifications = divisor != null,
+            Integer frequency = DetectionNotifications.getFrequency(player, false);
+            boolean notifications = frequency != null,
                     found = false,
                     store = false,
                     include = player.getProfile().isLegitimate()
                             && (!SpartanBukkit.testMode
                             || !notifications
-                            || divisor != testingNotificationDivisor);
+                            || frequency != testingNotificationDivisorFrequency);
 
             synchronized (this.generalizations) {
                 for (PatternGeneralization generalization : this.generalizations.values()) {
@@ -432,7 +432,7 @@ public class Pattern {
                         "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
                                 + (player.getProfile().isLegitimate()
                                 ? "Continue playing LEGITIMATELY to train the algorithm and get better results."
-                                : "Since you are " + player.getProfile().evidence.getType().name + ", either clear your data via '/spartan info'"
+                                : "Since you are " + player.getProfile().evidence.getType().toString() + ", either clear your data via '/spartan info'"
                                 + " and play LEGITIMATELY or find a legitimate player to help train the algorithm and get better results.")
                 );
 

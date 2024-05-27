@@ -33,8 +33,6 @@ public class CommandTab implements TabCompleter {
         commands.put("wave clear", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave run", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave list", new Enums.Permission[]{Enums.Permission.WAVE});
-        commands.put("customer-support", new Enums.Permission[]{Enums.Permission.ADMIN});
-        commands.put("ai-assistance", new Enums.Permission[]{Enums.Permission.ADMIN});
     }
 
     @Override

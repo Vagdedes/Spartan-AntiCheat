@@ -48,7 +48,7 @@ public class CombatProcessing {
                 && !player.movement.isGliding()
                 && player.getVehicle() == null
                 && !mcMMO.hasGeneralAbility(player)
-                && !Attributes.has(player, Attributes.GENERIC_ARMOR)) {
+                && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0) {
             GameMode gameMode = player.getGameMode();
             return gameMode == GameMode.SURVIVAL
                     || gameMode == GameMode.ADVENTURE

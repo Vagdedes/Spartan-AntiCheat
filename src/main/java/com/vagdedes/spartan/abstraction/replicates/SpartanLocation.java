@@ -269,7 +269,7 @@ public class SpartanLocation {
     }
 
     public float getYaw() {
-        return yaw % 360.0f;
+        return yaw;
     }
 
     public float getPitch() {

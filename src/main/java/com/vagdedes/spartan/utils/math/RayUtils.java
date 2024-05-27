@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.utils.math;
 
+import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.tracking.RayLine;
@@ -9,7 +10,6 @@ import com.vagdedes.spartan.utils.minecraft.mcp.MovingObjectPosition;
 import com.vagdedes.spartan.utils.minecraft.mcp.Vec3;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.util.Vector;
 
@@ -91,10 +91,10 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    Block block = world.getBlockAt(x, y, z);
+                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
 
                     for (Set<Material> set : sets) {
-                        if (set.contains(block.getType())) {
+                        if (set.contains(block.material)) {
                             return true;
                         }
                     }
@@ -113,9 +113,9 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    Block block = world.getBlockAt(x, y, z);
+                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (set.contains(block.getType())) {
+                    if (set.contains(block.material)) {
                         return true;
                     }
                 }
@@ -133,9 +133,9 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    Block block = world.getBlockAt(x, y, z);
+                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.getType() == material) {
+                    if (block.material == material) {
                         return true;
                     }
                 }
@@ -153,8 +153,9 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    Block block = world.getBlockAt(x, y, z);
-                    if (block.getType().isSolid()) {
+                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
+
+                    if (block.material.isSolid()) {
                         return true;
                     }
                 }

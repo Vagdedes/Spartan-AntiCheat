@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
@@ -9,7 +8,6 @@ import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -63,21 +61,11 @@ public class EventsHandler3 implements Listener {
             if (p == null) {
                 return;
             }
-            GameMode gameMode = p.getGameMode();
-            boolean cancelled = e.isCancelled()
-                    && (gameMode == GameMode.SURVIVAL
-                    || gameMode == GameMode.ADVENTURE);
-
             // Objects
             p.addReceivedDamage(e);
 
-            // Handlers
-            if (!cancelled) {
-                p.trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 2);
-            }
-
             // Detections
-            p.getExecutor(Enums.HackType.NoFall).handle(cancelled, e.getCause());
+            p.getExecutor(Enums.HackType.NoFall).handle(e.isCancelled(), e.getCause());
         } else {
             Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                     ? entity.getPassengers().toArray(new Entity[0])
@@ -148,9 +136,6 @@ public class EventsHandler3 implements Listener {
                 }
             } else {
                 // Detections
-                if (action == Action.LEFT_CLICK_AIR) {
-                    p.getExecutor(Enums.HackType.FastClicks).run(false);
-                }
                 p.getExecutor(Enums.HackType.FastEat).handle(false, e);
             }
             // Detections

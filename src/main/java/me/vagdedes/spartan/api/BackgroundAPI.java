@@ -70,7 +70,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getPlayer(p);
 
             if (player != null) {
-                DetectionNotifications.set(player, value, -1);
+                DetectionNotifications.set(player, -1);
             }
         }
     }
@@ -85,7 +85,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getPlayer(p);
 
             if (player != null) {
-                DetectionNotifications.set(player, true, -Math.max(1, Math.abs(frequency)));
+                DetectionNotifications.set(player, -Math.max(1, Math.abs(frequency)));
             }
         }
     }

@@ -4,13 +4,11 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.moderation.Wave;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -84,9 +82,6 @@ public class CommandExecution implements CommandExecutor {
                         buildCommand(sender, ChatColor.GREEN, "/" + command + " menu",
                                 "Click this command to open the plugin's inventory menu.");
                     }
-                    if (!isPlayer || Permissions.has(player, Permission.ADMIN)) {
-                        ClickableMessage.sendCommand(sender, ChatColor.GREEN + "/" + command + " customer-support <check> <discord-tag> [explanation]", "This command can be used to provide crucial details to the developers about a check.", null);
-                    }
                     if (manage) {
                         ClickableMessage.sendCommand(sender, ChatColor.RED + "/" + command + " toggle <check>",
                                 "This command can be used to enable/disable a check and its detections.", null);
@@ -112,7 +107,7 @@ public class CommandExecution implements CommandExecutor {
                     boolean permission = false;
 
                     if (isPlayer && DetectionNotifications.hasPermission(player)) {
-                        ClickableMessage.sendCommand(sender, ChatColor.RED + "/" + command + " notifications [frequency]",
+                        ClickableMessage.sendCommand(sender, ChatColor.RED + "/" + command + " notifications [ticks-frequency]",
                                 "This command can be used to receive chat messages whenever a player is suspected of using hack modules.", null);
                     }
                     if (isPlayer && info) {
@@ -223,7 +218,7 @@ public class CommandExecution implements CommandExecutor {
                         sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                         return true;
                     }
-                    DetectionNotifications.toggle(player, 0);
+                    DetectionNotifications.set(player, DetectionNotifications.defaultFrequency);
 
                 } else {
                     completeMessage(sender, "default");
@@ -332,19 +327,13 @@ public class CommandExecution implements CommandExecutor {
                             if (AlgebraUtils.validInteger(divisorString)) {
                                 int divisor = Integer.parseInt(divisorString);
 
-                                if (divisor > 0) {
-                                    Integer cachedDivisor = DetectionNotifications.getDivisor(player, true);
-
-                                    if (cachedDivisor != null && cachedDivisor != divisor) {
-                                        DetectionNotifications.change(player, divisor, true);
-                                    } else {
-                                        DetectionNotifications.toggle(player, divisor);
-                                    }
+                                if (divisor >= 0) {
+                                    DetectionNotifications.set(player, divisor);
                                 } else {
-                                    completeMessage(sender, "moderation");
+                                    sender.sendMessage(Config.messages.getColorfulString("failed_command"));
                                 }
                             } else {
-                                completeMessage(sender, "moderation");
+                                sender.sendMessage(Config.messages.getColorfulString("failed_command"));
                             }
 
                         } else {
@@ -487,18 +476,6 @@ public class CommandExecution implements CommandExecutor {
                                 completeMessage(sender, "moderation");
                             }
 
-                        } else if (args.length == 3 && args[0].equalsIgnoreCase("Customer-Support")) {
-                            if (isPlayer && !Permissions.has(player, Permission.ADMIN)) {
-                                sender.sendMessage(Config.messages.getColorfulString("no_permission"));
-                                return true;
-                            }
-                            AwarenessNotifications.forcefullySend(sender, "Please wait...");
-
-                            SpartanBukkit.connectionThread.execute(() -> {
-                                String check = args[1];
-                                String discordTag = args[2];
-                                AwarenessNotifications.forcefullySend(sender, CloudConnections.sendCustomerSupport(discordTag, check, "No Provided Description"));
-                            });
                         } else if (args.length >= 4) {
                             argumentsToStringBuilder = new StringBuilder();
                             for (int i = 3; i < args.length; i++) {
@@ -506,25 +483,7 @@ public class CommandExecution implements CommandExecutor {
                             }
                             argumentsToString = argumentsToStringBuilder.substring(0, argumentsToStringBuilder.length() - 1);
 
-                            if (args[0].equalsIgnoreCase("Customer-Support")) {
-                                if (isPlayer && !Permissions.has(player, Permission.ADMIN)) {
-                                    sender.sendMessage(Config.messages.getColorfulString("no_permission"));
-                                    return true;
-                                }
-                                if (isPlayer ? argumentsToString.length() > player.getMaxChatLength() : argumentsToString.length() > maxConnectedArgumentLength) {
-                                    sender.sendMessage(Config.messages.getColorfulString("failed_command")); // Different reply, do not change
-                                    return true;
-                                }
-                                String argumentsToStringThreaded = argumentsToString;
-                                AwarenessNotifications.forcefullySend(sender, "Please wait...");
-
-                                SpartanBukkit.connectionThread.execute(() -> {
-                                    String check = args[1];
-                                    String discordTag = args[2];
-                                    AwarenessNotifications.forcefullySend(sender, CloudConnections.sendCustomerSupport(discordTag, check, argumentsToStringThreaded));
-                                });
-
-                            } else if (args.length >= 7) {
+                            if (args.length >= 7) {
                                 if (isPlayer && !Permissions.has(player, Permission.CONDITION)) {
                                     sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                                     return true;

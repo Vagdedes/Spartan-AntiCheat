@@ -27,7 +27,7 @@ public class BlockUtils {
             climbable, climbableOriginal, door, entity_blocks, trap_door, liquid, banner, carpet, bed, shulker_box, stairs,
             fence, fence_gate, heads, leaves, egg, coral_fan, pot, anvil, cobble_walls, terracotta, concrete, candle,
             candleCake, dripleaf, ores, wood, wool, wire, semi_solid, changeable, walls, interactive_bushes, scaffolding,
-            interactive_snow, interactive_and_passable, honey_block, slime_block, web;
+            interactive_snow, interactive_and_passable, honey_block, slime_block, web, piston;
 
     public static boolean endsWith(String s, String ending) {
         return s.endsWith(ending) && !s.contains("LEGACY_");
@@ -726,6 +726,19 @@ public class BlockUtils {
         // Separator
 
         builder.clear();
+
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+            builder.add(Material.PISTON);
+            builder.add(Material.STICKY_PISTON);
+        } else {
+            builder.add(Material.getMaterial("PISTON_BASE"));
+            builder.add(Material.getMaterial("PISTON_STICKY_BASE"));
+        }
+        piston = new HashSet<>(builder);
+
+        // Separator
+
+        builder.clear();
         helper.clear();
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)) {
@@ -1348,6 +1361,10 @@ public class BlockUtils {
 
     public static boolean areWebs(Material m) {
         return web.contains(m);
+    }
+
+    public static boolean arePistons(Material m) {
+        return piston.contains(m);
     }
 
     public static boolean areShulkerBoxes(Material m) {

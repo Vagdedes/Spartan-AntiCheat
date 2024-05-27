@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.profiling.*;
@@ -10,7 +11,6 @@ import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -42,11 +42,11 @@ public class ResearchEngine {
 
     private static final Map<String, PlayerProfile> playerProfiles
             = Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
-    private static final Map<Enums.MiningOre, Double> averageMining = new LinkedHashMap<>(Enums.MiningOre.values().length);
-    private static final double[] defaultAverageMining = new double[Enums.MiningOre.values().length];
+    private static final Map<MiningHistory.MiningOre, Double> averageMining = new LinkedHashMap<>(MiningHistory.MiningOre.values().length);
+    private static final double[] defaultAverageMining = new double[MiningHistory.MiningOre.values().length];
 
     static {
-        for (Enums.MiningOre ore : Enums.MiningOre.values()) {
+        for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
             switch (ore) {
                 case DIAMOND:
                     defaultAverageMining[ore.ordinal()] = -32.0;
@@ -133,7 +133,7 @@ public class ResearchEngine {
     }
 
     public static int getDetectionViolationLevel(String s) {
-        int index1 = s.indexOf("(VL: ");
+        int index1 = s.indexOf("(" + LiveViolation.violationLevelIdentifier + " ");
 
         if (index1 > -1) {
             int index2 = s.indexOf(") [");
@@ -278,7 +278,7 @@ public class ResearchEngine {
         return new ViolationHistory(list, false);
     }
 
-    public static double getMiningHistoryAverage(Enums.MiningOre ore) {
+    public static double getMiningHistoryAverage(MiningHistory.MiningOre ore) {
         Double average = averageMining.get(ore);
         return average == null ? defaultAverageMining[ore.ordinal()] : average;
     }
@@ -399,7 +399,7 @@ public class ResearchEngine {
     // Separator
 
     public static Collection<File> getFiles() {
-        File[] files = new File(Register.plugin.getDataFolder() + "/logs/").listFiles();
+        File[] files = new File(AntiCheatLogs.folderPath).listFiles();
 
         if (files != null && files.length > 0) {
             TreeMap<Integer, File> map = new TreeMap<>();
@@ -506,7 +506,6 @@ public class ResearchEngine {
     public static void refresh(boolean enabledPlugin) {
         Runnable runnable = () -> {
             // Complete Storage
-            AntiCheatLogs.refresh();
             Config.sql.refreshDatabase();
 
             if (enabledPlugin) {
@@ -597,7 +596,7 @@ public class ResearchEngine {
                                     String name = split[0].toLowerCase();
 
                                     try {
-                                        Enums.MiningOre ore = DetectionNotifications.getMiningOre(
+                                        MiningHistory.MiningOre ore = MiningHistory.getMiningOre(
                                                 Material.getMaterial(
                                                         split[3].toUpperCase().replace("-", "_")
                                                 )
@@ -743,7 +742,7 @@ public class ResearchEngine {
             // Separator
 
             if (!legitimatePlayers.isEmpty()) {
-                for (Enums.MiningOre ore : Enums.MiningOre.values()) {
+                for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
                     double average = 0.0, total = 0.0;
 
                     for (PlayerProfile playerProfile : legitimatePlayers) {

@@ -30,7 +30,10 @@ public class PunishmentHistory {
         kicks++;
 
         if (reason != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + kickMessage + reason, true);
+            AntiCheatLogs.logInfo(player,
+                    Config.getConstruct() + player.name + kickMessage + reason,
+                    true
+            );
             SpartanLocation location = player.movement.getLocation();
             CrossServerInformation.queueNotification(
                     reason,
@@ -61,7 +64,11 @@ public class PunishmentHistory {
         warnings++;
 
         if (reason != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + warningMessage + reason, true);
+            AntiCheatLogs.logInfo(
+                    player,
+                    Config.getConstruct() + player.name + warningMessage + reason,
+                    true
+            );
             SpartanLocation location = player.movement.getLocation();
             CrossServerInformation.queueNotification(
                     reason,
@@ -84,7 +91,10 @@ public class PunishmentHistory {
         punishments++;
 
         if (commands != null) {
-            AntiCheatLogs.logInfo(Config.getConstruct() + player.name + punishmentMessage + commands, true);
+            AntiCheatLogs.logInfo(player,
+                    Config.getConstruct() + player.name + punishmentMessage + commands,
+                    true
+            );
             SpartanLocation location = player.movement.getLocation();
             CloudConnections.executeDiscordWebhook(
                     "punishments",

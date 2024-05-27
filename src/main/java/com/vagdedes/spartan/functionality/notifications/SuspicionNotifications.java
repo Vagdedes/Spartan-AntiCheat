@@ -23,9 +23,9 @@ public class SuspicionNotifications {
                 Iterator<SpartanPlayer> iterator = players.iterator();
 
                 while (iterator.hasNext()) {
-                    Integer divisor = DetectionNotifications.getDivisor(iterator.next(), false);
+                    Integer divisor = DetectionNotifications.getFrequency(iterator.next(), false);
 
-                    if (divisor == null || divisor != 0) {
+                    if (divisor == null || divisor != DetectionNotifications.defaultFrequency) {
                         iterator.remove();
                     }
                 }
@@ -93,4 +93,5 @@ public class SuspicionNotifications {
             }
         }
     }
+
 }

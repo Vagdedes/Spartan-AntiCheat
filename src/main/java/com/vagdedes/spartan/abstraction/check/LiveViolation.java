@@ -12,7 +12,6 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.NotifyViolation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -20,6 +19,7 @@ import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import me.vagdedes.spartan.api.CheckCancelEvent;
 import me.vagdedes.spartan.api.PlayerViolationCommandEvent;
@@ -34,6 +34,7 @@ import java.util.*;
 
 public class LiveViolation {
 
+    public static final String violationLevelIdentifier = "VL:";
     private static final long violationTimeWorth = 2_000L;
 
     private final SpartanPlayer player;
@@ -355,30 +356,29 @@ public class LiveViolation {
                 hackType
         );
 
-        if (canPrevent
-                || !hackType.getCheck().supportsLiveEvidence) {
+        if (canPrevent || !hackType.getCheck().supportsLiveEvidence) {
             CrossServerInformation.queueNotification(message, true);
         }
         SpartanLocation location = player.movement.getLocation();
-        String information = Config.getConstruct() + player.name + " failed " + hackType + " (VL: " + playerViolation.level
-                + ") " + "[(Version: " + MultiVersion.fork() + " " + MultiVersion.versionString()
-                + "), (I-V: " + (canPrevent ? "-" : "") + ignoredViolations + ") (Silent: "
-                + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
+        String information = Config.getConstruct() + player.name + " failed " + hackType
+                + " (" + violationLevelIdentifier + " " + playerViolation.level + ") "
+                + "[(Version: " + MultiVersion.fork() + " "
+                + MultiVersion.versionString() + "), (IV: " + (canPrevent ? "-" : "") + ignoredViolations + ")"
+                + " (Silent: " + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
                 + "(Ping: " + player.getPing() + "ms), (TPS: "
                 + AlgebraUtils.cut(TPS.get(player, false), 3) + "), " +
                 "(XYZ: " + location.getBlockX() + " " + location.getBlockY() + " "
                 + location.getBlockZ() + "), (" + playerViolation.information + ")]";
-        AntiCheatLogs.logInfo(player, information, information, null, hackType, true, playerViolation.level);
+        AntiCheatLogs.logInfo(player, information, true, null, playerViolation);
 
         // Local Notifications
         String command = Config.settings.getString("Notifications.message_clickable_command")
                 .replace("{player}", player.name);
 
         if (individualOnlyNotifications) {
-            Integer divisor = DetectionNotifications.getDivisor(player, false);
+            Integer frequency = DetectionNotifications.getFrequency(player, false);
 
-            if (DetectionNotifications.canAcceptMessages(player, divisor, false)
-                    && isDivisorValid(playerViolation.level, divisor)) { // Attention
+            if (DetectionNotifications.canAcceptMessages(player, frequency, false)) { // Attention
                 Player realPlayer = player.getInstance();
 
                 if (realPlayer != null) {
@@ -390,10 +390,15 @@ public class LiveViolation {
 
             if (!notificationPlayers.isEmpty()) {
                 for (SpartanPlayer staff : notificationPlayers) {
-                    if (isDivisorValid(
-                            playerViolation.level,
-                            NotifyViolation.get(staff, player, ignoredViolations)
-                    )) {
+                    if (staff.cooldowns.canDo("notification")) {
+                        staff.cooldowns.add(
+                                "notification",
+                                getNotificationTicksCooldown(
+                                        staff,
+                                        player,
+                                        ignoredViolations * TPS.tickTimeInteger
+                                )
+                        );
                         Player realPlayer = staff.getInstance();
 
                         if (realPlayer != null) {
@@ -410,7 +415,21 @@ public class LiveViolation {
         }
     }
 
-    private boolean isDivisorValid(int level, int divisor) {
-        return divisor == 1 || level % divisor == 0;
+    private int getNotificationTicksCooldown(SpartanPlayer staff,
+                                             SpartanPlayer detectedPlayer,
+                                             int def) {
+        Integer frequency = DetectionNotifications.getFrequency(staff, true);
+
+        if (frequency != null
+                && frequency != DetectionNotifications.defaultFrequency) {
+            return frequency;
+        } else if (staff.uuid.equals(detectedPlayer.uuid)
+                || staff.getWorld().equals(detectedPlayer.getWorld())
+                && AlgebraUtils.getHorizontalDistance(staff.movement.getLocation(), detectedPlayer.movement.getLocation()) <= PlayerUtils.chunk) {
+            return 0;
+        } else {
+            return def;
+        }
     }
+
 }

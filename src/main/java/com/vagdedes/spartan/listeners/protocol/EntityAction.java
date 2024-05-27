@@ -32,6 +32,7 @@ public class EntityAction extends PacketAdapter {
 
             if (container.sprint()) {
                 AntiCheatLogs.logInfo(
+                        player,
                         player.name
                                 + " use impossible EntityAction! (START_SPRINTING while already sprinting)",
                         true
@@ -49,6 +50,7 @@ public class EntityAction extends PacketAdapter {
 
             if (!container.sprint()) {
                 AntiCheatLogs.logInfo(
+                        player,
                         player.name
                                 + " use impossible EntityAction! (STOP_SPRINTING while already non-sprinting)",
                         true
@@ -66,6 +68,7 @@ public class EntityAction extends PacketAdapter {
 
             if (container.sneak()) {
                 AntiCheatLogs.logInfo(
+                        player,
                         player.name
                                 + " use impossible EntityAction! (PRESS_SHIFT_KEY while already sneaking)",
                         true
@@ -83,6 +86,7 @@ public class EntityAction extends PacketAdapter {
 
             if (!container.sneak()) {
                 AntiCheatLogs.logInfo(
+                        player,
                         player.name
                                 + " use impossible EntityAction! (RELEASE_SHIFT_KEY while already non-sneaking)",
                         true

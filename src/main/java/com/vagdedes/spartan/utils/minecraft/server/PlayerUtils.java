@@ -5,6 +5,7 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -53,6 +54,8 @@ public class PlayerUtils {
             chunk = 16.0,
             climbingUpDefault = 0.12 * airDrag, // 0.11760
             climbingDownDefault = AlgebraUtils.floatDouble(0.15),
+            honeyBlockDownDefault = AlgebraUtils.floatDouble(0.13) * airDrag,
+            webBlockDownDefault = AlgebraUtils.floatDouble(0.64) * airDrag,
             maxJumpingMotionDifference;
 
     public static final int
@@ -66,14 +69,14 @@ public class PlayerUtils {
     private static final Map<PotionEffectType, Integer> handledPotionEffects = new LinkedHashMap<>();
 
     static {
-        handledPotionEffects.put(JUMP, 100);
-        handledPotionEffects.put(SPEED, 40);
+        handledPotionEffects.put(JUMP, AlgebraUtils.integerRound(TPS.maximum * 5));
+        handledPotionEffects.put(SPEED, AlgebraUtils.integerRound(TPS.maximum * 2));
 
-        if (slowFall) {
-            handledPotionEffects.put(SLOW_FALLING, 20);
-        }
         if (dolphinsGrace) {
-            handledPotionEffects.put(DOLPHINS_GRACE, 30);
+            handledPotionEffects.put(DOLPHINS_GRACE, AlgebraUtils.integerRound(TPS.maximum));
+        }
+        if (slowFall) {
+            handledPotionEffects.put(SLOW_FALLING, 10);
         }
         if (levitation) {
             handledPotionEffects.put(LEVITATION, 10);
@@ -338,14 +341,10 @@ public class PlayerUtils {
 
     // Potion Effects
 
-    public static int getPotionEffectExtraTime(PotionEffectType potionEffectType) {
-        return handledPotionEffects.getOrDefault(potionEffectType, 0);
-    }
-
     public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
         SpartanPotionEffect potionEffect = entity.getPotionEffect(
                 potionEffectType,
-                getPotionEffectExtraTime(potionEffectType)
+                handledPotionEffects.getOrDefault(potionEffectType, 0)
         );
 
         if (potionEffect != null) {

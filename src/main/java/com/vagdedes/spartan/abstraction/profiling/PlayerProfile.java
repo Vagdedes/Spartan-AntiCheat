@@ -67,12 +67,12 @@ public class PlayerProfile {
 
         // Separator
         this.violationHistory = new ViolationHistory[hackTypes.length];
-        this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
+        this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
             this.violationHistory[hackType.ordinal()] = new ViolationHistory();
         }
-        for (Enums.MiningOre ore : Enums.MiningOre.values()) {
+        for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
             this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0);
         }
     }
@@ -91,12 +91,12 @@ public class PlayerProfile {
         this.bedrockPlayerCheck = true;
 
         this.violationHistory = new ViolationHistory[hackTypes.length];
-        this.miningHistory = new MiningHistory[Enums.MiningOre.values().length];
+        this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
         for (Enums.HackType hackType : hackTypes) {
             this.violationHistory[hackType.ordinal()] = new ViolationHistory();
         }
-        for (Enums.MiningOre ore : Enums.MiningOre.values()) {
+        for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
             this.miningHistory[ore.ordinal()] = new MiningHistory(ore, 0);
         }
     }
@@ -218,7 +218,7 @@ public class PlayerProfile {
         return new MiningHistory(null, mines);
     }
 
-    public MiningHistory getMiningHistory(Enums.MiningOre ore) {
+    public MiningHistory getMiningHistory(MiningHistory.MiningOre ore) {
         return miningHistory[ore.ordinal()];
     }
 

@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.replicates;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
-import com.vagdedes.spartan.abstraction.check.CheckExecutorExample;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
@@ -175,16 +174,14 @@ public class SpartanPlayer {
         for (Enums.HackType hackType : hackTypes) {
             int id = hackType.ordinal();
             this.violations[id] = new LiveViolation(this, hackType);
-            this.executors[id] = new CheckExecutorExample(this);
-        }
-        if (CheckExecutorExample.executors.length > 0) {
-            for (Class<?> executorClass : CheckExecutorExample.executors) {
-                try {
-                    CheckExecutor executor = (CheckExecutor) executorClass.getConstructor(SpartanPlayer.class).newInstance(this);
-                    this.executors[executor.hackType.ordinal()] = executor;
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+
+            try {
+                CheckExecutor executor = (CheckExecutor) hackType.executor
+                        .getConstructor(hackType.getClass(), this.getClass())
+                        .newInstance(hackType, this);
+                this.executors[id] = executor;
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -276,6 +273,7 @@ public class SpartanPlayer {
         if (runRegardless
                 && (action == null || action == Action.LEFT_CLICK_AIR)) {
             clicks.calculate();
+            this.getExecutor(Enums.HackType.FastClicks).run(false);
 
             if (clicks.canDistributeInformation()) {
                 InteractiveInventory.playerInfo.refresh(name);
@@ -381,12 +379,13 @@ public class SpartanPlayer {
 
     // Separator
 
-    public boolean isOnGround(SpartanLocation location) {
+    public boolean isOnGround(SpartanLocation location, boolean checkEntities) {
         Player p = this.getInstance();
         return GroundUtils.isOnGround(
                 this,
                 location,
-                p != null && p.isOnGround()
+                p != null && p.isOnGround(),
+                checkEntities
         );
     }
 
@@ -398,12 +397,12 @@ public class SpartanPlayer {
         } else if (SpartanBukkit.packetsEnabled()) {
             return ProtocolStorage.isOnGround(this)
                     || bedrockPlayer
-                    && GroundUtils.isOnGround(this, movement.getLocation(), false);
+                    && GroundUtils.isOnGround(this, movement.getLocation(), false, true);
         } else {
             Player p = this.getInstance();
             return p != null && p.isOnGround()
                     || bedrockPlayer
-                    && GroundUtils.isOnGround(this, movement.getLocation(), false);
+                    && GroundUtils.isOnGround(this, movement.getLocation(), false, true);
         }
     }
 
@@ -775,7 +774,7 @@ public class SpartanPlayer {
             if (Config.settings.getBoolean("Detections.fall_damage_on_teleport")
                     && iterations > PlayerUtils.fallDamageAboveBlocks
                     && playerProfile.isSuspectedOrHacker()) { // Damage
-                applyFallDamage(Math.max(getFallDistance(), iterations));
+                applyDamage(EntityDamageEvent.DamageCause.FALL, Math.max(getFallDistance(), iterations));
             }
         }
     }
@@ -807,9 +806,9 @@ public class SpartanPlayer {
 
     // Separator
 
-    public boolean applyFallDamage(double d) {
+    public boolean applyDamage(EntityDamageEvent.DamageCause damageCause, double amount) {
         trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 3);
-        return this.damage(d, EntityDamageEvent.DamageCause.FALL);
+        return this.damage(amount, damageCause);
     }
 
     private boolean damage(double amount, EntityDamageEvent.DamageCause damageCause) {

@@ -82,7 +82,7 @@ public class SpartanEdition {
         if (alternativeVersion) {
             return "Spartan AntiCheat: Java & Bedrock Edition";
         } else {
-            return "Spartan AntiCheat: " + dataType.name + " Edition";
+            return "Spartan AntiCheat: " + dataType + " Edition";
         }
     }
 
@@ -158,7 +158,7 @@ public class SpartanEdition {
         if (Permissions.isStaff(player)) {
             String message = AwarenessNotifications.getNotification(
                     versionNotificationMessage
-                            .replace(type, dataType.name)
+                            .replace(type, dataType.toString())
                             .replace(
                                     product,
                                     IDs.isBuiltByBit()

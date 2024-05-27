@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
+import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
@@ -13,7 +14,6 @@ import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
-import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 
 import java.io.File;
@@ -329,13 +329,12 @@ public class SQLFeature extends ConfigurationBuilder {
     public void logInfo(SpartanPlayer p,
                         String information,
                         Material material,
-                        Enums.HackType hackType,
-                        boolean miningNotification,
-                        int violations) {
+                        PlayerViolation playerViolation) {
         if (enabled) {
             String table = getTable();
-            boolean hasPlayer = p != null;
-            boolean hasCheck = hackType != null;
+            boolean hasPlayer = p != null,
+                    hasCheck = playerViolation != null,
+                    hasMaterial = material != null;
             UUID uuid = hasPlayer ? p.uuid : null;
             SpartanLocation location = hasPlayer ? p.movement.getLocation() : null;
 
@@ -352,15 +351,15 @@ public class SQLFeature extends ConfigurationBuilder {
                                 + ", " + syntaxForColumn(MultiVersion.versionString())
                                 + ", " + syntaxForColumn(TPS.get(p, false))
                                 + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
-                                + ", " + syntaxForColumn(miningNotification ? "mining" : hasCheck ? "violation" : "other")
+                                + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                                 + ", " + syntaxForColumn(information)
                                 + ", " + (hasPlayer ? syntaxForColumn(uuid) : "NULL")
                                 + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
                                 + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
                                 + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
                                 + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
-                                + ", " + (hasCheck ? syntaxForColumn(hackType) : miningNotification ? syntaxForColumn(material) : "NULL")
-                                + ", " + (violations > -1 ? syntaxForColumn(violations) : "NULL")
+                                + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(playerViolation.hackType) : "NULL")
+                                + ", " + (hasCheck ? syntaxForColumn(playerViolation.level) : "NULL")
                                 + ");"
                 );
             }

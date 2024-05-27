@@ -75,7 +75,7 @@ public class Check {
 
         for (Enums.DataType dataType : dataTypes) {
             Object optionValue = getOption(
-                    "enabled." + dataType.lowerCase,
+                    "enabled." + dataType.toString().toLowerCase(),
                     hasOldOption ? oldOptionValue : true,
                     false
             );
@@ -265,7 +265,7 @@ public class Check {
                             player.getViolations(hackType).reset();
                         }
                     }
-                    setOption("enabled." + type.lowerCase, b);
+                    setOption("enabled." + type.toString().toLowerCase(), b);
                 }
             }
         }

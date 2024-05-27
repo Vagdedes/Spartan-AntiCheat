@@ -37,6 +37,7 @@ public class SpartanPlayerDamage {
                         EntityDamageEvent event,
                         SpartanLocation location,
                         long tick) {
+        boolean abstractVelocity = false;
         player.trackers.add(Trackers.TrackerType.DAMAGE, (int) TPS.maximum);
         this.parent = player;
         this.tick = tick;
@@ -51,9 +52,7 @@ public class SpartanPlayerDamage {
                 this.boss = false;
                 this.explosive = false;
             } else if (actualEvent.getDamager() instanceof LivingEntity) {
-                this.activeItem = MultiVersion.folia
-                        ? ((LivingEntity) actualEvent.getDamager()).getActiveItem()
-                        : null;
+                this.activeItem = ((LivingEntity) actualEvent.getDamager()).getEquipment().getItemInHand();
                 this.boss = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)
                         && actualEvent.getDamager() instanceof Boss;
                 this.explosive = false;
@@ -62,11 +61,24 @@ public class SpartanPlayerDamage {
 
                 if (projectile.getShooter() instanceof LivingEntity) {
                     LivingEntity shooter = (LivingEntity) projectile.getShooter();
-                    this.activeItem = MultiVersion.folia
-                            ? shooter.getActiveItem()
-                            : null;
+                    this.activeItem = shooter.getEquipment().getItemInHand();
                     this.boss = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)
                             && shooter instanceof Boss;
+
+                    if (this.activeItem != null
+                            && (this.activeItem.getType() == Material.BOW
+                            || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)
+                            && this.activeItem.getType() == Material.CROSSBOW)) {
+                        int level = this.activeItem.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK);
+
+                        if (level > 2) {
+                            this.parent.trackers.add(
+                                    Trackers.TrackerType.ABSTRACT_VELOCITY,
+                                    AlgebraUtils.integerRound(Math.log(level) * TPS.maximum)
+                            );
+                            abstractVelocity = true;
+                        }
+                    }
                 } else {
                     this.activeItem = null;
                     this.boss = false;
@@ -95,7 +107,12 @@ public class SpartanPlayerDamage {
                         Trackers.TrackerType.ABSTRACT_VELOCITY,
                         AlgebraUtils.integerRound(Math.log(level) * TPS.maximum)
                 );
+                abstractVelocity = true;
             }
+        }
+
+        if (!abstractVelocity && !event.isCancelled()) {
+            player.trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 2);
         }
     }
 

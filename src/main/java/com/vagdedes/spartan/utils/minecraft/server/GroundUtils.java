@@ -26,6 +26,7 @@ public class GroundUtils {
             v1_20 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_20);
     public static final double
             boundingBox = 0.305,
+            honeyBlockBoundingBox = 0.62,
             maxPossibleStep = 0.9375, // Attention, serious usage
             minPossibleStep = 0.015625,  // Attention, serious usage
             maxPlayerStep = 0.5625,
@@ -180,10 +181,13 @@ public class GroundUtils {
 
     // Method
 
-    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc, boolean defaultOnGround) {
-        if (p.trackers.has(Trackers.TrackerType.PISTON)
+    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc,
+                                     boolean defaultOnGround,
+                                     boolean checkEntities) {
+        if (checkEntities
+                && (p.trackers.has(Trackers.TrackerType.PISTON)
                 || stepsOnBoats(p)
-                || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p))) {
+                || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p)))) {
             return true;
         }
         double box = loc.getY() - loc.getBlockY(), distribution;

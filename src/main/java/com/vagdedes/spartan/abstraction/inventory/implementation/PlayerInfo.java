@@ -100,7 +100,7 @@ public class PlayerInfo extends InventoryMenu {
             if (isOnline) {
                 lore.add("§7CPS (Clicks Per Second)§8:§a " + target.clicks.getCount());
                 lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().name + " (" + target.dataType.name + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().toString() + " (" + target.dataType + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK, 1), information);
 
                 lore.clear();
@@ -109,7 +109,7 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§cRight click to delete the player's stored data.");
                 add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
             } else {
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().name + " (" + playerProfile.getDataType().name + ")");
+                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().toString() + " (" + playerProfile.getDataType().toString() + ")");
                 add("§2Information", lore, new ItemStack(Material.BOOK), information);
 
                 lore.clear();

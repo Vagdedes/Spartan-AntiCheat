@@ -5,8 +5,8 @@ import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -88,7 +88,7 @@ public class EventsHandler5 implements Listener {
         }
 
         // Detections
-        DetectionNotifications.runMining(p, b, cancelled);
+        AntiCheatLogs.logMining(p, b, cancelled);
 
         if (p.getViolations(Enums.HackType.NoSwing).prevent()
                 || p.getViolations(Enums.HackType.BlockReach).prevent()
@@ -133,7 +133,6 @@ public class EventsHandler5 implements Listener {
 
     @EventHandler
     private void PreLoginEvent(AsyncPlayerPreLoginEvent e) {
-        // Features
         if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             InetAddress address = e.getAddress();
             String ipAddress = address != null ? PlayerLimitPerIP.get(address) : null;

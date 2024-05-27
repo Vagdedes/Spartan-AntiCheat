@@ -106,7 +106,7 @@ public class ConfigUtils {
         String worldName = p.getWorld().getName();
         message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
         message = replace(message, "{player}", p.name);
-        message = replace(message, "{player:type}", p.dataType.lowerCase);
+        message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", uuid.toString());
         message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{world}", worldName);
@@ -146,7 +146,7 @@ public class ConfigUtils {
             if (p != null) {
                 SpartanLocation loc = p.movement.getLocation();
                 String worldName = p.getWorld().getName();
-                message = replace(message, "{player:type}", p.dataType.lowerCase);
+                message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
                 message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
                 message = replace(message, "{ping}", String.valueOf(p.getPing()));
                 message = replace(message, "{world}", worldName);
@@ -171,7 +171,7 @@ public class ConfigUtils {
                 PlayerProfile profile = ResearchEngine.getPlayerProfileAdvanced(name, false);
 
                 if (profile != null) {
-                    message = replace(message, "{player:type}", profile.getDataType().lowerCase);
+                    message = replace(message, "{player:type}", profile.getDataType().toString().toLowerCase());
                 }
                 message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null)));
             }

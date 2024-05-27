@@ -1,29 +1,23 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
-import com.vagdedes.spartan.abstraction.profiling.ViolationHistory;
 import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 public class CloudConnections {
 
@@ -284,195 +278,4 @@ public class CloudConnections {
         }
     }
 
-    // Manual
-
-    private static String sendCustomerSupport(String contactPlatform, String contactInformation,
-                                              String columnType, String columnInformation,
-                                              String userInformation) {
-        if (contactInformation == null) {
-            contactInformation = "None";
-        }
-
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            Check check = hackType.getCheck();
-            String checkName = check.getName();
-
-            if (check.toString().equals(columnInformation) || checkName.equalsIgnoreCase(columnInformation)) {
-                ViolationHistory violationHistory = ResearchEngine.getViolationHistory(hackType, Enums.DataType.UNIVERSAL, ResearchEngine.getLegitimatePlayers());
-
-                if (violationHistory == null) {
-                    return "No useful information was found for this check, try again later.";
-                }
-                Collection<PlayerViolation> violations = violationHistory.getCollection();
-
-                String comma = ", ", newLine = "\n";
-                StringBuilder softwareInformation = new StringBuilder();
-
-                softwareInformation.append("Check:")
-                        .append(newLine);
-                softwareInformation.append("Type: ").append(hackType)
-                        .append(newLine);
-                softwareInformation.append("Name: ").append(checkName)
-                        .append(newLine);
-                softwareInformation.append("Enabled: ").append(check.isEnabled(null, null, null))
-                        .append(newLine);
-                softwareInformation.append("Preventions: ").append(!check.isSilent(null))
-                        .append(newLine);
-                softwareInformation.append("Punishments: ").append(check.canPunish)
-                        .append(newLine);
-                softwareInformation.append("Average Ignored Violations: ").append(check.getAverageIgnoredViolations(Enums.DataType.UNIVERSAL))
-                        .append(newLine);
-                softwareInformation.append("Violation Count: ").append(violationHistory.getCount())
-                        .append(newLine);
-
-                // Separator
-
-                softwareInformation.append("Server:")
-                        .append(newLine);
-                softwareInformation.append("Version: ").append(MultiVersion.fork()).append(" ").append(MultiVersion.versionString())
-                        .append(newLine);
-
-                softwareInformation.append("Plugins:").append(newLine)
-                        .append(StringUtils.toString(Register.manager.getPlugins(), comma))
-                        .append(newLine).append(newLine); // 2 lines
-
-                List<Compatibility.CompatibilityType> compatibilities = Config.compatibility.getActiveCompatibilities();
-                if (!compatibilities.isEmpty()) {
-                    StringBuilder compatibilitiesNames = new StringBuilder();
-
-                    for (Compatibility.CompatibilityType compatibility : compatibilities) {
-                        compatibilitiesNames.append(compatibility.toString()).append(comma);
-                    }
-                    softwareInformation.append("Compatibilities:").append(newLine)
-                            .append(compatibilitiesNames.toString(), 0, compatibilitiesNames.length() - comma.length())
-                            .append(newLine).append(newLine).append(newLine); // 3 lines
-                } else {
-                    softwareInformation.append(newLine); // +1 line
-                }
-
-                // Separator
-
-                softwareInformation.append("Configuration:").append(newLine);
-                String dataFolder = Register.plugin.getDataFolder() + "/";
-
-                for (String fileName : Config.configs) {
-                    softwareInformation.append(fileName).append(":").append(newLine);
-                    File file = new File(dataFolder + fileName);
-
-                    if (file.exists() && file.isFile()
-                            && !fileName.equals(Config.messages.getFile().getName())) {
-                        switch (fileName) {
-                            case Config.checksFileName:
-                                Collection<Map.Entry<String, Object>> options = check.getOptions();
-
-                                if (!options.isEmpty()) {
-                                    for (Map.Entry<String, Object> entry : options) {
-                                        softwareInformation.append(entry.getKey()).append(": ")
-                                                .append(entry.getValue().toString().replace(newLine, "%%__line__%%"))
-                                                .append(newLine);
-                                    }
-                                }
-                                break;
-                            default:
-                                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-                                for (String key : configuration.getKeys(true)) {
-                                    if (!key.contains("password")) {
-                                        Object object = configuration.get(key, null);
-
-                                        if (object instanceof Number
-                                                || object instanceof Boolean
-                                                || object instanceof String) {
-                                            softwareInformation.append(key).append(": ")
-                                                    .append(object.toString().replace(newLine, "%%__line__%%"))
-                                                    .append(newLine);
-                                        }
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                }
-                softwareInformation.append(newLine);
-
-                // Separator
-
-                int entriesSize = violations.size(),
-                        limit = 250,
-                        minViolations = Integer.MAX_VALUE,
-                        maxViolations = 0,
-                        averageViolations = 0,
-                        validViolations = 0,
-                        totalViolations = 0;
-                softwareInformation.append("Detection Information:").append(newLine);
-                Set<Integer> uniqueInformation = new HashSet<>(limit);
-
-                if (entriesSize > 0) {
-                    for (PlayerViolation playerViolation : violations) {
-                        int violation = playerViolation.level;
-
-                        minViolations = Math.min(minViolations, violation);
-                        maxViolations = Math.max(maxViolations, violation);
-
-                        averageViolations += violation;
-                        totalViolations++;
-                        String information = "x" + playerViolation.level
-                                + " (" + playerViolation.information + ")";
-
-                        if (uniqueInformation.add(playerViolation.identity)) {
-                            softwareInformation.append(information).append(newLine);
-                            validViolations++;
-
-                            if (validViolations == limit) {
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    softwareInformation.append("None").append(newLine);
-                }
-
-                softwareInformation.append(newLine).append(newLine) // +2 lines
-                        .append("Detection Statistics:").append(newLine)
-                        .append("Minimum Violations: ").append(minViolations)
-                        .append(newLine)
-                        .append("Average Violations: ").append(AlgebraUtils.cut(averageViolations / ((double) totalViolations), 2))
-                        .append(newLine)
-                        .append("Maximum Violations: ").append(maxViolations);
-
-                try {
-                    String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + " " + CloudBase.identification
-                            + "&action=add&data=customerSupport&version=" + CloudBase.version
-                            + "&value=" + URLEncoder.encode(
-                            contactPlatform + CloudBase.separator + contactInformation + CloudBase.separator
-                                    + columnType + CloudBase.separator + columnInformation + CloudBase.separator
-                                    + userInformation + CloudBase.separator + softwareInformation,
-                            "UTF-8"), "POST");
-
-                    if (results.length > 0) {
-                        String data = results[0];
-
-                        if (data.equals("false")) {
-                            return "Failed to complete request, reach support if this continues.";
-                        } else if (data.equals("true")) {
-                            return "Thanks for reporting" + " " + contactInformation + ", we will get back to you if needed. You can join our Discord server at: §n" + DiscordMemberCount.discordURL;
-                        }
-                    }
-                    return "No results were returned from the server, try updating and reach support if this continues.";
-                } catch (Exception e) {
-                    CloudBase.throwError(e, "customerSupport:ADD");
-                    return "A programming exception has occurred, reach support if this continues.";
-                }
-            }
-        }
-        return "Check not found, check your arguments.";
-    }
-
-    public static String sendCustomerSupport(String contactInformation, String columnInformation, String userInformation) {
-        return sendCustomerSupport(
-                "discord", contactInformation,
-                "functionality", columnInformation,
-                userInformation
-        );
-    }
 }
