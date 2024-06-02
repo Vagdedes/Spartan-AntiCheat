@@ -407,10 +407,6 @@ public class SpartanPlayer {
         }
     }
 
-    public boolean isOnGround() {
-        return this.isOnGround(true);
-    }
-
     // Separator
 
     public PlayerProfile getProfile() {
@@ -732,12 +728,15 @@ public class SpartanPlayer {
     // Teleport
 
     public void groundTeleport() {
-        if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection")
-                || this.isOnGround()) {
+        if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection")) {
             return;
         }
-        SpartanLocation location = this.movement.getLocation(),
-                locationP1 = location.clone().add(0, 1, 0);
+        SpartanLocation location = this.movement.getLocation();
+
+        if (this.isOnGround(location, true)) {
+            return;
+        }
+        SpartanLocation locationP1 = location.clone().add(0, 1, 0);
 
         if (BlockUtils.isSolid(locationP1.getBlock().material)
                 && !(BlockUtils.areWalls(locationP1.getBlock().material)
@@ -784,7 +783,7 @@ public class SpartanPlayer {
             if (Config.settings.getBoolean("Detections.fall_damage_on_teleport")
                     && iterations > PlayerUtils.fallDamageAboveBlocks
                     && playerProfile.isSuspectedOrHacker()) { // Damage
-                applyDamage(EntityDamageEvent.DamageCause.FALL, Math.max(getFallDistance(), iterations));
+                damage(Math.max(getFallDistance(), iterations));
             }
         }
     }
@@ -816,19 +815,12 @@ public class SpartanPlayer {
 
     // Separator
 
-    public boolean applyDamage(EntityDamageEvent.DamageCause damageCause, double amount) {
-        trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 3);
-        return this.damage(amount, damageCause);
-    }
-
-    private boolean damage(double amount, EntityDamageEvent.DamageCause damageCause) {
+    public boolean damage(double amount) {
         Player p = getInstance();
 
         if (p != null) {
-            EntityDamageEvent event = new EntityDamageEvent(p, damageCause, amount);
+            trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 3);
             p.damage(amount);
-            p.setLastDamageCause(event);
-            this.addReceivedDamage(event);
             return true;
         } else {
             return false;

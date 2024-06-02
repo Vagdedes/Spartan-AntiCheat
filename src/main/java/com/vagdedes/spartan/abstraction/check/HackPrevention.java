@@ -4,7 +4,6 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.event.entity.EntityDamageEvent;
 
 public class HackPrevention {
 
@@ -49,7 +48,7 @@ public class HackPrevention {
             player.groundTeleport();
         }
         if (this.damage > 0.0) {
-            player.applyDamage(EntityDamageEvent.DamageCause.CUSTOM, this.damage);
+            player.damage(this.damage);
         }
     }
 }

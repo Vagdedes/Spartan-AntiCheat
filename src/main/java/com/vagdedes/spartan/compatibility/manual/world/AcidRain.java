@@ -25,7 +25,10 @@ public class AcidRain implements Listener {
             p.addReceivedDamage(new EntityDamageEvent(
                     n,
                     EntityDamageEvent.DamageCause.FALL,
-                    0.0
+                    Math.max(
+                            e.getProtection() - e.getRainDamage(),
+                            0.0
+                    )
             ));
         }
     }
@@ -42,7 +45,10 @@ public class AcidRain implements Listener {
             p.addReceivedDamage(new EntityDamageEvent(
                     n,
                     EntityDamageEvent.DamageCause.FALL,
-                    0.0
+                    Math.max(
+                            e.getProtection() - e.getTotalDamage(),
+                            0.0
+                    )
             ));
         }
     }

@@ -192,58 +192,60 @@ public class GroundUtils {
                 || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p)))) {
             return true;
         }
-        double box = loc.getY() - loc.getBlockY(), distribution;
+        if (loc != null) {
+            double box = loc.getY() - loc.getBlockY(), distribution;
 
-        if (defaultOnGround
-                && blockHeightExists(box)) {
-            SpartanBlock block = loc.getBlock();
+            if (defaultOnGround
+                    && blockHeightExists(box)) {
+                SpartanBlock block = loc.getBlock();
 
-            if (block.isLiquidOrWaterLogged(true)
-                    || BlockUtils.canClimb(block.material, false)) {
-                return true;
+                if (block.isLiquidOrWaterLogged(true)
+                        || BlockUtils.canClimb(block.material, false)) {
+                    return true;
+                }
             }
-        }
-        Entity vehicle = p.getVehicle();
-        boolean hasVehicle = vehicle != null;
+            Entity vehicle = p.getVehicle();
+            boolean hasVehicle = vehicle != null;
 
-        if (hasVehicle) {
-            distribution = Math.max(
-                    CombatUtils.getWidthAndHeight(vehicle)[0],
-                    boundingBox
-            );
-        } else {
-            distribution = boundingBox;
-        }
-        for (double position : new double[]{-(box + minBoundingBox), 0.0, -maxPlayerStep}) {
-            for (SpartanLocation loopLocation : loc.getSurroundingLocations(
-                    distribution,
-                    position,
-                    distribution
-            )) {
-                Material type = loopLocation.getBlock().material;
+            if (hasVehicle) {
+                distribution = Math.max(
+                        CombatUtils.getWidthAndHeight(vehicle)[0],
+                        boundingBox
+                );
+            } else {
+                distribution = boundingBox;
+            }
+            for (double position : new double[]{-(box + minBoundingBox), 0.0, -maxPlayerStep}) {
+                for (SpartanLocation loopLocation : loc.getSurroundingLocations(
+                        distribution,
+                        position,
+                        distribution
+                )) {
+                    Material type = loopLocation.getBlock().material;
 
-                if (BlockUtils.isSolid(type)) {
-                    boolean abstractOnly = position == -maxPlayerStep;
-                    double[] heights = correlatedBlockHeights.get(type);
+                    if (BlockUtils.isSolid(type)) {
+                        boolean abstractOnly = position == -maxPlayerStep;
+                        double[] heights = correlatedBlockHeights.get(type);
 
-                    if (heights != null) {
-                        if (abstractOnly) {
-                            if (heights[0] == -1.0) {
-                                return true;
-                            }
-                        } else if (heights.length == 1) {
-                            if (heights[0] == -1.0 || heights[0] == box) {
-                                return true;
-                            }
-                        } else {
-                            for (double height : heights) {
-                                if (height == box) {
+                        if (heights != null) {
+                            if (abstractOnly) {
+                                if (heights[0] == -1.0) {
                                     return true;
                                 }
+                            } else if (heights.length == 1) {
+                                if (heights[0] == -1.0 || heights[0] == box) {
+                                    return true;
+                                }
+                            } else {
+                                for (double height : heights) {
+                                    if (height == box) {
+                                        return true;
+                                    }
+                                }
                             }
+                        } else if (!abstractOnly && box == 0.0) {
+                            return true;
                         }
-                    } else if (!abstractOnly && box == 0.0) {
-                        return true;
                     }
                 }
             }

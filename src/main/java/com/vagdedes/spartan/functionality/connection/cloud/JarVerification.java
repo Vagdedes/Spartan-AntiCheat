@@ -54,7 +54,7 @@ public class JarVerification {
         SpartanBukkit.runDelayedTask(() -> {
             SpartanBukkit.cancelTask(scheduledTask);
 
-            if (!valid) {
+            if (!valid && (enabled || CloudBase.hasToken())) {
                 Register.disablePlugin();
             }
         }, delay * 3L);

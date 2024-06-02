@@ -3,6 +3,7 @@ package com.vagdedes.spartan.utils.math;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.mcp.AxisAlignedBB;
 import com.vagdedes.spartan.utils.minecraft.mcp.MathHelper;
 import com.vagdedes.spartan.utils.minecraft.mcp.MovingObjectPosition;
@@ -165,33 +166,43 @@ public class RayUtils {
 
     private static float[] getRotation(Player player1, Entity entity2) {
         Vector direction = entity2.getLocation().toVector().subtract(player1.getLocation().toVector());
-
-        float yaw = (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ()));
-
-        float pitch = (float) Math.toDegrees(Math.asin(-direction.getY()));
-
+        float yaw = (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())),
+                pitch = (float) Math.toDegrees(Math.asin(-direction.getY()));
         return new float[]{castTo360(yaw), pitch};
     }
+
     public static boolean inHitbox(SpartanPlayer player, Entity target, float size) {
         SpartanLocation location = player.movement.getLocation();
         boolean intersection = false;
+        boolean exempt;
 
-        double targetX = target.getLocation().getX();
-        double targetY = target.getLocation().getY();
-        double targetZ = target.getLocation().getZ();
+        if (target instanceof Player) {
+            SpartanPlayer targetSpartan = SpartanBukkit.getPlayer(target.getUniqueId());
+            assert targetSpartan != null;
+            double targetX = targetSpartan.movement.getLocation().getX();
+            double targetY = targetSpartan.movement.getLocation().getY();
+            double targetZ = targetSpartan.movement.getLocation().getZ();
 
-        AxisAlignedBB boundingBox = new AxisAlignedBB(
-                        targetX - size, targetY - 0.1F, targetZ - size,
-                        targetX + size, targetY + 1.9F, targetZ + size
-        );
-        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+            AxisAlignedBB boundingBox = new AxisAlignedBB(
+                    targetX - size, targetY - 0.1F, targetZ - size,
+                    targetX + size, targetY + 1.9F, targetZ + size
+            );
+            // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+            intersection = isIntersection(player, location, intersection, boundingBox);
+            exempt = target.isInsideVehicle();
+        } else {
+            double targetX = target.getLocation().getX();
+            double targetY = target.getLocation().getY();
+            double targetZ = target.getLocation().getZ();
 
-        intersection = isIntersection(player, location, intersection, boundingBox);
-
-        final boolean exempt = target.isInsideVehicle()
-                        || !(target instanceof Player || target instanceof Villager
-                        || target instanceof Zombie || target instanceof Skeleton || target instanceof Creeper);
-
+            AxisAlignedBB boundingBox = new AxisAlignedBB(
+                    targetX - size, targetY - 0.1F, targetZ - size,
+                    targetX + size, targetY + 1.9F, targetZ + size
+            );
+            // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+            intersection = isIntersection(player, location, intersection, boundingBox);
+            exempt = target.isInsideVehicle() || !(target instanceof Villager || target instanceof Zombie || target instanceof Skeleton || target instanceof Creeper);
+        }
         return intersection || exempt;
     }
 
@@ -208,25 +219,21 @@ public class RayUtils {
     }
 
     private static MovingObjectPosition rayCast(final float yaw, final float pitch, final boolean sneak, final AxisAlignedBB bb, SpartanPlayer player) {
-        final SpartanLocation position = player.movement.getLocation();
-
-        final double lastX = position.getX();
-        final double lastY = position.getY();
-        final double lastZ = position.getZ();
-
-        final Vec3 vec3 = new Vec3(lastX, lastY + getEyeHeight(sneak, player), lastZ);
-        final Vec3 vec31 = getVectorForRotation(pitch, yaw);
-        final Vec3 vec32 = vec3.add(new Vec3(vec31.xCoord * 4.5D, vec31.yCoord * 4.5D, vec31.zCoord * 4.5D));
-
+        SpartanLocation position = player.movement.getLocation();
+        double lastX = position.getX(),
+                lastY = position.getY(),
+                lastZ = position.getZ();
+        Vec3 vec3 = new Vec3(lastX, lastY + getEyeHeight(sneak, player), lastZ),
+                vec31 = getVectorForRotation(pitch, yaw),
+                vec32 = vec3.add(new Vec3(vec31.xCoord * 4.5D, vec31.yCoord * 4.5D, vec31.zCoord * 4.5D));
         return bb.calculateIntercept(vec3, vec32);
     }
 
     private static Vec3 getVectorForRotation(final float pitch, final float yaw) {
-        final float f = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
-        final float f1 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
-        final float f2 = -MathHelper.cos(-pitch * 0.017453292F);
-        final float f3 = MathHelper.sin(-pitch * 0.017453292F);
-
+        float f = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI),
+                f1 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI),
+                f2 = -MathHelper.cos(-pitch * 0.017453292F),
+                f3 = MathHelper.sin(-pitch * 0.017453292F);
         return new Vec3(f1 * f2, f3, f * f2);
     }
 
@@ -236,15 +243,46 @@ public class RayUtils {
         if (player.isSleeping()) {
             f2 = 0.2F;
         }
-
         if (sneak) {
             f2 -= 0.08F;
         }
-
         return f2;
     }
 
     public static double getOnlyScale(double value) {
         return value - Math.floor(value);
+    }
+
+    public static float bruteforceRayTrace(Player player, Entity target) {
+        SpartanPlayer spartanPlayer = SpartanBukkit.getPlayer(player);
+        float bruteForce = 0.01F,
+                bruteForceStart = 0.01F;
+        boolean checked = false;
+
+        for (int i = 0; i < 40; i++) {
+            if (inHitbox(spartanPlayer, target, bruteForceStart)) {
+                bruteForce = bruteForceStart;
+                checked = true;
+            } else {
+                bruteForceStart += 0.01F;
+            }
+        }
+        return (checked) ? bruteForce : 0.4F;
+    }
+
+    public static float bruteforceRayTrace(SpartanPlayer spartanPlayer, Entity target) {
+        float bruteForce = 0.01F;
+        float bruteForceStart = 0.01F;
+        boolean checked = false;
+
+        for (int i = 0; i < 60; i++) {
+            if (inHitbox(spartanPlayer, target, bruteForceStart)) {
+                bruteForce = bruteForceStart;
+                checked = true;
+            } else {
+                bruteForceStart += 0.01F;
+            }
+        }
+        return (checked) ? bruteForce : 0.6F;
     }
 }

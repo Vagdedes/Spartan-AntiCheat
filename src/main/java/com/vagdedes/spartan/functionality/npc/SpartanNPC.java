@@ -20,6 +20,9 @@ import java.util.UUID;
 
 public class SpartanNPC {
 
+    public static final boolean
+            hasSecondHand = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9),
+            hasLockType = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16);
     private static final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(
             UUID.fromString("0e6f8837-3b61-4e42-b91c-81c0222bafd9")
     );
@@ -45,14 +48,15 @@ public class SpartanNPC {
         armorStand.setCustomNameVisible(true);
         armorStand.setArms(true);
 
-        armorStand.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
-        armorStand.addEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.REMOVING_OR_CHANGING);
-        armorStand.addEquipmentLock(EquipmentSlot.LEGS, ArmorStand.LockType.REMOVING_OR_CHANGING);
-        armorStand.addEquipmentLock(EquipmentSlot.FEET, ArmorStand.LockType.REMOVING_OR_CHANGING);
-        armorStand.addEquipmentLock(EquipmentSlot.HAND, ArmorStand.LockType.REMOVING_OR_CHANGING);
-
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+        if (hasLockType) {
+            armorStand.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
+            armorStand.addEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.REMOVING_OR_CHANGING);
+            armorStand.addEquipmentLock(EquipmentSlot.LEGS, ArmorStand.LockType.REMOVING_OR_CHANGING);
+            armorStand.addEquipmentLock(EquipmentSlot.FEET, ArmorStand.LockType.REMOVING_OR_CHANGING);
+            armorStand.addEquipmentLock(EquipmentSlot.HAND, ArmorStand.LockType.REMOVING_OR_CHANGING);
             armorStand.addEquipmentLock(EquipmentSlot.OFF_HAND, ArmorStand.LockType.REMOVING_OR_CHANGING);
+        }
+        if (hasSecondHand) {
             armorStand.getEquipment().setItemInOffHand(new ItemStack(Material.SHIELD));
         }
         this.updateBodyAndLegs();

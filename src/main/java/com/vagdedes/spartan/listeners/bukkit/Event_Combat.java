@@ -117,9 +117,6 @@ public class Event_Combat implements Listener {
             }
             // Objects
             p.addReceivedDamage(e);
-
-            // Detections
-            p.getExecutor(Enums.HackType.NoFall).handle(e.isCancelled(), e.getCause());
         } else {
             Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
                     ? entity.getPassengers().toArray(new Entity[0])

@@ -12,29 +12,35 @@ import org.bukkit.entity.Player;
 class SpartanScheduler {
 
     static void transfer(Runnable runnable) {
-        if (!MultiVersion.folia) {
-            Bukkit.getScheduler().runTask(Register.plugin, runnable);
-        } else {
-            Bukkit.getGlobalRegionScheduler().run(Register.plugin, consumer -> runnable.run());
+        if (Register.isPluginEnabled()) {
+            if (!MultiVersion.folia) {
+                Bukkit.getScheduler().runTask(Register.plugin, runnable);
+            } else {
+                Bukkit.getGlobalRegionScheduler().run(Register.plugin, consumer -> runnable.run());
+            }
         }
     }
 
     static void run(Player player, Runnable runnable, boolean sync) {
         if (!MultiVersion.folia) {
             if (sync && !Bukkit.isPrimaryThread()) {
-                Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                if (Register.isPluginEnabled()) {
+                    Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                }
             } else {
                 runnable.run();
             }
         } else {
             if (player != null) {
-                Location location = player.getLocation();
-                Bukkit.getRegionScheduler()
-                        .execute(Register.plugin,
-                                player.getWorld(),
-                                SpartanLocation.getChunkPos(location.getBlockX()),
-                                SpartanLocation.getChunkPos(location.getBlockZ()),
-                                runnable);
+                if (Register.isPluginEnabled()) {
+                    Location location = player.getLocation();
+                    Bukkit.getRegionScheduler()
+                            .execute(Register.plugin,
+                                    player.getWorld(),
+                                    SpartanLocation.getChunkPos(location.getBlockX()),
+                                    SpartanLocation.getChunkPos(location.getBlockZ()),
+                                    runnable);
+                }
             } else {
                 runnable.run();
             }
@@ -44,17 +50,21 @@ class SpartanScheduler {
     static void run(SpartanPlayer player, Runnable runnable, boolean sync) {
         if (!MultiVersion.folia) {
             if (sync && !Bukkit.isPrimaryThread()) {
-                Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                if (Register.isPluginEnabled()) {
+                    Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                }
             } else {
                 runnable.run();
             }
         } else {
             if (player != null) {
-                SpartanLocation location = player.movement.getLocation();
-                Bukkit.getRegionScheduler()
-                        .execute(Register.plugin,
-                                player.getWorld(), location.getChunkX(), location.getChunkZ(),
-                                runnable);
+                if (Register.isPluginEnabled()) {
+                    SpartanLocation location = player.movement.getLocation();
+                    Bukkit.getRegionScheduler()
+                            .execute(Register.plugin,
+                                    player.getWorld(), location.getChunkX(), location.getChunkZ(),
+                                    runnable);
+                }
             } else {
                 runnable.run();
             }
@@ -64,11 +74,13 @@ class SpartanScheduler {
     static void run(World world, int x, int z, Runnable runnable, boolean sync) {
         if (!MultiVersion.folia) {
             if (sync && !Bukkit.isPrimaryThread()) {
-                Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                if (Register.isPluginEnabled()) {
+                    Bukkit.getScheduler().runTask(Register.plugin, runnable);
+                }
             } else {
                 runnable.run();
             }
-        } else {
+        } else if (Register.isPluginEnabled()) {
             Bukkit.getRegionScheduler()
                     .execute(Register.plugin,
                             world, x, z,
@@ -77,38 +89,42 @@ class SpartanScheduler {
     }
 
     static Object schedule(SpartanPlayer player, Runnable runnable, long start, long repetition) {
-        if (!MultiVersion.folia) {
-            if (repetition == -1L) {
-                return Bukkit.getScheduler()
-                        .scheduleSyncDelayedTask(Register.plugin, runnable, start);
+        if (Register.isPluginEnabled()) {
+            if (!MultiVersion.folia) {
+                if (repetition == -1L) {
+                    return Bukkit.getScheduler()
+                            .scheduleSyncDelayedTask(Register.plugin, runnable, start);
+                } else {
+                    return Bukkit.getScheduler()
+                            .scheduleSyncRepeatingTask(Register.plugin, runnable, start, repetition);
+                }
             } else {
-                return Bukkit.getScheduler()
-                        .scheduleSyncRepeatingTask(Register.plugin, runnable, start, repetition);
+                if (repetition == -1L) {
+                    if (player != null) {
+                        SpartanLocation location = player.movement.getLocation();
+                        return Bukkit.getRegionScheduler()
+                                .runDelayed(Register.plugin,
+                                        player.getWorld(), location.getChunkX(), location.getChunkZ(),
+                                        consumer -> runnable.run(), start);
+                    } else {
+                        return Bukkit.getGlobalRegionScheduler()
+                                .runDelayed(Register.plugin, consumer -> runnable.run(), start);
+                    }
+                } else {
+                    if (player != null) {
+                        SpartanLocation location = player.movement.getLocation();
+                        return Bukkit.getRegionScheduler()
+                                .runAtFixedRate(Register.plugin,
+                                        player.getWorld(), location.getChunkX(), location.getChunkZ(),
+                                        consumer -> runnable.run(), start, repetition);
+                    } else {
+                        return Bukkit.getGlobalRegionScheduler()
+                                .runAtFixedRate(Register.plugin, consumer -> runnable.run(), start, repetition);
+                    }
+                }
             }
         } else {
-            if (repetition == -1L) {
-                if (player != null) {
-                    SpartanLocation location = player.movement.getLocation();
-                    return Bukkit.getRegionScheduler()
-                            .runDelayed(Register.plugin,
-                                    player.getWorld(), location.getChunkX(), location.getChunkZ(),
-                                    consumer -> runnable.run(), start);
-                } else {
-                    return Bukkit.getGlobalRegionScheduler()
-                            .runDelayed(Register.plugin, consumer -> runnable.run(), start);
-                }
-            } else {
-                if (player != null) {
-                    SpartanLocation location = player.movement.getLocation();
-                    return Bukkit.getRegionScheduler()
-                            .runAtFixedRate(Register.plugin,
-                                    player.getWorld(), location.getChunkX(), location.getChunkZ(),
-                                    consumer -> runnable.run(), start, repetition);
-                } else {
-                    return Bukkit.getGlobalRegionScheduler()
-                            .runAtFixedRate(Register.plugin, consumer -> runnable.run(), start, repetition);
-                }
-            }
+            return null;
         }
     }
 

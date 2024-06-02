@@ -116,8 +116,8 @@ public class PlayerCombat {
         );
         synchronized (fights) {
             fights.add(fight);
-            return fight;
         }
+        return fight;
     }
 
     public void track() {

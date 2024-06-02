@@ -10,6 +10,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,35 +68,38 @@ public class InventoryUtils {
         SkullMeta meta;
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            if (create
-                    && offlinePlayer != null
-                    && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_18)) {
-                String name = offlinePlayer.getName();
-
-                if (name == null) {
-                    name = backupName;
-
-                    if (paperProfile) {
-                        if (name == null) {
-                            Bukkit.createProfile(offlinePlayer.getUniqueId());
-                        } else {
-                            Bukkit.createProfileExact(offlinePlayer.getUniqueId(), name);
-                        }
-                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
-                    } else if (name == null) {
-                        Bukkit.createPlayerProfile(offlinePlayer.getUniqueId());
-                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
-                    } else {
-                        Bukkit.createPlayerProfile(offlinePlayer.getUniqueId(), name);
-                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
-                    }
-                }
-            }
             skull = new ItemStack(Material.PLAYER_HEAD);
             meta = (SkullMeta) skull.getItemMeta();
 
             if (offlinePlayer != null) {
-                meta.setOwningPlayer(offlinePlayer);
+                if (create
+                        && !offlinePlayer.hasPlayedBefore()
+                        && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_18)) {
+                    String name = offlinePlayer.getName();
+
+                    if (name == null) {
+                        name = backupName;
+                        PlayerProfile profile;
+
+                        if (paperProfile) {
+                            if (name == null) {
+                                profile = Bukkit.createProfile(offlinePlayer.getUniqueId());
+                            } else {
+                                profile = Bukkit.createProfileExact(offlinePlayer.getUniqueId(), name);
+                            }
+                            offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                        } else if (name == null) {
+                            profile = Bukkit.createPlayerProfile(offlinePlayer.getUniqueId());
+                            offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                        } else {
+                            profile = Bukkit.createPlayerProfile(offlinePlayer.getUniqueId(), name);
+                            offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                        }
+                        meta.setOwnerProfile(profile);
+                    }
+                } else {
+                    meta.setOwningPlayer(offlinePlayer);
+                }
             }
         } else {
             skull = new ItemStack(

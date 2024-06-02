@@ -56,7 +56,7 @@ public class MovementProcessing {
 
     private static boolean calculateGroundCollision(SpartanPlayer player,
                                                     double vertical, double box) {
-        if (player.isOnGround()
+        if (player.isOnGround(true)
                 && player.movement.getTicksOnAir() == 0
                 && player.getVehicle() == null
                 && vertical == 0.0
