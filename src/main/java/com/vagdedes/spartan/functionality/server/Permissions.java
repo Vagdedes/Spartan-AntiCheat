@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.server;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
@@ -23,6 +23,19 @@ public class Permissions {
         for (Enums.Permission permission : Enums.Permission.values()) {
             if (has(p, permission)) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean has(SpartanPlayer p) {
+        Player n = p.getInstance();
+
+        if (n != null) {
+            for (Enums.Permission permission : Enums.Permission.values()) {
+                if (has(n, permission)) {
+                    return true;
+                }
             }
         }
         return false;

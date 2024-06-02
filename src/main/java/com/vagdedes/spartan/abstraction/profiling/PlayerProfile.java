@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
@@ -115,20 +115,20 @@ public class PlayerProfile {
                 if (player == null) {
                     return InventoryUtils.getHead();
                 } else {
-                    this.skull = InventoryUtils.getSkull(player);
+                    this.skull = InventoryUtils.getSkull(player, name, false);
                 }
             } else {
                 SpartanPlayer spartanPlayer = getSpartanPlayer();
 
                 if (spartanPlayer == null) {
-                    return InventoryUtils.getHead();
+                    return InventoryUtils.getSkull(null, name, false);
                 } else {
                     Player player = spartanPlayer.getInstance();
 
                     if (player == null) {
-                        return InventoryUtils.getHead();
+                        return InventoryUtils.getSkull(null, name, false);
                     } else {
-                        this.skull = InventoryUtils.getSkull(player);
+                        this.skull = InventoryUtils.getSkull(player, name, false);
                     }
                 }
             }

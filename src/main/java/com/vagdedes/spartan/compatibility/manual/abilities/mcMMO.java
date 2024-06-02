@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.gmail.nossr50.api.AbilityAPI;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import org.bukkit.entity.AnimalTamer;

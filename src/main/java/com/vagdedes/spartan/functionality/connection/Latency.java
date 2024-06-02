@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.connection;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -30,9 +30,9 @@ public class Latency {
 
     public static double getDelay(SpartanPlayer player) {
         double pingDelay;
-        int max = Config.settings.getInteger(Settings.maxSupportedLatencyOption);
+        int max = Config.settings.getInteger("Protections.max_supported_player_latency");
 
-        if (max <= 0 || player.getProfile().isSuspectedOrHacker()) {
+        if (max <= 0) {
             pingDelay = 0.0;
         } else {
             int latency = player.getPing();

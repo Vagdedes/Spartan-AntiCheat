@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.connection;
 
-import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -32,27 +31,25 @@ public class PlayerLimitPerIP {
     private static final Map<Player, Storage> memory = new LinkedHashMap<>(Config.getMaxPlayers());
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                Iterator<Map.Entry<Player, Storage>> iterator = memory.entrySet().iterator();
+        SpartanBukkit.runRepeatingTask(() -> {
+            Iterator<Map.Entry<Player, Storage>> iterator = memory.entrySet().iterator();
 
-                while (iterator.hasNext()) {
-                    Map.Entry<Player, Storage> entry = iterator.next();
-                    Storage storage = entry.getValue();
+            while (iterator.hasNext()) {
+                Map.Entry<Player, Storage> entry = iterator.next();
+                Storage storage = entry.getValue();
 
-                    if (storage.kickTicks == 0) {
-                        Player p = entry.getKey();
+                if (storage.kickTicks == 0) {
+                    Player p = entry.getKey();
 
-                        if (p.isOnline()) {
-                            p.kickPlayer(ConfigUtils.replaceWithSyntax(p, Config.messages.getColorfulString("player_ip_limit_kick_message"), null));
-                        }
-                        iterator.remove();
-                    } else if (storage.kickTicks > 0) {
-                        storage.kickTicks -= 1;
+                    if (p.isOnline()) {
+                        p.kickPlayer(ConfigUtils.replaceWithSyntax(p, Config.messages.getColorfulString("player_ip_limit_kick_message"), null));
                     }
+                    iterator.remove();
+                } else if (storage.kickTicks > 0) {
+                    storage.kickTicks -= 1;
                 }
-            }, 1L, 1L);
-        }
+            }
+        }, 1L, 1L);
     }
 
     public static void clear() {
@@ -78,7 +75,7 @@ public class PlayerLimitPerIP {
 
         if (!players.isEmpty()) {
             for (SpartanPlayer p : players) {
-                String ip = p.ipAddress;
+                String ip = p.getIpAddress();
 
                 if (ip != null) {
                     Player n = p.getInstance();
@@ -124,15 +121,7 @@ public class PlayerLimitPerIP {
         return storage != null && storage.kickTicks >= 0;
     }
 
-    public static void remove(SpartanPlayer p) {
-        String ip = p.ipAddress;
-
-        if (ip != null) {
-            Player n = p.getInstance();
-
-            if (n != null) {
-                memory.remove(n);
-            }
-        }
+    public static void remove(Player p) {
+        memory.remove(p);
     }
 }

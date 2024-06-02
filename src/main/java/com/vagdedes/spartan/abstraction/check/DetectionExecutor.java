@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -25,6 +25,7 @@ public abstract class DetectionExecutor {
 
     protected final void runAsync(Runnable runnable) {
         if (!MultiVersion.folia
+                && !SpartanBukkit.packetsEnabled()
                 && (hackType.getCheck().isSilent(player.getWorld().getName())
                 || TPS.getMillisecondsPassed(player) <= tMinus)) {
             SpartanBukkit.detectionThread.executeIfFreeElseHere(runnable);

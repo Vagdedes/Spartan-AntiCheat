@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.abstraction.replicates;
+package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;

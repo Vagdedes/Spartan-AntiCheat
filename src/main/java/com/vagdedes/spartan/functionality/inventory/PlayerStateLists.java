@@ -2,8 +2,9 @@ package com.vagdedes.spartan.functionality.inventory;
 
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.management.Cache;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
@@ -15,9 +16,9 @@ import java.util.*;
 public class PlayerStateLists {
 
     public static final String
-            hackerPlayers = "Identified Hackers",
-            suspectedPlayers = "Suspected Players",
-            legitimatePlayers = "Legitimate Players",
+            hackerPlayers = "Identified Hacker",
+            suspectedPlayers = "Suspected Player",
+            legitimatePlayers = "Legitimate Player",
             inactiveColour = "§8",
 
     noDataAvailable = "No data available at this time",
@@ -29,17 +30,18 @@ public class PlayerStateLists {
     };
     private static final int[] ignoredSlots = new int[]{
             0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 17,
-            18, 26,
-            27, 35,
-            36, 44,
+            9, 10, 16, 17,
+            18, 19, 25, 26,
+            27, 28, 34, 35,
+            36, 37, 43, 44,
             45, 46, 47, 48, 49, 50, 51, 52, 53
     };
 
     private static final Map<UUID, Integer> cache = Cache.store(new LinkedHashMap<>());
 
-    private static void fill(String title, Inventory inventory, PlayerProfile profile, List<String> description, int slot) {
-        ItemStack item = profile.getSkull(false);
+    private static void fill(String title, Inventory inventory, PlayerProfile profile,
+                             List<String> description, int slot) {
+        ItemStack item = InventoryUtils.getHead();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§c" + profile.getName());
 
@@ -55,6 +57,15 @@ public class PlayerStateLists {
         meta.setLore(lore);
         item.setItemMeta(meta);
         inventory.setItem(slot, item);
+
+        SpartanBukkit.dataThread.executeWithPriority(() -> {
+            ItemStack itemNew = profile.getSkull(profile.isSuspectedOrHacker());
+            ItemMeta metaNew = itemNew.getItemMeta();
+            metaNew.setDisplayName(meta.getDisplayName());
+            metaNew.setLore(lore);
+            itemNew.setItemMeta(metaNew);
+            inventory.setItem(slot, itemNew);
+        });
     }
 
     public static int getPage(UUID uuid) {
@@ -83,15 +94,31 @@ public class PlayerStateLists {
 
     public static void fill(UUID uuid, Inventory inventory) {
         List<String> lore = new ArrayList<>(20);
-        int slotPosition = 0, limit = 7;
+        int slotPosition = 0, limit = 5;
         Integer[] freeSlots = getFreeSlots(inventory);
 
         for (String title : menuList) {
             int listSize, page = getPage(uuid), skip = ((page - 1) * limit);
+            double players = ResearchEngine.getPlayerProfiles().size();
+            List<PlayerProfile> hackers = ResearchEngine.getHackers(),
+                    suspectedPlayers = ResearchEngine.getSuspectedPlayers(),
+                    legitimates = ResearchEngine.getLegitimatePlayers();
+            String hackerString, suspectedString, legitimateString;
 
+            // Separator
+
+            if (players > 0) {
+                hackerString = " §8(§6" + AlgebraUtils.integerRound((hackers.size() / players) * 100.0) + "% §7of players§8)";
+                suspectedString = " §8(§6" + AlgebraUtils.integerRound((suspectedPlayers.size() / players) * 100.0) + "% §7of players§8)";
+                legitimateString = " §8(§6" + AlgebraUtils.integerRound((legitimates.size() / players) * 100.0) + "% §7of players§8)";
+            } else {
+                hackerString = "";
+                suspectedString = "";
+                legitimateString = "";
+            }
             switch (title) {
-                case hackerPlayers:
-                    List<PlayerProfile> playerProfiles = subList(ResearchEngine.getHackers(), skip, skip + limit);
+                case PlayerStateLists.hackerPlayers:
+                    List<PlayerProfile> playerProfiles = subList(hackers, skip, skip + limit);
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
@@ -104,7 +131,7 @@ public class PlayerStateLists {
                                 for (Enums.HackType hackType : evidenceDetails) {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
-                                fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
+                                fill(title + hackerString, inventory, playerProfile, lore, freeSlots[slotPosition]);
                                 slotPosition++;
                             } else {
                                 listSize--;
@@ -112,8 +139,8 @@ public class PlayerStateLists {
                         }
                     }
                     break;
-                case suspectedPlayers:
-                    playerProfiles = subList(ResearchEngine.getSuspectedPlayers(), skip, skip + limit);
+                case PlayerStateLists.suspectedPlayers:
+                    playerProfiles = subList(suspectedPlayers, skip, skip + limit);
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
@@ -126,7 +153,7 @@ public class PlayerStateLists {
                                 for (Enums.HackType hackType : evidenceDetails) {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
-                                fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
+                                fill(title + suspectedString, inventory, playerProfile, lore, freeSlots[slotPosition]);
                                 slotPosition++;
                             } else {
                                 listSize--;
@@ -134,8 +161,8 @@ public class PlayerStateLists {
                         }
                     }
                     break;
-                case legitimatePlayers:
-                    playerProfiles = subList(ResearchEngine.getLegitimatePlayers(), skip, skip + limit);
+                case PlayerStateLists.legitimatePlayers:
+                    playerProfiles = subList(legitimates, skip, skip + limit);
 
                     if ((listSize = playerProfiles.size()) > 0) {
                         for (PlayerProfile playerProfile : playerProfiles) {
@@ -149,7 +176,7 @@ public class PlayerStateLists {
                                     lore.add("§4" + hackType.getCheck().getName());
                                 }
                             }
-                            fill(title, inventory, playerProfile, lore, freeSlots[slotPosition]);
+                            fill(title + legitimateString, inventory, playerProfile, lore, freeSlots[slotPosition]);
                             slotPosition++;
                         }
                     }
@@ -160,21 +187,15 @@ public class PlayerStateLists {
             }
 
             if (listSize != limit) {
-                boolean option = Config.settings.getBoolean("Important.inventory_menu_empty_heads");
-
-                if (option) {
-                    InventoryUtils.prepareDescription(lore, title);
-                    lore.add("§7" + noDataAvailable);
-                    lore.add("");
-                    lore.add("§cEmpty items like this will be filled with");
-                    lore.add("§cuseful information about your players");
-                    lore.add("§cas Spartan learns more about your server.");
-                }
+                InventoryUtils.prepareDescription(lore, title);
+                lore.add("§7" + noDataAvailable);
+                lore.add("");
+                lore.add("§cEmpty items like this will be filled with");
+                lore.add("§cuseful information about your players");
+                lore.add("§cas Spartan learns more about your server.");
 
                 for (int i = listSize; i < limit; i++) {
-                    if (option) {
-                        InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
-                    }
+                    InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
                     slotPosition++;
                 }
             }

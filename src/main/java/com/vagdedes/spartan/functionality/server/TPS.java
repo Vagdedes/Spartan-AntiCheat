@@ -1,9 +1,8 @@
 package com.vagdedes.spartan.functionality.server;
 
-import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.management.Config;
 import org.bukkit.Bukkit;
 
@@ -26,34 +25,32 @@ public class TPS {
     // Object
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                if (MultiVersion.folia) {
-                    List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-                    int size = players.size();
+        SpartanBukkit.runRepeatingTask(() -> {
+            if (MultiVersion.folia) {
+                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                int size = players.size();
 
-                    if (size > 0) {
-                        Set<Integer> processed = Collections.synchronizedSet(new HashSet<>(size));
+                if (size > 0) {
+                    Set<Integer> processed = Collections.synchronizedSet(new HashSet<>(size));
 
-                        for (SpartanPlayer player : players) {
-                            SpartanBukkit.runTask(player, () -> {
-                                synchronized (processed) {
-                                    int hash = getHash(player);
+                    for (SpartanPlayer player : players) {
+                        SpartanBukkit.runTask(player, () -> {
+                            synchronized (processed) {
+                                int hash = getHash(player);
 
-                                    if (processed.add(hash)) {
-                                        runCalculator(getCalculator(hash, true));
-                                    }
+                                if (processed.add(hash)) {
+                                    runCalculator(getCalculator(hash, true));
                                 }
-                            });
-                        }
-                    } else {
-                        calculators.clear();
+                            }
+                        });
                     }
                 } else {
-                    runCalculator(calculator);
+                    calculators.clear();
                 }
-            }, 1L, 1L);
-        }
+            } else {
+                runCalculator(calculator);
+            }
+        }, 1L, 1L);
     }
 
     // Scheduler

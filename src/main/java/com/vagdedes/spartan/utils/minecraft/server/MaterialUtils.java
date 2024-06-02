@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPotionEffect;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Material;
@@ -283,7 +283,7 @@ public class MaterialUtils {
                     multiplier /= 5.0;
                 }
             }
-            if (!player.isOnGround()) {
+            if (!player.isOnGround(false)) {
                 multiplier /= 5.0;
             }
 

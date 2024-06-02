@@ -1,6 +1,8 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
@@ -13,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryUtils {
+
+    private static final boolean paperProfile = ReflectionUtils.classExists(
+            "com.destroystokyo.paper.profile.PlayerProfile"
+    );
 
     public static void prepareDescription(List<String> array, String title) {
         array.clear();
@@ -51,23 +57,66 @@ public class InventoryUtils {
     }
 
     public static ItemStack getHead() {
-        return new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.PLAYER_HEAD : Material.getMaterial("SKULL_ITEM"));
+        return new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                ? Material.PLAYER_HEAD
+                : Material.getMaterial("SKULL_ITEM"), 1, (short) SkullType.PLAYER.ordinal());
     }
 
-    public static ItemStack getSkull(OfflinePlayer offlinePlayer) {
-        ItemStack skull = new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.PLAYER_HEAD : Material.getMaterial("SKULL_ITEM"), 1, (short) SkullType.PLAYER.ordinal());
-        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+    public static ItemStack getSkull(OfflinePlayer offlinePlayer, String backupName, boolean create) {
+        ItemStack skull;
+        SkullMeta meta;
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            meta.setOwningPlayer(offlinePlayer);
-        } else {
-            String name = offlinePlayer.getName();
+            if (create
+                    && offlinePlayer != null
+                    && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_18)) {
+                String name = offlinePlayer.getName();
 
+                if (name == null) {
+                    name = backupName;
+
+                    if (paperProfile) {
+                        if (name == null) {
+                            Bukkit.createProfile(offlinePlayer.getUniqueId());
+                        } else {
+                            Bukkit.createProfileExact(offlinePlayer.getUniqueId(), name);
+                        }
+                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                    } else if (name == null) {
+                        Bukkit.createPlayerProfile(offlinePlayer.getUniqueId());
+                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                    } else {
+                        Bukkit.createPlayerProfile(offlinePlayer.getUniqueId(), name);
+                        offlinePlayer = Bukkit.getOfflinePlayer(offlinePlayer.getUniqueId());
+                    }
+                }
+            }
+            skull = new ItemStack(Material.PLAYER_HEAD);
+            meta = (SkullMeta) skull.getItemMeta();
+
+            if (offlinePlayer != null) {
+                meta.setOwningPlayer(offlinePlayer);
+            }
+        } else {
+            skull = new ItemStack(
+                    Material.getMaterial("SKULL_ITEM"),
+                    1,
+                    (short) SkullType.PLAYER.ordinal()
+            );
+            meta = (SkullMeta) skull.getItemMeta();
+            String name = null;
+
+            if (offlinePlayer != null) {
+                name = offlinePlayer.getName();
+            }
             if (name != null) {
                 meta.setOwner(name);
+            } else if (backupName != null) {
+                meta.setOwner(backupName);
             }
         }
         skull.setItemMeta(meta);
         return skull;
     }
+
 }

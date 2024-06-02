@@ -23,17 +23,15 @@ public class CancelCause {
         return expiration != 0L;
     }
 
-    private boolean hasExpired() {
+    boolean hasExpired() {
         return hasExpiration() && expiration < System.currentTimeMillis();
     }
-
-    // Separator
 
     public String getReason() {
         return reason;
     }
 
-    public boolean pointerMatches(String info) {
-        return !hasExpired() && (this.pointer == null || info.contains(this.pointer));
+    boolean pointerMatches(String info) {
+        return this.pointer == null || info.contains(this.pointer);
     }
 }

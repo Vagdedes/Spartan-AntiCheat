@@ -6,7 +6,7 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibili
 import com.vagdedes.spartan.abstraction.configuration.implementation.Messages;
 import com.vagdedes.spartan.abstraction.configuration.implementation.SQLFeature;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
@@ -15,7 +15,6 @@ import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Chunks;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
-import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
 import me.vagdedes.spartan.system.Enums;
@@ -169,7 +168,7 @@ public class Config {
             settings.clear();
             sql.refreshConfiguration();
             messages.clear();
-            compatibility.clear();
+            compatibility.clearCache();
             Wave.clearCache();
 
             // System
@@ -177,7 +176,6 @@ public class Config {
         }
 
         // System
-        PluginUtils.clear();
         Cache.clearStorage(!enabledPlugin);
         Chunks.reload(enabledPlugin);
         ResearchEngine.refresh(enabledPlugin);

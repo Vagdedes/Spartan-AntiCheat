@@ -1,6 +1,7 @@
-package com.vagdedes.spartan.abstraction.replicates;
+package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.TPS;
 import org.bukkit.event.player.PlayerVelocityEvent;
 

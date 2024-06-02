@@ -2,17 +2,18 @@ package com.vagdedes.spartan.functionality.command;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
+import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ProxyUtils;
@@ -44,22 +45,34 @@ public class CommandExecution implements CommandExecutor {
         if (!isPlayer || Permissions.has((Player) sender)) {
             String v = API.getVersion();
             sender.sendMessage("");
-            String detectionSlots = CloudBase.getDetectionSlots() <= 0
-                    ? "Unlimited"
-                    : String.valueOf(CloudBase.getDetectionSlots()),
-                    command = "§2" + SpartanEdition.getProductName()
-                            + " §8[§7(§cDetection Slots: " + detectionSlots + "§7)§8, "
-                            + "§7(§fVersion: " + v + "§7)§8, "
-                            + "§7(§fID: " + IDs.hide(IDs.user()) + "/" + IDs.hide(IDs.nonce()) + "§7)§8]";
+            int slots = CloudBase.getDetectionSlots();
+            String command = "§2" + SpartanEdition.getProductName() + " §a" + v;
 
+            if (slots <= 0) {
+                command += "\n§8[§eDetection Slots§7: §6Unlimited§8]";
+            } else {
+                int players = SpartanBukkit.getPlayerCount();
+                command += "\n§8[§4Detection Slots§7: §c" + slots
+                        + " (" + Math.max(slots - players, 0) + " remaining)§8]";
+            }
             ClickableMessage.sendURL(
                     sender,
                     command,
-                    "Support us on Patreon and get Benefits",
-                    "https://www.idealistic.ai/patreon"
+                    "Click to learn how Detection Slots work!",
+                    SpartanEdition.patreonURL
             );
-            sender.sendMessage("§8§l<> §7Required command argument");
-            sender.sendMessage("§8§l[] §7Optional command argument");
+            ClickableMessage.sendURL(
+                    sender,
+                    "§8§l<> §7Required command argument",
+                    "Click to learn how Detection Slots work!",
+                    SpartanEdition.patreonURL
+            );
+            ClickableMessage.sendURL(
+                    sender,
+                    "§8§l[] §7Optional command argument",
+                    "Click to learn how Detection Slots work!",
+                    SpartanEdition.patreonURL
+            );
             return true;
         }
         sender.sendMessage(Config.messages.getColorfulString("unknown_command"));
@@ -158,8 +171,6 @@ public class CommandExecution implements CommandExecutor {
                         completeMessage(sender, "default");
                     }
                     break;
-                case "commands":
-                    sender.sendMessage(ChatColor.RED + "Run '/spartan commands' for a list of commands");
                 default:
                     break;
             }
@@ -184,11 +195,18 @@ public class CommandExecution implements CommandExecutor {
                 return false;
             }
             if (args.length == 0) {
-                if (isPlayer && InteractiveInventory.mainMenu.open(player, false)) {
-                    completeMessage(sender, "commands");
-                } else {
-                    completeMessage(sender, "default");
+                if (isPlayer) {
+                    if (NPCManager.supported && Permissions.isStaff(player)) {
+                        if (Config.settings.getBoolean("Important.enable_npc")) {
+                            NPCManager.create(player);
+                        } else {
+                            InteractiveInventory.mainMenu.open(player, false);
+                        }
+                    } else {
+                        InteractiveInventory.mainMenu.open(player, false);
+                    }
                 }
+                completeMessage(sender, "default");
             } else if (args.length == 1) {
                 if (isPlayer && args[0].equalsIgnoreCase("Menu")) {
                     InteractiveInventory.mainMenu.open(player);
@@ -420,7 +438,7 @@ public class CommandExecution implements CommandExecutor {
                                                 sender.sendMessage(ChatColor.RED + "Seconds must be between 1 and 3600.");
                                                 return true;
                                             }
-                                            t.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * 20);
+                                            t.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * ((int) TPS.maximum));
                                         }
                                         String message = ConfigUtils.replaceWithSyntax(t, Config.messages.getColorfulString("bypass_message"), hackType)
                                                 .replace("{time}", noSeconds ? "infinite" : String.valueOf(seconds));

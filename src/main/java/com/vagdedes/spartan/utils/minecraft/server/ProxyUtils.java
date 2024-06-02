@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -10,7 +10,10 @@ import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class ProxyUtils {
 
@@ -31,13 +34,24 @@ public class ProxyUtils {
             boolean isNull = player == null;
 
             if (isNull || !player.isOp()) {
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                Set<Map.Entry<UUID, SpartanPlayer>> entries = SpartanBukkit.getPlayerEntries();
 
                 if (!isNull) {
-                    players.remove(SpartanBukkit.getPlayer(player.getUniqueId()));
+                    Iterator<Map.Entry<UUID, SpartanPlayer>> iterator = entries.iterator();
+
+                    while (iterator.hasNext()) {
+                        UUID uuid = iterator.next().getKey();
+
+                        if (player.getUniqueId().equals(uuid)) {
+                            iterator.remove();
+                            break;
+                        }
+                    }
                 }
-                if (!players.isEmpty()) { // 1 because we already know we have one player
-                    for (SpartanPlayer loopPlayer : players) {
+                if (!entries.isEmpty()) { // 1 because we already know we have one player
+                    for (Map.Entry<UUID, SpartanPlayer> entry : entries) {
+                        SpartanPlayer loopPlayer = entry.getValue();
+
                         if (loopPlayer.isOp()) {
                             player = loopPlayer.getInstance();
                             break;

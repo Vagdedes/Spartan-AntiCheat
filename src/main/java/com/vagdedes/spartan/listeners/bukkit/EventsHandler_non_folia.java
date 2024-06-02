@@ -8,7 +8,7 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
-public class EventsHandler_non_folia implements Listener {
+public class EventsHandler_Non_Folia implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void ChunkLoad(ChunkLoadEvent e) {

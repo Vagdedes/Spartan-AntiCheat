@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.abstraction.replicates;
+package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
@@ -52,7 +52,11 @@ public class SpartanPunishments {
             }
 
             this.parent.getProfile().punishmentHistory.increaseKicks(this.parent, kick);
-            target.kickPlayer(kick);
+
+            SpartanBukkit.transferTask(
+                    this.parent,
+                    () -> target.kickPlayer(kick)
+            );
         }
     }
 

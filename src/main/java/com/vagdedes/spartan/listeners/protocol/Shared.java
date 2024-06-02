@@ -1,19 +1,20 @@
 package com.vagdedes.spartan.listeners.protocol;
 
-import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.event.PlayerAttackEvent;
+import com.vagdedes.spartan.abstraction.event.PlayerStayEvent;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
-import com.vagdedes.spartan.listeners.protocol.modules.RotationData;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -23,18 +24,23 @@ import org.bukkit.event.player.PlayerVelocityEvent;
 
 public class Shared {
 
-    public static final Enums.HackType[] handledChecks = new Enums.HackType[]{
+    public static final Enums.HackType[]
+            handledMovementChecks = new Enums.HackType[]{
             Enums.HackType.NoFall,
             Enums.HackType.IrregularMovements,
             Enums.HackType.Speed,
             Enums.HackType.MorePackets,
             Enums.HackType.ImpossibleInventory,
             Enums.HackType.Exploits
+    }, handledCombatChecks = new Enums.HackType[]{
+            Enums.HackType.KillAura,
+            Enums.HackType.HitReach,
+            Enums.HackType.Criticals,
+            Enums.HackType.NoSwing
     };
 
     public static void join(PlayerJoinEvent e) {
         Player n = e.getPlayer();
-        SpartanBukkit.addRealPlayer(n);
 
         // Utils
         if (PlayerLimitPerIP.add(n)) {
@@ -48,7 +54,17 @@ public class Shared {
         }
         // System
         MaximumCheckedPlayers.add(p);
-        SpartanEdition.attemptNotification(p);
+
+        if (!SpartanEdition.attemptNotification(p)
+                && Config.settings.getBoolean("Important.enable_watermark")) {
+            p.sendMessage("");
+            AwarenessNotifications.forcefullySend(
+                    p,
+                    "\nThis server is protected by the Spartan AntiCheat",
+                    false
+            );
+            p.sendMessage("");
+        }
 
         // Detections
         p.getExecutor(Enums.HackType.Speed).handle(false, e);
@@ -61,13 +77,12 @@ public class Shared {
         }, 10);
 
         // Trackers
-        ProtocolStorage.canCheck.put(p.uuid, true);
+        SpartanBukkit.getProtocol(n).canCheck = true;
     }
 
     public static void move(PlayerMoveEvent e) {
         Player n = e.getPlayer();
         SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
         if (p == null) {
             return;
         }
@@ -97,8 +112,8 @@ public class Shared {
         MovementProcessing.run(p, to, ver, box);
 
         // Patterns
-        Bukkit.getScheduler().runTask(Register.plugin, () -> {
-            for (Enums.HackType hackType : handledChecks) {
+        SpartanBukkit.transferTask(p, () -> {
+            for (Enums.HackType hackType : handledMovementChecks) {
                 if (p.getViolations(hackType).prevent()) {
                     break;
                 }
@@ -109,10 +124,10 @@ public class Shared {
         boolean cancelled = e.isCancelled();
         p.getExecutor(Enums.HackType.Exploits).handle(cancelled, null);
         p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
-        p.getExecutor(Enums.HackType.KillAura).run(cancelled);
         p.getExecutor(Enums.HackType.NoFall).run(cancelled);
         p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
         p.getExecutor(Enums.HackType.Speed).run(cancelled);
+        p.getExecutor(Enums.HackType.KillAura).handle(cancelled, e);
         p.getExecutor(Enums.HackType.MorePackets).run(cancelled);
     }
 
@@ -134,9 +149,11 @@ public class Shared {
         p.movement.judgeGround();
 
         // Trackers
-        ProtocolStorage.positionManager.put(p.uuid, to);
-        ProtocolStorage.lastRotation.put(p.uuid, new RotationData(to.getYaw(), to.getPitch()));
-        ProtocolStorage.lastTeleport.put(p.uuid, to);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(n);
+        protocol.position = nto;
+        protocol.lastRotation.setYaw(to.getYaw());
+        protocol.lastRotation.setPitch(to.getPitch());
+        protocol.lastTeleport = nto;
 
         // Detections
         p.getExecutor(Enums.HackType.NoFall).handle(false, null);
@@ -152,10 +169,31 @@ public class Shared {
         p.addReceivedVelocity(e);
 
         // Detections
-        p.getExecutor(Enums.HackType.Speed).handle(e.isCancelled(), e);
+        boolean cancelled = e.isCancelled();
+        p.getExecutor(Enums.HackType.Speed).handle(cancelled, e);
+        p.getExecutor(Enums.HackType.Velocity).handle(cancelled, e);
+    }
 
-        if (p.getViolations(Enums.HackType.Velocity).prevent()) {
-            e.setCancelled(true);
+    public static void stay(PlayerStayEvent e) { // Packets Only
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+        if (p == null) {
+            return;
+        }
+        // Detections
+        p.getExecutor(Enums.HackType.Speed).handle(false, e);
+    }
+
+    public static void attack(PlayerAttackEvent e) {
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+        if (p == null) {
+            return;
+        }
+        boolean cancelled = e.isCancelled();
+
+        for (Enums.HackType hackType : Shared.handledCombatChecks) {
+            p.getExecutor(hackType).handle(cancelled, e);
         }
     }
 

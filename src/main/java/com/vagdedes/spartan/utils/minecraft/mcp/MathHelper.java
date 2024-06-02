@@ -18,7 +18,7 @@ public class MathHelper {
     private static final float degToIndex = 11.377778F;
     public static final float deg2Rad = 0.017453292F;
     private static final float[] SIN_TABLE_FAST = new float[4096];
-    public static boolean fastMath = false;
+    public static boolean fastMath = true;
 
     /**
      * A table of sin values computed from 0 (inclusive) to 2*pi (exclusive), with steps of 2*PI / 65536.

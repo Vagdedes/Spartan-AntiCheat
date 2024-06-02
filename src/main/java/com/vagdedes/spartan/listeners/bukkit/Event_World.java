@@ -1,89 +1,83 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
-import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.chat.StaffChat;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
+import com.vagdedes.spartan.functionality.tracking.Piston;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.server.ServerCommandEvent;
 
-public class EventsHandler3 implements Listener {
+public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void Chat(AsyncPlayerChatEvent e) {
-        Player n = e.getPlayer();
+    private void BlockBreak(BlockBreakEvent e) {
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
-        if (PlayerLimitPerIP.isLimited(n)) {
+        if (p == null) {
+            return;
+        }
+        Block nb = e.getBlock();
+        SpartanBlock b = new SpartanBlock(nb);
+        boolean cancelled = e.isCancelled();
+
+        // Detections
+        if (!ItemsAdder.is(nb)) {
+            p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, b);
+        }
+
+        // Detections
+        AntiCheatLogs.logMining(p, b, cancelled);
+
+        if (p.getViolations(Enums.HackType.NoSwing).prevent()
+                || p.getViolations(Enums.HackType.BlockReach).prevent()
+                || p.getViolations(Enums.HackType.FastBreak).prevent()
+                || p.getViolations(Enums.HackType.GhostHand).prevent()
+                || p.getViolations(Enums.HackType.XRay).prevent()) {
             e.setCancelled(true);
-        } else {
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-            if (p == null) {
-                return;
-            }
-            boolean cancelled = e.isCancelled();
-            String msg = e.getMessage();
-
-            // Detections
-            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, msg);
-
-            // Protections
-            if (!cancelled && StaffChat.run(p, msg) // Features
-                    || !cancelled && ChatProtection.runChat(p, msg)) { // Features
-                e.setCancelled(true);
-            }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void Damage(EntityDamageEvent e) {
-        Entity entity = e.getEntity();
+    private void BlockPlace(BlockPlaceEvent e) {
+        Player n = e.getPlayer();
+        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
-        if (entity instanceof Player) {
-            Player n = (Player) entity;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+        if (p == null) {
+            return;
+        }
+        Block nb = e.getBlock();
+        SpartanBlock b = new SpartanBlock(nb);
+        b.removeBlockCache();
+        p.movement.judgeGround();
 
-            if (p == null) {
-                return;
-            }
-            // Objects
-            p.addReceivedDamage(e);
+        if (n.getWorld() != b.getWorld()) {
+            return;
+        }
+        boolean cancelled = e.isCancelled();
 
-            // Detections
-            p.getExecutor(Enums.HackType.NoFall).handle(e.isCancelled(), e.getCause());
-        } else {
-            Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                    ? entity.getPassengers().toArray(new Entity[0])
-                    : new Entity[]{entity.getPassenger()};
+        // Detections
+        if (!ItemsAdder.is(nb)) {
+            p.getExecutor(Enums.HackType.ImpossibleActions).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
+            p.getExecutor(Enums.HackType.FastPlace).handle(cancelled, e);
+        }
 
-            if (passengers.length > 0) {
-                for (Entity passenger : passengers) {
-                    if (passenger instanceof Player) {
-                        Player n = (Player) passenger;
-                        SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-                        if (p != null) {
-                            // Objects
-                            p.addReceivedDamage(e);
-                        }
-                    }
-                }
-            }
+        if (p.getViolations(Enums.HackType.FastPlace).prevent()
+                || p.getViolations(Enums.HackType.BlockReach).prevent()
+                || p.getViolations(Enums.HackType.ImpossibleActions).prevent()) {
+            e.setCancelled(true);
         }
     }
 
@@ -152,14 +146,9 @@ public class EventsHandler3 implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void Command(ServerCommandEvent e) {
-        CommandSender s = e.getSender();
-        String msg = e.getCommand();
-
-        // Protections
-        if (ChatProtection.runConsoleCommand(s, msg)) {
-            e.setCancelled(true);
-        }
+    private void PistonEvent(BlockPistonExtendEvent e) {
+        // Handlers
+        Piston.run(e.getBlock(), e.getBlocks());
     }
 
 }

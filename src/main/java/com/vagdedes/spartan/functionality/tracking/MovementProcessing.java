@@ -2,9 +2,9 @@ package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Trackers;
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
@@ -164,7 +164,7 @@ public class MovementProcessing {
                                    boolean elytra, boolean velocity,
                                    boolean flight, boolean attributes) {
         if ((elytra || !player.movement.isGliding())
-                && (flight || !player.movement.isFlying())
+                && (flight || !player.movement.isFlying() && !player.trackers.has(Trackers.TrackerType.FLYING))
                 && (velocity || !player.trackers.has(Trackers.TrackerType.ABSTRACT_VELOCITY))
                 && (attributes || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()

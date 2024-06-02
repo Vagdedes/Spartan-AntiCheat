@@ -5,6 +5,7 @@ import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.AutoUpdater;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -68,6 +69,7 @@ public class Cache {
         DetectionNotifications.clear();
         CrossServerInformation.clear();
         PlayerLimitPerIP.clear();
+        NPCManager.clear();
 
         // Configuration
         Config.create();

@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 
 public class PlayerViolation {

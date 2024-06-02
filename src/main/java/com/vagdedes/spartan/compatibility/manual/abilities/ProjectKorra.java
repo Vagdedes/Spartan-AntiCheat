@@ -4,10 +4,12 @@ import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
 import com.projectkorra.projectkorra.event.AbilityProgressEvent;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -31,7 +33,15 @@ public class ProjectKorra implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void AbilityDamageEvent(AbilityDamageEntityEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getPlayer(e.getEntity().getUniqueId()), 60);
+            Entity entity = e.getEntity();
+
+            if (entity instanceof Player) {
+                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+
+                if (p != null) {
+                    evadeCombatFPs(p, 60);
+                }
+            }
         }
     }
 

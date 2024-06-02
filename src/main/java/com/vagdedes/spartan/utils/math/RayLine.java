@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.functionality.tracking;
+package com.vagdedes.spartan.utils.math;
 
 import java.util.Objects;
 

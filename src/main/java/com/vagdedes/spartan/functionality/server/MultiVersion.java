@@ -8,45 +8,12 @@ import org.bukkit.Bukkit;
 public class MultiVersion {
 
     private static MCVersion detectedVersion;
-    private static final String fork;
-    public static final boolean other, unknownFork, folia;
+    public static final boolean other, folia;
 
     static {
         detectedVersion = judge();
         other = detectedVersion == MCVersion.OTHER;
-
-        // Separator
-        String serverType = Bukkit.getVersion().toLowerCase(),
-                unknownKeyword = "Unknown";
-
-        if (serverType.contains("folia")) {
-            fork = "Folia";
-            folia = true;
-            unknownFork = false;
-        } else {
-            folia = false;
-
-            if (serverType.contains("taco")) {
-                fork = "TacoSpigot";
-            } else if (serverType.contains("paper")) {
-                fork = "Paper";
-            } else if (serverType.contains("spigot")) {
-                fork = "Spigot";
-            } else if (serverType.contains("craftbukkit")) {
-                fork = "CraftBukkit";
-            } else if (serverType.contains("tuinity")) {
-                fork = "Tuinity";
-            } else if (serverType.contains("yatopia")) {
-                fork = "Yatopia";
-            } else if (serverType.contains("purpur")) {
-                fork = "Purpur";
-            } else if (serverType.contains("airplane")) {
-                fork = "Airplane";
-            } else {
-                fork = unknownKeyword;
-            }
-            unknownFork = fork.equals(unknownKeyword);
-        }
+        folia = Bukkit.getVersion().toLowerCase().contains("folia");
     }
 
     public enum MCVersion {
@@ -59,12 +26,10 @@ public class MultiVersion {
         return detectedVersion.ordinal() >= trialVersion.ordinal();
     }
 
-    public static String fork() {
-        return fork;
-    }
-
     public static String versionString() {
-        return other ? "Unknown" : detectedVersion.toString().substring(1).replace("_", ".");
+        return other
+                ? "Unknown"
+                : detectedVersion.toString().substring(1).replace("_", ".");
     }
 
     public static MCVersion version() {

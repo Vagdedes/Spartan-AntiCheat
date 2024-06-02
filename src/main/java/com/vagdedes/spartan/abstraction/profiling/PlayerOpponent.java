@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 
 public class PlayerOpponent {
 

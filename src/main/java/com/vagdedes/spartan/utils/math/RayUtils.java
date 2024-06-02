@@ -1,9 +1,8 @@
 package com.vagdedes.spartan.utils.math;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
-import com.vagdedes.spartan.functionality.tracking.RayLine;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.utils.minecraft.mcp.AxisAlignedBB;
 import com.vagdedes.spartan.utils.minecraft.mcp.MathHelper;
 import com.vagdedes.spartan.utils.minecraft.mcp.MovingObjectPosition;

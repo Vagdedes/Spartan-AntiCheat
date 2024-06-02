@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.functionality.connection;
 
+import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -25,6 +26,7 @@ public class DiscordMemberCount {
 
                     if (AlgebraUtils.validInteger(number)) {
                         count = Integer.parseInt(number);
+                        MainMenu.refresh();
                     } else {
                         count = 0;
                     }

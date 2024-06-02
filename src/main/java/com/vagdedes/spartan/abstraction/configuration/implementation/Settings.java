@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
@@ -28,7 +28,6 @@ public class Settings extends ConfigurationBuilder {
 
     public static final String
             tpsProtectionOption = "Protections.use_tps_protection",
-            maxSupportedLatencyOption = "Protections.max_supported_player_latency",
             cloudServerNameOption = "Cloud.server_name",
             cloudSynchroniseFilesOption = "Cloud.synchronise_files";
     private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
@@ -74,28 +73,24 @@ public class Settings extends ConfigurationBuilder {
         addOption("Chat.blocked_commands", "blockedCommand1, blockedCommand2");
         addOption("Chat.staff_chat_character", "@");
 
-        addOption(tpsProtectionOption, true); // test server
-        addOption(maxSupportedLatencyOption, TPS.tickTimeInteger * 100); // test server
-        addOption("Protections.avoid_self_bow_damage", true);
+        addOption(tpsProtectionOption, true);
+        addOption("Protections.max_supported_player_latency", TPS.tickTimeInteger * 100);
         addOption("Protections.player_limit_per_ip", 0);
-        addOption("Protections.disallowed_building", true); // test server
 
         addOption("Important.op_bypass", false);
         addOption("Important.bedrock_client_permission", false);
-        addOption("Important.modify_server_configuration", false);
-        addOption("Important.refresh_inventory_menu", true);
         addOption("Important.enable_developer_api", true);
         addOption("Important.bedrock_player_prefix", ".");
-        addOption("Important.inventory_menu_empty_heads", true);
+        addOption("Important.enable_npc", true);
+        addOption("Important.enable_watermark", true);
 
         addOption(cloudServerNameOption, "specify server name");
         addOption(cloudSynchroniseFilesOption, true);
 
-        addOption("Detections.ground_teleport_on_detection", true); // test server
-        addOption("Detections.fall_damage_on_teleport", false); // test server
-        addOption("Detections.update_blocks_upon_violation", false);
+        addOption("Detections.ground_teleport_on_detection", true);
+        addOption("Detections.fall_damage_on_teleport", false);
 
-        addOption(MaximumCheckedPlayers.option, 100); // test server alternative
+        addOption(MaximumCheckedPlayers.option, 100);
 
         addOption("Discord.webhook_hex_color", "4caf50");
         addOption("Discord.checks_webhook_url", "");
@@ -109,10 +104,9 @@ public class Settings extends ConfigurationBuilder {
 
     public void runOnLogin(SpartanPlayer p) {
         if (getBoolean("Notifications.enable_notifications_on_login")
-                && DetectionNotifications.hasPermission(p)) {
-            if (!DetectionNotifications.isEnabled(p)) {
-                DetectionNotifications.set(p, 0);
-            }
+                && DetectionNotifications.hasPermission(p)
+                && !DetectionNotifications.isEnabled(p)) {
+            DetectionNotifications.set(p, 0);
         }
     }
 

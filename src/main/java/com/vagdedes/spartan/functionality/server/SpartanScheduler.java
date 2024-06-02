@@ -1,11 +1,13 @@
 package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 class SpartanScheduler {
 
@@ -14,6 +16,28 @@ class SpartanScheduler {
             Bukkit.getScheduler().runTask(Register.plugin, runnable);
         } else {
             Bukkit.getGlobalRegionScheduler().run(Register.plugin, consumer -> runnable.run());
+        }
+    }
+
+    static void run(Player player, Runnable runnable, boolean sync) {
+        if (!MultiVersion.folia) {
+            if (sync && !Bukkit.isPrimaryThread()) {
+                Bukkit.getScheduler().runTask(Register.plugin, runnable);
+            } else {
+                runnable.run();
+            }
+        } else {
+            if (player != null) {
+                Location location = player.getLocation();
+                Bukkit.getRegionScheduler()
+                        .execute(Register.plugin,
+                                player.getWorld(),
+                                SpartanLocation.getChunkPos(location.getBlockX()),
+                                SpartanLocation.getChunkPos(location.getBlockZ()),
+                                runnable);
+            } else {
+                runnable.run();
+            }
         }
     }
 

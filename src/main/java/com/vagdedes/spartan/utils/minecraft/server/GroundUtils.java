@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
@@ -19,23 +19,24 @@ public class GroundUtils {
             blockHeights = new ArrayList<>(),
             collisionHeights = new ArrayList<>();
     private static final Map<Material, double[]> correlatedBlockHeights = new LinkedHashMap<>();
+    public static final Set<Material> abstractMaterials = new HashSet<>();
 
     private static final boolean
             v1_9 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9),
             v1_15 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_15),
             v1_20 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_20);
     public static final double
-            boundingBox = 0.305,
-            honeyBlockBoundingBox = 0.62,
-            maxPossibleStep = 0.9375, // Attention, serious usage
-            minPossibleStep = 0.015625,  // Attention, serious usage
+            boundingBox = 0.3 + 0.005,
+            contactBoundingBox = 0.62,
+            maxBoundingBox = 0.9375, // Attention, serious usage
+            minBoundingBox = 0.015625,  // Attention, serious usage
             maxPlayerStep = 0.5625,
             maxHeightLengthRatio;
     public static final int maxHeightLength;
 
     static {
-        blockHeights.add(maxPossibleStep);
-        blockHeights.add(minPossibleStep);
+        blockHeights.add(maxBoundingBox);
+        blockHeights.add(minBoundingBox);
         blockHeights.add(maxPlayerStep);
         blockHeights.add(0.0);
         blockHeights.add(0.6625);
@@ -108,6 +109,7 @@ public class GroundUtils {
                     || v1_15 && m == Material.HONEY_BLOCK
                     || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_19) && m == Material.MUD) {
                 correlatedBlockHeights.put(m, new double[]{-1.0});
+                abstractMaterials.add(m);
             } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14) && m == Material.STONECUTTER) {
                 correlatedBlockHeights.put(m, new double[]{0.0, 0.5, 0.5625, 0.6625});
             } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14) && m == Material.LANTERN || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16) && m == Material.SOUL_LANTERN) {
@@ -212,7 +214,7 @@ public class GroundUtils {
         } else {
             distribution = boundingBox;
         }
-        for (double position : new double[]{-(box + minPossibleStep), 0.0}) {
+        for (double position : new double[]{-(box + minBoundingBox), 0.0, -maxPlayerStep}) {
             for (SpartanLocation loopLocation : loc.getSurroundingLocations(
                     distribution,
                     position,
@@ -221,10 +223,15 @@ public class GroundUtils {
                 Material type = loopLocation.getBlock().material;
 
                 if (BlockUtils.isSolid(type)) {
+                    boolean abstractOnly = position == -maxPlayerStep;
                     double[] heights = correlatedBlockHeights.get(type);
 
                     if (heights != null) {
-                        if (heights.length == 1) {
+                        if (abstractOnly) {
+                            if (heights[0] == -1.0) {
+                                return true;
+                            }
+                        } else if (heights.length == 1) {
                             if (heights[0] == -1.0 || heights[0] == box) {
                                 return true;
                             }
@@ -235,7 +242,7 @@ public class GroundUtils {
                                 }
                             }
                         }
-                    } else if (box == 0.0) {
+                    } else if (!abstractOnly && box == 0.0) {
                         return true;
                     }
                 }
@@ -282,6 +289,10 @@ public class GroundUtils {
             }
             return min;
         }
+    }
+
+    public static boolean isAbstract(Material m) {
+        return abstractMaterials.contains(m);
     }
 
     public static boolean blockHeightExists(double d) {

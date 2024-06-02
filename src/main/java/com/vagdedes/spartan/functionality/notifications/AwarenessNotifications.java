@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -28,7 +28,6 @@ public class AwarenessNotifications {
     }
 
     public static boolean canSend(UUID uuid, String key, int secondsCooldown) {
-        boolean hasCooldown = secondsCooldown != Integer.MAX_VALUE;
         Map<String, Long> childMap = map.get(uuid);
         boolean send;
 
@@ -36,7 +35,7 @@ public class AwarenessNotifications {
             Long time = childMap.get(key);
 
             if (time == null) {
-                childMap.put(key, hasCooldown ? System.currentTimeMillis() + (secondsCooldown * 1_000L) : 0L);
+                childMap.put(key, System.currentTimeMillis() + (secondsCooldown * 1_000L));
                 send = true;
             } else if (time == 0L) {
                 send = false;
@@ -44,7 +43,7 @@ public class AwarenessNotifications {
                 long currentTime = System.currentTimeMillis();
 
                 if (currentTime >= time) {
-                    childMap.put(key, hasCooldown ? currentTime + (secondsCooldown * 1_000L) : 0L);
+                    childMap.put(key, currentTime + (secondsCooldown * 1_000L));
                     send = true;
                 } else {
                     send = false;
@@ -52,15 +51,11 @@ public class AwarenessNotifications {
             }
         } else {
             childMap = new LinkedHashMap<>();
-            childMap.put(key, hasCooldown ? System.currentTimeMillis() + (secondsCooldown * 1_000L) : 0L);
+            childMap.put(key, System.currentTimeMillis() + (secondsCooldown * 1_000L));
             map.put(uuid, childMap);
             send = true;
         }
         return send;
-    }
-
-    public static boolean canSend(UUID uuid, String key) {
-        return canSend(uuid, key, 24 * 60 * 60);
     }
 
     public static String getNotification(String s, boolean disableMessage) {
@@ -76,7 +71,7 @@ public class AwarenessNotifications {
         return !areEnabled() || s == null ? null : getNotification(s, true);
     }
 
-    public static void forcefullySend(Object sender, String message) {
+    public static void forcefullySend(Object sender, String message, boolean console) {
         message = getNotification(message);
 
         if (sender != null) {
@@ -84,15 +79,18 @@ public class AwarenessNotifications {
                 CommandSender commandSender = (CommandSender) sender;
                 commandSender.sendMessage(message);
 
-                if (commandSender != Bukkit.getConsoleSender()) {
+                if (console && commandSender != Bukkit.getConsoleSender()) {
                     Bukkit.getConsoleSender().sendMessage("(" + commandSender.getName() + ") " + message);
                 }
             } else if (sender instanceof SpartanPlayer) {
                 SpartanPlayer spartanPlayer = (SpartanPlayer) sender;
                 spartanPlayer.sendMessage(message);
-                Bukkit.getConsoleSender().sendMessage("(" + spartanPlayer.name + ") " + message);
+
+                if (console) {
+                    Bukkit.getConsoleSender().sendMessage("(" + spartanPlayer.name + ") " + message);
+                }
             }
-        } else { // Console
+        } else if (console) {
             Bukkit.getConsoleSender().sendMessage(message);
         }
     }

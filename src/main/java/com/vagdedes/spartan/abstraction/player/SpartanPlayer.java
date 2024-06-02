@@ -1,6 +1,5 @@
-package com.vagdedes.spartan.abstraction.replicates;
+package com.vagdedes.spartan.abstraction.player;
 
-import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
@@ -9,6 +8,9 @@ import com.vagdedes.spartan.abstraction.data.Clicks;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.enchants.CustomEnchantsPlus;
@@ -23,7 +25,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.Elytra;
-import com.vagdedes.spartan.listeners.protocol.ProtocolStorage;
 import com.vagdedes.spartan.listeners.protocol.Shared;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -52,7 +53,6 @@ public class SpartanPlayer {
     public final boolean bedrockPlayer;
     public final String name;
     public final UUID uuid;
-    public final String ipAddress;
     private final Map<PotionEffectType, SpartanPotionEffect> potionEffects;
     public final Enums.DataType dataType;
     public final SpartanPlayerMovement movement;
@@ -76,51 +76,51 @@ public class SpartanPlayer {
     private PlayerProfile playerProfile;
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        SpartanBukkit.runRepeatingTask(() -> {
+            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-                if (!players.isEmpty()) {
-                    for (SpartanPlayer p : players) {
-                        p.movement.judgeGround();
-                        p.movement.getLocation();
+            if (!players.isEmpty()) {
+                for (SpartanPlayer p : players) {
+                    p.movement.judgeGround();
 
-                        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-                            Elytra.judge(p, false);
-                        }
-                        p.playerProfile.playerCombat.track();
-                        p.movement.setDetectionLocation(false);
-
-                        // Separator
-                        SpartanBukkit.runTask(p, () -> {
-                            Player n = p.getInstance();
-
-                            if (n != null) {
-                                p.setStoredPotionEffects(n.getActivePotionEffects()); // Bad
-                                SpartanLocation to = p.movement.getLocation(),
-                                        from = p.movement.getSchedulerFromLocation();
-
-                                if (from != null) {
-                                    p.movement.schedulerDistance = to.distance(from);
-                                }
-                                p.movement.schedulerFrom = to;
-
-                                for (CheckExecutor executor : p.executors) {
-                                    executor.scheduler();
-                                }
-                            }
-
-                            // Preventions
-                            for (Enums.HackType hackType : Shared.handledChecks) {
-                                if (p.getViolations(hackType).prevent()) {
-                                    break;
-                                }
-                            }
-                        });
+                    if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+                        Elytra.judge(p, false);
                     }
+                    if (p.movement.isFlying()) {
+                        p.trackers.add(Trackers.TrackerType.FLYING, (int) TPS.maximum);
+                    }
+                    p.playerProfile.playerCombat.track();
+                    p.movement.setDetectionLocation(false);
+
+                    // Separator
+                    SpartanBukkit.runTask(p, () -> {
+                        Player n = p.getInstance();
+
+                        if (n != null) {
+                            p.setStoredPotionEffects(n.getActivePotionEffects()); // Bad
+                        }
+                        SpartanLocation to = p.movement.getLocation(),
+                                from = p.movement.getSchedulerFromLocation();
+
+                        if (from != null) {
+                            p.movement.schedulerDistance = to.distance(from);
+                        }
+                        p.movement.schedulerFrom = to;
+
+                        for (CheckExecutor executor : p.executors) {
+                            executor.scheduler();
+                        }
+
+                        // Preventions
+                        for (Enums.HackType hackType : Shared.handledMovementChecks) {
+                            if (p.getViolations(hackType).prevent()) {
+                                break;
+                            }
+                        }
+                    });
                 }
-            }, 1L, 1L);
-        }
+            }
+        }, 1L, 1L);
     }
 
     // Object
@@ -133,7 +133,6 @@ public class SpartanPlayer {
         this.dataType = bedrockPlayer ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
         this.trackers = new Trackers(this);
 
-        this.ipAddress = PlayerLimitPerIP.get(p);
         this.name = p.getName();
         this.potionEffects = Collections.synchronizedMap(
                 SpartanPotionEffect.mapFromBukkit(this, p.getActivePotionEffects())
@@ -389,21 +388,27 @@ public class SpartanPlayer {
         );
     }
 
-    public boolean isOnGround() {
+    public boolean isOnGround(boolean custom) {
         Entity vehicle = getVehicle();
 
         if (vehicle != null) {
             return vehicle.isOnGround();
-        } else if (SpartanBukkit.packetsEnabled()) {
-            return ProtocolStorage.isOnGround(this)
-                    || bedrockPlayer
+        } else if (SpartanBukkit.packetsEnabled(this.uuid)) {
+            Player p = this.getInstance();
+            SpartanProtocol protocol = p == null ? null : SpartanBukkit.getProtocol(p);
+            return protocol != null && protocol.trueOrFalse(protocol.onGround)
+                    || custom
                     && GroundUtils.isOnGround(this, movement.getLocation(), false, true);
         } else {
             Player p = this.getInstance();
             return p != null && p.isOnGround()
-                    || bedrockPlayer
+                    || custom
                     && GroundUtils.isOnGround(this, movement.getLocation(), false, true);
         }
+    }
+
+    public boolean isOnGround() {
+        return this.isOnGround(true);
     }
 
     // Separator
@@ -441,6 +446,11 @@ public class SpartanPlayer {
     }
 
     // Separator
+
+    public String getIpAddress() {
+        Player p = this.getInstance();
+        return p == null ? null : PlayerLimitPerIP.get(p);
+    }
 
     public boolean isOp() {
         Player p = this.getInstance();
@@ -852,11 +862,8 @@ public class SpartanPlayer {
     // Separator
 
     public boolean canSee(Player target) {
-        if (SpartanBukkit.supportedFork) {
-            Player p = getInstance();
-            return p != null && p.canSee(target);
-        }
-        return false;
+        Player p = getInstance();
+        return p != null && p.canSee(target);
     }
 
     public int getPing() {

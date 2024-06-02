@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -198,7 +198,7 @@ public class CloudConnections {
                     String ipAddress;
 
                     if (!isNull && offlinePlayer.isOnline()) {
-                        ipAddress = player.ipAddress;
+                        ipAddress = player.getIpAddress();
 
                         if (ipAddress == null) {
                             ipAddress = "NULL";

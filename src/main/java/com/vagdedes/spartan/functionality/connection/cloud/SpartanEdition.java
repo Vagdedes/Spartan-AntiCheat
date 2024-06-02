@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
@@ -23,13 +23,15 @@ public class SpartanEdition {
             StringUtils.decodeBase64("U3BhcnRhbkJlZHJvY2tFZGl0aW9u"),
             "Spartan",
     };
+    public static final String patreonURL = "https://www.idealistic.ai/patreon";
+    private static final int notificationCooldown = 60 * 60;
     private static final String
             type = "{type}",
             product = "{product}",
             versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections."
                     + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §rto §lfix this§r." : ""),
             limitNotificationMessage = "\nHey, just a heads up! You have more online players than the anti-cheat can check at once."
-                    + "\nClick §nhttps://www.idealistic.ai/patreon§r to learn how §lDetection Slots §rwork.";
+                    + "\nClick §n" + patreonURL + "§r to learn how §lDetection Slots §rwork.";
     private static boolean
             notifyCache = false,
             alternativeVersion = false;
@@ -88,7 +90,7 @@ public class SpartanEdition {
 
     // Notifications
 
-    public static void attemptNotification(SpartanPlayer player) {
+    public static boolean attemptNotification(SpartanPlayer player) {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
         if (players.size() <= CloudBase.getDetectionSlots()
@@ -120,7 +122,7 @@ public class SpartanEdition {
                                     if (bedrockIsMissingDetection == otherPlayer.bedrockPlayer) {
                                         notifyCache = true;
                                         sendVersionNotification(player, missingDetection);
-                                        return;
+                                        return true;
                                     } else {
                                         checkedProfiles.add(player.getProfile());
                                     }
@@ -142,7 +144,7 @@ public class SpartanEdition {
                                         if (bedrockIsMissingDetection == profile.isBedrockPlayer()) {
                                             notifyCache = true;
                                             sendVersionNotification(player, missingDetection);
-                                            return;
+                                            return true;
                                         }
                                     }
                                 }
@@ -152,6 +154,7 @@ public class SpartanEdition {
                 }
             }
         }
+        return false;
     }
 
     private static void sendVersionNotification(SpartanPlayer player, Enums.DataType dataType) {
@@ -171,7 +174,7 @@ public class SpartanEdition {
                             )
             );
 
-            if (AwarenessNotifications.canSend(player.uuid, "alternative-version")) {
+            if (AwarenessNotifications.canSend(player.uuid, "alternative-version", notificationCooldown)) {
                 player.sendImportantMessage(message);
             }
         }
@@ -181,7 +184,7 @@ public class SpartanEdition {
         if (Permissions.isStaff(player)) {
             String message = AwarenessNotifications.getNotification(limitNotificationMessage);
 
-            if (AwarenessNotifications.canSend(player.uuid, "limit-notification")) {
+            if (AwarenessNotifications.canSend(player.uuid, "limit-notification", notificationCooldown)) {
                 player.sendImportantMessage(message);
                 return true;
             }

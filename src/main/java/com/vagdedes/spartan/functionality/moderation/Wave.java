@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
@@ -31,26 +31,24 @@ public class Wave {
     }
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                synchronized (commands) {
-                    int size = commands.size();
+        SpartanBukkit.runRepeatingTask(() -> {
+            synchronized (commands) {
+                int size = commands.size();
 
-                    if (size > 0) {
-                        ConsoleCommandSender sender = Bukkit.getConsoleSender();
-                        Iterator<Map.Entry<UUID, String>> iterator = commands.entrySet().iterator();
+                if (size > 0) {
+                    ConsoleCommandSender sender = Bukkit.getConsoleSender();
+                    Iterator<Map.Entry<UUID, String>> iterator = commands.entrySet().iterator();
 
-                        while (iterator.hasNext()) {
-                            Map.Entry<UUID, String> entry = iterator.next();
-                            iterator.remove();
-                            remove(entry.getKey());
-                            Bukkit.dispatchCommand(sender, entry.getValue());
-                        }
-                        end(Config.settings.getBoolean("Punishments.broadcast_on_punishment"), size);
+                    while (iterator.hasNext()) {
+                        Map.Entry<UUID, String> entry = iterator.next();
+                        iterator.remove();
+                        remove(entry.getKey());
+                        Bukkit.dispatchCommand(sender, entry.getValue());
                     }
+                    end(Config.settings.getBoolean("Punishments.broadcast_on_punishment"), size);
                 }
-            }, 1L, 1L);
-        }
+            }
+        }, 1L, 1L);
     }
 
     public static void create(boolean local) {

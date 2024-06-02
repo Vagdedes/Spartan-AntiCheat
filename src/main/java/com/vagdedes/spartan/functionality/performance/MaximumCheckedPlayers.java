@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.performance;
 
-import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -18,58 +17,43 @@ public class MaximumCheckedPlayers {
     private static int ticks = 0;
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                int optionAmount = getOptionValue();
+        SpartanBukkit.runRepeatingTask(() -> {
+            int optionAmount = getOptionValue();
 
-                if (optionAmount > 0) {
-                    if (ticks == 0) {
-                        ticks = refreshTicks;
-                        optionAmount = Math.max(optionAmount, minimumPlayers);
-                        Set<UUID> players = SpartanBukkit.getUUIDs();
-                        int playerAmount = players.size();
+            if (optionAmount > 0) {
+                if (ticks == 0) {
+                    ticks = refreshTicks;
+                    optionAmount = Math.max(optionAmount, minimumPlayers);
+                    Set<UUID> players = SpartanBukkit.getUUIDs();
+                    int playerAmount = players.size();
 
-                        if (playerAmount <= optionAmount) {
-                            synchronized (priority) {
-                                synchronized (list) {
-                                    priority.clear();
-                                    list.clear();
-                                    list.addAll(players);
-                                }
-                            }
-                        } else {
-                            List<UUID> newList = new ArrayList<>(optionAmount);
-
-                            // Add prioritised players first
-                            if (!priority.isEmpty()) {
-                                synchronized (priority) {
-                                    Iterator<UUID> iterator = priority.iterator();
-
-                                    while (iterator.hasNext() && newList.size() < optionAmount) {
-                                        newList.add(iterator.next());
-                                        iterator.remove();
-                                    }
-                                }
-                            }
-
-                            // Add non-prioritised players that are not being checked
+                    if (playerAmount <= optionAmount) {
+                        synchronized (priority) {
                             synchronized (list) {
-                                for (UUID uuid : players) {
-                                    if (!list.contains(uuid)) {
-                                        if (newList.size() < optionAmount) {
-                                            newList.add(uuid);
-                                        } else {
-                                            synchronized (priority) {
-                                                if (!priority.contains(uuid)) {
-                                                    priority.add(uuid);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                priority.clear();
+                                list.clear();
+                                list.addAll(players);
+                            }
+                        }
+                    } else {
+                        List<UUID> newList = new ArrayList<>(optionAmount);
 
-                                // Add non-prioritised players that are being checked
-                                for (UUID uuid : list) {
+                        // Add prioritised players first
+                        if (!priority.isEmpty()) {
+                            synchronized (priority) {
+                                Iterator<UUID> iterator = priority.iterator();
+
+                                while (iterator.hasNext() && newList.size() < optionAmount) {
+                                    newList.add(iterator.next());
+                                    iterator.remove();
+                                }
+                            }
+                        }
+
+                        // Add non-prioritised players that are not being checked
+                        synchronized (list) {
+                            for (UUID uuid : players) {
+                                if (!list.contains(uuid)) {
                                     if (newList.size() < optionAmount) {
                                         newList.add(uuid);
                                     } else {
@@ -80,20 +64,33 @@ public class MaximumCheckedPlayers {
                                         }
                                     }
                                 }
-
-                                // Set the new list
-                                list.clear();
-                                list.addAll(newList);
                             }
+
+                            // Add non-prioritised players that are being checked
+                            for (UUID uuid : list) {
+                                if (newList.size() < optionAmount) {
+                                    newList.add(uuid);
+                                } else {
+                                    synchronized (priority) {
+                                        if (!priority.contains(uuid)) {
+                                            priority.add(uuid);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Set the new list
+                            list.clear();
+                            list.addAll(newList);
                         }
-                    } else {
-                        ticks -= 1;
                     }
                 } else {
-                    ticks = refreshTicks;
+                    ticks -= 1;
                 }
-            }, 1L, 1L);
-        }
+            } else {
+                ticks = refreshTicks;
+            }
+        }, 1L, 1L);
     }
 
     public static void remove(SpartanPlayer player) {

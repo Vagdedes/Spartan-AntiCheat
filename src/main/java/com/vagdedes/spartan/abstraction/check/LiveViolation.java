@@ -1,10 +1,10 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.InformationAnalysis;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -56,6 +56,7 @@ public class LiveViolation {
         synchronized (this) {
             if (!CloudBase.isInformationCancelled(hackType, information)
                     && (disableCause == null
+                    || disableCause.hasExpired()
                     || !disableCause.pointerMatches(information))) {
                 InformationAnalysis analysis = new InformationAnalysis(hackType, information);
                 int violationsInt = Math.max(AlgebraUtils.integerRound(violations), 1);
@@ -92,6 +93,7 @@ public class LiveViolation {
                     this.prevention = newPrevention;
                     this.prevention.canPrevent = !hackType.getCheck().isSilent(player.getWorld().getName())
                             && (silentCause == null
+                            || silentCause.hasExpired()
                             || !silentCause.pointerMatches(information))
                             && (player.getProfile().isSuspectedOrHacker(hackType)
                             || playerViolation.level >= playerViolation.getIgnoredViolations(player));
@@ -229,11 +231,11 @@ public class LiveViolation {
     // Separator
 
     public CancelCause getDisableCause() {
-        return disableCause;
+        return disableCause != null && disableCause.hasExpired() ? null : disableCause;
     }
 
     public CancelCause getSilentCause() {
-        return silentCause;
+        return silentCause != null && silentCause.hasExpired() ? null : silentCause;
     }
 
     public void addDisableCause(String reason, String pointer, int ticks) {
@@ -323,7 +325,7 @@ public class LiveViolation {
 
                     if (performed) {
                         player.getProfile().punishmentHistory.increasePunishments(player, StringUtils.toString(commands, "\n"));
-                    } else if (found && AwarenessNotifications.canSend(AwarenessNotifications.uuid, hackType + "-cancelled-punishment-event")) {
+                    } else if (found && AwarenessNotifications.canSend(AwarenessNotifications.uuid, hackType + "-cancelled-punishment-event", 60 * 60)) {
                         String notification = "Just a reminder that the punishments of the '" + hackType + "' check were just cancelled via code by a third-party plugin."
                                 + " Please do not reach support for this as it relates only to your server.";
                         List<Plugin> dependentPlugins = PluginUtils.getDependentPlugins(Register.plugin.getName());
@@ -339,7 +341,7 @@ public class LiveViolation {
                         AwarenessNotifications.forcefullySend(notification);
                     }
                 }
-            } else if (AwarenessNotifications.canSend(AwarenessNotifications.uuid, hackType + "-no-punishment-commands")) {
+            } else if (AwarenessNotifications.canSend(AwarenessNotifications.uuid, hackType + "-no-punishment-commands", 60 * 60)) {
                 AwarenessNotifications.forcefullySend("Just a reminder that you have set no punishment commands for the '" + hackType + "' check.");
             }
         }
@@ -362,7 +364,7 @@ public class LiveViolation {
         SpartanLocation location = player.movement.getLocation();
         String information = Config.getConstruct() + player.name + " failed " + hackType
                 + " (" + violationLevelIdentifier + " " + playerViolation.level + ") "
-                + "[(Version: " + MultiVersion.fork() + " "
+                + "[(Version: " + MultiVersion.versionString() + " "
                 + MultiVersion.versionString() + "), (IV: " + (canPrevent ? "-" : "") + ignoredViolations + ")"
                 + " (Silent: " + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
                 + "(Ping: " + player.getPing() + "ms), (TPS: "

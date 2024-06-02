@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.data;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 import java.util.Collections;
@@ -18,7 +18,7 @@ public class Trackers {
         PISTON(TrackerFamily.VELOCITY), BUBBLE_WATER(TrackerFamily.VELOCITY),
         TRIDENT(TrackerFamily.VELOCITY), DAMAGE(TrackerFamily.VELOCITY),
 
-        VEHICLE(TrackerFamily.MOTION);
+        VEHICLE(TrackerFamily.MOTION), FLYING(TrackerFamily.MOTION);
 
         public final TrackerFamily family;
 

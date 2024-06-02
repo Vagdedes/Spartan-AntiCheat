@@ -1,8 +1,7 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
-import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -123,24 +122,22 @@ public class CrossServerInformation {
     };
 
     static {
-        if (Register.isPluginLoaded()) {
-            SpartanBukkit.runRepeatingTask(() -> {
-                if (ticks == 0) {
-                    ticks = 1200;
+        SpartanBukkit.runRepeatingTask(() -> {
+            if (ticks == 0) {
+                ticks = 1200;
 
-                    SpartanBukkit.connectionThread.execute(() -> {
-                        generalTask.run();
-                        notificationsTask.run();
-                    });
-                } else {
-                    ticks -= 1;
+                SpartanBukkit.connectionThread.execute(() -> {
+                    generalTask.run();
+                    notificationsTask.run();
+                });
+            } else {
+                ticks -= 1;
 
-                    if (ticks % 200 == 0) {
-                        SpartanBukkit.connectionThread.execute(notificationsTask::run);
-                    }
+                if (ticks % 200 == 0) {
+                    SpartanBukkit.connectionThread.execute(notificationsTask::run);
                 }
-            }, 1L, 1L);
-        }
+            }
+        }, 1L, 1L);
     }
 
     public static void refresh() {

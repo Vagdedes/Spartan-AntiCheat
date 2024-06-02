@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.entity;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import es.pollitoyeye.vehicles.enums.VehicleType;
 import es.pollitoyeye.vehicles.events.VehicleEnterEvent;
@@ -14,17 +14,23 @@ import org.bukkit.event.Listener;
 public class Vehicles implements Listener {
 
     private static final String key = Compatibility.CompatibilityType.VEHICLES + "=compatibility=";
+    public static final String
+            DRILL = "drill",
+            TRACTOR = "tractor";
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(VehicleEnterEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer().getUniqueId());
-            VehicleType vehicleType = e.getVehicleType();
+            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
 
-            if (vehicleType == VehicleType.DRILL) {
-                add(p, "drill");
-            } else if (vehicleType == VehicleType.TRACTOR) {
-                add(p, "tractor");
+            if (p != null) {
+                VehicleType vehicleType = e.getVehicleType();
+
+                if (vehicleType == VehicleType.DRILL) {
+                    add(p, Vehicles.DRILL);
+                } else if (vehicleType == VehicleType.TRACTOR) {
+                    add(p, Vehicles.TRACTOR);
+                }
             }
         }
     }
@@ -32,8 +38,11 @@ public class Vehicles implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Exit(VehicleExitEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer().getUniqueId());
-            p.buffer.clear(key);
+            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+
+            if (p != null) {
+                p.buffer.clear(key);
+            }
         }
     }
 

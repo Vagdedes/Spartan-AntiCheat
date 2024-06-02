@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.*;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShot;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShotPlus;
@@ -11,7 +11,7 @@ import com.vagdedes.spartan.compatibility.manual.building.*;
 import com.vagdedes.spartan.compatibility.manual.damage.RealDualWield;
 import com.vagdedes.spartan.compatibility.manual.entity.CraftBook;
 import com.vagdedes.spartan.compatibility.manual.entity.Vehicles;
-import com.vagdedes.spartan.compatibility.manual.packet.ProtocolLib;
+import com.vagdedes.spartan.compatibility.manual.packet.protocollib.ProtocolLib;
 import com.vagdedes.spartan.compatibility.manual.world.AcidRain;
 import com.vagdedes.spartan.compatibility.necessary.Floodgate;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
@@ -38,19 +38,39 @@ public class Compatibility {
     private static final Map<String, Boolean> bool = new LinkedHashMap<>();
 
     public enum CompatibilityType {
-        ADVANCED_ABILITIES, CRACK_SHOT, CRACK_SHOT_PLUS, CRAFT_BOOK, MAGIC_SPELLS, PROTOCOL_LIB,
-        MC_MMO, AUTHENTICATION, TREE_FELLER, VEIN_MINER, GRAPPLING_HOOK, RECENT_PVP_MECHANICS,
-        MINE_BOMB, SUPER_PICKAXE, REAL_DUAL_WIELD, MYTHIC_MOBS, ITEM_ATTRIBUTES, PRINTER_MODE,
-        VEHICLES, MINE_TINKER, WILD_TOOLS, AURELIUM_SKILLS, KNOCKBACK_MASTER,
-        MY_PET, CUSTOM_ENCHANTS_PLUS, ECO_ENCHANTS, ITEMS_ADDER, RAMPEN_DRILLS, OLD_COMBAT_MECHANICS,
-        CUSTOM_KNOCKBACK, PROJECT_KORRA, ACID_RAIN, FILE_GUI, FLOODGATE, PROTOCOL_SUPPORT;
+        ADVANCED_ABILITIES("AdvancedAbilities"), CRACK_SHOT("CrackShot"),
+        CRACK_SHOT_PLUS("CrackShotPlus"), CRAFT_BOOK("CraftBook"),
+        MAGIC_SPELLS("MagicSpells"), PROTOCOL_LIB("ProtocolLib"),
+        MC_MMO("mcMMO"), AUTHENTICATION("Authentication"),
+        TREE_FELLER("TreeFeller"), VEIN_MINER("VeinMiner"),
+        GRAPPLING_HOOK("GrapplingHook"), RECENT_PVP_MECHANICS("RecentPvPMechanics"),
+        MINE_BOMB("MineBomb"), SUPER_PICKAXE("SuperPickaxe"),
+        REAL_DUAL_WIELD("RealDualWield"), MYTHIC_MOBS("MythicMobs"),
+        ITEM_ATTRIBUTES("ItemAttributes"), PRINTER_MODE("PrinterMode"),
+        VEHICLES("Vehicles"), MINE_TINKER("MineTinker"),
+        WILD_TOOLS("WildTools"), AURELIUM_SKILLS("AureliumSkills"),
+        KNOCKBACK_MASTER("KnockbackMaster"), MY_PET("MyPet"),
+        CUSTOM_ENCHANTS_PLUS("CustomEncahntsPlus"), ECO_ENCHANTS("EcoEnchants"),
+        ITEMS_ADDER("ItemsAdder"), RAMPEN_DRILLS("RampenDrills"),
+        OLD_COMBAT_MECHANICS("OldCombatMechanics"), CUSTOM_KNOCKBACK("CustomKnockback"),
+        PROJECT_KORRA("ProjectKorra"), ACID_RAIN("AcidRain"),
+        FILE_GUI("FileGUI"), FLOODGATE("Floodgate"),
+        PROTOCOL_SUPPORT("ProtocolSupport");
 
-        private boolean enabled, forced, functional;
+        private boolean enabled, forced, functional, elseRunnable;
+        private final String name;
 
-        CompatibilityType() {
+        CompatibilityType(String name) {
+            this.name = name;
             this.enabled = false;
             this.forced = false;
             this.functional = false;
+            this.elseRunnable = false;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
 
         public void refresh(boolean create) {
@@ -109,71 +129,25 @@ public class Compatibility {
         // Separator
 
         public void setFunctional() {
-            setFunctional(new String[]{this.toString()}, null, null);
+            setFunctional(new String[]{this.toString()}, null, null, null);
         }
-
-        // Separator
 
         public void setFunctional(boolean bool) {
             this.functional = bool;
         }
 
-        public void setFunctional(String pluginOrClass) {
-            setFunctional(new String[]{pluginOrClass}, null, null);
-        }
-
-        public void setFunctional(String[] pluginsOrClasses) {
-            setFunctional(pluginsOrClasses, null, null);
-        }
-
-        public void setFunctional(CompatibilityType compatibility) {
-            setFunctional(null, new CompatibilityType[]{compatibility}, null);
-        }
-
-        public void setFunctional(CompatibilityType[] compatibilities) {
-            setFunctional(null, compatibilities, null);
-        }
-
-        public void setFunctional(Runnable runnable) {
-            setFunctional(new String[]{this.toString()}, null, runnable);
+        public void setFunctional(Runnable runnable, Runnable elseRunnable) {
+            setFunctional(new String[]{this.toString()}, null, runnable, elseRunnable);
         }
 
         // Separator
 
-        public void setFunctional(String pluginOrClass, Runnable runnable) {
-            setFunctional(new String[]{pluginOrClass}, null, runnable);
-        }
-
-        public void setFunctional(String[] pluginsOrClasses, Runnable runnable) {
-            setFunctional(pluginsOrClasses, null, runnable);
-        }
-
-        public void setFunctional(CompatibilityType[] compatibilities, Runnable runnable) {
-            setFunctional(null, compatibilities, runnable);
-        }
-
-        // Separator
-
-        public void setFunctional(String pluginOrClass, CompatibilityType compatibility) {
-            setFunctional(new String[]{pluginOrClass}, new CompatibilityType[]{compatibility}, null);
-        }
-
-        public void setFunctional(String[] pluginsOrClasses, CompatibilityType compatibility) {
-            setFunctional(pluginsOrClasses, new CompatibilityType[]{compatibility}, null);
-        }
-
-        public void setFunctional(String pluginOrClass, CompatibilityType[] compatibilities) {
-            setFunctional(new String[]{pluginOrClass}, compatibilities, null);
-        }
-
-        public void setFunctional(String[] pluginsOrClasses, CompatibilityType[] compatibilities) {
-            setFunctional(pluginsOrClasses, compatibilities, null);
-        }
-
-        // Separator
-
-        public void setFunctional(String[] pluginsOrClasses, CompatibilityType[] compatibilities, Runnable runnable) {
+        public void setFunctional(String[] pluginsOrClasses, CompatibilityType[] compatibilities,
+                                  Runnable runnable, Runnable elseRunnable) {
             if (this.isEnabled()) {
+                if (this.functional) {
+                    return;
+                }
                 boolean function = this.isForced();
 
                 if (!function && pluginsOrClasses != null) {
@@ -218,20 +192,30 @@ public class Compatibility {
                 }
 
                 if (function) {
+                    this.elseRunnable = false;
+
                     if (runnable != null) {
                         try {
                             runnable.run();
                             this.functional = true;
                         } catch (Exception ex) {
                             this.functional = false;
-                            AwarenessNotifications.forcefullySend("Compatibility '" + this + "' failed to load.");
+                            AwarenessNotifications.forcefullySend("Compatibility '" + this.toString() + "' failed to load.");
                         }
                     } else {
                         this.functional = true;
                     }
                 } else {
                     this.functional = false;
+
+                    if (!this.elseRunnable && elseRunnable != null) {
+                        this.elseRunnable = true;
+                        elseRunnable.run();
+                    }
                 }
+            } else if (!this.elseRunnable && elseRunnable != null) {
+                this.elseRunnable = true;
+                elseRunnable.run();
             }
         }
     }
@@ -246,28 +230,43 @@ public class Compatibility {
         }
         CompatibilityType.MC_MMO.setFunctional();
         CompatibilityType.TREE_FELLER.setFunctional(
-                CompatibilityType.TREE_FELLER.toString(),
-                CompatibilityType.MC_MMO
+                new String[]{CompatibilityType.TREE_FELLER.toString()},
+                new CompatibilityType[]{CompatibilityType.MC_MMO},
+                null,
+                null
         );
-        CompatibilityType.CRAFT_BOOK.setFunctional(CraftBook::resetBoatLimit);
+        CompatibilityType.CRAFT_BOOK.setFunctional(CraftBook::resetBoatLimit, null);
         CompatibilityType.CRACK_SHOT.setFunctional(
-                () -> Register.enable(new CrackShot(), CrackShot.class)
+                () -> Register.enable(new CrackShot(), CrackShot.class),
+                null
         );
         CompatibilityType.CRACK_SHOT_PLUS.setFunctional(
-                () -> Register.enable(new CrackShotPlus(), CrackShotPlus.class)
+                () -> Register.enable(new CrackShotPlus(), CrackShotPlus.class),
+                null
         );
-        CompatibilityType.CUSTOM_KNOCKBACK.setFunctional("%knockback");
+        CompatibilityType.CUSTOM_KNOCKBACK.setFunctional(
+                new String[]{
+                        "%knockback"
+                },
+                null,
+                null,
+                null);
         CompatibilityType.KNOCKBACK_MASTER.setFunctional(
                 new String[]{
                         "com.xdefcon.knockbackmaster.api.KnockbackMasterAPI+",
                         CompatibilityType.KNOCKBACK_MASTER + "+"
-                }
+                },
+                null,
+                null,
+                null
         );
         CompatibilityType.REAL_DUAL_WIELD.setFunctional(
-                () -> Register.enable(new RealDualWield(), RealDualWield.class)
+                () -> Register.enable(new RealDualWield(), RealDualWield.class),
+                null
         );
         CompatibilityType.MAGIC_SPELLS.setFunctional(
-                () -> Register.enable(new MagicSpells(), MagicSpells.class)
+                () -> Register.enable(new MagicSpells(), MagicSpells.class),
+                null
         );
         CompatibilityType.ACID_RAIN.setFunctional(
                 new String[]{
@@ -275,27 +274,42 @@ public class Compatibility {
                         "acidisland",
                         "askyblock"
                 },
-                () -> Register.enable(new AcidRain(), AcidRain.class)
+                null,
+                () -> Register.enable(new AcidRain(), AcidRain.class),
+                null
         );
         CompatibilityType.ADVANCED_ABILITIES.setFunctional(
-                () -> Register.enable(new AdvancedAbilities(), AdvancedAbilities.class)
+                () -> Register.enable(new AdvancedAbilities(), AdvancedAbilities.class),
+                null
         );
         CompatibilityType.OLD_COMBAT_MECHANICS.setFunctional();
-        CompatibilityType.VEIN_MINER.setFunctional(VeinMiner::reload);
+        CompatibilityType.VEIN_MINER.setFunctional(
+                VeinMiner::reload,
+                null
+        );
         CompatibilityType.PROJECT_KORRA.setFunctional(
-                () -> Register.enable(new ProjectKorra(), ProjectKorra.class)
+                () -> Register.enable(new ProjectKorra(), ProjectKorra.class),
+                null
         );
         CompatibilityType.GRAPPLING_HOOK.setFunctional(
-                () -> Register.enable(new GrapplingHook(), GrapplingHook.class)
+                () -> Register.enable(new GrapplingHook(), GrapplingHook.class),
+                null
         );
-        CompatibilityType.MYTHIC_MOBS.setFunctional(MythicMobs::reload);
+        CompatibilityType.MYTHIC_MOBS.setFunctional(
+                MythicMobs::reload,
+                null
+        );
         CompatibilityType.CUSTOM_ENCHANTS_PLUS.setFunctional();
-        CompatibilityType.ECO_ENCHANTS.setFunctional(ReflectionUtils.classExists("com.willfp.ecoenchants.enchants.EcoEnchant"));
+        CompatibilityType.ECO_ENCHANTS.setFunctional(
+                ReflectionUtils.classExists("com.willfp.ecoenchants.enchants.EcoEnchant")
+        );
         CompatibilityType.VEHICLES.setFunctional(
-                () -> Register.enable(new Vehicles(), Vehicles.class)
+                () -> Register.enable(new Vehicles(), Vehicles.class),
+                null
         );
         CompatibilityType.MINE_TINKER.setFunctional(
-                () -> Register.enable(new MineTinker(), MineTinker.class)
+                () -> Register.enable(new MineTinker(), MineTinker.class),
+                null
         );
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             CompatibilityType.ITEM_ATTRIBUTES.setFunctional(
@@ -304,44 +318,66 @@ public class Compatibility {
                             CompatibilityType.MINE_TINKER,
                             CompatibilityType.MYTHIC_MOBS,
                             CompatibilityType.PROJECT_KORRA
-                    }
+                    },
+                    null,
+                    null
             );
             CompatibilityType.RECENT_PVP_MECHANICS.setFunctional(
-                    new String[]{""}
+                    new String[]{""},
+                    null,
+                    null,
+                    null
             );
         }
         CompatibilityType.WILD_TOOLS.setFunctional(
-                () -> Register.enable(new WildTools(), WildTools.class)
+                () -> Register.enable(new WildTools(), WildTools.class),
+                null
         );
         CompatibilityType.FLOODGATE.setFunctional(
                 new String[]{
                         "%" + CompatibilityType.FLOODGATE,
                         "%geyser"
                 },
-                Floodgate::reload
+                null,
+                Floodgate::reload,
+                null
         );
         CompatibilityType.PROTOCOL_SUPPORT.setFunctional(
                 new String[]{
                         "protocolsupport.api.Connection+",
                         "protocolsupport.api.ProtocolSupportAPI+",
                         CompatibilityType.PROTOCOL_SUPPORT + "+"
-                }
+                },
+                null,
+                null,
+                null
         );
-        CompatibilityType.PROTOCOL_LIB.setFunctional(ProtocolLib::reload);
+        CompatibilityType.PROTOCOL_LIB.setFunctional(
+                ProtocolLib::run,
+                null
+        );
         CompatibilityType.MY_PET.setFunctional();
         CompatibilityType.RAMPEN_DRILLS.setFunctional(
-                () -> Register.enable(new RampenDrills(), RampenDrills.class)
+                () -> Register.enable(new RampenDrills(), RampenDrills.class),
+                null
         );
-        CompatibilityType.MINE_BOMB.setFunctional(MineBomb::reload);
+        CompatibilityType.MINE_BOMB.setFunctional(
+                MineBomb::reload,
+                null
+        );
         CompatibilityType.PRINTER_MODE.setFunctional();
         CompatibilityType.SUPER_PICKAXE.setFunctional(
                 new String[]{
                         CompatibilityType.SUPER_PICKAXE.toString(),
                         CompatibilityType.SUPER_PICKAXE + "Reloaded"
-                }
+                },
+                null,
+                null,
+                null
         );
         CompatibilityType.AURELIUM_SKILLS.setFunctional(
-                () -> Register.enable(new AureliumSkills(), AureliumSkills.class)
+                () -> Register.enable(new AureliumSkills(), AureliumSkills.class),
+                null
         );
         CompatibilityType.ITEMS_ADDER.setFunctional();
         MainMenu.refresh();
@@ -364,12 +400,11 @@ public class Compatibility {
         return value;
     }
 
-    public void clear() {
+    public void clearCache() {
         bool.clear();
-        fastClear();
     }
 
-    public void fastClear() {
+    public void fastRefresh() {
         refresh(false);
     }
 

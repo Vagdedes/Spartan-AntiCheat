@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
-import com.vagdedes.spartan.abstraction.replicates.SpartanBlock;
-import com.vagdedes.spartan.abstraction.replicates.SpartanLocation;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,9 +14,8 @@ import java.util.Set;
 
 public class BlockUtils {
 
+    public static final long sensitiveBlockBreakTime = 250L;
     public static final Material
-            water = MaterialUtils.get("water"),
-            lava = MaterialUtils.get("lava"),
             head = MaterialUtils.get("head"),
             iron_bars = MaterialUtils.get("iron_bars"),
             cake = MaterialUtils.get("cake"),
@@ -1426,7 +1425,7 @@ public class BlockUtils {
     }
 
     private static boolean isSensitive(Material m, long time) {
-        return time >= 0L && time <= 250L || sensitive.contains(m);
+        return time >= 0L && time <= sensitiveBlockBreakTime || sensitive.contains(m);
     }
 
     public static boolean isSensitive(SpartanPlayer p, Material m) {

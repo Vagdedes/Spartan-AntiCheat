@@ -1,12 +1,15 @@
 package com.vagdedes.spartan.compatibility.manual.vanilla;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+
+import java.util.Collection;
 
 public class Attributes {
 
@@ -35,23 +38,37 @@ public class Attributes {
 
     public static double getAmount(SpartanPlayer p, String attributeString) {
         if (classExists && Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
-            Player n = p.getInstance();
+            Attribute attribute = Attribute.valueOf(attributeString);
 
-            if (n != null) {
-                AttributeInstance instance = n.getAttribute(Attribute.valueOf(attributeString));
+            if (attribute != null) {
+                PlayerInventory inventory = p.getInventory();
 
-                if (instance != null && !instance.getModifiers().isEmpty()) {
-                    int modifiers = 0;
+                if (inventory != null) {
+                    int modifiersCount = 0;
                     double amount = 0.0;
 
-                    for (AttributeModifier modifier : instance.getModifiers()) {
-                        if (modifier.getSlot() != null) {
-                            modifiers++;
-                            amount = Math.max(amount, modifier.getAmount());
+                    for (ItemStack itemStack : new ItemStack[]{
+                            inventory.getHelmet(),
+                            inventory.getChestplate(),
+                            inventory.getLeggings(),
+                            inventory.getBoots(),
+                            inventory.getItemInHand(),
+                            MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? inventory.getItemInOffHand() : null
+                    }) {
+                        if (itemStack != null && itemStack.hasItemMeta()) {
+                            Collection<AttributeModifier> modifiers = itemStack.getItemMeta()
+                                    .getAttributeModifiers(attribute);
+
+                            if (modifiers != null && !modifiers.isEmpty()) {
+                                for (AttributeModifier modifier : modifiers) {
+                                    modifiersCount++;
+                                    amount = Math.max(amount, modifier.getAmount());
+                                }
+                            }
                         }
                     }
 
-                    if (modifiers > 0) {
+                    if (modifiersCount > 0) {
                         return amount;
                     }
                 }

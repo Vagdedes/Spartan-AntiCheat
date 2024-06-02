@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.necessary;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -30,7 +30,7 @@ public class Floodgate {
 
             if (!players.isEmpty()) {
                 for (SpartanPlayer p : players) {
-                    if (AwarenessNotifications.canSend(p.uuid, "floodgate")) {
+                    if (AwarenessNotifications.canSend(p.uuid, "floodgate", 0)) {
                         p.sendMessage(message);
                     }
                 }

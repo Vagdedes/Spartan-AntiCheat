@@ -4,10 +4,11 @@ import com.vagdedes.spartan.abstraction.check.CancelCause;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
@@ -18,6 +19,7 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -28,6 +30,7 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class PlayerInfo extends InventoryMenu {
@@ -37,7 +40,7 @@ public class PlayerInfo extends InventoryMenu {
     private static final Cooldowns cooldowns = new Cooldowns(null);
 
     public PlayerInfo() {
-        super(menu, 36, new Permission[]{Permission.MANAGE, Permission.INFO});
+        super(menu, 45, new Permission[]{Permission.MANAGE, Permission.INFO});
     }
 
     @Override
@@ -45,22 +48,64 @@ public class PlayerInfo extends InventoryMenu {
         boolean back = !permissionMessage;
         SpartanPlayer target = SpartanBukkit.getPlayer(object.toString());
         boolean isOnline = target != null;
-        PlayerProfile playerProfile = isOnline ? target.getProfile() : ResearchEngine.getPlayerProfileAdvanced(object.toString(), true);
+        PlayerProfile profile = isOnline
+                ? target.getProfile()
+                : ResearchEngine.getPlayerProfileAdvanced(object.toString(), true);
 
-        if (playerProfile == null) {
+        if (profile == null) {
             player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
             return false;
         } else {
-            setTitle(player, menu + (isOnline ? target.name : playerProfile.getName()));
+            boolean legitimate = profile.evidence.getType() == PlayerEvidence.EvidenceType.LEGITIMATE;
+            Collection<HackType> evidenceDetails = profile.evidence.getKnowledgeList(legitimate);
+            PunishmentHistory punishmentHistory = profile.punishmentHistory;
+            int miningHistoryMines = profile.getOverallMiningHistory().getMines();
             List<String> lore = new ArrayList<>(20);
+            int i = 19;
 
-            int i = 10;
+            setTitle(player, menu + (isOnline ? target.name : profile.getName()));
+
+            InventoryUtils.prepareDescription(
+                    lore,
+                    legitimate ? PlayerStateLists.legitimatePlayers
+                            : profile.isHacker()
+                            ? PlayerStateLists.hackerPlayers
+                            : PlayerStateLists.suspectedPlayers
+            );
+            if (!evidenceDetails.isEmpty()) {
+                lore.add(legitimate ? "§7Evaluated for§8:" : "§7Detected for§8:");
+
+                for (Enums.HackType hackType : evidenceDetails) {
+                    lore.add("§4" + hackType.getCheck().getName());
+                }
+                lore.add("");
+            }
+            lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
+            lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
+
+            if (isOnline) {
+                lore.add("§7CPS (Clicks Per Second)§8:§c " + target.clicks.getCount());
+                lore.add("§7Latency§8:§c " + target.getPing() + "ms");
+                lore.add("§7Edition§8:§c " + target.dataType);
+                lore.add("");
+                lore.add("§eLeft click to reset the player's live violations.");
+            } else {
+                lore.add("§7Edition§8:§c " + profile.getDataType().toString());
+                lore.add("");
+            }
+            lore.add("§cRight click to delete the player's stored data.");
+            add(
+                    "§c" + profile.getName(),
+                    lore,
+                    profile.getSkull(true),
+                    4
+            );
 
             for (Enums.HackCategoryType checkType : Enums.HackCategoryType.values()) {
                 if (checkType == Enums.HackCategoryType.EXPLOITS) {
-                    addCheck(HackType.Exploits, 15, isOnline, target, playerProfile, lore);
+                    addCheck(HackType.Exploits, 24, isOnline, target, profile, lore);
                 } else {
-                    addChecks(i, isOnline, target, playerProfile, lore, checkType);
+                    addChecks(i, isOnline, target, profile, lore, checkType);
                     i++;
                 }
             }
@@ -69,7 +114,7 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("");
             boolean added = false;
 
-            for (MiningHistory history : playerProfile.getMiningHistory()) {
+            for (MiningHistory history : profile.getMiningHistory()) {
                 int mines = history.getMines();
 
                 if (mines > 0) {
@@ -83,41 +128,11 @@ public class PlayerInfo extends InventoryMenu {
             if (!added) {
                 lore.add("§c" + PlayerStateLists.noDataAvailable);
             }
-            int miningHistoryMines = playerProfile.getOverallMiningHistory().getMines(),
-                    information = 29,
-                    reset = 33;
             ItemStack item = miningHistoryMines > 0 ?
                     new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(miningHistoryMines, 64), (short) 14) :
                     new ItemStack(Material.QUARTZ_BLOCK);
-            add("§2Mining History", lore, item, 16);
-
-            PunishmentHistory punishmentHistory = playerProfile.punishmentHistory;
-            lore.clear();
-            lore.add("");
-            lore.add("§7Warnings§8:§c " + punishmentHistory.getWarnings());
-            lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
-
-            if (isOnline) {
-                lore.add("§7CPS (Clicks Per Second)§8:§a " + target.clicks.getCount());
-                lore.add("§7Player Latency§8:§a " + target.getPing() + "ms");
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().toString() + " (" + target.dataType + ")");
-                add("§2Information", lore, new ItemStack(Material.BOOK, 1), information);
-
-                lore.clear();
-                lore.add("");
-                lore.add("§eLeft click to reset the player's live violations.");
-                lore.add("§cRight click to delete the player's stored data.");
-                add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
-            } else {
-                lore.add("§7Player State§8:§a " + playerProfile.evidence.getType().toString() + " (" + playerProfile.getDataType().toString() + ")");
-                add("§2Information", lore, new ItemStack(Material.BOOK), information);
-
-                lore.clear();
-                lore.add("");
-                lore.add("§cClick to delete the player's stored data.");
-                add("§4Reset", lore, new ItemStack(Material.REDSTONE), reset);
-            }
-            add("§c" + (back ? "Back" : "Close"), null, new ItemStack(Material.ARROW), 31);
+            add("§2Mining History", lore, item, 25);
+            add("§c" + (back ? "Back" : "Close"), null, new ItemStack(Material.ARROW), 40);
             return true;
         }
     }
@@ -251,8 +266,7 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     public void refresh(String targetName) {
-        if (Config.settings.getBoolean("Important.refresh_inventory_menu")
-                && cooldowns.canDo("")) {
+        if (cooldowns.canDo("")) {
             cooldowns.add("", 1);
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
@@ -276,10 +290,9 @@ public class PlayerInfo extends InventoryMenu {
     public boolean internalHandle(SpartanPlayer player) {
         String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
+        String playerName = title.substring(menu.length());
 
-        if (item.equals("Reset")) {
-            String playerName = title.substring(menu.length());
-
+        if (item.equals(playerName)) {
             if (!Permissions.has(player, Permission.MANAGE)) {
                 player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {

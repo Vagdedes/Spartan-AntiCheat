@@ -1,11 +1,13 @@
 package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.replicates.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.DeeCaaD.CrackShotPlus.Events.WeaponSecondScopeEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -47,18 +49,22 @@ public class CrackShotPlus implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void EntityDamage(EntityDamageEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getEntity().getUniqueId());
+            Entity entity = e.getEntity();
 
-            if (p != null && isUsingScope(p)) {
-                Config.compatibility.evadeFalsePositives(
-                        p,
-                        Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
-                        new Enums.HackCategoryType[]{
-                                Enums.HackCategoryType.MOVEMENT,
-                                Enums.HackCategoryType.COMBAT
-                        },
-                        60
-                );
+            if (entity instanceof Player) {
+                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+
+                if (p != null && isUsingScope(p)) {
+                    Config.compatibility.evadeFalsePositives(
+                            p,
+                            Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
+                            new Enums.HackCategoryType[]{
+                                    Enums.HackCategoryType.MOVEMENT,
+                                    Enums.HackCategoryType.COMBAT
+                            },
+                            60
+                    );
+                }
             }
         }
     }
@@ -66,18 +72,22 @@ public class CrackShotPlus implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void EntityByEntityDamage(EntityDamageByEntityEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getDamager().getUniqueId());
+            Entity entity = e.getDamager();
 
-            if (p != null && isUsingScope(p)) {
-                Config.compatibility.evadeFalsePositives(
-                        p,
-                        Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
-                        new Enums.HackCategoryType[]{
-                                Enums.HackCategoryType.MOVEMENT,
-                                Enums.HackCategoryType.COMBAT
-                        },
-                        30
-                );
+            if (entity instanceof Player) {
+                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+
+                if (p != null && isUsingScope(p)) {
+                    Config.compatibility.evadeFalsePositives(
+                            p,
+                            Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
+                            new Enums.HackCategoryType[]{
+                                    Enums.HackCategoryType.MOVEMENT,
+                                    Enums.HackCategoryType.COMBAT
+                            },
+                            30
+                    );
+                }
             }
         }
     }
