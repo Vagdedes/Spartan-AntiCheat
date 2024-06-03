@@ -144,23 +144,18 @@ public class SpartanPlayer {
         this.velocityReceived = Collections.synchronizedList(new LinkedList<>());
         this.damageReceived = Collections.synchronizedMap(new LinkedHashMap<>());
         this.damageDealt = Collections.synchronizedMap(new LinkedHashMap<>());
-        this.lastDamageReceived = new SpartanPlayerDamage(
-                this,
-                new EntityDamageEvent(p, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 0.0),
-                this.movement.getLocation(),
-                0L
-        );
-        this.lastDamageDealt = this.lastDamageReceived;
+        this.lastDamageReceived = new SpartanPlayerDamage(this);
+        this.lastDamageDealt = new SpartanPlayerDamage(this);
 
         // Load them all to keep their order
         for (EntityDamageEvent.DamageCause damageCause : EntityDamageEvent.DamageCause.values()) {
             this.damageReceived.put(
                     damageCause,
-                    this.lastDamageReceived
+                    new SpartanPlayerDamage(this)
             );
             this.damageDealt.put(
                     damageCause,
-                    this.lastDamageReceived
+                    new SpartanPlayerDamage(this)
             );
         }
         this.creationTime = System.currentTimeMillis();
@@ -305,7 +300,7 @@ public class SpartanPlayer {
             if (message != null) {
                 p.sendMessage(message);
             }
-            p.closeInventory();
+            SpartanBukkit.transferTask(p, p::closeInventory);
         }
     }
 
@@ -316,7 +311,7 @@ public class SpartanPlayer {
             p.sendMessage("");
             p.sendMessage(message);
             p.sendMessage("");
-            p.closeInventory();
+            SpartanBukkit.transferTask(p, p::closeInventory);
         }
     }
 
@@ -327,7 +322,10 @@ public class SpartanPlayer {
             Player p = getInstance();
 
             if (p != null) {
-                p.openInventory(inventory);
+                SpartanBukkit.transferTask(
+                        p,
+                        () -> p.openInventory(inventory)
+                );
             }
         }
     }
@@ -603,7 +601,7 @@ public class SpartanPlayer {
     }
 
     public void addReceivedDamage(EntityDamageEvent event) {
-        this.lastDamageReceived = new SpartanPlayerDamage(this, event, this.movement.getLocation());
+        this.lastDamageReceived = new SpartanPlayerDamage(this, event);
 
         synchronized (this.damageReceived) {
             this.damageReceived.put(
@@ -614,7 +612,7 @@ public class SpartanPlayer {
     }
 
     public void addDealtDamage(EntityDamageByEntityEvent event) {
-        this.lastDamageDealt = new SpartanPlayerDamage(this, event, this.movement.getLocation());
+        this.lastDamageDealt = new SpartanPlayerDamage(this, event);
 
         synchronized (this.damageDealt) {
             this.damageDealt.put(

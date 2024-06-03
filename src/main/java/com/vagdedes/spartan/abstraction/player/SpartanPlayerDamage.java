@@ -34,16 +34,23 @@ public class SpartanPlayerDamage {
     private final ItemStack activeItem;
     public final boolean boss, explosive;
 
-    SpartanPlayerDamage(SpartanPlayer player,
-                        EntityDamageEvent event,
-                        SpartanLocation location,
-                        long tick) {
+    SpartanPlayerDamage(SpartanPlayer player) {
+        this.parent = player;
+        this.tick = 0L;
+        this.event = null;
+        this.location = player.movement.getLocation();
+        this.activeItem = null;
+        this.boss = false;
+        this.explosive = false;
+    }
+
+    SpartanPlayerDamage(SpartanPlayer player, EntityDamageEvent event) {
         boolean abstractVelocity = false;
         player.trackers.add(Trackers.TrackerType.DAMAGE, (int) TPS.maximum);
         this.parent = player;
-        this.tick = tick;
+        this.tick = TPS.getTick(player);
         this.event = event;
-        this.location = location.clone();
+        this.location = player.movement.getLocation();
 
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent actualEvent = (EntityDamageByEntityEvent) this.event;
@@ -117,20 +124,14 @@ public class SpartanPlayerDamage {
         }
     }
 
-    SpartanPlayerDamage(SpartanPlayer player,
-                        EntityDamageEvent event,
-                        SpartanLocation location) {
-        this(player, event, location, TPS.getTick(player));
-    }
-
     public EntityDamageByEntityEvent getEntityDamageByEntityEvent() {
-        return event instanceof EntityDamageByEntityEvent
+        return this.event != null && this.event instanceof EntityDamageByEntityEvent
                 ? (EntityDamageByEntityEvent) this.event
                 : null;
     }
 
     public long ticksPassed() {
-        return TPS.getTick(this.parent) - tick;
+        return TPS.getTick(this.parent) - this.tick;
     }
 
     public ItemStack getActiveItem() {
@@ -140,7 +141,8 @@ public class SpartanPlayerDamage {
     }
 
     public boolean isPropellingProjectile() {
-        if (!this.event.isCancelled()
+        if (this.event != null
+                && !this.event.isCancelled()
                 && this.ticksPassed() <= TPS.maximum
                 && this.parent.movement.getTicksOnAir() <= TPS.maximum
                 && this.location.getPitch() <= -60.0f
@@ -156,7 +158,7 @@ public class SpartanPlayerDamage {
     }
 
     public boolean hasBigKnockBack() {
-        if (this.event.isCancelled()) {
+        if (this.event == null || this.event.isCancelled()) {
             return false;
         } else {
             int time = AlgebraUtils.integerRound(TPS.maximum * 2.0);
@@ -170,7 +172,7 @@ public class SpartanPlayerDamage {
     }
 
     public boolean isSignificant() {
-        if (this.event.isCancelled()) {
+        if (this.event == null || this.event.isCancelled()) {
             return false;
         } else if (this.hasBigKnockBack()) {
             return true;
@@ -191,7 +193,7 @@ public class SpartanPlayerDamage {
     }
 
     public boolean isSubtle() {
-        if (this.event.isCancelled()) {
+        if (this.event == null || this.event.isCancelled()) {
             return false;
         } else {
             EntityDamageEvent.DamageCause cause = this.event.getCause();

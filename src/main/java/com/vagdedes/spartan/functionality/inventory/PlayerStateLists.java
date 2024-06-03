@@ -5,7 +5,7 @@ import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;

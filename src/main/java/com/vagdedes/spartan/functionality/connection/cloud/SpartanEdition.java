@@ -29,9 +29,9 @@ public class SpartanEdition {
             type = "{type}",
             product = "{product}",
             versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections."
-                    + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §rto §lfix this§r." : ""),
-            limitNotificationMessage = "\nHey, just a heads up! You have more online players than the anti-cheat can check at once."
-                    + "\nClick §n" + patreonURL + "§r to learn how §lDetection Slots §rwork.";
+                    + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §r§cto §lfix this§r§c." : ""),
+            limitNotificationMessage = "\n§cHey, just a heads up! You have more online players than the anti-cheat can check at once."
+                    + "\nClick §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.";
     private static boolean
             notifyCache = false,
             alternativeVersion = false;

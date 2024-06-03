@@ -1,53 +1,41 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.gmail.nossr50.api.AbilityAPI;
+import com.gmail.nossr50.datatypes.player.McMMOPlayer;
+import com.gmail.nossr50.datatypes.skills.SuperAbilityType;
+import com.gmail.nossr50.util.player.UserManager;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
-import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
-import org.bukkit.entity.AnimalTamer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Wolf;
 
 public class mcMMO {
 
     public static boolean hasGeneralAbility(SpartanPlayer p) {
         if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
-            Player n = p.getInstance();
-            return n != null && AbilityAPI.isAnyAbilityEnabled(n)
+            McMMOPlayer n = getMcMMOPlayer(p);
 
-                    || PlayerUtils.isAxeItem(p.getItemInHand().getType())
-                    && !p.getNearbyEntities(
-                    CombatUtils.maxHitDistance,
-                    CombatUtils.maxHitDistance,
-                    CombatUtils.maxHitDistance).isEmpty()
-
-                    || hasTamingAbility(p);
-        } else {
-            return false;
-        }
-    }
-
-    public static boolean hasTreeFeller(SpartanPlayer p) {
-        if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
-            Player n = p.getInstance();
-            return n != null && AbilityAPI.treeFellerEnabled(n);
-        } else {
-            return false;
-        }
-    }
-
-    private static boolean hasTamingAbility(SpartanPlayer p) {
-        for (Entity entity : p.getNearbyEntities(PlayerUtils.chunk, PlayerUtils.chunk, PlayerUtils.chunk)) {
-            if (entity instanceof Wolf) {
-                AnimalTamer owner = ((Wolf) entity).getOwner();
-
-                if (owner != null && owner.getUniqueId().equals(p.uuid)) {
-                    return true;
+            if (n != null) {
+                for (SuperAbilityType type : SuperAbilityType.values()) {
+                    if (n.getAbilityMode(type)) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
     }
+
+    public static boolean hasTreeFeller(SpartanPlayer p) {
+        if (Compatibility.CompatibilityType.MC_MMO.isFunctional()) {
+            McMMOPlayer n = getMcMMOPlayer(p);
+            return n != null && n.getAbilityMode(SuperAbilityType.TREE_FELLER);
+        } else {
+            return false;
+        }
+    }
+
+    private static McMMOPlayer getMcMMOPlayer(SpartanPlayer p) {
+        Player n = p.getInstance();
+        return n == null ? null : UserManager.getPlayer(n);
+    }
+
 }

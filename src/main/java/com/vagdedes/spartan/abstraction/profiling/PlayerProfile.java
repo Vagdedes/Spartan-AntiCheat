@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.profiling;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.minecraft.server.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
