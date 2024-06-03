@@ -56,8 +56,11 @@ public class TPS {
     // Scheduler
 
     private static int getHash(SpartanPlayer player) {
-        SpartanLocation location = player.movement.getLocation();
-        int hash = SpartanBukkit.hashCodeMultiplier + player.getWorld().hashCode();
+        return getHash(player.movement.getLocation());
+    }
+
+    private static int getHash(SpartanLocation location) {
+        int hash = SpartanBukkit.hashCodeMultiplier + location.world.hashCode();
         hash = (SpartanBukkit.hashCodeMultiplier * hash) + location.getChunkX();
         return (SpartanBukkit.hashCodeMultiplier * hash) + location.getBlockZ();
     }
@@ -104,12 +107,34 @@ public class TPS {
         }
     }
 
+    public static long getTick(SpartanLocation location) {
+        if (MultiVersion.folia) {
+            Calculator calculator = getCalculator(getHash(location), false);
+            return calculator == null ? 0 : calculator.counter;
+        } else {
+            return calculator.counter;
+        }
+    }
+
     public static double get(SpartanPlayer player, boolean protection) {
         if (MultiVersion.folia) {
             if (player == null) {
                 return Bukkit.getTPS()[0];
             } else {
                 Calculator calculator = getCalculator(getHash(player), false);
+                return calculator == null ? maximum : calculator.result(protection);
+            }
+        } else {
+            return calculator.result(protection);
+        }
+    }
+
+    public static double get(SpartanLocation location, boolean protection) {
+        if (MultiVersion.folia) {
+            if (location == null) {
+                return Bukkit.getTPS()[0];
+            } else {
+                Calculator calculator = getCalculator(getHash(location), false);
                 return calculator == null ? maximum : calculator.result(protection);
             }
         } else {

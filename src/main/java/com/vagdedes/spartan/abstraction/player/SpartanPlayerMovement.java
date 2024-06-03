@@ -413,9 +413,7 @@ public class SpartanPlayerMovement {
                         || this.location.getZ() != actualLocation.getZ()
                         || this.location.getYaw() != actualLocation.getYaw()
                         || this.location.getPitch() != actualLocation.getPitch()) {
-                    SpartanLocation from = this.location.clone();
                     this.setLocation(new SpartanLocation(actualLocation), false);
-                    location.retrieveDataFrom(from);
                 }
             }
         }

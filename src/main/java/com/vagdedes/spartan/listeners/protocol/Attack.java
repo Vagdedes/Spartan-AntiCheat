@@ -27,7 +27,7 @@ public class Attack extends PacketAdapter {
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
 
-        SpartanBukkit.runTask(player, () -> {
+        SpartanBukkit.transferTask(player, () -> {
             Entity entity = ProtocolLibrary.getProtocolManager().
                     getEntityFromID(player.getWorld(), event.getPacket().getIntegers().read(0));
             PacketContainer packet = event.getPacket();

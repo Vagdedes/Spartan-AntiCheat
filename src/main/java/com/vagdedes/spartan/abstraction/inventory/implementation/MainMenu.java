@@ -38,31 +38,23 @@ public class MainMenu extends InventoryMenu {
     }
 
     public static void refresh() {
-        Runnable runnable = () -> {
-            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-            if (!players.isEmpty()) {
-                for (SpartanPlayer p : players) {
-                    SpartanBukkit.runTask(p, () -> {
-                        Player n = p.getInstance();
+        if (!players.isEmpty()) {
+            for (SpartanPlayer p : players) {
+                SpartanBukkit.transferTask(p, () -> {
+                    Player n = p.getInstance();
 
-                        if (n != null) {
-                            String title = n.getOpenInventory().getTitle();
+                    if (n != null) {
+                        String title = n.getOpenInventory().getTitle();
 
-                            if (title.startsWith(name)) {
-                                DiscordMemberCount.ignore();
-                                InteractiveInventory.mainMenu.open(p);
-                            }
+                        if (title.startsWith(name)) {
+                            DiscordMemberCount.ignore();
+                            InteractiveInventory.mainMenu.open(p);
                         }
-                    });
-                }
+                    }
+                });
             }
-        };
-
-        if (SpartanBukkit.isSynchronised()) {
-            runnable.run();
-        } else {
-            SpartanBukkit.transferTask(runnable);
         }
     }
 

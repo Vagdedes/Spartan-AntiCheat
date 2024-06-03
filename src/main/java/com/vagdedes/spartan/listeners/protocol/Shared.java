@@ -95,7 +95,6 @@ public class Shared {
         SpartanLocation
                 to = vehicle != null ? vehicle : new SpartanLocation(nto),
                 from = new SpartanLocation(e.getFrom());
-        from.retrieveDataFrom(to);
 
         // Values
         double preXZ = AlgebraUtils.getSquare(to.getX(), from.getX()) + AlgebraUtils.getSquare(to.getZ(), from.getZ()),

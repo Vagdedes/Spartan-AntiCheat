@@ -19,17 +19,18 @@ import java.util.*;
 public class SpartanBukkit {
 
     public static final boolean
+            // Change it when testing and put it to false if not ready for production
+            // before pushing on the repository
+            packetsForcedState = false,
             testMode = !JarVerification.enabled && !CloudBase.hasToken()
-            && !IDs.isBuiltByBit() && !IDs.isPolymart()
-            && Bukkit.getMotd().contains(Register.plugin.getName()),
+                    && !IDs.isBuiltByBit() && !IDs.isPolymart()
+                    && Bukkit.getMotd().contains(Register.plugin.getName()),
             canAdvertise = !JarVerification.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
             dataThread = new Threads.ThreadPool(1L),
-            analysisThread = new Threads.ThreadPool(1L),
-            chunkThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L),
-            detectionThread = MultiVersion.folia ? null : new Threads.ThreadPool(1L);
+            analysisThread = new Threads.ThreadPool(1L);
 
     public static final int hashCodeMultiplier = 31;
     private static final long packetsGracePeriod = 5_000L;
@@ -175,7 +176,9 @@ public class SpartanBukkit {
     // Separator
 
     public static boolean packetsEnabled() {
-        return testMode && Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
+        return testMode
+                && packetsForcedState
+                && Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
     }
 
     public static boolean packetsEnabled(UUID uuid) {

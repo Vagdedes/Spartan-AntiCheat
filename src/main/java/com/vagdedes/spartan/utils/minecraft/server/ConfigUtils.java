@@ -24,53 +24,18 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class ConfigUtils {
 
-    private static final Map<String, Map<String, Boolean>> map
-            = Collections.synchronizedMap(new LinkedHashMap<>());
-
-    public static void clear() {
-        synchronized (map) {
-            map.clear();
-        }
-    }
-
-    public static boolean contains(String message, String index) {
-        synchronized (map) {
-            Map<String, Boolean> childMap = map.get(message);
-
-            if (childMap != null) {
-                Boolean contains = childMap.get(index);
-
-                if (contains != null) {
-                    return contains;
-                }
-                contains = message.contains(index);
-                childMap.put(index, contains);
-                return contains;
-            } else {
-                childMap = new LinkedHashMap<>();
-                boolean contains = message.contains(index);
-                childMap.put(index, contains);
-                map.put(message, childMap);
-                return contains;
-            }
-        }
-    }
-
     public static String replace(String message, String target, String replacement) {
-        return contains(message, target) ? message.replace(target, replacement) : message;
+        return message.replace(target, replacement);
     }
 
     public static String replaceWithSyntax(String message, HackType hackType) {
         message = replace(message, "%%", " ");
         message = replace(message, "{space}", " ");
-        message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(null, false), 2)));
+        message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get((SpartanPlayer) null, false), 2)));
         message = replace(message, "{online}", String.valueOf(SpartanBukkit.getPlayerCount()));
         message = replace(message, "{staff}", String.valueOf(Permissions.getStaff().size()));
         message = replace(message, "{motd}", Bukkit.getMotd());
@@ -79,21 +44,16 @@ public class ConfigUtils {
         message = replace(message, "{server:version}", MultiVersion.versionString());
         message = replace(message, "{line}", "\n");
 
-        if (contains(message, "{date:")) {
-            LocalDateTime now = LocalDateTime.now();
-            message = replace(message, "{date:time}", DateTimeFormatter.ofPattern("HH:mm:ss").format(now));
-            message = replace(message, "{date:d-m-y}", DateTimeFormatter.ofPattern("dd/MM/yyyy").format(now));
-            message = replace(message, "{date:m-d-y}", DateTimeFormatter.ofPattern("MM/dd/yyyy").format(now));
-            message = replace(message, "{date:y-m-d}", DateTimeFormatter.ofPattern("yyyy/MM/dd").format(now));
-        }
+        LocalDateTime now = LocalDateTime.now();
+        message = replace(message, "{date:time}", DateTimeFormatter.ofPattern("HH:mm:ss").format(now));
+        message = replace(message, "{date:d-m-y}", DateTimeFormatter.ofPattern("dd/MM/yyyy").format(now));
+        message = replace(message, "{date:m-d-y}", DateTimeFormatter.ofPattern("MM/dd/yyyy").format(now));
+        message = replace(message, "{date:y-m-d}", DateTimeFormatter.ofPattern("yyyy/MM/dd").format(now));
 
         if (hackType != null) {
             Check check = hackType.getCheck();
-
-            if (contains(message, "{detection")) {
-                message = replace(message, "{detection}", check.getName());
-                message = replace(message, "{detection:real}", hackType.toString());
-            }
+            message = replace(message, "{detection}", check.getName());
+            message = replace(message, "{detection:real}", hackType.toString());
             message = replace(message, "{punish:detection}", String.valueOf(check.canPunish));
         }
         return message;

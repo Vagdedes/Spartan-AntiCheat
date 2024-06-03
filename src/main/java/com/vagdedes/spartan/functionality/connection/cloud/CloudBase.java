@@ -99,7 +99,7 @@ public class CloudBase {
 
     public static void announce(SpartanPlayer player) {
         if (Permissions.isStaff(player)) {
-            Runnable runnable = () -> {
+            SpartanBukkit.connectionThread.execute(() -> {
                 String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                 if (announcements.length > 0) {
@@ -117,13 +117,7 @@ public class CloudBase {
                         }
                     }
                 }
-            };
-
-            if (SpartanBukkit.isSynchronised()) {
-                runnable.run();
-            } else {
-                SpartanBukkit.connectionThread.execute(runnable);
-            }
+            });
         }
     }
 

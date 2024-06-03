@@ -1536,12 +1536,4 @@ public class BlockUtils {
         return isSlime(p, loc, blocks) || isBed(p, loc, blocks);
     }
 
-    public static boolean isClearLiquid(SpartanPlayer p, SpartanLocation loc) {
-        SpartanBlock b = loc.getBlock();
-
-        if (!b.liquid) {
-            return true;
-        }
-        return b.data == 0 || b.data == 8 || p != null && p.movement.getLocation().getBlock() != b;
-    }
 }

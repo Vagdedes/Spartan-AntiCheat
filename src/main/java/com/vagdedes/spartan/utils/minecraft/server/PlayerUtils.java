@@ -205,7 +205,12 @@ public class PlayerUtils {
                         ticks++;
 
                         if (ticks > maxTicks) {
-                            fallTicks.put(key, -1);
+                            if (fallTicks.put(key, -1) == null
+                                    && fallTicks.size() > 1_000) {
+                                Iterator<Integer> iterator = fallTicks.keySet().iterator();
+                                iterator.next();
+                                iterator.remove();
+                            }
                             return -1;
                         }
                     }
@@ -245,7 +250,12 @@ public class PlayerUtils {
                     } else {
                         ticks = -1;
                     }
-                    fallTicks.put(key, ticks);
+                    if (fallTicks.put(key, ticks) == null
+                            && fallTicks.size() > 1_000) {
+                        Iterator<Integer> iterator = fallTicks.keySet().iterator();
+                        iterator.next();
+                        iterator.remove();
+                    }
                 }
             }
             return ticks;

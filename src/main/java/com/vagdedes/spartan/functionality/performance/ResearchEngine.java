@@ -495,7 +495,7 @@ public class ResearchEngine {
     // Separator
 
     public static void refresh(boolean enabledPlugin) {
-        Runnable runnable = () -> {
+        SpartanBukkit.analysisThread.executeIfFree(() -> {
             // Complete Storage
             Config.sql.refreshDatabase();
 
@@ -509,13 +509,7 @@ public class ResearchEngine {
                 Pattern.clear();
                 ViolationAnalysis.clear();
             }
-        };
-
-        if (SpartanBukkit.isSynchronised()) {
-            SpartanBukkit.analysisThread.executeIfFree(runnable);
-        } else {
-            runnable.run();
-        }
+        });
     }
 
     private static void buildCache() {

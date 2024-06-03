@@ -91,7 +91,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
                     for (Set<Material> set : sets) {
                         if (set.contains(block.material)) {
@@ -113,7 +113,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
                     if (set.contains(block.material)) {
                         return true;
@@ -133,7 +133,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
                     if (block.material == material) {
                         return true;
@@ -153,7 +153,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, null, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
                     if (block.material.isSolid()) {
                         return true;

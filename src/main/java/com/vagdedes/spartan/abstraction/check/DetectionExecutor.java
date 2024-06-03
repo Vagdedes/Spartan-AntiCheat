@@ -2,8 +2,6 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
 
@@ -21,20 +19,6 @@ public abstract class DetectionExecutor {
         this.executor = this instanceof CheckExecutor ? (CheckExecutor) this : executor;
         this.hackType = hackType;
         this.player = player;
-    }
-
-    protected final void runAsync(Runnable runnable) {
-        if (!MultiVersion.folia
-                && !SpartanBukkit.packetsEnabled()
-                && (hackType.getCheck().isSilent(player.getWorld().getName())
-                || TPS.getMillisecondsPassed(player) <= tMinus)) {
-            SpartanBukkit.detectionThread.executeIfFreeElseHere(runnable);
-        } else {
-            // If there are less than X milliseconds available and the check is not silent,
-            // we definitely run the detection on the main thread because we run into the
-            // danger of moving the possible prevention in the next tick
-            runnable.run();
-        }
     }
 
     // Separator

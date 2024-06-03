@@ -246,7 +246,7 @@ public class CloudConnections {
             int length = color.length();
 
             if (length >= 3 && length <= 6) {
-                Runnable runnable = () -> {
+                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         int webhookVersion = 2;
                         String crossServerInformationOption = CrossServerInformation.getOptionValue();
@@ -267,13 +267,7 @@ public class CloudConnections {
                     } catch (Exception e) {
                         CloudBase.throwError(e, "discordWebhooks:ADD");
                     }
-                };
-
-                if (SpartanBukkit.isSynchronised()) {
-                    SpartanBukkit.connectionThread.execute(runnable);
-                } else {
-                    runnable.run();
-                }
+                });
             }
         }
     }

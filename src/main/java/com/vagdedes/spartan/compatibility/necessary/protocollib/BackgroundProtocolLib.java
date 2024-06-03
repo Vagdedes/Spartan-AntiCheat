@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.compatibility.manual.packet.protocollib;
+package com.vagdedes.spartan.compatibility.necessary.protocollib;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;

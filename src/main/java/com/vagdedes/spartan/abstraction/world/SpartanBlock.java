@@ -1,41 +1,34 @@
 package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
 import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
-import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Levelled;
 import org.bukkit.block.data.Waterlogged;
 
 public class SpartanBlock {
 
+    private final long tick;
     public final Material material;
-    public final byte data;
-    public final int x, z;
-    public final short y;
     public final boolean liquid, waterLogged;
-    private final SpartanLocation location;
+    public final SpartanLocation location;
 
-    SpartanBlock(World world, Chunk chunk, Material material, byte data, int x, int y, int z, boolean liquid, boolean waterLogged) {
+    SpartanBlock(SpartanLocation location, Material material, boolean liquid, boolean waterLogged) {
         this.material = material;
-        this.data = data;
-        this.x = x;
-        this.y = (short) y;
-        this.z = z;
         this.liquid = liquid;
         this.waterLogged = waterLogged;
-        this.location = new SpartanLocation(world, chunk, this.x, this.y, this.z, 0.0f, 0.0f);
+        this.location = location;
+        this.tick = TPS.getTick(location);
     }
 
     public SpartanBlock(Block block) {
+        Location location = block.getLocation();
+        this.location = new SpartanLocation(block.getWorld(), location.getX(), location.getY(), location.getZ(), 0.0f, 0.0f);
         this.material = block.getType();
-        this.x = block.getX();
-        this.y = (short) block.getY();
-        this.z = block.getZ();
-        this.location = new SpartanLocation(block.getWorld(), null, this.x, this.y, this.z, 0.0f, 0.0f);
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             Object blockData = block.getBlockData();
@@ -47,17 +40,20 @@ public class SpartanBlock {
                 this.liquid = BlockUtils.isLiquid(block);
                 this.waterLogged = false;
             }
-            this.data = (byte) (blockData instanceof Levelled ? ((Levelled) blockData).getLevel() : 0);
         } else {
             this.liquid = BlockUtils.isLiquid(block);
             this.waterLogged = false;
-            this.data = block.getData();
         }
+        this.tick = TPS.getTick(this.location);
+    }
+
+    long ticksPassed() {
+        return TPS.getTick(this.location) - this.tick;
     }
 
     public void removeBlockCache() {
         synchronized (SpartanLocation.memory) {
-            SpartanLocation.memory.remove(this.location.getIdentifier());
+            SpartanLocation.memory.remove(this.location.identifier);
         }
     }
 
@@ -65,23 +61,28 @@ public class SpartanBlock {
         return this.location.world;
     }
 
-    public Chunk getChunk() {
-        return this.location.getChunk();
+    public int getX() {
+        return this.location.getBlockX();
+    }
+
+    public int getY() {
+        return this.location.getBlockY();
+    }
+
+    public int getZ() {
+        return this.location.getBlockZ();
     }
 
     public boolean isLiquidOrWaterLogged(boolean lava) {
-        return liquid && (lava || material != MaterialUtils.get("lava")) || waterLogged;
+        return this.liquid && (lava || this.material != MaterialUtils.get("lava")) || this.waterLogged;
     }
 
     public boolean isNonWaterLoggedLiquid(boolean lava) {
-        return liquid && !waterLogged && (lava || material != MaterialUtils.get("lava"));
+        return this.liquid && !this.waterLogged && (lava || this.material != MaterialUtils.get("lava"));
     }
 
     public boolean isLiquid(Material material) {
-        return liquid && this.material == material;
+        return this.liquid && this.material == material;
     }
 
-    public SpartanLocation getLocation() {
-        return this.location;
-    }
 }

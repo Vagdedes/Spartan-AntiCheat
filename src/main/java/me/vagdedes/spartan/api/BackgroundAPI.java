@@ -95,7 +95,7 @@ public class BackgroundAPI {
     }
 
     static double getTPS() {
-        return TPS.get(null, false);
+        return TPS.get((SpartanPlayer) null, false);
     }
 
     static boolean hasPermission(Player p, Permission Permission) {

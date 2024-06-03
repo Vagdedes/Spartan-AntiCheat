@@ -60,7 +60,6 @@ public class Register extends JavaPlugin {
             enable(new NPCManager(), NPCManager.class);
         }
         if (!MultiVersion.folia) {
-            enable(new EventsHandler_Non_Folia(), EventsHandler_Non_Folia.class);
         }
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             enable(new EventsHandler_1_9(), EventsHandler_1_9.class);

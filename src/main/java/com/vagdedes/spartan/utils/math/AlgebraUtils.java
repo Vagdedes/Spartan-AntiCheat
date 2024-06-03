@@ -160,7 +160,6 @@ public class AlgebraUtils {
     }
 
     public static double getHorizontalDistance(SpartanLocation loc1, SpartanLocation loc2) {
-        loc1.retrieveDataFrom(loc2);
         return Math.sqrt(getSquare(loc1.getX(), loc2.getX()) + getSquare(loc1.getZ(), loc2.getZ()));
     }
 
@@ -179,7 +178,6 @@ public class AlgebraUtils {
     }
 
     public static double getVerticalDistance(SpartanLocation loc1, SpartanLocation loc2) {
-        loc1.retrieveDataFrom(loc2);
         return Math.sqrt(getSquare(loc1.getY(), loc2.getY()));
     }
 
