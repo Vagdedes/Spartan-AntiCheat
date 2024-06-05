@@ -37,7 +37,7 @@ public class CloudBase {
 
     // Parameters
     static String identification = "", token = null;
-    static int version = 0;
+    static final String version = calculateVersion();
     static final String separator = ">@#&!%<;=";
 
     static {
@@ -47,18 +47,20 @@ public class CloudBase {
             refresh(true);
             refresh(false);
         }), 1L, refreshTime);
-
-        String[] verstionString = Register.plugin.getDescription().getVersion().split(" ");
-
-        for (String s : verstionString) {
-            if (AlgebraUtils.validInteger(s)) {
-                version = Integer.parseInt(s);
-                break;
-            }
-        }
     }
 
     // Separator
+
+    private static String calculateVersion() {
+        String[] verstionString = Register.plugin.getDescription().getVersion().split(" ");
+
+        for (String s : verstionString) {
+            if (AlgebraUtils.validInteger(s) || AlgebraUtils.validDecimal(s)) {
+                return s;
+            }
+        }
+        return "0";
+    }
 
     public static boolean hasToken() {
         return token != null && !IDs.hasUserIDByDefault;

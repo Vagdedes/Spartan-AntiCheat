@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
@@ -46,7 +45,6 @@ public abstract class CheckExecutor extends DetectionExecutor {
 
     public final void scheduler() {
         function = !TPS.areLow(player)
-                && MaximumCheckedPlayers.isChecked(player.uuid)
                 && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
                 || player.getGameMode() != GameMode.SPECTATOR)
                 && player.getCancellableCompatibility() == null
@@ -89,7 +87,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
     }
 
     private boolean canFunctionOrJustImplemented() {
-        return function || player.timePassedSinceCreation() <= (TPS.maximum * TPS.tickTime);
+        return function || player.ticksPassed() <= TPS.maximum;
     }
 
     final boolean canFunction() {

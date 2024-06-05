@@ -7,6 +7,7 @@ import org.bukkit.SkullType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,28 @@ public class InventoryUtils {
     }
 
     public static ItemStack getSkull(OfflinePlayer offlinePlayer, String backupName, boolean create) {
-        return BackgroundInventoryUtils.getSkull(offlinePlayer, backupName, create);
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+            return BackgroundInventoryUtils.getSkull_v1_13(offlinePlayer, backupName, create);
+        } else {
+            ItemStack skull = new ItemStack(
+                    Material.getMaterial("SKULL_ITEM"),
+                    1,
+                    (short) SkullType.PLAYER.ordinal()
+            );
+            SkullMeta meta = (SkullMeta) skull.getItemMeta();
+            String name = null;
+
+            if (offlinePlayer != null) {
+                name = offlinePlayer.getName();
+            }
+            if (name != null) {
+                meta.setOwner(name);
+            } else if (backupName != null) {
+                meta.setOwner(backupName);
+            }
+            skull.setItemMeta(meta);
+            return skull;
+        }
     }
 
 }

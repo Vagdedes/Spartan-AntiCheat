@@ -5,9 +5,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MiningHistory {
 
@@ -59,7 +58,7 @@ public class MiningHistory {
 
     public final MiningOre ore;
     private final int[] mines;
-    private final Set<String> days;
+    private final Map<String, Boolean> days;
 
     MiningHistory(MiningOre ore, int mines) {
         World.Environment[] environments = World.Environment.values();
@@ -69,7 +68,7 @@ public class MiningHistory {
             this.mines[environment.ordinal()] = mines;
         }
         this.ore = ore;
-        this.days = Collections.synchronizedSet(new HashSet<>());
+        this.days = new ConcurrentHashMap<>();
     }
 
     public int getMines() {
@@ -86,9 +85,7 @@ public class MiningHistory {
     }
 
     public int increaseMines(World.Environment environment, int amount, String date) {
-        synchronized (days) {
-            days.add(date);
-        }
+        days.putIfAbsent(date, null);
         return mines[environment.ordinal()] += amount;
     }
 

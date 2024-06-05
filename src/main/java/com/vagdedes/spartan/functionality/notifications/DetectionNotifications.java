@@ -21,12 +21,6 @@ public class DetectionNotifications {
             new LinkedHashMap<>(Config.getMaxPlayers())
     );
 
-    public static void clear() {
-        synchronized (notifications) {
-            notifications.clear();
-        }
-    }
-
     public static List<SpartanPlayer> getPlayers(boolean all) {
         if (!notifications.isEmpty()) {
             List<SpartanPlayer> list = new ArrayList<>(notifications.size());

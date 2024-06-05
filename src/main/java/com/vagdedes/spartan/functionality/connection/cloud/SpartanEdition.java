@@ -92,8 +92,10 @@ public class SpartanEdition {
 
     public static boolean attemptNotification(SpartanPlayer player) {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        int detectionSlots = CloudBase.getDetectionSlots();
 
-        if (players.size() <= CloudBase.getDetectionSlots()
+        if (detectionSlots <= 0
+                || players.size() <= detectionSlots
                 || !sendLimitNotification(player)) {
             Enums.DataType missingDetection = getMissingDetection();
 

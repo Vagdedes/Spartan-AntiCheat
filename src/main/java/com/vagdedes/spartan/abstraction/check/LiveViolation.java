@@ -12,6 +12,7 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -54,7 +55,8 @@ public class LiveViolation {
 
     void run(HackPrevention newPrevention, String information, double violations, long time) {
         synchronized (this) {
-            if (!CloudBase.isInformationCancelled(hackType, information)
+            if (PlayerDetectionSlots.isChecked(player.uuid)
+                    && !CloudBase.isInformationCancelled(hackType, information)
                     && (disableCause == null
                     || disableCause.hasExpired()
                     || !disableCause.pointerMatches(information))) {

@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.inventory;
 
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -37,7 +36,7 @@ public class PlayerStateLists {
             45, 46, 47, 48, 49, 50, 51, 52, 53
     };
 
-    private static final Map<UUID, Integer> cache = Cache.store(new LinkedHashMap<>());
+    private static final Map<UUID, Integer> cache = new LinkedHashMap<>();
 
     private static void fill(String title, Inventory inventory, PlayerProfile profile,
                              List<String> description, int slot) {

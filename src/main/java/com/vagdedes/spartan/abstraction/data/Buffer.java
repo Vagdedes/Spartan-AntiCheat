@@ -3,37 +3,40 @@ package com.vagdedes.spartan.abstraction.data;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.TPS;
 
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Buffer {
 
-    private final Map<String, BufferChild> storage;
+    private final Map<String, IndividualBuffer> storage;
     private final SpartanPlayer player;
 
-    private static class BufferChild {
+    public static class IndividualBuffer {
 
-        private final Buffer parent;
+        private final SpartanPlayer parent;
         private int count;
         private long start;
 
-        private BufferChild(Buffer buffer) {
-            this.parent = buffer;
+        public IndividualBuffer(SpartanPlayer player) {
+            this.parent = player;
             this.reset();
         }
 
-        private long ticksPassed() {
-            return TPS.getTick(this.parent.player) - this.start;
+        public long ticksPassed() {
+            return TPS.getTick(this.parent) - this.start;
         }
 
-        private int increase(int amount) {
+        public int set(int amount) {
+            return this.count = amount;
+        }
+
+        public int increase(int amount) {
             this.count += amount;
             return this.count;
         }
 
-        private int decrease(int amount) {
+        public int decrease(int amount) {
             if (this.count > amount) {
                 this.count -= amount;
                 return this.count;
@@ -43,76 +46,56 @@ public class Buffer {
             }
         }
 
-        private void reset() {
+        public void reset() {
             this.count = 0;
-            this.start = TPS.getTick(this.parent.player);
+            this.start = TPS.getTick(this.parent);
         }
+
+        public int count(int amount, int maxTicks) {
+            if (this.ticksPassed() > maxTicks) {
+                this.reset();
+            }
+            return this.increase(amount);
+        }
+
     }
 
     public Buffer(SpartanPlayer player) {
         this.player = player;
-        this.storage = Collections.synchronizedMap(new LinkedHashMap<>());
-    }
-
-    // Implementation
-
-    public void clear() {
-        synchronized (storage) {
-            storage.clear();
-        }
+        this.storage = new ConcurrentHashMap<>();
     }
 
     public int get(String name) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.get(name);
-        }
+        IndividualBuffer obj = storage.get(name);
         return obj != null ? obj.count : 0;
     }
 
     public void set(String name, int amount) {
-        BufferChild obj;
+        IndividualBuffer obj = storage.get(name);
 
-        synchronized (storage) {
-            obj = storage.get(name);
-
-            if (obj == null) {
-                obj = new BufferChild(this);
-                storage.put(name, obj);
-            }
+        if (obj == null) {
+            obj = new IndividualBuffer(this.player);
+            storage.put(name, obj);
         }
         obj.reset();
         obj.increase(amount);
     }
 
     public int increase(String name, int amount) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.computeIfAbsent(
-                    name,
-                    k -> new BufferChild(this)
-            );
-        }
-        return obj.increase(amount);
+        return storage.computeIfAbsent(
+                name,
+                k -> new IndividualBuffer(this.player)
+        ).increase(amount);
     }
 
     public int decrease(String name, int amount) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.get(name);
-        }
+        IndividualBuffer obj = storage.get(name);
         return obj != null ? obj.decrease(amount) : 0;
     }
 
     public int getRemainingTicks(String name, int maxTicks) {
-        BufferChild obj;
+        IndividualBuffer obj = storage.get(name);
 
-        synchronized (storage) {
-            obj = storage.get(name);
-        }
         if (obj == null) {
             return 0;
         } else {
@@ -122,23 +105,14 @@ public class Buffer {
     }
 
     public int count(String name, int maxTicks) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.computeIfAbsent(name, k -> new BufferChild(this));
-        }
-        if (obj.ticksPassed() > maxTicks) {
-            obj.reset();
-        }
-        return obj.increase(1);
+        return storage.computeIfAbsent(
+                name,
+                k -> new IndividualBuffer(this.player)
+        ).count(1, maxTicks);
     }
 
     public double ratio(String name, int minimumTicks, int maxTicks) {
-        BufferChild obj;
-
-        synchronized (storage) {
-            obj = storage.computeIfAbsent(name, k -> new BufferChild(this));
-        }
+        IndividualBuffer obj = storage.computeIfAbsent(name, k -> new IndividualBuffer(this.player));
         double ticksPassed = obj.ticksPassed();
         int count;
 
@@ -156,28 +130,22 @@ public class Buffer {
     }
 
     public void remove(String name) {
-        synchronized (storage) {
-            storage.remove(name);
-        }
+        storage.remove(name);
     }
 
     public void remove(String[] names) {
-        synchronized (storage) {
-            for (String name : names) {
-                storage.remove(name);
-            }
+        for (String name : names) {
+            storage.remove(name);
         }
     }
 
     public void clear(String s) {
         if (!storage.isEmpty()) {
-            synchronized (storage) {
-                Iterator<String> iterator = storage.keySet().iterator();
+            Iterator<String> iterator = storage.keySet().iterator();
 
-                while (iterator.hasNext()) {
-                    if (iterator.next().contains(s)) {
-                        iterator.remove();
-                    }
+            while (iterator.hasNext()) {
+                if (iterator.next().contains(s)) {
+                    iterator.remove();
                 }
             }
         }

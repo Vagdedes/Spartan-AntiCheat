@@ -5,7 +5,7 @@ import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
@@ -42,7 +42,7 @@ public class Event_Status implements Listener {
             return;
         }
         // Features
-        MaximumCheckedPlayers.remove(p);
+        PlayerDetectionSlots.remove(p);
         ChatProtection.remove(p);
     }
 

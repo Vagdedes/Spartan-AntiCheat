@@ -39,15 +39,15 @@ public class JarVerification {
 
         // Separator
         long delay = 1200L;
-        Object scheduledTask = SpartanBukkit.runRepeatingTask(JarVerification::collectAdministrators, 1L, 20L);
+        Object scheduledTask = SpartanBukkit.runRepeatingTask(JarVerification::collectAdministrators, 1L, 1L);
 
-        SpartanBukkit.runDelayedTask(() -> SpartanBukkit.connectionThread.execute(() -> {
-            boolean b = isValid(IDs.site(), IDs.user(), IDs.nonce());
-
-            if (!b) {
-                valid = b;
-            }
-        }), delay * 2);
+        SpartanBukkit.runDelayedTask(() -> SpartanBukkit.connectionThread.execute(() ->
+                valid = isValid(
+                        "https://www.vagdedes.com/minecraft/cloud/verification/?id=&nonce=",
+                        IDs.user(),
+                        IDs.nonce()
+                )
+        ), delay * 2L);
 
         // Separator
 

@@ -50,6 +50,7 @@ import java.util.*;
 
 public class SpartanPlayer {
 
+    public final SpartanProtocol protocol;
     public final boolean bedrockPlayer;
     public final String name;
     public final UUID uuid;
@@ -62,7 +63,7 @@ public class SpartanPlayer {
     public final Trackers trackers;
     public final Clicks clicks;
 
-    private final long creationTime;
+    private final long tick;
     private final Map<EntityDamageEvent.DamageCause, SpartanPlayerDamage>
             damageReceived,
             damageDealt;
@@ -125,10 +126,11 @@ public class SpartanPlayer {
 
     // Object
 
-    public SpartanPlayer(Player p, UUID uuid) {
+    public SpartanPlayer(SpartanProtocol protocol, Player p) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
 
-        this.uuid = uuid;
+        this.protocol = protocol;
+        this.uuid = p.getUniqueId();
         this.bedrockPlayer = BedrockCompatibility.isPlayer(p);
         this.dataType = bedrockPlayer ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
         this.trackers = new Trackers(this);
@@ -158,7 +160,7 @@ public class SpartanPlayer {
                     new SpartanPlayerDamage(this)
             );
         }
-        this.creationTime = System.currentTimeMillis();
+        this.tick = System.currentTimeMillis();
 
         this.buffer = new Buffer(this);
         this.cooldowns = new Cooldowns(this);
@@ -268,10 +270,7 @@ public class SpartanPlayer {
                 && (action == null || action == Action.LEFT_CLICK_AIR)) {
             clicks.calculate();
             this.getExecutor(Enums.HackType.FastClicks).run(false);
-
-            if (clicks.canDistributeInformation()) {
-                InteractiveInventory.playerInfo.refresh(name);
-            }
+            InteractiveInventory.playerInfo.refresh(name);
         }
     }
 
@@ -367,11 +366,11 @@ public class SpartanPlayer {
     // Separator
 
     public Player getInstance() {
-        return SpartanBukkit.getRealPlayer(uuid);
+        return this.protocol.player;
     }
 
-    public long timePassedSinceCreation() {
-        return System.currentTimeMillis() - creationTime;
+    public long ticksPassed() {
+        return TPS.getTick(this) - this.tick;
     }
 
     // Separator
@@ -391,7 +390,7 @@ public class SpartanPlayer {
 
         if (vehicle != null) {
             return vehicle.isOnGround();
-        } else if (SpartanBukkit.packetsEnabled(this.uuid)) {
+        } else if (SpartanBukkit.packetsEnabled(this)) {
             Player p = this.getInstance();
             SpartanProtocol protocol = p == null ? null : SpartanBukkit.getProtocol(p);
             return protocol != null && protocol.trueOrFalse(protocol.onGround)

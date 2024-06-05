@@ -1,12 +1,10 @@
 package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.server.TPS;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Cooldowns {
 
@@ -14,26 +12,13 @@ public class Cooldowns {
     private final SpartanPlayer player;
 
     public Cooldowns(SpartanPlayer player) {
-        this.storage = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.storage = new ConcurrentHashMap<>();
         this.player = player;
-
-        if (player == null) {
-            Cache.store(this.storage);
-        }
-    }
-
-    public void clear() {
-        synchronized (storage) {
-            storage.clear();
-        }
     }
 
     public int get(String name) {
-        Long object;
+        Long object = storage.get(name);
 
-        synchronized (storage) {
-            object = storage.get(name);
-        }
         if (object == null) {
             return 0;
         } else {
@@ -52,43 +37,32 @@ public class Cooldowns {
 
     public void add(String name, int ticks) {
         if (player == null) {
-            synchronized (storage) {
-                storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
-            }
+            storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
         } else {
-            synchronized (storage) {
-                storage.put(name, TPS.getTick(player) + ticks);
-            }
+            storage.put(name, TPS.getTick(player) + ticks);
         }
     }
 
     public void add(String[] names, int ticks) {
         if (player == null) {
-            synchronized (storage) {
-                for (String name : names) {
-                    storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
-                }
+            for (String name : names) {
+                storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
             }
         } else {
-            synchronized (storage) {
-                for (String name : names) {
-                    storage.put(name, TPS.getTick(player) + ticks);
-                }
+            for (String name : names) {
+                storage.put(name, TPS.getTick(player) + ticks);
             }
         }
     }
 
     public void remove(String name) {
-        synchronized (storage) {
+        storage.remove(name);
+    }
+
+    public void remove(String[] names) {
+        for (String name : names) {
             storage.remove(name);
         }
     }
 
-    public void remove(String[] names) {
-        synchronized (storage) {
-            for (String name : names) {
-                storage.remove(name);
-            }
-        }
-    }
 }

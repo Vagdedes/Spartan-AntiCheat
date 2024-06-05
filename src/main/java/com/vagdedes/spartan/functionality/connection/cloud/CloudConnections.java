@@ -69,9 +69,8 @@ public class CloudConnections {
             String[] reply = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website)
                             + "?action=get"
                             + "&data=userIdentification"
-                            + "&version=" + CloudBase.version
-                            + (!CloudBase.identification.isEmpty() ? "&" + CloudBase.identification : ""),
-                    RequestUtils.defaultTimeOut / 2);
+                            + "&version=" + CloudBase.version,
+                    RequestUtils.defaultTimeOut);
 
             if (reply.length > 0) {
                 String line = reply[0];

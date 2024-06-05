@@ -7,7 +7,6 @@ import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -89,8 +88,6 @@ public class Settings extends ConfigurationBuilder {
 
         addOption("Detections.ground_teleport_on_detection", true);
         addOption("Detections.fall_damage_on_teleport", false);
-
-        addOption(MaximumCheckedPlayers.option, 100);
 
         addOption("Discord.webhook_hex_color", "4caf50");
         addOption("Discord.checks_webhook_url", "");

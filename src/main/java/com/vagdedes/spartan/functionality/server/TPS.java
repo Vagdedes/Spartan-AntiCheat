@@ -6,7 +6,11 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.management.Config;
 import org.bukkit.Bukkit;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TPS {
 
@@ -31,16 +35,14 @@ public class TPS {
                 int size = players.size();
 
                 if (size > 0) {
-                    Set<Integer> processed = Collections.synchronizedSet(new HashSet<>(size));
+                    Map<Integer, Boolean> processed = new ConcurrentHashMap<>(size);
 
                     for (SpartanPlayer player : players) {
                         SpartanBukkit.runTask(player, () -> {
-                            synchronized (processed) {
-                                int hash = getHash(player);
+                            int hash = getHash(player);
 
-                                if (processed.add(hash)) {
-                                    runCalculator(getCalculator(hash, true));
-                                }
+                            if (processed.putIfAbsent(hash, null) == null) {
+                                runCalculator(getCalculator(hash, true));
                             }
                         });
                     }

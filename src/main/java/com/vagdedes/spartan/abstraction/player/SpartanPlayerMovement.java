@@ -23,11 +23,15 @@ public class SpartanPlayerMovement {
 
     private final SpartanPlayer parent;
     double schedulerDistance;
-    private final List<Double>
+    private Double
             eventDistance,
+            eventPreviousDistance,
             eventHorizontal,
+            eventPreviousHorizontal,
             eventVertical,
-            eventBox;
+            eventPreviousVertical,
+            eventBox,
+            eventPreviousBox;
     private final Map<Long, List<SpartanLocation>> locations;
     private int
             airTicks;
@@ -46,11 +50,6 @@ public class SpartanPlayerMovement {
     SpartanPlayerMovement(SpartanPlayer parent, Player p) {
         this.parent = parent;
         this.schedulerDistance = 0.0;
-
-        this.eventDistance = Collections.synchronizedList(new LinkedList<>());
-        this.eventHorizontal = Collections.synchronizedList(new LinkedList<>());
-        this.eventVertical = Collections.synchronizedList(new LinkedList<>());
-        this.eventBox = Collections.synchronizedList(new LinkedList<>());
 
         this.airTicks = 0;
 
@@ -86,65 +85,41 @@ public class SpartanPlayerMovement {
     // Separator
 
     public Double getEventDistance() {
-        synchronized (eventDistance) {
-            int size = eventDistance.size();
-            return size > 0 ? eventDistance.get(size - 1) : null;
-        }
+        return eventDistance;
     }
 
     public Double getPreviousEventDistance() {
-        synchronized (eventDistance) {
-            int size = eventDistance.size();
-            return size > 1 ? eventDistance.get(size - 2) : null;
-        }
+        return eventPreviousDistance;
     }
 
     // Separator
 
     public Double getEventHorizontal() {
-        synchronized (eventHorizontal) {
-            int size = eventHorizontal.size();
-            return size > 0 ? eventHorizontal.get(size - 1) : null;
-        }
+        return eventHorizontal;
     }
 
     public Double getPreviousEventHorizontal() {
-        synchronized (eventHorizontal) {
-            int size = eventHorizontal.size();
-            return size > 1 ? eventHorizontal.get(size - 2) : null;
-        }
+        return eventPreviousHorizontal;
     }
 
     // Separator
 
     public Double getEventVertical() {
-        synchronized (eventVertical) {
-            int size = eventVertical.size();
-            return size > 0 ? eventVertical.get(size - 1) : null;
-        }
+        return eventVertical;
     }
 
     public Double getPreviousEventVertical() {
-        synchronized (eventVertical) {
-            int size = eventVertical.size();
-            return size > 1 ? eventVertical.get(size - 2) : null;
-        }
+        return eventPreviousVertical;
     }
 
     // Separator
 
     public Double getEventBox() {
-        synchronized (eventBox) {
-            int size = eventBox.size();
-            return size > 0 ? eventBox.get(size - 1) : null;
-        }
+        return eventBox;
     }
 
     public Double getPreviousEventBox() {
-        synchronized (eventBox) {
-            int size = eventBox.size();
-            return size > 1 ? eventBox.get(size - 2) : null;
-        }
+        return eventPreviousBox;
     }
 
     // Separator
@@ -204,7 +179,7 @@ public class SpartanPlayerMovement {
     public boolean isSneaking() {
         Player p = this.parent.getInstance();
 
-        if (SpartanBukkit.packetsEnabled(this.parent.uuid)) {
+        if (SpartanBukkit.packetsEnabled(this.parent)) {
             return p != null && SpartanBukkit.getProtocol(p).abilities.isSneaking();
         } else {
             return p != null && p.isSneaking();
@@ -227,7 +202,7 @@ public class SpartanPlayerMovement {
     public boolean isSprinting() {
         Player p = this.parent.getInstance();
 
-        if (SpartanBukkit.packetsEnabled(this.parent.uuid)) {
+        if (SpartanBukkit.packetsEnabled(this.parent)) {
             return p != null && SpartanBukkit.getProtocol(p).abilities.isSprinting();
         } else {
             return p != null && p.isSprinting();
@@ -381,7 +356,7 @@ public class SpartanPlayerMovement {
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
             Location playerLocation;
 
-            if (SpartanBukkit.packetsEnabled(this.parent.uuid)) {
+            if (SpartanBukkit.packetsEnabled(this.parent)) {
                 playerLocation = SpartanBukkit.getProtocol(player).getLocation();
             } else {
                 playerLocation = player.getLocation();
@@ -403,7 +378,7 @@ public class SpartanPlayerMovement {
             if (spartanLocation == null) {
                 Location actualLocation;
 
-                if (SpartanBukkit.packetsEnabled(this.parent.uuid)) {
+                if (SpartanBukkit.packetsEnabled(this.parent)) {
                     actualLocation = SpartanBukkit.getProtocol(p).getLocation();
                 } else {
                     actualLocation = p.getLocation();
@@ -456,21 +431,14 @@ public class SpartanPlayerMovement {
         this.setLocation(to, true);
         this.eventTo = to;
         this.eventFrom = from;
-        this.eventDistance.add(distance);
-        this.eventHorizontal.add(horizontal);
-        this.eventVertical.add(vertical);
-        this.eventBox.add(box);
-
-        for (List list : new List[]{
-                eventDistance,
-                eventHorizontal,
-                eventVertical,
-                eventBox
-        }) {
-            if (list.size() > 2) {
-                list.remove(0);
-            }
-        }
+        this.eventPreviousDistance = this.eventDistance;
+        this.eventDistance = distance;
+        this.eventPreviousHorizontal = this.eventHorizontal;
+        this.eventHorizontal = horizontal;
+        this.eventPreviousVertical = this.eventVertical;
+        this.eventVertical = vertical;
+        this.eventPreviousBox = this.eventBox;
+        this.eventBox = box;
         this.judgeGround(true);
         return true;
     }

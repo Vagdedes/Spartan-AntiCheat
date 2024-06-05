@@ -10,7 +10,7 @@ import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.performance.MaximumCheckedPlayers;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -53,7 +53,7 @@ public class Shared {
             return;
         }
         // System
-        MaximumCheckedPlayers.add(p);
+        PlayerDetectionSlots.add(p);
 
         if (!SpartanEdition.attemptNotification(p)
                 && Config.settings.getBoolean("Important.enable_watermark")) {

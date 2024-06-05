@@ -171,7 +171,6 @@ public class Config {
         }
 
         // System
-        Cache.clearStorage(!enabledPlugin);
         ResearchEngine.refresh(enabledPlugin);
     }
 

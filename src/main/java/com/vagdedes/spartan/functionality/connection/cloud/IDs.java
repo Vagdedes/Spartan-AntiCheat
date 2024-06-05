@@ -45,10 +45,6 @@ public class IDs {
         return !JarVerification.enabled ? localID : "%%__RESOURCE__%%";
     }
 
-    static String site() {
-        return "https://www.vagdedes.com/minecraft/cloud/verification/?id=&nonce=";
-    }
-
     // Platforms
 
     public static void setPlatform(int id) {
@@ -76,4 +72,5 @@ public class IDs {
         double number = AlgebraUtils.cut(Integer.parseInt(id) / version, 6);
         return String.valueOf(number).replace("-", "*").replace(".", "-");
     }
+
 }

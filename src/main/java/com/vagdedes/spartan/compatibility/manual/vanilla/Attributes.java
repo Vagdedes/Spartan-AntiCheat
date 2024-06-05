@@ -8,6 +8,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Collection;
 
@@ -56,13 +57,16 @@ public class Attributes {
                             MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? inventory.getItemInOffHand() : null
                     }) {
                         if (itemStack != null && itemStack.hasItemMeta()) {
-                            Collection<AttributeModifier> modifiers = itemStack.getItemMeta()
-                                    .getAttributeModifiers(attribute);
+                            ItemMeta meta = itemStack.getItemMeta();
 
-                            if (modifiers != null && !modifiers.isEmpty()) {
-                                for (AttributeModifier modifier : modifiers) {
-                                    modifiersCount++;
-                                    amount = Math.max(amount, modifier.getAmount());
+                            if (meta != null && meta.hasAttributeModifiers()) {
+                                Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(attribute);
+
+                                if (modifiers != null && !modifiers.isEmpty()) {
+                                    for (AttributeModifier modifier : modifiers) {
+                                        modifiersCount++;
+                                        amount = Math.max(amount, modifier.getAmount());
+                                    }
                                 }
                             }
                         }

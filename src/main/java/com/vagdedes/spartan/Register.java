@@ -3,11 +3,11 @@ package com.vagdedes.spartan;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.command.CommandTab;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.*;
 import com.vagdedes.spartan.utils.minecraft.server.ProxyUtils;
 import org.bukkit.Bukkit;
@@ -83,7 +83,7 @@ public class Register extends JavaPlugin {
         // Separator
         ProxyUtils.unregister();
         listeners.clear();
-        Cache.disable();
+        SpartanBukkit.disable();
     }
 
     // Utilities

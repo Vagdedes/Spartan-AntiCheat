@@ -19,6 +19,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BoundingBox;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.bukkit.potion.PotionEffectType.*;
 
@@ -64,8 +65,7 @@ public class PlayerUtils {
             fallDamageAboveBlocks = 3;
 
     private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
-    private static final Map<Integer, Integer>
-            fallTicks = Collections.synchronizedMap(new LinkedHashMap<>());
+    private static final Map<Integer, Integer> fallTicks = new ConcurrentHashMap<>();
     private static final Map<PotionEffectType, Integer> handledPotionEffects = new LinkedHashMap<>();
 
     static {
@@ -190,72 +190,68 @@ public class PlayerUtils {
             key = (key * SpartanBukkit.hashCodeMultiplier) + Double.hashCode(acceleration);
             key = (key * SpartanBukkit.hashCodeMultiplier) + Double.hashCode(drag);
             key = (key * SpartanBukkit.hashCodeMultiplier) + jump;
-            Integer ticks;
+            Integer ticks = fallTicks.get(key);
 
-            synchronized (fallTicks) {
-                ticks = fallTicks.get(key);
+            if (ticks == null) {
+                ticks = 0;
+                double preD = 0.0;
 
-                if (ticks == null) {
-                    ticks = 0;
-                    double preD = 0.0;
+                while (d < 0.0) {
+                    preD = d;
+                    d = (d / drag) + acceleration;
+                    ticks++;
 
-                    while (d < 0.0) {
-                        preD = d;
-                        d = (d / drag) + acceleration;
-                        ticks++;
-
-                        if (ticks > maxTicks) {
-                            if (fallTicks.put(key, -1) == null
-                                    && fallTicks.size() > 1_000) {
-                                Iterator<Integer> iterator = fallTicks.keySet().iterator();
-                                iterator.next();
-                                iterator.remove();
-                            }
-                            return -1;
+                    if (ticks > maxTicks) {
+                        if (fallTicks.put(key, -1) == null
+                                && fallTicks.size() > 1_000) {
+                            Iterator<Integer> iterator = fallTicks.keySet().iterator();
+                            iterator.next();
+                            iterator.remove();
                         }
+                        return -1;
                     }
+                }
 
-                    if (ticks > 0) {
-                        preD = Math.abs(preD);
-                        boolean precisely = preD < precision;
+                if (ticks > 0) {
+                    preD = Math.abs(preD);
+                    boolean precisely = preD < precision;
 
-                        if (!precisely && Math.abs(preD - (acceleration * drag)) >= precision) {
-                            boolean found = false;
+                    if (!precisely && Math.abs(preD - (acceleration * drag)) >= precision) {
+                        boolean found = false;
 
-                            if (jump == 0) {
-                                List<Double> motions = getJumpMotions(0);
+                        if (jump == 0) {
+                            List<Double> motions = getJumpMotions(0);
+                            double last = motions.get(motions.size() - 1);
+
+                            if (Math.abs(last - d) < precision) {
+                                found = true;
+                            }
+                        } else {
+                            for (int i : new int[]{jump, 0}) {
+                                List<Double> motions = getJumpMotions(i);
                                 double last = motions.get(motions.size() - 1);
 
                                 if (Math.abs(last - d) < precision) {
                                     found = true;
-                                }
-                            } else {
-                                for (int i : new int[]{jump, 0}) {
-                                    List<Double> motions = getJumpMotions(i);
-                                    double last = motions.get(motions.size() - 1);
-
-                                    if (Math.abs(last - d) < precision) {
-                                        found = true;
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
-
-                            if (!found) {
-                                ticks = -1;
-                            }
-                        } else if (precisely) {
-                            ticks -= 1;
                         }
-                    } else {
-                        ticks = -1;
+
+                        if (!found) {
+                            ticks = -1;
+                        }
+                    } else if (precisely) {
+                        ticks -= 1;
                     }
-                    if (fallTicks.put(key, ticks) == null
-                            && fallTicks.size() > 1_000) {
-                        Iterator<Integer> iterator = fallTicks.keySet().iterator();
-                        iterator.next();
-                        iterator.remove();
-                    }
+                } else {
+                    ticks = -1;
+                }
+                if (fallTicks.put(key, ticks) == null
+                        && fallTicks.size() > 1_000) {
+                    Iterator<Integer> iterator = fallTicks.keySet().iterator();
+                    iterator.next();
+                    iterator.remove();
                 }
             }
             return ticks;

@@ -73,7 +73,7 @@ public class MainMenu extends InventoryMenu {
         InventoryUtils.prepareDescription(lore, "Plugin Management");
         int slots = CloudBase.getDetectionSlots();
 
-        lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled(player.uuid) ? "Enabled" : "Disabled"));
+        lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled(player) ? "Enabled" : "Disabled"));
         if (slots <= 0) {
             lore.add("§7Detection Slots§8: §aUnlimited");
         } else {
@@ -170,23 +170,21 @@ public class MainMenu extends InventoryMenu {
         } else if (item.equals("Compatibilities")) {
             if (!Permissions.has(player, Permission.MANAGE)) {
                 player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-            } else {
-                if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
-                    Player n = player.getInstance();
+            } else if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
+                Player n = player.getInstance();
 
-                    if (n != null && n.hasPermission("filegui.modify")) {
-                        FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
-                    } else {
-                        player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
-                    }
+                if (n != null && n.hasPermission("filegui.modify")) {
+                    FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                 } else {
-                    player.sendInventoryCloseMessage(
-                            "§7You need §aFileGUI §7to access this feature§8:\n§2"
-                                    + (IDs.isBuiltByBit() ? "https://builtbybit.com/resources/13185"
-                                    : IDs.isPolymart() ? "https://polymart.org/resource/984"
-                                    : "https://www.spigotmc.org/resources/73893")
-                    );
+                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
                 }
+            } else {
+                player.sendInventoryCloseMessage(
+                        "§7You need §aFileGUI §7to access this feature§8:\n§2"
+                                + (IDs.isBuiltByBit() ? "https://builtbybit.com/resources/13185"
+                                : IDs.isPolymart() ? "https://polymart.org/resource/984"
+                                : "https://www.spigotmc.org/resources/73893")
+                );
             }
 
         } else if (item.equals("Management")) {

@@ -272,7 +272,12 @@ public class SpartanLocation {
                     cache = setBlock();
 
                     synchronized (SpartanLocation.memory) {
-                        SpartanLocation.memory.put(this.identifier, cache);
+                        if (SpartanLocation.memory.put(this.identifier, cache) == null
+                                && SpartanLocation.memory.size() > 1_000) {
+                            Iterator<Integer> iterator = memory.keySet().iterator();
+                            iterator.next();
+                            iterator.remove();
+                        }
                     }
                     return cache;
                 } else {
@@ -400,8 +405,31 @@ public class SpartanLocation {
 
     // Surrounding
 
-    // todo block idea where you check x and z and if within 301 and 699 then you don't check surroundings
     public Collection<SpartanLocation> getSurroundingLocations(double x, double y, double z) {
+        if (x >= 1.0 || z >= 1.0) {
+            return this.getRawSurroundingLocations(x, y, z).values();
+        } else {
+            double endX = 1.0 - x, endZ = 1.0 - z;
+
+            if (x != endX && z != endZ) {
+                double xBox = getX() - getBlockX(),
+                        zBox = getZ() - getBlockZ();
+
+                if (xBox > x && xBox < endX
+                        && zBox > z && zBox < endZ) {
+                    List<SpartanLocation> locations = new ArrayList<>(2);
+                    locations.add(this.clone().add(0, y, 0));
+                    return locations;
+                } else {
+                    return this.getRawSurroundingLocations(x, y, z).values();
+                }
+            } else {
+                return this.getRawSurroundingLocations(x, y, z).values();
+            }
+        }
+    }
+
+    private Map<Integer, SpartanLocation> getRawSurroundingLocations(double x, double y, double z) {
         Map<Integer, SpartanLocation> locations = new LinkedHashMap<>(10, 1.0f);
         SpartanLocation yOnly = this.clone().add(0, y, 0);
         locations.put(yOnly.identifier, yOnly);
@@ -419,7 +447,7 @@ public class SpartanLocation {
             SpartanLocation location = this.clone().add(positions[0], y, positions[1]);
             locations.putIfAbsent(location.identifier, location);
         }
-        return locations.values();
+        return locations;
     }
 
     @Deprecated

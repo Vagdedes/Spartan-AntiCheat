@@ -83,7 +83,7 @@ public class Compatibility {
                 case FILE_GUI: // Local
                     hardcoded = true;
                     contains = false;
-                    name = this.name().toLowerCase();
+                    name = this.toString().toLowerCase();
                     break;
                 case AUTHENTICATION: // General
                     hardcoded = true;

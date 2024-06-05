@@ -1,15 +1,12 @@
 package com.vagdedes.spartan.abstraction.check;
 
+import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Bukkit;
 
 public abstract class DetectionExecutor {
-
-    private static final long
-            potentialProcessing = 10L,
-            tMinus = TPS.tickTime - potentialProcessing;
 
     public final CheckExecutor executor;
     public final Enums.HackType hackType;
@@ -25,14 +22,16 @@ public abstract class DetectionExecutor {
 
     protected final void cancel(String information, double violations, SpartanLocation location,
                                 int cancelTicks, boolean groundTeleport, double damage) {
-        if (executor.canFunction()) { // Refer to 'canFunctionOrJustImplemented' in CheckExecutor
-            new HackPrevention(
-                    player, hackType,
-                    information, violations,
-                    location, cancelTicks,
-                    groundTeleport, damage
-            );
-        }
+        Bukkit.getScheduler().runTask(Register.plugin, () -> {
+            if (executor.canFunction()) { // Refer to 'canFunctionOrJustImplemented' in CheckExecutor
+                new HackPrevention(
+                                player, hackType,
+                                information, violations,
+                                location, cancelTicks,
+                                groundTeleport, damage
+                );
+            }
+        });
     }
 
     protected final void cancel(String information, double violations, SpartanLocation location,

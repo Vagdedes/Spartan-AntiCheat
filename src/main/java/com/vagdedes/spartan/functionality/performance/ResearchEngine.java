@@ -5,11 +5,13 @@ import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.*;
+import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
+import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.management.Cache;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -247,28 +249,6 @@ public class ResearchEngine {
 
     // Separator
 
-    public static ViolationHistory getViolationHistory(Enums.HackType hackType, Enums.DataType dataType, Collection<PlayerProfile> profiles) {
-        int size = profiles.size();
-
-        if (size == 0) {
-            return null;
-        }
-        Collection<PlayerViolation> list = new ArrayList<>(size);
-        boolean universal = dataType == Enums.DataType.UNIVERSAL;
-
-        // Separator
-        for (PlayerProfile playerProfile : profiles) {
-            if (universal || ((dataType == Enums.DataType.BEDROCK) == playerProfile.isBedrockPlayer())) {
-                list.addAll(playerProfile.getViolationHistory(hackType).getRawCollection());
-            }
-        }
-
-        if (list.isEmpty()) {
-            return null;
-        }
-        return new ViolationHistory(list, false);
-    }
-
     public static double getMiningHistoryAverage(MiningHistory.MiningOre ore) {
         Double average = averageMining.get(ore);
         return average == null ? defaultAverageMining[ore.ordinal()] : average;
@@ -428,7 +408,7 @@ public class ResearchEngine {
         if (Config.sql.isEnabled()) {
             if (!isFull) {
                 try {
-                    ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + Cache.maxRows + ";");
+                    ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + SpartanBukkit.maxSQLRows + ";");
 
                     if (rs != null) {
                         while (rs.next()) {
@@ -438,7 +418,7 @@ public class ResearchEngine {
                             cache.put(date, data);
                             byteSize += date.length() + data.length();
 
-                            if (byteSize >= Cache.maxBytes) {
+                            if (byteSize >= SpartanBukkit.maxBytes) {
                                 isFull = true;
                                 break;
                             }
@@ -477,7 +457,7 @@ public class ResearchEngine {
                             cache.put(key, data);
                             byteSize += key.length() + data.length();
 
-                            if (byteSize >= Cache.maxBytes) {
+                            if (byteSize >= SpartanBukkit.maxBytes) {
                                 isFull = true;
                                 break;
                             }
