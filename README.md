@@ -6,7 +6,9 @@
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vSu-WfjoyG8ipSI4tw3CqgmYh8gGDriSgD8gZTQ8HqU4k8jq9eYE8gzW3oiuKf6qzuvH7GTxssnMO_5/pub"><img src="https://vagdedes.com/.images/spartan/customization.png"></a>
 
-<a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long.png?id=1"></a>
+<a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long_1.png"></a>
+<a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long_2.png"></a>
+<a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long_3.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vTHwxatQmlastam-oCq5zOwQ3gLFTSa6SgqL5WT37JzC5g4YZWhkE3r-a6JGAJC_LnjIHXx8EDFRKMV/pub"><img src="https://vagdedes.com/.images/spartan/blocked_hacks.png"></a>
 
