@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -18,7 +19,7 @@ public class DetectionNotifications {
     public static final int defaultFrequency = Integer.MIN_VALUE;
 
     private static final Map<UUID, Integer> notifications = Collections.synchronizedMap(
-            new LinkedHashMap<>(Config.getMaxPlayers())
+            new LinkedHashMap<>()
     );
 
     public static List<SpartanPlayer> getPlayers(boolean all) {
@@ -27,10 +28,10 @@ public class DetectionNotifications {
 
             synchronized (notifications) {
                 for (Map.Entry<UUID, Integer> entry : notifications.entrySet()) {
-                    SpartanPlayer p = SpartanBukkit.getPlayer(entry.getKey());
+                    SpartanProtocol p = SpartanBukkit.getProtocol(entry.getKey());
 
-                    if (p != null && canAcceptMessages(p, entry.getValue(), all)) {
-                        list.add(p);
+                    if (p != null && canAcceptMessages(p.spartanPlayer, entry.getValue(), all)) {
+                        list.add(p.spartanPlayer);
                     }
                 }
             }

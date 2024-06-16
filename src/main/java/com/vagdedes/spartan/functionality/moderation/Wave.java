@@ -22,7 +22,7 @@ public class Wave {
     private static File file = new File(Register.plugin.getDataFolder() + "/storage.yml");
     private static final String section = "Wave";
     private static final Map<UUID, String> commands
-            = Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
+            = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public static void clearCache() {
         synchronized (commands) {
@@ -110,7 +110,7 @@ public class Wave {
     public static void add(UUID uuid, String command) {
         ConfigUtils.set(file, section + "." + uuid + ".command", command);
 
-        if (getWaveList().length >= Config.getMaxPlayers()) {
+        if (getWaveList().length >= Math.max(Math.min(Bukkit.getMaxPlayers(), 500), 20)) {
             start();
         }
     }

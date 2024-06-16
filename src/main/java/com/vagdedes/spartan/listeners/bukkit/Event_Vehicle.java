@@ -32,7 +32,7 @@ public class Event_Vehicle implements Listener {
             for (Entity passenger : passengers) {
                 if (passenger instanceof Player) {
                     Player n = (Player) passenger;
-                    SpartanPlayer p = SpartanBukkit.getPlayer(n);
+                    SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                     if (p != null) {
                         for (Enums.HackType hackType : hackTypes) {
@@ -53,7 +53,7 @@ public class Event_Vehicle implements Listener {
         Entity entity = e.getEntered();
 
         if (entity instanceof Player) {
-            SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+            SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -67,7 +67,7 @@ public class Event_Vehicle implements Listener {
         Entity en = e.getExited();
 
         if (en instanceof Player) {
-            SpartanPlayer p = SpartanBukkit.getPlayer((Player) en);
+            SpartanPlayer p = SpartanBukkit.getProtocol((Player) en).spartanPlayer;
 
             if (p == null) {
                 return;

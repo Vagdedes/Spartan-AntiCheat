@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
@@ -43,9 +44,9 @@ public class SuspicionNotifications {
             PlayerProfile profile = player.getProfile();
             boolean shouldList;
 
-            if (profile.isHacker()) {
+            if (profile.evidence.has(PlayerEvidence.EvidenceType.HACKER)) {
                 shouldList = true;
-            } else if (profile.isSuspected()) {
+            } else if (profile.evidence.has(PlayerEvidence.EvidenceType.SUSPECTED)) {
                 shouldList = false;
 
                 for (Enums.HackType hackType : profile.evidence.getKnowledgeList(false)) {
@@ -75,7 +76,7 @@ public class SuspicionNotifications {
                             "checks",
                             player.uuid, player.name,
                             location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                            (profile.isHacker() ? "Hacker" : "Suspected"), evidence.toString()
+                            profile.evidence.getType().toString(), evidence.toString()
                     );
                 }
             }

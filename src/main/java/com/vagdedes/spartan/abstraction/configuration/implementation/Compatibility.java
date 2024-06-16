@@ -354,7 +354,7 @@ public class Compatibility {
         );
         CompatibilityType.PROTOCOL_LIB.setFunctional(
                 ProtocolLib::run,
-                null
+                ProtocolLib::otherwise
         );
         CompatibilityType.MY_PET.setFunctional();
         CompatibilityType.RAMPEN_DRILLS.setFunctional(

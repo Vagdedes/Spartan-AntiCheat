@@ -75,13 +75,13 @@ public class CommandTab implements TabCompleter {
             if (!players.isEmpty()) {
                 String argAbstract = args[length - 1].toLowerCase();
                 boolean player = sender instanceof Player;
-                SpartanPlayer p = player ? SpartanBukkit.getPlayer((Player) sender) : null;
+                SpartanPlayer p = player ? SpartanBukkit.getProtocol((Player) sender).spartanPlayer : null;
                 player &= p != null;
 
                 for (SpartanPlayer o : players) {
                     Player on = o.getInstance();
 
-                    if (on != null && (!player || p.canSee(on))) {
+                    if (on != null && (!player || p.getInstance().canSee(on))) {
                         String name = o.name;
 
                         if (name.toLowerCase().contains(argAbstract)) {

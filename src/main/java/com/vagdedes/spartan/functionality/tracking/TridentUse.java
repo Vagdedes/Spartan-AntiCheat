@@ -20,24 +20,22 @@ public class TridentUse {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             PlayerInventory inventory = p.getInventory();
 
-            if (inventory != null) {
-                for (ItemStack item : new ItemStack[]{inventory.getItemInHand(), inventory.getItemInOffHand()}) {
-                    if (item.getType() == Material.TRIDENT) {
-                        int level = item.getEnchantmentLevel(Enchantment.RIPTIDE);
+            for (ItemStack item : new ItemStack[]{inventory.getItemInHand(), inventory.getItemInOffHand()}) {
+                if (item.getType() == Material.TRIDENT) {
+                    int level = item.getEnchantmentLevel(Enchantment.RIPTIDE);
 
-                        if (level > 0) {
-                            int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
+                    if (level > 0) {
+                        int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
 
-                            if (level > riptideMaxSafeLevel) {
-                                p.trackers.add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
-                                p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE_UNSAFE);
-                            } else {
-                                p.trackers.add(Trackers.TrackerType.TRIDENT, ticks);
-                                p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE);
-                            }
+                        if (level > riptideMaxSafeLevel) {
+                            p.trackers.add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
+                            p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE_UNSAFE);
+                        } else {
+                            p.trackers.add(Trackers.TrackerType.TRIDENT, ticks);
+                            p.getExecutor(Enums.HackType.Speed).handle(false, SpeedAction.RIPTIDE);
                         }
-                        break;
                     }
+                    break;
                 }
             }
         }

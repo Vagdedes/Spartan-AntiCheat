@@ -12,7 +12,7 @@ public class Elytra {
     public static void judge(SpartanPlayer p, boolean event) {
         boolean gliding = p.movement.isGliding();
 
-        if (p.getVehicle() == null) {
+        if (p.getInstance().getVehicle() == null) {
             PlayerInventory inventory = p.getInventory();
 
             if (inventory != null) {

@@ -52,7 +52,7 @@ public class ProxyUtils {
                     for (Map.Entry<UUID, SpartanPlayer> entry : entries) {
                         SpartanPlayer loopPlayer = entry.getValue();
 
-                        if (loopPlayer.isOp()) {
+                        if (loopPlayer.getInstance().isOp()) {
                             player = loopPlayer.getInstance();
                             break;
                         } else if (Permissions.isStaff(loopPlayer)) {

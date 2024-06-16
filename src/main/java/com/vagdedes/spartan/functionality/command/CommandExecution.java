@@ -3,6 +3,7 @@ package com.vagdedes.spartan.functionality.command;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -81,7 +82,7 @@ public class CommandExecution implements CommandExecutor {
 
     public static void completeMessage(CommandSender sender, String list) {
         boolean isPlayer = sender instanceof Player;
-        SpartanPlayer player = isPlayer ? SpartanBukkit.getPlayer((Player) sender) : null;
+        SpartanPlayer player = isPlayer ? SpartanBukkit.getProtocol((Player) sender).spartanPlayer : null;
         isPlayer &= player != null;
 
         if (spartanMessage(sender, isPlayer)) {
@@ -189,7 +190,7 @@ public class CommandExecution implements CommandExecutor {
         boolean isPlayer = sender instanceof Player;
 
         if (label.equalsIgnoreCase(Register.plugin.getName()) && (isPlayer || sender instanceof ConsoleCommandSender)) {
-            SpartanPlayer player = isPlayer ? SpartanBukkit.getPlayer((Player) sender) : null;
+            SpartanPlayer player = isPlayer ? SpartanBukkit.getProtocol((Player) sender).spartanPlayer : null;
 
             if (isPlayer && player == null) {
                 return false;
@@ -373,13 +374,15 @@ public class CommandExecution implements CommandExecutor {
                                 sender.sendMessage(Config.messages.getColorfulString("massive_command_reason"));
                                 return true;
                             }
-                            SpartanPlayer t = SpartanBukkit.getPlayer(args[1]);
+                            SpartanProtocol t = SpartanBukkit.getProtocol(args[1]);
 
                             if (t == null) {
                                 sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                                 return true;
                             }
-                            t.punishments.kick(sender, argumentsToString);
+                            if (!t.spartanPlayer.punishments.kick(sender, argumentsToString)) {
+                                sender.sendMessage(Config.messages.getColorfulString("failed_command"));
+                            }
 
                         } else if (args[0].equalsIgnoreCase("Warn")) {
                             if (isPlayer && !Permissions.has(player, Permission.WARN)) {
@@ -390,13 +393,15 @@ public class CommandExecution implements CommandExecutor {
                                 sender.sendMessage(Config.messages.getColorfulString("massive_command_reason"));
                                 return true;
                             }
-                            SpartanPlayer t = SpartanBukkit.getPlayer(args[1]);
+                            SpartanProtocol t = SpartanBukkit.getProtocol(args[1]);
 
                             if (t == null) {
                                 sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                                 return true;
                             }
-                            t.punishments.warn(sender, argumentsToString);
+                            if (!t.spartanPlayer.punishments.warn(sender, argumentsToString)) {
+                                sender.sendMessage(Config.messages.getColorfulString("failed_command"));
+                            }
 
                         } else if (args[0].equalsIgnoreCase("Bypass")) {
                             boolean noSeconds = args.length == 3;
@@ -411,7 +416,7 @@ public class CommandExecution implements CommandExecutor {
                                     sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                                     return true;
                                 }
-                                SpartanPlayer t = SpartanBukkit.getPlayer(args[1]);
+                                SpartanProtocol t = SpartanBukkit.getProtocol(args[1]);
 
                                 if (t == null) {
                                     sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
@@ -432,15 +437,15 @@ public class CommandExecution implements CommandExecutor {
                                         int seconds = noSeconds ? 0 : Integer.parseInt(sec);
 
                                         if (noSeconds) {
-                                            t.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, 0);
+                                            t.spartanPlayer.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, 0);
                                         } else {
                                             if (seconds < 1 || seconds > 3600) {
                                                 sender.sendMessage(ChatColor.RED + "Seconds must be between 1 and 3600.");
                                                 return true;
                                             }
-                                            t.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * ((int) TPS.maximum));
+                                            t.spartanPlayer.getViolations(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * ((int) TPS.maximum));
                                         }
-                                        String message = ConfigUtils.replaceWithSyntax(t, Config.messages.getColorfulString("bypass_message"), hackType)
+                                        String message = ConfigUtils.replaceWithSyntax(t.spartanPlayer, Config.messages.getColorfulString("bypass_message"), hackType)
                                                 .replace("{time}", noSeconds ? "infinite" : String.valueOf(seconds));
                                         sender.sendMessage(message);
                                     }
@@ -506,21 +511,21 @@ public class CommandExecution implements CommandExecutor {
                                     sender.sendMessage(Config.messages.getColorfulString("no_permission"));
                                     return true;
                                 }
-                                SpartanPlayer t = SpartanBukkit.getPlayer(args[0]);
+                                SpartanProtocol t = SpartanBukkit.getProtocol(args[0]);
 
                                 if (t == null) {
                                     sender.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
                                     return true;
                                 }
                                 if (args[1].equalsIgnoreCase("if") && args[5].equalsIgnoreCase("do")) {
-                                    final String condition = ConfigUtils.replaceWithSyntax(t, args[2], null);
-                                    final String result = ConfigUtils.replaceWithSyntax(t, args[4], null);
+                                    final String condition = ConfigUtils.replaceWithSyntax(t.spartanPlayer, args[2], null);
+                                    final String result = ConfigUtils.replaceWithSyntax(t.spartanPlayer, args[4], null);
 
                                     argumentsToStringBuilder = new StringBuilder();
                                     for (int i = 6; i < args.length; i++) {
                                         argumentsToStringBuilder.append(args[i]).append(" ");
                                     }
-                                    final String command = ConfigUtils.replaceWithSyntax(t, argumentsToStringBuilder.substring(0, argumentsToStringBuilder.length() - 1), null);
+                                    final String command = ConfigUtils.replaceWithSyntax(t.spartanPlayer, argumentsToStringBuilder.substring(0, argumentsToStringBuilder.length() - 1), null);
 
                                     switch (args[3].toLowerCase()) {
                                         case "equals":

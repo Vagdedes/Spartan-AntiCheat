@@ -2,6 +2,7 @@ package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerFight;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
@@ -33,14 +34,16 @@ public class Event_Status implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Leave(PlayerQuitEvent e) {
         Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.removePlayer(n);
+        SpartanProtocol protocol = SpartanBukkit.deleteProtocol(n);
 
         // Features
         PlayerLimitPerIP.remove(n);
 
-        if (p == null) {
+        if (protocol == null) {
             return;
         }
+        SpartanPlayer p = protocol.spartanPlayer;
+
         // Features
         PlayerDetectionSlots.remove(p);
         ChatProtection.remove(p);
@@ -49,11 +52,8 @@ public class Event_Status implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Death(PlayerDeathEvent e) {
         Player n = e.getEntity();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
-        if (p == null) {
-            return;
-        }
         // Detections
         p.getExecutor(Enums.HackType.AutoRespawn).run(false);
         p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, null);
@@ -63,7 +63,7 @@ public class Event_Status implements Listener {
         Player killer = n.getKiller();
 
         if (killer != null && killer.isOnline()) {
-            SpartanPlayer p2 = SpartanBukkit.getPlayer(killer);
+            SpartanPlayer p2 = SpartanBukkit.getProtocol(killer).spartanPlayer;
 
             if (p2 != null) {
                 PlayerFight fight = p.getProfile().playerCombat.getFight(p2);
@@ -74,20 +74,15 @@ public class Event_Status implements Listener {
             }
         }
         p.resetTrackers();
-        p.movement.setDetectionLocation(true);
+        p.movement.setDetectionLocation();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Respawn(PlayerRespawnEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
         // Objects
-        p.movement.setDetectionLocation(true);
+        p.movement.setDetectionLocation();
 
         // Protections
         p.resetTrackers();

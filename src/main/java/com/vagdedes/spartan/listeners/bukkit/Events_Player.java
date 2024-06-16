@@ -20,7 +20,7 @@ public class Events_Player implements Listener {
 
         if (entity instanceof Player) {
             Player n = (Player) entity;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -43,7 +43,7 @@ public class Events_Player implements Listener {
 
         if (entity instanceof Player) {
             Player n = (Player) entity;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -60,11 +60,8 @@ public class Events_Player implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Animation(PlayerAnimationEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
-        if (p == null) {
-            return;
-        }
         // Detections
         p.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
     }

@@ -74,7 +74,7 @@ public class Permissions {
     // Separator
 
     public static boolean isBypassing(SpartanPlayer p, Enums.HackType hackType) {
-        if (p.isOp()) {
+        if (p.getInstance().isOp()) {
             return Config.settings.getBoolean("Important.op_bypass");
         } else {
             Player n = p.getInstance();
@@ -92,7 +92,7 @@ public class Permissions {
     // Separator
 
     public static boolean isStaff(SpartanPlayer player) {
-        if (player.isOp()) {
+        if (player.getInstance().isOp()) {
             return true;
         } else {
             for (Enums.Permission permission : staffPermissions) {

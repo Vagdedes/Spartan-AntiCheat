@@ -1,4 +1,6 @@
-package com.vagdedes.spartan.utils.minecraft.mcp;
+package com.vagdedes.spartan.utils.minecraft.vector;
+
+import com.vagdedes.spartan.utils.math.MathHelper;
 
 public class Vec3i implements Comparable {
     /**

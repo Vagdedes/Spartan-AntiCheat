@@ -16,8 +16,8 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
-import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
@@ -73,7 +73,7 @@ public class MainMenu extends InventoryMenu {
         InventoryUtils.prepareDescription(lore, "Plugin Management");
         int slots = CloudBase.getDetectionSlots();
 
-        lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled(player) ? "Enabled" : "Disabled"));
+        lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled() ? "Enabled" : "Disabled"));
         if (slots <= 0) {
             lore.add("§7Detection Slots§8: §aUnlimited");
         } else {

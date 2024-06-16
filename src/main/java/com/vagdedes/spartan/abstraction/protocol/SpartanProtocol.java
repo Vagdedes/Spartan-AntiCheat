@@ -3,59 +3,103 @@ package com.vagdedes.spartan.abstraction.protocol;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class SpartanProtocol {
 
     public final Player player;
     public final SpartanPlayer spartanPlayer;
-    public final AbilitiesContainer abilities;
-    public final RotationData lastRotation;
-    public Boolean
-            onGround,
-            spawnStatus,
-            canCheck;
-    public Location
-            position,
-            verifiedPosition,
-            lastTeleport;
-    private final long creationTime;
+    private boolean isOnGround, isSprinting, isSneaking, onLoadStatus;
+    private final Location location;
+    private Vector velocity;
+    private long lastTransaction;
+    private int ping;
+    private short transactionID;
 
     public SpartanProtocol(Player player) {
-        this.creationTime = System.currentTimeMillis();
         this.player = player;
-        this.abilities = new AbilitiesContainer(false, false, false);
-        this.lastRotation = new RotationData();
-        this.spartanPlayer = new SpartanPlayer(this, player);
+        this.isOnGround = false;
+        this.location = player.getLocation();
+        this.isSprinting = false;
+        this.isSneaking = false;
+        this.onLoadStatus = true;
+        this.velocity = new Vector(0, 0, 0);
+        this.spartanPlayer = new SpartanPlayer(this);
+        this.lastTransaction = Long.MIN_VALUE;
     }
 
-    // Utilities
-
-    public boolean hasDataFor(Object object) {
-        return object != null
-                && (!(object instanceof SpartanProtocolField)
-                || ((SpartanProtocolField) object).hasData());
+    public boolean isOnGround() {
+        return this.isOnGround;
     }
 
-    public boolean trueOrFalse(Boolean bool) {
-        return bool != null && bool;
+    public boolean isSprinting() {
+        return this.isSprinting;
     }
 
-    // Implementations
+    public boolean isSneaking() {
+        return this.isSneaking;
+    }
 
-    public long timePassed() {
-        return System.currentTimeMillis() - creationTime;
+    public boolean isOnLoadStatus() {
+        return this.onLoadStatus;
     }
 
     public Location getLocation() {
-        if (hasDataFor(position)) {
-            if (hasDataFor(lastRotation)) {
-                position.setYaw(lastRotation.getYaw());
-                position.setPitch(lastRotation.getPitch());
-            }
-            return position;
-        } else {
-            return player.getLocation();
+        return this.location;
+    }
+
+    public Vector getVelocity() {
+        return this.velocity;
+    }
+
+    public int getPing() {
+        return this.ping;
+    }
+
+    public short getTransactionID() {
+        return this.transactionID;
+    }
+
+    // Separator
+
+    public void setOnGround(boolean isOnGround) {
+        this.isOnGround = isOnGround;
+
+        if (this.isOnGround) {
+            this.spartanPlayer.movement.resetAirTicks();
         }
+    }
+
+    public void setSprinting(boolean isSprinting) {
+        this.isSprinting = isSprinting;
+    }
+
+    public void setSneaking(boolean isSneaking) {
+        this.isSneaking = isSneaking;
+    }
+
+    public void setOnLoadStatus(boolean onLoadStatus) {
+        this.onLoadStatus = onLoadStatus;
+    }
+
+    public void setVelocity(Vector velocity) {
+        this.velocity = velocity;
+    }
+
+    public void setLastTransaction() {
+        if (this.lastTransaction != Long.MIN_VALUE) {
+            this.ping = (int) (System.currentTimeMillis() - this.lastTransaction);
+        }
+        this.lastTransaction = System.currentTimeMillis();
+    }
+
+    public short increaseTransactionID() {
+        this.transactionID++;
+
+        if (this.transactionID > 1500) {
+            this.transactionID = 1488;
+        }
+        return this.transactionID;
     }
 
 }

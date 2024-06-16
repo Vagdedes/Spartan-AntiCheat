@@ -22,7 +22,7 @@ public class CrackShot implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -52,7 +52,7 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponPreShoot(WeaponPreShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -72,7 +72,7 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponShoot(WeaponShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -95,7 +95,7 @@ public class CrackShot implements Listener {
             Entity entity = e.getVictim();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null) {
                     Config.compatibility.evadeFalsePositives(
@@ -118,7 +118,7 @@ public class CrackShot implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -141,7 +141,7 @@ public class CrackShot implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(

@@ -9,7 +9,6 @@ public class PlayerViolation {
     public final long time;
     public final String information, detection;
     public final int level, identity;
-    public final boolean isOption;
 
     public PlayerViolation(long time,
                            Enums.HackType hackType,
@@ -22,7 +21,6 @@ public class PlayerViolation {
         this.level = level;
 
         this.detection = analysis.detection;
-        this.isOption = analysis.isOption;
         this.identity = analysis.identity;
     }
 
@@ -39,11 +37,8 @@ public class PlayerViolation {
         );
     }
 
-    boolean isDetectionEnabled() {
-        return !isOption || hackType.getCheck().getBooleanOption(detection, null);
-    }
-
     public int getIgnoredViolations(SpartanPlayer player) {
         return hackType.getCheck().getIgnoredViolations(player.dataType, this.identity);
     }
+
 }

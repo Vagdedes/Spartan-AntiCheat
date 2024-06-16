@@ -7,7 +7,7 @@ import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 public class DiscordMemberCount {
 
-    public static final String discordURL = "https://www.idealistic.ai/discord";
+    public static final String discordURL = "https://www.vagdedes.com/discord";
     private static int
             count = 0,
             times = 0;

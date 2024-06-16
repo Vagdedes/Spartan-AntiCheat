@@ -20,94 +20,36 @@ import java.util.*;
 public class SpartanBukkit {
 
     public static final boolean
-                    // Change it when testing and put it to false if not ready for production
-                    // before pushing on the repository
-                    packetsForcedState = true,
-                    testMode = !JarVerification.enabled && !CloudBase.hasToken()
-                                    && !IDs.isBuiltByBit() && !IDs.isPolymart()
-                                    && Bukkit.getMotd().contains(Register.plugin.getName()),
-                    canAdvertise = !JarVerification.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
+            // Change it when testing and put it to false if not ready for production
+            // before pushing on the repository
+            packetsForcedState = true,
+            testMode = !JarVerification.enabled && !CloudBase.hasToken()
+                    && !IDs.isBuiltByBit() && !IDs.isPolymart()
+                    && Bukkit.getMotd().contains(Register.plugin.getName()),
+            canAdvertise = !JarVerification.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
 
     public static final Threads.ThreadPool
-                    connectionThread = new Threads.ThreadPool(TPS.tickTime),
-                    dataThread = new Threads.ThreadPool(1L),
-                    analysisThread = new Threads.ThreadPool(1L);
+            connectionThread = new Threads.ThreadPool(TPS.tickTime),
+            dataThread = new Threads.ThreadPool(1L),
+            analysisThread = new Threads.ThreadPool(1L);
 
     public static final int
-                    hashCodeMultiplier = 31,
-                    maxBytes = AlgebraUtils.integerRound(Runtime.getRuntime().maxMemory() * 0.05),
-                    maxSQLRows = maxBytes / 1024;
-    private static final long packetsGracePeriod = 5_000L;
+            hashCodeMultiplier = 31,
+            maxBytes = AlgebraUtils.integerRound(Runtime.getRuntime().maxMemory() * 0.05),
+            maxSQLRows = maxBytes / 1024;
     private static final Map<UUID, SpartanProtocol> playerProtocol =
-                    Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
+            Collections.synchronizedMap(new LinkedHashMap<>());
     public static final Class<?> craftPlayer = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)
-                    ? null
-                    : ReflectionUtils.getClass(
-                    ReflectionUtils.class.getPackage().getName().substring(0, 19) // Package
-                                    + "org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().substring(23) + ".entity.CraftPlayer" // Version
+            ? null
+            : ReflectionUtils.getClass(
+            ReflectionUtils.class.getPackage().getName().substring(0, 19) // Package
+                    + "org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().substring(23) + ".entity.CraftPlayer" // Version
     );
 
     public static boolean isPlayer(UUID uuid) {
         synchronized (playerProtocol) {
             return playerProtocol.containsKey(uuid);
         }
-    }
-
-    public static SpartanPlayer getPlayer(String name) {
-        if (!playerProtocol.isEmpty()) {
-            name = name.toLowerCase();
-
-            synchronized (playerProtocol) {
-                for (SpartanProtocol protocol : playerProtocol.values()) {
-                    if (protocol.spartanPlayer.name.toLowerCase().equals(name)) {
-                        return protocol.spartanPlayer;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    public static SpartanPlayer getPlayer(UUID uuid) {
-        SpartanProtocol protocol;
-
-        if (isSynchronised()) {
-            Player player = Bukkit.getPlayer(uuid);
-
-            if (player != null) {
-                protocol = getProtocol(player);
-            } else {
-                synchronized (playerProtocol) {
-                    protocol = playerProtocol.get(uuid);
-                }
-            }
-        } else {
-            synchronized (playerProtocol) {
-                protocol = playerProtocol.get(uuid);
-            }
-        }
-        return protocol == null ? null : protocol.spartanPlayer;
-    }
-
-    public static SpartanPlayer getPlayer(Player real) {
-        SpartanProtocol protocol;
-
-        synchronized (playerProtocol) {
-            protocol = playerProtocol.computeIfAbsent(
-                            real.getUniqueId(),
-                            k -> new SpartanProtocol(real)
-            );
-        }
-        return protocol.spartanPlayer;
-    }
-
-    public static SpartanPlayer removePlayer(Player real) {
-        SpartanProtocol protocol;
-
-        synchronized (playerProtocol) {
-            protocol = playerProtocol.remove(real.getUniqueId());
-        }
-        return protocol == null ? null : protocol.spartanPlayer;
     }
 
     public static int getPlayerCount() {
@@ -146,7 +88,7 @@ public class SpartanBukkit {
 
     public static boolean isSynchronised() {
         return Bukkit.isPrimaryThread()
-                        || !Register.isPluginEnabled();
+                || !Register.isPluginEnabled();
     }
 
     // Separator
@@ -165,42 +107,77 @@ public class SpartanBukkit {
     // Separator
 
     public static boolean packetsEnabled() {
-        return testMode
-                        && packetsForcedState
-                        && Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
-    }
-
-    public static boolean packetsEnabled(UUID uuid) {
-        if (packetsEnabled()) {
-            SpartanProtocol protocol;
-
-            synchronized (playerProtocol) {
-                protocol = playerProtocol.get(uuid);
-            }
-            return protocol != null && protocol.timePassed() > packetsGracePeriod;
-        } else {
-            return false;
-        }
-    }
-
-    public static boolean packetsEnabled(SpartanPlayer player) {
-        return packetsEnabled(player.protocol);
-    }
-
-    public static boolean packetsEnabled(SpartanProtocol protocol) {
-        return packetsEnabled() && protocol.timePassed() > packetsGracePeriod;
-    }
-
-    public static boolean packetsEnabled(Player player) {
-        return packetsEnabled(getProtocol(player));
+        return packetsForcedState && Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
     }
 
     public static SpartanProtocol getProtocol(Player player) {
         synchronized (playerProtocol) {
             return playerProtocol.computeIfAbsent(
-                            player.getUniqueId(),
-                            k -> new SpartanProtocol(player)
+                    player.getUniqueId(),
+                    k -> new SpartanProtocol(player)
             );
+        }
+    }
+
+    public static SpartanProtocol getProtocol(String name) {
+        if (!playerProtocol.isEmpty()) {
+            name = name.toLowerCase();
+
+            synchronized (playerProtocol) {
+                for (SpartanProtocol protocol : playerProtocol.values()) {
+                    if (protocol.spartanPlayer.name.toLowerCase().equals(name)) {
+                        return protocol;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static SpartanProtocol getProtocol(int entityID) {
+        synchronized (playerProtocol) {
+            for (SpartanProtocol value : playerProtocol.values()) {
+                if (value.player.getEntityId() == entityID) {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static SpartanProtocol getProtocol(UUID uuid) {
+        SpartanProtocol protocol;
+
+        if (isSynchronised()) {
+            Player player = Bukkit.getPlayer(uuid);
+
+            if (player != null) {
+                protocol = getProtocol(player);
+            } else {
+                synchronized (playerProtocol) {
+                    protocol = playerProtocol.get(uuid);
+                }
+            }
+        } else {
+            synchronized (playerProtocol) {
+                protocol = playerProtocol.get(uuid);
+            }
+        }
+        return protocol;
+    }
+
+    public static void createProtocol(Player player) {
+        synchronized (playerProtocol) {
+            playerProtocol.put(
+                    player.getUniqueId(),
+                    new SpartanProtocol(player)
+            );
+        }
+    }
+
+    public static SpartanProtocol deleteProtocol(Player real) {
+        synchronized (playerProtocol) {
+            return playerProtocol.remove(real.getUniqueId());
         }
     }
 

@@ -9,6 +9,7 @@ import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -31,18 +32,15 @@ import java.util.*;
 public class ResearchEngine {
 
     public static final double requiredProfiles = 10;
-    public static final int violationsMeasurementDuration = 60_000;
     private static final double minimumAverageMining = 16.0;
 
     private static final int cacheRefreshTicks = 1200;
     private static int schedulerTicks = 0;
 
-    private static boolean enoughData = false;
-
     public static final Enums.DataType[] usableDataTypes = new Enums.DataType[]{Enums.DataType.JAVA, Enums.DataType.BEDROCK};
 
     private static final Map<String, PlayerProfile> playerProfiles
-            = Collections.synchronizedMap(new LinkedHashMap<>(Config.getMaxPlayers()));
+            = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final Map<MiningHistory.MiningOre, Double> averageMining = new LinkedHashMap<>(MiningHistory.MiningOre.values().length);
     private static final double[] defaultAverageMining = new double[MiningHistory.MiningOre.values().length];
 
@@ -103,24 +101,7 @@ public class ResearchEngine {
     // Separator
 
     public static boolean enoughData() {
-        if (enoughData) {
-            return true;
-        } else if (playerProfiles.size() >= requiredProfiles) {
-            int profiles = 0;
-
-            synchronized (playerProfiles) {
-                for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    if (playerProfile.isLegitimate()) {
-                        profiles++;
-
-                        if (profiles >= requiredProfiles) {
-                            return enoughData = true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+        return playerProfiles.size() >= requiredProfiles;
     }
 
     // Separator
@@ -147,64 +128,11 @@ public class ResearchEngine {
 
     // Separator
 
-    public static List<PlayerProfile> getHackers() {
-        if (!playerProfiles.isEmpty()) {
-            List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
-
-            synchronized (playerProfiles) {
-                for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    if (playerProfile.isHacker()) {
-                        list.add(playerProfile);
-                    }
-                }
-            }
-            return list;
-        } else {
-            return new ArrayList<>(0);
-        }
-    }
-
-    public static List<PlayerProfile> getSuspectedPlayers() {
-        if (!playerProfiles.isEmpty()) {
-            List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
-
-            synchronized (playerProfiles) {
-                for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    if (playerProfile.isSuspected()) {
-                        list.add(playerProfile);
-                    }
-                }
-            }
-            return list;
-        } else {
-            return new ArrayList<>(0);
-        }
-    }
-
-    public static List<PlayerProfile> getLegitimatePlayers() {
-        if (!playerProfiles.isEmpty()) {
-            List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
-
-            synchronized (playerProfiles) {
-                for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    if (playerProfile.isLegitimate()) {
-                        list.add(playerProfile);
-                    }
-                }
-            }
-            return list;
-        } else {
-            return new ArrayList<>(0);
-        }
-    }
-
     public static List<PlayerProfile> getPlayerProfiles() {
         synchronized (playerProfiles) {
             return new ArrayList<>(playerProfiles.values());
         }
     }
-
-    // Separator
 
     public static PlayerProfile getPlayerProfile(String name) {
         synchronized (playerProfiles) {
@@ -307,15 +235,15 @@ public class ResearchEngine {
 
     public static void resetData(String playerName) {
         // Clear Violations
-        SpartanPlayer p = SpartanBukkit.getPlayer(playerName);
+        SpartanProtocol p = SpartanBukkit.getProtocol(playerName);
         boolean foundPlayer = p != null;
         PlayerProfile profile;
 
         if (foundPlayer) {
-            profile = p.getProfile();
+            profile = p.spartanPlayer.getProfile();
 
             for (Enums.HackType hackType : Enums.HackType.values()) {
-                p.getViolations(hackType).reset();
+                p.spartanPlayer.getViolations(hackType).reset();
             }
         } else {
             profile = getPlayerProfile(playerName);
@@ -329,7 +257,7 @@ public class ResearchEngine {
                     playerProfiles.remove(playerName);
                 }
                 if (foundPlayer) {
-                    p.setProfile(getPlayerProfile(p));
+                    p.spartanPlayer.setProfile(getPlayerProfile(p.spartanPlayer));
                 }
                 if (Config.sql.isEnabled()) {
                     Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE information LIKE '%" + playerName + "%';");
@@ -359,10 +287,9 @@ public class ResearchEngine {
                 playerProfiles.remove(playerName);
             }
             if (foundPlayer) {
-                p.setProfile(getPlayerProfile(p));
+                p.spartanPlayer.setProfile(getPlayerProfile(p.spartanPlayer));
             }
         }
-        enoughData = false;
         MainMenu.refresh();
         InteractiveInventory.playerInfo.refresh(playerName);
     }
@@ -583,7 +510,6 @@ public class ResearchEngine {
                             }
                         }
                     }
-                    enoughData = false;
                     updateCache();
                     MainMenu.refresh();
                 } catch (Exception ex) {
@@ -602,7 +528,6 @@ public class ResearchEngine {
             }
             Enums.HackType[] hackTypes = Enums.HackType.values();
             Enums.DataType[] dataTypes = getDynamicUsableDataTypes(false);
-            List<PlayerProfile> legitimatePlayers = getLegitimatePlayers();
             int mines = 0;
             ViolationAnalysis.calculateData(playerProfiles);
 
@@ -622,8 +547,6 @@ public class ResearchEngine {
             // Separator
 
             if (enoughData()) {
-                double analysisDuration = 1_000.0; // 1 second
-
                 for (Enums.HackType hackType : hackTypes) {
                     hackType.getCheck().clearIgnoredViolations();
 
@@ -640,49 +563,45 @@ public class ResearchEngine {
                                     // Organize the violations into time period pieces
                                     if (!list.isEmpty()) {
                                         for (PlayerViolation playerViolation : list) {
-                                            int timeMoment = AlgebraUtils.integerFloor(playerViolation.time / analysisDuration);
-                                            ViolationAnalysis.TimePeriod timePeriod = averages.get(timeMoment);
-
-                                            if (timePeriod == null) {
-                                                timePeriod = new ViolationAnalysis.TimePeriod();
-                                                timePeriod.add(playerProfile, playerViolation);
-                                                averages.put(timeMoment, timePeriod);
-                                            } else {
-                                                timePeriod.add(playerProfile, playerViolation);
-                                            }
+                                            averages.computeIfAbsent(
+                                                    AlgebraUtils.integerFloor(playerViolation.time / (double) LiveViolation.violationTimeWorth),
+                                                    k -> new ViolationAnalysis.TimePeriod()
+                                            ).add(playerProfile, playerViolation);
                                         }
                                     }
                                 }
                             }
 
                             if (!averages.isEmpty()) {
-                                Map<Integer, Double> violationAverages = new LinkedHashMap<>();
-                                Map<Integer, Integer> violationAveragesDivisor = new LinkedHashMap<>();
+                                Map<Integer, Double>
+                                        sum = new LinkedHashMap<>(),
+                                        count = new LinkedHashMap<>();
 
                                 // Add the average violations for the executed detections based on each time period
                                 for (ViolationAnalysis.TimePeriod timePeriod : averages.values()) {
-                                    for (Map.Entry<Integer, Double> individualViolationAverages : timePeriod.getAverageViolations().entrySet()) {
-                                        int hash = individualViolationAverages.getKey();
-                                        violationAverages.put(
-                                                hash,
-                                                violationAverages.getOrDefault(hash, 0.0) + individualViolationAverages.getValue()
-                                        );
-                                        violationAveragesDivisor.put(
-                                                hash,
-                                                violationAveragesDivisor.getOrDefault(hash, 0) + 1
-                                        );
+                                    Map<Integer, Double> averageViolations = timePeriod.getAverageViolations();
+
+                                    if (!averageViolations.isEmpty()) {
+                                        for (Map.Entry<Integer, Double> averageViolationsEntry : averageViolations.entrySet()) {
+                                            sum.put(
+                                                    averageViolationsEntry.getKey(),
+                                                    sum.getOrDefault(averageViolationsEntry.getKey(), 0.0)
+                                                            + averageViolationsEntry.getValue()
+                                            );
+                                            count.put(
+                                                    averageViolationsEntry.getKey(),
+                                                    count.getOrDefault(averageViolationsEntry.getKey(), 0.0)
+                                                            + 1.0
+                                            );
+                                        }
                                     }
                                 }
 
-                                // Calculate the average violations for each executed detection and multiply to get the bigger image
-                                analysisDuration = violationsMeasurementDuration / analysisDuration;
-
-                                for (Map.Entry<Integer, Double> entry : violationAverages.entrySet()) {
-                                    entry.setValue(entry.getValue() / violationAveragesDivisor.get(entry.getKey()) * analysisDuration);
+                                // Calculate the average violations for each
+                                for (Map.Entry<Integer, Double> entry : sum.entrySet()) {
+                                    entry.setValue(entry.getValue() / count.get(entry.getKey()));
                                 }
-                                hackType.getCheck().setIgnoredViolations(dataType, violationAverages);
-                            } else {
-                                hackType.getCheck().clearIgnoredViolations();
+                                hackType.getCheck().setIgnoredViolations(dataType, sum);
                             }
                         }
                     }
@@ -695,11 +614,11 @@ public class ResearchEngine {
 
             // Separator
 
-            if (!legitimatePlayers.isEmpty()) {
-                for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
-                    double average = 0.0, total = 0.0;
+            for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
+                double average = 0.0, total = 0.0;
 
-                    for (PlayerProfile playerProfile : legitimatePlayers) {
+                for (PlayerProfile playerProfile : playerProfiles) {
+                    if (playerProfile.isLegitimate()) {
                         MiningHistory miningHistory = playerProfile.getMiningHistory(ore);
                         mines = miningHistory.getMines();
 
@@ -716,8 +635,6 @@ public class ResearchEngine {
                         averageMining.remove(ore);
                     }
                 }
-            } else {
-                averageMining.clear();
             }
         } else { // We clear because there are no players
             averageMining.clear();

@@ -51,4 +51,5 @@ public class HackPrevention {
             player.damage(this.damage);
         }
     }
+
 }

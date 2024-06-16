@@ -25,18 +25,7 @@ public class ViolationHistory {
     }
 
     public Collection<PlayerViolation> getCollection() {
-        if (!memory.isEmpty()) {
-            Collection<PlayerViolation> collection = new ArrayList<>(memory.size());
-
-            for (PlayerViolation playerViolation : memory) {
-                if (playerViolation.isDetectionEnabled()) {
-                    collection.add(playerViolation);
-                }
-            }
-            return collection;
-        } else {
-            return new ArrayList<>(0);
-        }
+        return new ArrayList<>(memory);
     }
 
 }

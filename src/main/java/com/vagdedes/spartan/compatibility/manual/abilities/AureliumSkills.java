@@ -13,7 +13,7 @@ public class AureliumSkills implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(TerraformBlockBreakEvent e) {
         if (Compatibility.CompatibilityType.AURELIUM_SKILLS.isEnabled()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;

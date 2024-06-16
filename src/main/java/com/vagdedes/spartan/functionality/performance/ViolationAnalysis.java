@@ -21,20 +21,23 @@ public class ViolationAnalysis {
 
     public static class TimePeriod {
 
-        private final Set<Integer> players;
         private final Map<Integer, Integer> violations;
+        private final Map<Integer, Set<Integer>> players;
 
         public TimePeriod() {
-            this.players = new HashSet<>();
             this.violations = new LinkedHashMap<>();
+            this.players = new LinkedHashMap<>();
         }
 
         public void add(PlayerProfile profile, PlayerViolation playerViolation) {
-            players.add(profile.hashCode());
-            violations.put(
+            this.violations.put(
                     playerViolation.identity,
-                    violations.getOrDefault(playerViolation.identity, 0) + 1
+                    this.violations.getOrDefault(playerViolation.identity, 0) + 1
             );
+            this.players.computeIfAbsent(
+                    playerViolation.identity,
+                    k -> new HashSet<>()
+            ).add(profile.hashCode());
         }
 
         public Map<Integer, Double> getAverageViolations() {
@@ -42,16 +45,19 @@ public class ViolationAnalysis {
 
             if (size > 0) {
                 Map<Integer, Double> violations = new LinkedHashMap<>(size);
-                double players = this.players.size();
 
                 for (Map.Entry<Integer, Integer> entry : this.violations.entrySet()) {
-                    violations.put(entry.getKey(), entry.getValue() / players);
+                    violations.put(
+                            entry.getKey(),
+                            entry.getValue() / ((double) this.players.get(entry.getKey()).size())
+                    );
                 }
                 return violations;
             } else {
                 return new HashMap<>(0);
             }
         }
+
     }
 
     // Separator
@@ -164,7 +170,7 @@ public class ViolationAnalysis {
 
                 if (!violations.isEmpty()) {
                     for (PlayerViolation violation : violations) {
-                        long time = AlgebraUtils.floorToNearest(violation.time, ResearchEngine.violationsMeasurementDuration);
+                        long time = AlgebraUtils.floorToNearest(violation.time, 60_000);
                         PlayerViolation highest = highestViolation.get(time);
 
                         if (highest == null || violation.level > highest.level) {

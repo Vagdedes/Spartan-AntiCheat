@@ -9,7 +9,7 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -147,11 +147,6 @@ public class ManageChecks extends InventoryMenu {
             if (normalPlaceholder > 0) {
                 lore.addAll(extra);
             }
-        }
-        lore.add("");
-
-        for (Enums.DataType dataType : ResearchEngine.getDynamicUsableDataTypes(false)) {
-            lore.add("§7§l" + dataType.toString() + " §r§7Average Ignored Violations§8:§c " + check.getAverageIgnoredViolations(dataType));
         }
 
         // Separator

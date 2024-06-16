@@ -51,10 +51,10 @@ public class CombatProcessing {
                 && !player.movement.isFlying()
                 && !player.trackers.has(Trackers.TrackerType.FLYING)
                 && !player.movement.isGliding()
-                && player.getVehicle() == null
+                && player.getInstance().getVehicle() == null
                 && !mcMMO.hasGeneralAbility(player)
                 && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0) {
-            GameMode gameMode = player.getGameMode();
+            GameMode gameMode = player.getInstance().getGameMode();
             return gameMode == GameMode.SURVIVAL
                     || gameMode == GameMode.ADVENTURE
                     || gameMode == GameMode.CREATIVE;

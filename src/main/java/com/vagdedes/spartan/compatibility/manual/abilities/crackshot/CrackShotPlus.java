@@ -19,7 +19,7 @@ public class CrackShotPlus implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponSecondScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -52,7 +52,7 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -75,7 +75,7 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(

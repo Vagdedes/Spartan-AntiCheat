@@ -1,8 +1,10 @@
-package com.vagdedes.spartan.utils.minecraft.mcp;
+package com.vagdedes.spartan.utils.minecraft.world;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.vagdedes.spartan.utils.math.MathHelper;
+import com.vagdedes.spartan.utils.minecraft.vector.Vec3i;
 
 import java.util.Iterator;
 import java.util.Map;

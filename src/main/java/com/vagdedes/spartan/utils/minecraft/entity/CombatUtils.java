@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.server;
+package com.vagdedes.spartan.utils.minecraft.entity;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
@@ -6,6 +6,7 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.TrigonometryUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.util.BoundingBox;
@@ -144,7 +145,12 @@ public class CombatUtils {
             case OCELOT:
                 return new double[]{0.6, 0.7};
             default:
-                return new double[]{0.0, !(entity instanceof LivingEntity) || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11) ? entity.getHeight() : ((LivingEntity) entity).getEyeHeight()};
+                return new double[]{
+                        0.0,
+                        MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11)
+                                ? entity.getHeight()
+                                : ((LivingEntity) entity).getEyeHeight()
+                };
         }
     }
 
@@ -155,7 +161,7 @@ public class CombatUtils {
     public static double[] get_X_Y_Distance(SpartanPlayer player, LivingEntity entity) {
         SpartanLocation
                 playerFeetLocation = player.movement.getLocation(),
-                playerEyeLocation = playerFeetLocation.clone().add(0, player.getEyeHeight(), 0);
+                playerEyeLocation = playerFeetLocation.clone().add(0, player.getInstance().getEyeHeight(), 0);
         Location entityFeetLocation = entity.getLocation();
         double directionalDistance = playerEyeLocation.distance(entityFeetLocation);
         Vector vector = playerFeetLocation.getDirection();

@@ -4,7 +4,7 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibili
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
-import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 
 public class TreeFeller {
 

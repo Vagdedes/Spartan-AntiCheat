@@ -14,15 +14,16 @@ import java.util.List;
 public class SpartanPunishments {
 
     private final SpartanPlayer parent;
+    private long kickCooldown, warnCooldown;
 
     public SpartanPunishments(SpartanPlayer player) {
         this.parent = player;
     }
 
-    public void kick(CommandSender punisher, String reason) {
-        Player target = this.parent.getInstance();
-
-        if (target != null) {
+    public boolean kick(CommandSender punisher, String reason) {
+        if (kickCooldown < System.currentTimeMillis()) {
+            kickCooldown = System.currentTimeMillis() + 1_000L;
+            Player target = this.parent.getInstance();
             String punisherName = punisher instanceof ConsoleCommandSender
                     ? Config.messages.getColorfulString("console_name")
                     : punisher.getName(),
@@ -57,30 +58,40 @@ public class SpartanPunishments {
                     this.parent,
                     () -> target.kickPlayer(kick)
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    public void warn(CommandSender punisher, String reason) {
-        Player target = this.parent.getInstance();
+    public boolean warn(CommandSender punisher, String reason) {
+        if (warnCooldown < System.currentTimeMillis()) {
+            warnCooldown = System.currentTimeMillis() + 1_000L;
+            Player target = this.parent.getInstance();
 
-        if (target != null) {
-            String punisherName = punisher instanceof ConsoleCommandSender
-                    ? Config.messages.getColorfulString("console_name")
-                    : punisher.getName(),
-                    warning = ConfigUtils.replaceWithSyntax(target,
-                            Config.messages.getColorfulString("warning_message")
-                                    .replace("{reason}", reason)
-                                    .replace("{punisher}", punisherName),
-                            null),
-                    feedback = ConfigUtils.replaceWithSyntax(target,
-                            Config.messages.getColorfulString("warning_feedback_message")
-                                    .replace("{reason}", reason)
-                                    .replace("{punisher}", punisherName),
-                            null);
-            target.sendMessage(warning);
-            punisher.sendMessage(feedback);
+            if (target != null) {
+                String punisherName = punisher instanceof ConsoleCommandSender
+                        ? Config.messages.getColorfulString("console_name")
+                        : punisher.getName(),
+                        warning = ConfigUtils.replaceWithSyntax(target,
+                                Config.messages.getColorfulString("warning_message")
+                                        .replace("{reason}", reason)
+                                        .replace("{punisher}", punisherName),
+                                null),
+                        feedback = ConfigUtils.replaceWithSyntax(target,
+                                Config.messages.getColorfulString("warning_feedback_message")
+                                        .replace("{reason}", reason)
+                                        .replace("{punisher}", punisherName),
+                                null);
+                target.sendMessage(warning);
+                punisher.sendMessage(feedback);
 
-            this.parent.getProfile().punishmentHistory.increaseWarnings(this.parent, reason);
+                this.parent.getProfile().punishmentHistory.increaseWarnings(this.parent, reason);
+            }
+            return true;
+        } else {
+            return false;
         }
     }
+
 }

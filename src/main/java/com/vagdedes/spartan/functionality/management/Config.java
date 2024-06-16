@@ -17,7 +17,6 @@ import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -33,7 +32,6 @@ public class Config {
 
     private static YamlConfiguration configuration = null;
     private static String construct = null;
-    private static int maxPlayers = 20;
     public static Settings settings = new Settings();
     public static SQLFeature sql = new SQLFeature();
     public static Messages messages = new Messages();
@@ -44,10 +42,6 @@ public class Config {
     }
 
     // Separator
-
-    public static int getMaxPlayers() {
-        return maxPlayers;
-    }
 
     public static File getFile() {
         return new File(Register.plugin.getDataFolder() + "/" + checksFileName);
@@ -95,10 +89,6 @@ public class Config {
     // Separator
 
     public static void refreshFields(boolean clearChecksCache) {
-        // Memory Allowance
-        int max = Math.max(Bukkit.getMaxPlayers(), maxPlayers); // static, dynamic & past/minimum
-        maxPlayers = Math.min(max, 500);
-
         // Configuration
         File file = getFile();
 

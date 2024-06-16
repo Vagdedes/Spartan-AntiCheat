@@ -1,5 +1,7 @@
-package com.vagdedes.spartan.utils.minecraft.mcp;
+package com.vagdedes.spartan.utils.minecraft.entity;
 
+import com.vagdedes.spartan.utils.minecraft.vector.Vec3;
+import com.vagdedes.spartan.utils.minecraft.world.EnumFacing;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
@@ -33,7 +35,7 @@ public class AxisAlignedBB {
 
     public AxisAlignedBB(final Location location) {
         this(location.getX() - .3F, location.getY(), location.getZ() - .3F,
-                        location.getX() + .3F, location.getY() + 1.8F, location.getZ() + .3F);
+                location.getX() + .3F, location.getY() + 1.8F, location.getZ() + .3F);
     }
 
     /**

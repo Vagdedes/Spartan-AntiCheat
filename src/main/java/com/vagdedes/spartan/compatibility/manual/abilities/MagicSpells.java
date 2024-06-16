@@ -21,7 +21,7 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) caster);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
 
                 if (p != null) {
                     Config.compatibility.evadeFalsePositives(
@@ -44,7 +44,7 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) caster);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
 
                 if (p != null) {
                     Config.compatibility.evadeFalsePositives(

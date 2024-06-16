@@ -15,7 +15,7 @@ public class AdvancedAbilities implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void AbilityEvent(AbilityCallEvent e) {
         if (Compatibility.CompatibilityType.ADVANCED_ABILITIES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p == null) {
                 return;

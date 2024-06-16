@@ -212,10 +212,12 @@ public class API {
         return BackgroundAPI.getBanPunisher(uuid);
     }
 
+    @Deprecated
     public static boolean isHacker(Player p) {
         return BackgroundAPI.isHacker(p);
     }
 
+    @Deprecated
     public static boolean isLegitimate(Player p) {
         return BackgroundAPI.isLegitimate(p);
     }

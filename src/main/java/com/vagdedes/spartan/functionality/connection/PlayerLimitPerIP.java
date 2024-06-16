@@ -28,7 +28,7 @@ public class PlayerLimitPerIP {
         }
     }
 
-    private static final Map<Player, Storage> memory = new LinkedHashMap<>(Config.getMaxPlayers());
+    private static final Map<Player, Storage> memory = new LinkedHashMap<>();
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {

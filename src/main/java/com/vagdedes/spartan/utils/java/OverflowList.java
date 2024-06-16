@@ -2,16 +2,19 @@ package com.vagdedes.spartan.utils.java;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 public class OverflowList<E> implements List<E> {
 
-    private final ArrayList<E> list;
+    private final List<E> list;
     private final int maxSize;
     private int overflow;
 
-    public OverflowList(int size, int maxSize) {
-        this.list = new ArrayList<>(size);
+    public OverflowList(List<E> list, int maxSize) {
+        this.list = list;
         this.maxSize = maxSize;
         this.overflow = 0;
     }

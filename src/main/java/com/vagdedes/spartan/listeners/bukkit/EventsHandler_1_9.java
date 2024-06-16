@@ -18,7 +18,7 @@ public class EventsHandler_1_9 implements Listener {
 
         if (entity instanceof Player) {
             Player n = (Player) entity;
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;

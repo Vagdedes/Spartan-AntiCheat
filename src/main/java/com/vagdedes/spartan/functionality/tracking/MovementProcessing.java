@@ -10,11 +10,10 @@ import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
-import com.vagdedes.spartan.utils.minecraft.server.CombatUtils;
-import com.vagdedes.spartan.utils.minecraft.server.GroundUtils;
-import com.vagdedes.spartan.utils.minecraft.server.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
+import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 
@@ -32,11 +31,7 @@ public class MovementProcessing {
             LAVA = MaterialUtils.get("lava");
     public static final int
             motionPrecision = 4,
-            heightPrecision = 3,
-            quantumPrecision = AlgebraUtils.integerRound(
-                    Math.sqrt(((motionPrecision * motionPrecision) + (heightPrecision * heightPrecision)) / 2.0)
-            );
-    public static final double maxPrecisionHeightLengthRatio = 1.0 / Math.pow(10, heightPrecision);
+            heightPrecision = 3;
 
     public static void run(SpartanPlayer player,
                            SpartanLocation to,
@@ -58,7 +53,7 @@ public class MovementProcessing {
                                                     double vertical, double box) {
         if (player.isOnGround(true)
                 && player.movement.getTicksOnAir() == 0
-                && player.getVehicle() == null
+                && player.getInstance().getVehicle() == null
                 && vertical == 0.0
                 && GroundUtils.collisionHeightExists(box)) {
             player.trackers.removeMany(Trackers.TrackerFamily.MOTION);
@@ -101,7 +96,7 @@ public class MovementProcessing {
             player.movement.setLastLiquid(LAVA);
             return true;
         } else {
-            for (double i = 0.0; i < player.getEyeHeight(); i++) {
+            for (double i = 0.0; i < player.getInstance().getEyeHeight(); i++) {
                 for (SpartanLocation locationModified : location.getSurroundingLocations(GroundUtils.boundingBox, i, GroundUtils.boundingBox)) {
                     if (locationModified.getBlock().isLiquidOrWaterLogged(false)) {
                         player.movement.setLastLiquid(WATER);

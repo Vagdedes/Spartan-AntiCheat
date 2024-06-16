@@ -3,8 +3,7 @@ package com.vagdedes.spartan.functionality.inventory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -15,18 +14,8 @@ import java.util.*;
 public class PlayerStateLists {
 
     public static final String
-            hackerPlayers = "Identified Hacker",
-            suspectedPlayers = "Suspected Player",
-            legitimatePlayers = "Legitimate Player",
             inactiveColour = "§8",
-
-    noDataAvailable = "No data available at this time",
-            viewData = "§7Click this item to §eview the player's information§7.";
-    public static final String[] menuList = new String[]{
-            hackerPlayers,
-            suspectedPlayers,
-            legitimatePlayers
-    };
+            noDataAvailable = "No data available at this time";
     private static final int[] ignoredSlots = new int[]{
             0, 1, 2, 3, 4, 5, 6, 7, 8,
             9, 10, 16, 17,
@@ -38,27 +27,30 @@ public class PlayerStateLists {
 
     private static final Map<UUID, Integer> cache = new LinkedHashMap<>();
 
-    private static void fill(String title, Inventory inventory, PlayerProfile profile,
+    private static void fill(Inventory inventory, PlayerProfile profile,
                              List<String> description, int slot) {
         ItemStack item = InventoryUtils.getHead();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§c" + profile.getName());
 
         List<String> lore = new ArrayList<>(description.size() + 10);
-        InventoryUtils.prepareDescription(lore, title);
+        InventoryUtils.prepareDescription(
+                lore,
+                profile.evidence.getType().toString()
+        );
 
         if (!description.isEmpty()) {
             lore.addAll(description);
             lore.add("");
         }
-        lore.add(viewData);
+        lore.add("§7Click this item to §eview the player's information§7.");
 
         meta.setLore(lore);
         item.setItemMeta(meta);
         inventory.setItem(slot, item);
 
         SpartanBukkit.dataThread.executeWithPriority(() -> {
-            ItemStack itemNew = profile.getSkull(profile.isSuspectedOrHacker());
+            ItemStack itemNew = profile.getSkull(true);
             ItemMeta metaNew = itemNew.getItemMeta();
             metaNew.setDisplayName(meta.getDisplayName());
             metaNew.setLore(lore);
@@ -91,104 +83,51 @@ public class PlayerStateLists {
         return false;
     }
 
+    private static List<PlayerProfile> getProfiles() {
+        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+
+        if (!playerProfiles.isEmpty()) {
+            List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
+
+            for (PlayerProfile playerProfile : playerProfiles) {
+                if (!playerProfile.isLegitimate()) {
+                    list.add(playerProfile);
+                }
+            }
+            return list;
+        } else {
+            return new ArrayList<>(0);
+        }
+    }
+
     public static void fill(UUID uuid, Inventory inventory) {
         List<String> lore = new ArrayList<>(20);
-        int slotPosition = 0, limit = 5;
+        int slotPosition = 0, limit = 15;
         Integer[] freeSlots = getFreeSlots(inventory);
 
-        for (String title : menuList) {
-            int listSize, page = getPage(uuid), skip = ((page - 1) * limit);
-            double players = ResearchEngine.getPlayerProfiles().size();
-            List<PlayerProfile> hackers = ResearchEngine.getHackers(),
-                    suspectedPlayers = ResearchEngine.getSuspectedPlayers(),
-                    legitimates = ResearchEngine.getLegitimatePlayers();
-            String hackerString, suspectedString, legitimateString;
+        int listSize, page = getPage(uuid), skip = ((page - 1) * limit);
+        List<PlayerProfile> playerProfiles = subList(getProfiles(), skip, skip + limit);
 
-            // Separator
+        if ((listSize = playerProfiles.size()) > 0) {
+            for (PlayerProfile playerProfile : playerProfiles) {
+                Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
 
-            if (players > 0) {
-                hackerString = " §8(§6" + AlgebraUtils.integerRound((hackers.size() / players) * 100.0) + "% §7of players§8)";
-                suspectedString = " §8(§6" + AlgebraUtils.integerRound((suspectedPlayers.size() / players) * 100.0) + "% §7of players§8)";
-                legitimateString = " §8(§6" + AlgebraUtils.integerRound((legitimates.size() / players) * 100.0) + "% §7of players§8)";
-            } else {
-                hackerString = "";
-                suspectedString = "";
-                legitimateString = "";
-            }
-            switch (title) {
-                case PlayerStateLists.hackerPlayers:
-                    List<PlayerProfile> playerProfiles = subList(hackers, skip, skip + limit);
+                if (!evidenceDetails.isEmpty()) {
+                    lore.clear();
+                    lore.add("§7Detected for§8:");
 
-                    if ((listSize = playerProfiles.size()) > 0) {
-                        for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
-
-                            if (!evidenceDetails.isEmpty()) {
-                                lore.clear();
-                                lore.add("§7Detected for§8:");
-
-                                for (Enums.HackType hackType : evidenceDetails) {
-                                    lore.add("§4" + hackType.getCheck().getName());
-                                }
-                                fill(title + hackerString, inventory, playerProfile, lore, freeSlots[slotPosition]);
-                                slotPosition++;
-                            } else {
-                                listSize--;
-                            }
-                        }
+                    for (Enums.HackType hackType : evidenceDetails) {
+                        lore.add("§4" + hackType.getCheck().getName());
                     }
-                    break;
-                case PlayerStateLists.suspectedPlayers:
-                    playerProfiles = subList(suspectedPlayers, skip, skip + limit);
-
-                    if ((listSize = playerProfiles.size()) > 0) {
-                        for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
-
-                            if (!evidenceDetails.isEmpty()) {
-                                lore.clear();
-                                lore.add("§7Detected for§8:");
-
-                                for (Enums.HackType hackType : evidenceDetails) {
-                                    lore.add("§4" + hackType.getCheck().getName());
-                                }
-                                fill(title + suspectedString, inventory, playerProfile, lore, freeSlots[slotPosition]);
-                                slotPosition++;
-                            } else {
-                                listSize--;
-                            }
-                        }
-                    }
-                    break;
-                case PlayerStateLists.legitimatePlayers:
-                    playerProfiles = subList(legitimates, skip, skip + limit);
-
-                    if ((listSize = playerProfiles.size()) > 0) {
-                        for (PlayerProfile playerProfile : playerProfiles) {
-                            Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(true);
-                            lore.clear();
-
-                            if (!evidenceDetails.isEmpty()) {
-                                lore.add("§7Evaluated for§8:");
-
-                                for (Enums.HackType hackType : evidenceDetails) {
-                                    lore.add("§4" + hackType.getCheck().getName());
-                                }
-                            }
-                            fill(title + legitimateString, inventory, playerProfile, lore, freeSlots[slotPosition]);
-                            slotPosition++;
-                        }
-                    }
-                    break;
-                default:
-                    listSize = 0;
-                    break;
+                    fill(inventory, playerProfile, lore, freeSlots[slotPosition]);
+                    slotPosition++;
+                } else {
+                    listSize--;
+                }
             }
 
             if (listSize != limit) {
-                InventoryUtils.prepareDescription(lore, title);
-                lore.add("§7" + noDataAvailable);
-                lore.add("");
+                InventoryUtils.prepareDescription(lore, noDataAvailable);
                 lore.add("§cEmpty items like this will be filled with");
                 lore.add("§cuseful information about your players");
                 lore.add("§cas Spartan learns more about your server.");

@@ -14,11 +14,7 @@ public class WildTools implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(ToolUseEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.WILD_TOOLS;
 
         if (compatibilityType.isFunctional()) {

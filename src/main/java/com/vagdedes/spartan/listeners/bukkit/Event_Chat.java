@@ -24,7 +24,7 @@ public class Event_Chat implements Listener {
         if (PlayerLimitPerIP.isLimited(n)) {
             e.setCancelled(true);
         } else {
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -45,11 +45,7 @@ public class Event_Chat implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Command(PlayerCommandPreprocessEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
         String msg = e.getMessage();
 
         if (ChatProtection.runCommand(p, msg, false)) {

@@ -2,6 +2,7 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
@@ -185,27 +186,29 @@ public class CloudConnections {
     static void punishPlayers() {
         StringBuilder value = new StringBuilder();
 
-        for (PlayerProfile playerProfile : ResearchEngine.getHackers()) {
-            SpartanPlayer player = playerProfile.getSpartanPlayer();
-            boolean isNull = player == null;
+        for (PlayerProfile playerProfile : ResearchEngine.getPlayerProfiles()) {
+            if (playerProfile.evidence.has(PlayerEvidence.EvidenceType.HACKER)) {
+                SpartanPlayer player = playerProfile.getSpartanPlayer();
+                boolean isNull = player == null;
 
-            if (isNull || !Permissions.isStaff(player) && !player.isOp()) {
-                OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
+                if (isNull || !Permissions.isStaff(player) && !player.getInstance().isOp()) {
+                    OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
 
-                if (offlinePlayer != null && !offlinePlayer.isOp()) {
-                    UUID uuid = offlinePlayer.getUniqueId();
-                    String ipAddress;
+                    if (offlinePlayer != null && !offlinePlayer.isOp()) {
+                        UUID uuid = offlinePlayer.getUniqueId();
+                        String ipAddress;
 
-                    if (!isNull && offlinePlayer.isOnline()) {
-                        ipAddress = player.getIpAddress();
+                        if (!isNull && offlinePlayer.isOnline()) {
+                            ipAddress = player.getIpAddress();
 
-                        if (ipAddress == null) {
+                            if (ipAddress == null) {
+                                ipAddress = "NULL";
+                            }
+                        } else {
                             ipAddress = "NULL";
                         }
-                    } else {
-                        ipAddress = "NULL";
+                        value.append(StringUtils.encodeBase64(uuid + CloudBase.separator + ipAddress)).append(CloudBase.separator);
                     }
-                    value.append(StringUtils.encodeBase64(uuid + CloudBase.separator + ipAddress)).append(CloudBase.separator);
                 }
             }
         }

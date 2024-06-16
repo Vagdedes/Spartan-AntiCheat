@@ -3,7 +3,8 @@ package com.vagdedes.spartan.abstraction.inventory;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -87,7 +88,10 @@ public abstract class InventoryMenu {
         if (access) {
             inventory = player.createInventory(size, title);
             if (internalOpen(player, permissionMessage, object)) {
-                player.openInventory(inventory);
+                SpartanBukkit.transferTask(
+                        player,
+                        () -> player.getInstance().openInventory(inventory)
+                );
                 return true;
             } else {
                 return false;

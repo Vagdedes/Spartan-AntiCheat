@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.server.inventory;
+package com.vagdedes.spartan.utils.minecraft.inventory;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;

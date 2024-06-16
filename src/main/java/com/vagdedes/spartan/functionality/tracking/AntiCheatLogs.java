@@ -9,8 +9,8 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.TimeUtils;
-import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
-import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import me.vagdedes.spartan.api.PlayerFoundOreEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
@@ -110,7 +110,7 @@ public class AntiCheatLogs {
     }
 
     public static void logMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
-        if (player.getGameMode() == GameMode.SURVIVAL
+        if (player.getInstance().getGameMode() == GameMode.SURVIVAL
                 && PlayerUtils.isPickaxeItem(player.getItemInHand().getType())) {
             MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.material);
 

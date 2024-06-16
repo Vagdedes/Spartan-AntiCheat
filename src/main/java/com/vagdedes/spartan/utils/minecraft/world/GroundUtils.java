@@ -1,10 +1,11 @@
-package com.vagdedes.spartan.utils.minecraft.server;
+package com.vagdedes.spartan.utils.minecraft.world;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -204,7 +205,7 @@ public class GroundUtils {
                     return true;
                 }
             }
-            Entity vehicle = p.getVehicle();
+            Entity vehicle = p.getInstance().getVehicle();
             boolean hasVehicle = vehicle != null;
 
             if (hasVehicle) {
@@ -229,11 +230,12 @@ public class GroundUtils {
 
                         if (heights != null) {
                             if (abstractOnly) {
-                                if (heights[0] == -1.0) {
+                                if (heights[0] == -1.0 && box % minBoundingBox == 0.0) {
                                     return true;
                                 }
                             } else if (heights.length == 1) {
-                                if (heights[0] == -1.0 || heights[0] == box) {
+                                if (heights[0] == -1.0 && box % minBoundingBox == 0.0
+                                        || heights[0] == box) {
                                     return true;
                                 }
                             } else {

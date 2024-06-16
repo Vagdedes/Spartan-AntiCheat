@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.server;
+package com.vagdedes.spartan.utils.minecraft.entity;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
@@ -7,6 +7,8 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
+import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,7 +16,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.BoundingBox;
 
@@ -50,6 +51,7 @@ public class PlayerUtils {
             lavaDrag = 0.5,
             jumpAcceleration = AlgebraUtils.floatDouble(0.42),
             airAcceleration = 0.08,
+            airAccelerationUnloaded = AlgebraUtils.floatDouble(0.098),
             slowFallAcceleration = 0.01,
             liquidAcceleration = 0.02,
             chunk = 16.0,
@@ -134,8 +136,7 @@ public class PlayerUtils {
         if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
             return 0;
         }
-        PlayerInventory inventory = p.getInventory();
-        ItemStack b = inventory == null ? null : inventory.getBoots();
+        ItemStack b = p.getInventory().getBoots();
         return b != null ? b.getEnchantmentLevel(Enchantment.DEPTH_STRIDER) : 0;
     }
 

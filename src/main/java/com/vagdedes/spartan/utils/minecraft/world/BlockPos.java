@@ -1,11 +1,14 @@
-package com.vagdedes.spartan.utils.minecraft.mcp;
+package com.vagdedes.spartan.utils.minecraft.world;
 
 import com.google.common.collect.AbstractIterator;
+import com.vagdedes.spartan.utils.math.MathHelper;
+import com.vagdedes.spartan.utils.minecraft.vector.Vec3;
+import com.vagdedes.spartan.utils.minecraft.vector.Vec3i;
 
 import java.util.Iterator;
 
 public class BlockPos extends Vec3i {
-    
+
     public static final BlockPos ORIGIN = new BlockPos(0, 0, 0);
     private static final int field_177990_b = 1 + MathHelper.calculateLogBaseTwo(MathHelper.roundUpToPowerOfTwo(30000000));
     private static final int field_177991_c = field_177990_b;
@@ -132,6 +135,7 @@ public class BlockPos extends Vec3i {
             public Iterator iterator() {
                 return new AbstractIterator() {
                     private BlockPos lastReturned = null;
+
                     protected BlockPos computeNext0() {
                         if (this.lastReturned == null) {
                             this.lastReturned = var2;

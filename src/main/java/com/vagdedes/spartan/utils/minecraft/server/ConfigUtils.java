@@ -69,8 +69,8 @@ public class ConfigUtils {
         message = replace(message, "{uuid}", uuid.toString());
         message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{world}", worldName);
-        message = replace(message, "{health}", String.valueOf(p.getHealth()));
-        message = replace(message, "{gamemode}", p.getGameMode().toString().toLowerCase());
+        message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
+        message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());
         message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
         message = replace(message, "{y}", String.valueOf(loc.getBlockY()));
         message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
@@ -100,7 +100,7 @@ public class ConfigUtils {
         message = replace(message, "{uuid}", uuid.toString());
 
         if (off.isOnline()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer((Player) off);
+            SpartanPlayer p = SpartanBukkit.getProtocol((Player) off).spartanPlayer;
 
             if (p != null) {
                 SpartanLocation loc = p.movement.getLocation();
@@ -109,8 +109,8 @@ public class ConfigUtils {
                 message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
                 message = replace(message, "{ping}", String.valueOf(p.getPing()));
                 message = replace(message, "{world}", worldName);
-                message = replace(message, "{health}", String.valueOf(p.getHealth()));
-                message = replace(message, "{gamemode}", p.getGameMode().toString().toLowerCase());
+                message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
+                message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());
                 message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
                 message = replace(message, "{y}", String.valueOf(loc.getBlockY()));
                 message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));

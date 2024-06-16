@@ -8,6 +8,7 @@ import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
@@ -18,7 +19,7 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -44,31 +45,29 @@ public class PlayerInfo extends InventoryMenu {
     @Override
     public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         boolean back = !permissionMessage;
-        SpartanPlayer target = SpartanBukkit.getPlayer(object.toString());
+        SpartanProtocol target = SpartanBukkit.getProtocol(object.toString());
         boolean isOnline = target != null;
         PlayerProfile profile = isOnline
-                ? target.getProfile()
+                ? target.spartanPlayer.getProfile()
                 : ResearchEngine.getPlayerProfileAdvanced(object.toString(), true);
 
         if (profile == null) {
             player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
             return false;
         } else {
-            boolean legitimate = profile.evidence.getType() == PlayerEvidence.EvidenceType.LEGITIMATE;
+            PlayerEvidence.EvidenceType evidenceType = profile.evidence.getType();
+            boolean legitimate = evidenceType == PlayerEvidence.EvidenceType.LEGITIMATE;
             Collection<HackType> evidenceDetails = profile.evidence.getKnowledgeList(legitimate);
             PunishmentHistory punishmentHistory = profile.punishmentHistory;
             int miningHistoryMines = profile.getOverallMiningHistory().getMines();
             List<String> lore = new ArrayList<>(20);
             int i = 19;
 
-            setTitle(player, menu + (isOnline ? target.name : profile.getName()));
+            setTitle(player, menu + (isOnline ? target.spartanPlayer.name : profile.getName()));
 
             InventoryUtils.prepareDescription(
                     lore,
-                    legitimate ? PlayerStateLists.legitimatePlayers
-                            : profile.isHacker()
-                            ? PlayerStateLists.hackerPlayers
-                            : PlayerStateLists.suspectedPlayers
+                    evidenceType.toString()
             );
             if (!evidenceDetails.isEmpty()) {
                 lore.add(legitimate ? "§7Evaluated for§8:" : "§7Detected for§8:");
@@ -82,9 +81,9 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("§7Kicks§8:§c " + punishmentHistory.getKicks());
 
             if (isOnline) {
-                lore.add("§7CPS (Clicks Per Second)§8:§c " + target.clicks.getCount());
+                lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartanPlayer.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
-                lore.add("§7Edition§8:§c " + target.dataType);
+                lore.add("§7Edition§8:§c " + target.spartanPlayer.dataType);
                 lore.add("");
                 lore.add("§eLeft click to reset the player's live violations.");
             } else {
@@ -98,12 +97,13 @@ public class PlayerInfo extends InventoryMenu {
                     profile.getSkull(true),
                     4
             );
+            SpartanPlayer sp = isOnline ? target.spartanPlayer : null;
 
             for (Enums.HackCategoryType checkType : Enums.HackCategoryType.values()) {
                 if (checkType == Enums.HackCategoryType.EXPLOITS) {
-                    addCheck(HackType.Exploits, 24, isOnline, target, profile, lore);
+                    addCheck(HackType.Exploits, 24, isOnline, sp, profile, lore);
                 } else {
-                    addChecks(i, isOnline, target, profile, lore, checkType);
+                    addChecks(i, isOnline, sp, profile, lore, checkType);
                     i++;
                 }
             }
@@ -293,13 +293,13 @@ public class PlayerInfo extends InventoryMenu {
             if (!Permissions.has(player, Permission.MANAGE)) {
                 player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
             } else {
-                SpartanPlayer t = SpartanBukkit.getPlayer(playerName);
+                SpartanProtocol t = SpartanBukkit.getProtocol(playerName);
 
                 if (t != null && clickType.isLeftClick()) {
                     for (HackType hackType : Enums.HackType.values()) {
-                        t.getViolations(hackType).reset();
+                        t.spartanPlayer.getViolations(hackType).reset();
                     }
-                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.name);
+                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.spartanPlayer.name);
                     player.sendMessage(message);
                 } else {
                     String name = Bukkit.getOfflinePlayer(playerName).getName();

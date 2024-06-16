@@ -5,9 +5,9 @@ import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
-import com.vagdedes.spartan.utils.minecraft.server.GroundUtils;
-import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -149,8 +149,7 @@ public class SpartanPlayerMovement {
         if (artificialSwimming >= TPS.getTick(this.parent)) {
             return true;
         } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            Player p = this.parent.getInstance();
-            return p != null && p.isSwimming();
+            return this.parent.getInstance().isSwimming();
         } else {
             return false;
         }
@@ -163,7 +162,7 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isLowEyeHeight() {
-        return this.parent.getEyeHeight() < 1.0;
+        return this.parent.getInstance().getEyeHeight() < 1.0;
     }
 
     public boolean isCrawling() {
@@ -173,40 +172,29 @@ public class SpartanPlayerMovement {
     public boolean isWalkJumping(double vertical) {
         return !this.isSprinting()
                 && this.getValueOrDefault(this.getEventDistance(), 0.0) > 0.0
-                && this.isJumping(vertical);
+                && this.justJumped(vertical);
     }
 
     public boolean isSneaking() {
-        Player p = this.parent.getInstance();
-
-        if (SpartanBukkit.packetsEnabled(this.parent)) {
-            return p != null && SpartanBukkit.getProtocol(p).abilities.isSneaking();
-        } else {
-            return p != null && p.isSneaking();
-        }
+        return this.parent.getInstance().isSneaking()
+                || this.parent.protocol.isSneaking();
     }
 
     public boolean isFlying() {
-        Entity vehicle = this.parent.getVehicle();
+        Entity vehicle = this.parent.getInstance().getVehicle();
 
         if (vehicle != null) {
             return vehicle instanceof Player && ((Player) vehicle).isFlying();
         } else {
-            Player p = this.parent.getInstance();
-            return p != null && p.isFlying();
+            return this.parent.getInstance().isFlying();
         }
     }
 
     // Separator
 
     public boolean isSprinting() {
-        Player p = this.parent.getInstance();
-
-        if (SpartanBukkit.packetsEnabled(this.parent)) {
-            return p != null && SpartanBukkit.getProtocol(p).abilities.isSprinting();
-        } else {
-            return p != null && p.isSprinting();
-        }
+        return this.parent.getInstance().isSprinting()
+                || this.parent.protocol.isSprinting();
     }
 
     public boolean isSprintJumping(double vertical) {
@@ -233,6 +221,12 @@ public class SpartanPlayerMovement {
 
     // Separator
 
+    public double getAirAcceleration() {
+        return this.location.isChunkLoaded()
+                ? PlayerUtils.airAcceleration
+                : PlayerUtils.airAccelerationUnloaded;
+    }
+
     public int getFallTick(double d, double acceleration, double drag, double precision) {
         return PlayerUtils.getFallTick(
                 d,
@@ -254,7 +248,7 @@ public class SpartanPlayerMovement {
 
     public boolean justFell(double d) {
         return d < 0.0
-                && Math.abs((0.0 - d) - (PlayerUtils.airAcceleration * PlayerUtils.airDrag))
+                && Math.abs((0.0 - d) - (this.getAirAcceleration() * PlayerUtils.airDrag))
                 <= GroundUtils.maxHeightLengthRatio;
     }
 
@@ -267,8 +261,7 @@ public class SpartanPlayerMovement {
 
     public boolean isGliding() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            Player p = this.parent.getInstance();
-            return p != null && p.isGliding();
+            return this.parent.getInstance().isGliding();
         } else {
             return false;
         }
@@ -319,7 +312,11 @@ public class SpartanPlayerMovement {
         return detectionLocation;
     }
 
-    public void setDetectionLocation(boolean force) {
+    public void setDetectionLocation() {
+        this.setDetectionLocation(true);
+    }
+
+    private void setDetectionLocation(boolean force) {
         SpartanLocation location = this.getLocation();
 
         if (force
@@ -350,17 +347,17 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    public SpartanLocation getVehicleLocation(Player player) {
-        Entity vehicle = player.getVehicle();
+    private Location getBukkitLocation() {
+        return SpartanBukkit.packetsEnabled()
+                ? this.parent.protocol.getLocation()
+                : this.parent.getInstance().getLocation();
+    }
+
+    public SpartanLocation getVehicleLocation() {
+        Entity vehicle = this.parent.getInstance().getVehicle();
 
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
-            Location playerLocation;
-
-            if (SpartanBukkit.packetsEnabled(this.parent)) {
-                playerLocation = SpartanBukkit.getProtocol(player).getLocation();
-            } else {
-                playerLocation = player.getLocation();
-            }
+            Location playerLocation = this.getBukkitLocation();
             return new SpartanLocation(
                     vehicle.getLocation(),
                     playerLocation.getYaw(),
@@ -370,29 +367,25 @@ public class SpartanPlayerMovement {
     }
 
     public SpartanLocation getLocation() {
-        Player p = this.parent.getInstance();
+        SpartanLocation vehicleLocation = getVehicleLocation();
+        return vehicleLocation == null
+                ? this.getRawLocation()
+                : vehicleLocation;
+    }
 
-        if (p != null) {
-            SpartanLocation spartanLocation = getVehicleLocation(p);
-
-            if (spartanLocation == null) {
-                Location actualLocation;
-
-                if (SpartanBukkit.packetsEnabled(this.parent)) {
-                    actualLocation = SpartanBukkit.getProtocol(p).getLocation();
-                } else {
-                    actualLocation = p.getLocation();
-                }
-                if (this.location.getX() != actualLocation.getX()
-                        || this.location.getY() != actualLocation.getY()
-                        || this.location.getZ() != actualLocation.getZ()
-                        || this.location.getYaw() != actualLocation.getYaw()
-                        || this.location.getPitch() != actualLocation.getPitch()) {
-                    this.setLocation(new SpartanLocation(actualLocation), false);
-                }
-            }
-        }
+    public SpartanLocation getRawLocation() {
+        this.refreshLocation(this.getBukkitLocation());
         return location;
+    }
+
+    public void refreshLocation(Location location) {
+        if (this.location.getX() != location.getX()
+                || this.location.getY() != location.getY()
+                || this.location.getZ() != location.getZ()
+                || this.location.getYaw() != location.getYaw()
+                || this.location.getPitch() != location.getPitch()) {
+            this.setLocation(new SpartanLocation(location), false);
+        }
     }
 
     private void setLocation(SpartanLocation location, boolean queue) {
@@ -410,6 +403,7 @@ public class SpartanPlayerMovement {
             this.parent.resetTrackers();
         }
         this.location = location;
+        this.setDetectionLocation(false);
     }
 
     // Separator
@@ -451,7 +445,7 @@ public class SpartanPlayerMovement {
 
     private void judgeGround(boolean increase) {
         if (this.parent.isOnGround(false)) {
-            this.airTicks = 0;
+            this.resetAirTicks();
         } else if (increase) {
             this.airTicks++;
         }
@@ -460,4 +454,17 @@ public class SpartanPlayerMovement {
     public void judgeGround() {
         this.judgeGround(false);
     }
+
+    public void resetAirTicks() {
+        this.airTicks = 0;
+    }
+
+    // Separator
+
+    public boolean isInVoid() {
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)
+                ? this.location.getY() < this.location.world.getMinHeight()
+                : this.location.getY() < 0;
+    }
+
 }

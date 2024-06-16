@@ -20,11 +20,7 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockBreak(BlockBreakEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
         Block nb = e.getBlock();
         SpartanBlock b = new SpartanBlock(nb);
         boolean cancelled = e.isCancelled();
@@ -51,18 +47,13 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockPlace(BlockPlaceEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
         Block nb = e.getBlock();
         SpartanBlock b = new SpartanBlock(nb);
         b.removeBlockCache();
         p.movement.judgeGround();
 
-        if (n.getWorld() != b.getWorld()) {
+        if (p.getWorld() != b.getWorld()) {
             return;
         }
         boolean cancelled = e.isCancelled();
@@ -83,11 +74,8 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Sign(SignChangeEvent e) {
-        SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
-        if (p == null) {
-            return;
-        }
         // Detections
         p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getLines());
 
@@ -103,11 +91,7 @@ public class Event_World implements Listener {
         if (PlayerLimitPerIP.isLimited(n)) {
             e.setCancelled(true);
         } else {
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-            if (p == null) {
-                return;
-            }
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
             Block nb = e.getClickedBlock();
             Action action = e.getAction();
             boolean notNull = nb != null,

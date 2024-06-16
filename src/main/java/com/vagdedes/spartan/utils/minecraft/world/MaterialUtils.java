@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.server;
+package com.vagdedes.spartan.utils.minecraft.world;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
@@ -254,7 +254,7 @@ public class MaterialUtils {
             if (player.movement.isSwimming()) {
                 water = true;
             } else {
-                SpartanBlock block = player.movement.getLocation().clone().add(0, player.getEyeHeight(), 0).getBlock();
+                SpartanBlock block = player.movement.getLocation().clone().add(0, player.getInstance().getEyeHeight(), 0).getBlock();
                 water = block.waterLogged || block.material == MaterialUtils.get("water");
             }
             if (water) {
@@ -264,17 +264,14 @@ public class MaterialUtils {
                     aquaInfinity = true;
                 } else {
                     PlayerInventory inventory = player.getInventory();
+                    List<ItemStack> items = new ArrayList<>(4 + 1);
+                    items.addAll(Arrays.asList(inventory.getArmorContents()));
+                    items.add(inventory.getItemInHand());
 
-                    if (inventory != null) {
-                        List<ItemStack> items = new ArrayList<>(4 + 1);
-                        items.addAll(Arrays.asList(inventory.getArmorContents()));
-                        items.add(inventory.getItemInHand());
-
-                        for (ItemStack item : items) {
-                            if (item != null && item.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
-                                aquaInfinity = true;
-                                break;
-                            }
+                    for (ItemStack item : items) {
+                        if (item != null && item.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
+                            aquaInfinity = true;
+                            break;
                         }
                     }
                 }

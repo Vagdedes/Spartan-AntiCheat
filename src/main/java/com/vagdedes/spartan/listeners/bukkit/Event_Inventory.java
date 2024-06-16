@@ -6,7 +6,7 @@ import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import com.vagdedes.spartan.utils.minecraft.server.BlockUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,12 +21,7 @@ public class Event_Inventory implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void ItemDrop(PlayerDropItemEvent e) {
-        Player n = e.getPlayer();
-        SpartanPlayer p = SpartanBukkit.getPlayer(n);
-
-        if (p == null) {
-            return;
-        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
         // Detections
         p.getExecutor(Enums.HackType.ItemDrops).run(e.isCancelled());
@@ -42,7 +37,7 @@ public class Event_Inventory implements Listener {
 
         if (BlockUtils.hasMaterial(item)) {
             Player n = (Player) e.getWhoClicked();
-            SpartanPlayer p = SpartanBukkit.getPlayer(n);
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;

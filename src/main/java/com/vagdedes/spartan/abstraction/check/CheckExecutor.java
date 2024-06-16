@@ -46,7 +46,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
     public final void scheduler() {
         function = !TPS.areLow(player)
                 && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
-                || player.getGameMode() != GameMode.SPECTATOR)
+                || player.getInstance().getGameMode() != GameMode.SPECTATOR)
                 && player.getCancellableCompatibility() == null
                 && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
                 && canRun();

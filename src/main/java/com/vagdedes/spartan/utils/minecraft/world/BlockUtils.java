@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.server;
+package com.vagdedes.spartan.utils.minecraft.world;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;

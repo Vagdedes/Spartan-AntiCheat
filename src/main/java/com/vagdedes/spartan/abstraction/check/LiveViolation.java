@@ -19,8 +19,8 @@ import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
-import com.vagdedes.spartan.utils.minecraft.server.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import me.vagdedes.spartan.api.CheckCancelEvent;
 import me.vagdedes.spartan.api.PlayerViolationCommandEvent;
@@ -36,7 +36,7 @@ import java.util.*;
 public class LiveViolation {
 
     public static final String violationLevelIdentifier = "VL:";
-    private static final long violationTimeWorth = 2_000L;
+    public static final long violationTimeWorth = 2_000L;
 
     private final SpartanPlayer player;
     private final Enums.HackType hackType;
@@ -97,8 +97,7 @@ public class LiveViolation {
                             && (silentCause == null
                             || silentCause.hasExpired()
                             || !silentCause.pointerMatches(information))
-                            && (player.getProfile().isSuspectedOrHacker(hackType)
-                            || playerViolation.level >= playerViolation.getIgnoredViolations(player));
+                            && playerViolation.level >= playerViolation.getIgnoredViolations(player);
                 };
 
                 if (!event || SpartanBukkit.isSynchronised()) {
@@ -156,8 +155,10 @@ public class LiveViolation {
         if (!this.level.isEmpty()) {
             int total = 0;
 
-            for (Long level : this.level.values()) {
-                total += this.calculateLevel(level);
+            synchronized (this.level) {
+                for (Long level : this.level.values()) {
+                    total += this.calculateLevel(level);
+                }
             }
             return total;
         } else {
@@ -167,9 +168,11 @@ public class LiveViolation {
 
     public boolean hasLevel() {
         if (!this.level.isEmpty()) {
-            for (Long level : this.level.values()) {
-                if (this.calculateLevel(level) > 0) {
-                    return true;
+            synchronized (this.level) {
+                for (Long level : this.level.values()) {
+                    if (this.calculateLevel(level) > 0) {
+                        return true;
+                    }
                 }
             }
         }
@@ -366,8 +369,7 @@ public class LiveViolation {
         SpartanLocation location = player.movement.getLocation();
         String information = Config.getConstruct() + player.name + " failed " + hackType
                 + " (" + violationLevelIdentifier + " " + playerViolation.level + ") "
-                + "[(Version: " + MultiVersion.versionString() + " "
-                + MultiVersion.versionString() + "), (IV: " + (canPrevent ? "-" : "") + ignoredViolations + ")"
+                + "[(Version: " + MultiVersion.versionString() + "), (IV: " + (canPrevent ? "-" : "") + ignoredViolations + ")"
                 + " (Silent: " + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
                 + "(Ping: " + player.getPing() + "ms), (TPS: "
                 + AlgebraUtils.cut(TPS.get(player, false), 3) + "), " +
@@ -386,7 +388,7 @@ public class LiveViolation {
                 Player realPlayer = player.getInstance();
 
                 if (realPlayer != null) {
-                    ClickableMessage.sendCommand(realPlayer, message, "Command: " + command, command);
+                    ClickableMessage.sendCommand(realPlayer, message, command, command);
                 }
             }
         } else {
@@ -409,7 +411,7 @@ public class LiveViolation {
                             ClickableMessage.sendCommand(
                                     realPlayer,
                                     message,
-                                    "Command: " + command,
+                                    command,
                                     command
                             );
                         }

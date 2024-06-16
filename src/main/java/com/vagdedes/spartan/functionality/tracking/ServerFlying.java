@@ -14,13 +14,13 @@ public class ServerFlying {
                 && p.movement.isFlying()
                 && !p.movement.isGliding()
                 && !p.movement.isSwimming()
-                && p.getVehicle() == null
-                && !p.isSleeping()
-                && !p.isDead()
+                && p.getInstance().getVehicle() == null
+                && !p.getInstance().isSleeping()
+                && !p.getInstance().isDead()
                 && !p.trackers.has(Trackers.TrackerFamily.VELOCITY)
                 && !p.trackers.has(Trackers.TrackerFamily.MOTION)
                 && Attributes.getAmount(p, Attributes.GENERIC_FLYING_SPEED) == 0.0) {
-            double limit = (p.getFlySpeed() * 10.0) + 1.0;
+            double limit = (p.getInstance().getFlySpeed() * 10.0) + 1.0;
             Double nmsDistance = p.movement.getEventDistance();
 
             if (nmsDistance != null && nmsDistance >= limit

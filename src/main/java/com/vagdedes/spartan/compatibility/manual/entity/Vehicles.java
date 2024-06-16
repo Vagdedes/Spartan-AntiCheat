@@ -21,7 +21,7 @@ public class Vehicles implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(VehicleEnterEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p != null) {
                 VehicleType vehicleType = e.getVehicleType();
@@ -38,7 +38,7 @@ public class Vehicles implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Exit(VehicleExitEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getPlayer(e.getPlayer());
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
             if (p != null) {
                 p.buffer.clear(key);

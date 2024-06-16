@@ -66,7 +66,7 @@ public class JarVerification {
                 && name.equalsIgnoreCase("Spartan")
                 && (description = Register.plugin.getDescription()).getVersion().startsWith("Phase " + description.getVersion().substring(6))
                 && description.getDescription().equals("In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning.")
-                && description.getWebsite().startsWith("https://www.idealistic.ai")
+                && description.getWebsite().startsWith("https://www.vagdedes.com")
                 && description.getAuthors().toString().equalsIgnoreCase("[Evangelos Dedes @Vagdedes]");
 
         try {

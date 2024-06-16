@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.mcp;
+package com.vagdedes.spartan.utils.math;
 
 import java.util.Random;
 import java.util.UUID;

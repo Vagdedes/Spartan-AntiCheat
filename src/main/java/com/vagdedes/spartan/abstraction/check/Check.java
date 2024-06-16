@@ -554,21 +554,14 @@ public class Check {
 
     public void setIgnoredViolations(Enums.DataType dataType, Map<Integer, Double> map) {
         synchronized (ignoredViolations) {
-            if (!map.isEmpty()) {
-                for (Map.Entry<Integer, Double> entry : map.entrySet()) {
-                    for (Enums.DataType data : new Enums.DataType[]{
-                            dataType,
-                            Enums.DataType.UNIVERSAL
-                    }) {
-                        ignoredViolations.computeIfAbsent(
-                                data,
-                                k -> new LinkedHashMap<>()
-                        ).put(
-                                entry.getKey(),
-                                AlgebraUtils.integerCeil(entry.getValue()) // Ceil to be the safest
-                        );
-                    }
-                }
+            for (Map.Entry<Integer, Double> entry : map.entrySet()) {
+                ignoredViolations.computeIfAbsent(
+                        dataType,
+                        k -> new LinkedHashMap<>()
+                ).put(
+                        entry.getKey(),
+                        AlgebraUtils.integerCeil(entry.getValue()) // Ceil to be the safest
+                );
             }
         }
     }
@@ -592,33 +585,10 @@ public class Check {
             } else {
                 Integer integer = map.get(hash);
                 return integer == null
-                        ? this.getAverageIgnoredViolations(dataType)
-                        : Math.max(integer, this.getAverageIgnoredViolations(dataType));
+                        ? standardIgnoredViolations
+                        : Math.max(integer, standardIgnoredViolations);
             }
         }
     }
 
-    public int getAverageIgnoredViolations(Enums.DataType dataType) {
-        if (ignoredViolations.isEmpty()) {
-            return standardIgnoredViolations;
-        } else {
-            synchronized (ignoredViolations) {
-                Map<Integer, Integer> map = ignoredViolations.get(dataType);
-
-                if (map == null) {
-                    return standardIgnoredViolations;
-                } else {
-                    int sum = 0;
-
-                    for (int violations : map.values()) {
-                        sum += violations;
-                    }
-                    return Math.max(
-                            standardIgnoredViolations,
-                            AlgebraUtils.integerRound(sum / (double) ignoredViolations.size())
-                    );
-                }
-            }
-        }
-    }
 }

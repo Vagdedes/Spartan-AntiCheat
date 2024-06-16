@@ -1,9 +1,10 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.utils.minecraft.server.inventory.InventoryUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -183,9 +184,14 @@ public class PlayerProfile {
     }
 
     public SpartanPlayer getSpartanPlayer() {
-        return uuid != null
-                ? SpartanBukkit.getPlayer(uuid)
-                : SpartanBukkit.getPlayer(name);
+        SpartanProtocol protocol;
+
+        if (uuid != null) {
+            protocol = SpartanBukkit.getProtocol(uuid);
+        } else {
+            protocol = SpartanBukkit.getProtocol(name);
+        }
+        return protocol != null ? protocol.spartanPlayer : null;
     }
 
     public boolean isOnline() {
@@ -228,45 +234,4 @@ public class PlayerProfile {
         return evidence.has(PlayerEvidence.EvidenceType.LEGITIMATE);
     }
 
-    public boolean isHacker() {
-        return evidence.has(PlayerEvidence.EvidenceType.HACKER);
-    }
-
-    public boolean isSuspected() {
-        return evidence.has(PlayerEvidence.EvidenceType.SUSPECTED);
-    }
-
-    public boolean isSuspected(Enums.HackType[] hackTypes) {
-        synchronized (evidence.live) {
-            if (evidence.has(PlayerEvidence.EvidenceType.SUSPECTED)) {
-                for (Enums.HackType hackType : hackTypes) {
-                    if (evidence.live.containsKey(hackType)
-                            || evidence.historical.containsKey(hackType)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    }
-
-    public boolean isSuspected(Enums.HackType hackType) {
-        synchronized (evidence.live) {
-            return evidence.has(PlayerEvidence.EvidenceType.SUSPECTED)
-                    && (evidence.live.containsKey(hackType)
-                    || evidence.historical.containsKey(hackType));
-        }
-    }
-
-    public boolean isSuspectedOrHacker() {
-        return isSuspected() || isHacker();
-    }
-
-    public boolean isSuspectedOrHacker(Enums.HackType[] hackTypes) {
-        return isHacker() || isSuspected(hackTypes);
-    }
-
-    public boolean isSuspectedOrHacker(Enums.HackType hackType) {
-        return isHacker() || isSuspected(hackType);
-    }
 }

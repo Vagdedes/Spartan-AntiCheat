@@ -19,14 +19,14 @@ public class ProjectKorra implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void AbilityStart(AbilityStartEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getPlayer(e.getAbility().getPlayer()), 60);
+            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 60);
         }
     }
 
     @EventHandler
     private void AbilityProgress(AbilityProgressEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getPlayer(e.getAbility().getPlayer()), 40);
+            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 40);
         }
     }
 
@@ -36,7 +36,7 @@ public class ProjectKorra implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getPlayer((Player) entity);
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
 
                 if (p != null) {
                     evadeCombatFPs(p, 60);

@@ -23,7 +23,7 @@ public class SpartanEdition {
             StringUtils.decodeBase64("U3BhcnRhbkJlZHJvY2tFZGl0aW9u"),
             "Spartan",
     };
-    public static final String patreonURL = "https://www.idealistic.ai/patreon";
+    public static final String patreonURL = "https://www.vagdedes.com/patreon";
     private static final int notificationCooldown = 60 * 60;
     private static final String
             type = "{type}",

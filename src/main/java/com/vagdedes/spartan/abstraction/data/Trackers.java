@@ -143,7 +143,12 @@ public class Trackers {
 
     public boolean has(TrackerType trackerType) {
         Long ticks = enable.get(trackerType);
-        return ticks != null && has(ticks);
+        if (ticks != null && has(ticks)) {
+            return true;
+        } else {
+            Map<String, Long> map = child.get(trackerType);
+            return map != null && map.values().stream().anyMatch(this::has);
+        }
     }
 
     public boolean has(TrackerType trackerType, String key) {
@@ -163,8 +168,8 @@ public class Trackers {
     }
 
     public int getRemainingTicks(TrackerType trackerType, String key) {
-            Map<String, Long> map = child.get(trackerType);
-            return map == null ? 0 : getRemainingTicks(map.get(key));
+        Map<String, Long> map = child.get(trackerType);
+        return map == null ? 0 : getRemainingTicks(map.get(key));
     }
 
     public int getRemainingTicks(TrackerType trackerType) {
