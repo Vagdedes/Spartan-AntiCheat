@@ -16,7 +16,8 @@ public class BackgroundMove {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
         movePacket(event, protocol);
 
-        if (!invalidTeleport(protocol.getLocation()) && protocol.isOnLoadStatus()) {
+        if (!invalidTeleport(protocol.getLocation())
+                && protocol.isOnLoadStatus()) {
             protocol.setOnLoadStatus(false);
         } else if (!invalidTeleport(protocol.getLocation())
                 || (invalidTeleport(protocol.getLocation()) && !protocol.isOnLoadStatus())) {
@@ -28,11 +29,11 @@ public class BackgroundMove {
         PacketContainer packet = event.getPacket();
         PacketType type = event.getPacket().getType();
 
-        if (type == PacketType.Play.Client.LOOK) {
+        if (type.equals(PacketType.Play.Client.LOOK)) {
             protocol.getLocation().setYaw(packet.getFloat().read(0));
             protocol.getLocation().setPitch(packet.getFloat().read(1));
             protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation());
-        } else if (type == PacketType.Play.Client.POSITION_LOOK) {
+        } else if (type.equals(PacketType.Play.Client.POSITION_LOOK)) {
             Location location = readLocation(event);
             protocol.getLocation().setX(location.getX());
             protocol.getLocation().setY(location.getY());
@@ -40,7 +41,7 @@ public class BackgroundMove {
             protocol.getLocation().setYaw(packet.getFloat().read(0));
             protocol.getLocation().setPitch(packet.getFloat().read(1));
             protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation());
-        } else if (type == PacketType.Play.Client.POSITION) {
+        } else if (type.equals(PacketType.Play.Client.POSITION)) {
             Location location = readLocation(event);
             protocol.getLocation().setX(location.getX());
             protocol.getLocation().setY(location.getY());

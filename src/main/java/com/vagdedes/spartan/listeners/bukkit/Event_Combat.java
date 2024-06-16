@@ -71,8 +71,8 @@ public class Event_Combat implements Listener {
                     Shared.attack(new PlayerAttackEvent(
                             player,
                             (LivingEntity) entity,
-                            e.isCancelled())
-                    );
+                            e.isCancelled()
+                    ));
                 }
             }
         }
