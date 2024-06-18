@@ -1,3 +1,4 @@
+## To build your own jar (1) ensure Maven is working properly, (2) include all local dependencies and (3) modify the <a href="https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/main/java/me/vagdedes/spartan/system/Enums.java">HackType enums</a> to your needs.
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/what.png"></a>
 
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple.png"></a>
