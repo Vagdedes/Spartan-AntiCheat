@@ -6,7 +6,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
-import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -313,21 +312,13 @@ public class SpartanPlayerMovement {
     }
 
     public void setDetectionLocation() {
-        this.setDetectionLocation(true);
+        this.setDetectionLocation(this.getLocation(), true);
     }
 
-    private void setDetectionLocation(boolean force) {
-        SpartanLocation location = this.getLocation();
-
+    private void setDetectionLocation(SpartanLocation location, boolean force) {
         if (force
                 || !location.world.equals(this.detectionLocation.world)
                 || location.distance(this.detectionLocation) > 4.0) {
-            int minHeight = BlockUtils.getMinHeight(location.world);
-
-            if (location.getBlockY() < minHeight) {
-                location = location.clone();
-                location.setY(minHeight);
-            }
             this.detectionLocation = location;
         }
     }
@@ -403,7 +394,7 @@ public class SpartanPlayerMovement {
             this.parent.resetTrackers();
         }
         this.location = location;
-        this.setDetectionLocation(false);
+        this.setDetectionLocation(location, false);
     }
 
     // Separator

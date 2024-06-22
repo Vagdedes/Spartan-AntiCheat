@@ -102,13 +102,16 @@ public class PlayerStateLists {
 
     public static void fill(UUID uuid, Inventory inventory) {
         List<String> lore = new ArrayList<>(20);
-        int slotPosition = 0, limit = 15;
+        int slotPosition = 0,
+                limit = 15,
+                page = getPage(uuid),
+                skip = ((page - 1) * limit);;
         Integer[] freeSlots = getFreeSlots(inventory);
 
-        int listSize, page = getPage(uuid), skip = ((page - 1) * limit);
         List<PlayerProfile> playerProfiles = subList(getProfiles(), skip, skip + limit);
+        int listSize = playerProfiles.size();
 
-        if ((listSize = playerProfiles.size()) > 0) {
+        if (listSize > 0) {
             for (PlayerProfile playerProfile : playerProfiles) {
                 Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(false);
 
@@ -125,17 +128,17 @@ public class PlayerStateLists {
                     listSize--;
                 }
             }
+        }
 
-            if (listSize != limit) {
-                InventoryUtils.prepareDescription(lore, noDataAvailable);
-                lore.add("§cEmpty items like this will be filled with");
-                lore.add("§cuseful information about your players");
-                lore.add("§cas Spartan learns more about your server.");
+        if (listSize != limit) {
+            InventoryUtils.prepareDescription(lore, noDataAvailable);
+            lore.add("§cEmpty items like this will be filled with");
+            lore.add("§cuseful information about your players");
+            lore.add("§cas Spartan learns more about your server.");
 
-                for (int i = listSize; i < limit; i++) {
-                    InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
-                    slotPosition++;
-                }
+            for (int i = listSize; i < limit; i++) {
+                InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
+                slotPosition++;
             }
         }
     }

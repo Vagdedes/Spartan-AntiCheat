@@ -4,10 +4,7 @@ import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import org.bukkit.Location;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LagCompensation {
@@ -59,9 +56,14 @@ public class LagCompensation {
 
     public static int getPlayerTicksDelay(int id) {
         List<Integer> delaysList = delays.get(id);
-        return delaysList != null
-                ? Collections.max(delaysList) / TPS.tickTimeInteger
-                : 0;
+        if (delaysList != null) {
+            List<Integer> snapshot;
+            synchronized (delaysList) {
+                snapshot = new ArrayList<>(delaysList);
+            }
+            return Collections.max(snapshot) / TPS.tickTimeInteger;
+        }
+        return 0;
     }
 
 }

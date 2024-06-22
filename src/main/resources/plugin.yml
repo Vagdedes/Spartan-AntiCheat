@@ -1,7 +1,7 @@
 name: Spartan
 author: Evangelos Dedes @Vagdedes
 main: com.vagdedes.spartan.Register
-version: Phase 535.5
+version: Phase 536
 website: https://www.vagdedes.com
 description: In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning.
 api-version: 1.13

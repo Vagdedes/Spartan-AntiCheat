@@ -7,6 +7,32 @@ import java.util.Set;
 
 public class BlockPatternUtils {
 
+    public static boolean isBlockPattern(double[][] positions,
+                                         SpartanLocation location,
+                                         boolean surroundings,
+                                         Material match) {
+        if (match != null) {
+            for (double[] coordinates : positions) {
+                if (surroundings) {
+                    for (SpartanLocation surroundingLocation : location.getSurroundingLocations(coordinates[0], coordinates[1], coordinates[2])) {
+                        Material material = surroundingLocation.getBlock().material;
+
+                        if (match == material) {
+                            return true;
+                        }
+                    }
+                } else {
+                    Material material = location.clone().add(coordinates[0], coordinates[1], coordinates[2]).getBlock().material;
+
+                    if (match == material) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     @SafeVarargs
     public static boolean isBlockPattern(double[][] positions,
                                          SpartanLocation location,

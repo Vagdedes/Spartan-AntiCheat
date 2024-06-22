@@ -10,7 +10,6 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.Event_Combat;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -78,9 +77,15 @@ public class Shared {
         SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
         boolean cancelled = e.isCancelled();
 
-        for (Enums.HackType hackType : Event_Combat.handledChecks) {
-            p.getExecutor(hackType).handle(cancelled, e);
-        }
+        p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
+        p.getExecutor(Enums.HackType.HitReach).handle(cancelled, e);
+    }
+    public static void useentity(PlayerAttackEvent e) {
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        boolean cancelled = e.isCancelled();
+
+        p.getExecutor(Enums.HackType.KillAura).handle(cancelled, e);
+        p.getExecutor(Enums.HackType.FastClicks).handle(cancelled, e);
     }
 
 }

@@ -6,7 +6,6 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.utils.math.MathHelper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerVelocityEvent;
 import org.bukkit.util.Vector;
@@ -29,9 +28,9 @@ public class Velocity extends PacketAdapter {
         int id = packet.getIntegers().getValues().get(0);
 
         if (player.getEntityId() == id) {
-            double x = MathHelper.floor_double(packet.getIntegers().read(1).doubleValue()) / 8000.0D,
-                    y = MathHelper.floor_double(packet.getIntegers().read(2).doubleValue()) / 8000.0D,
-                    z = MathHelper.floor_double(packet.getIntegers().read(3).doubleValue()) / 8000.0D;
+            double x = packet.getIntegers().read(1).doubleValue() / 8000.0D,
+                    y = packet.getIntegers().read(2).doubleValue() / 8000.0D,
+                    z = packet.getIntegers().read(3).doubleValue() / 8000.0D;
             Shared.velocity(new PlayerVelocityEvent(player, new Vector(x, y, z)));
         }
     }

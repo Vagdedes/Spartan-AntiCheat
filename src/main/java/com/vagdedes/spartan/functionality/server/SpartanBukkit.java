@@ -30,6 +30,7 @@ public class SpartanBukkit {
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
+            packetsThread = packetsForcedState ? new Threads.ThreadPool(1L) : null,
             dataThread = new Threads.ThreadPool(1L),
             analysisThread = new Threads.ThreadPool(1L);
 

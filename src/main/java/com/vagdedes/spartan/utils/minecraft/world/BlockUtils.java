@@ -294,6 +294,9 @@ public class BlockUtils {
         builder.addAll(climbableOriginal);
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)) {
+            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
+                builder.add(Material.POWDER_SNOW);
+            }
             builder.add(Material.SCAFFOLDING);
         }
         climbable = new HashSet<>(builder);
