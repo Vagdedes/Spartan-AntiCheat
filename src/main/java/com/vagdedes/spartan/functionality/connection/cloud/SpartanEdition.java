@@ -126,7 +126,7 @@ public class SpartanEdition {
                                         sendVersionNotification(player, missingDetection);
                                         return true;
                                     } else {
-                                        checkedProfiles.add(player.getProfile());
+                                        checkedProfiles.add(player.protocol.getProfile());
                                     }
                                 }
                             } else {
@@ -138,7 +138,7 @@ public class SpartanEdition {
                             List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
                             if (!playerProfiles.isEmpty()) {
-                                playerProfiles.remove(player.getProfile());
+                                playerProfiles.remove(player.protocol.getProfile());
                                 playerProfiles.removeAll(checkedProfiles);
 
                                 if (!playerProfiles.isEmpty()) {

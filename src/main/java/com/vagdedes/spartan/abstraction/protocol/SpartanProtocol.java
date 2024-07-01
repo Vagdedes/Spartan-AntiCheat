@@ -1,20 +1,30 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.listeners.protocol.modules.TeleportData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class SpartanProtocol {
 
     public final Player player;
     public final SpartanPlayer spartanPlayer;
     private boolean isOnGround, isSprinting, isSneaking, onLoadStatus;
-    private final Location location;
+    private Location location;
     private Vector velocity;
     private long lastTransaction;
     private int ping;
     private short transactionID;
+    private PlayerProfile profile;
+    public List<TeleportData> teleportEngine;
+    private boolean mutateTeleport;
 
     public SpartanProtocol(Player player) {
         this.player = player;
@@ -22,22 +32,31 @@ public class SpartanProtocol {
         this.location = player.getLocation();
         this.isSprinting = false;
         this.isSneaking = false;
-        this.onLoadStatus = true;
+        this.onLoadStatus = SpartanBukkit.packetsEnabled_Movement();
         this.velocity = new Vector(0, 0, 0);
         this.spartanPlayer = new SpartanPlayer(this);
         this.lastTransaction = Long.MIN_VALUE;
+        this.teleportEngine = new LinkedList<>();
+        this.mutateTeleport = false;
+        this.profile = ResearchEngine.getPlayerProfile(this.spartanPlayer, false);
     }
 
     public boolean isOnGround() {
-        return this.isOnGround;
+        return SpartanBukkit.packetsEnabled_Movement()
+                ? this.isOnGround
+                : this.player.isOnGround();
     }
 
     public boolean isSprinting() {
-        return this.isSprinting;
+        return SpartanBukkit.packetsEnabled_Movement()
+                ? this.isSprinting
+                : this.player.isSprinting();
     }
 
     public boolean isSneaking() {
-        return this.isSneaking;
+        return SpartanBukkit.packetsEnabled_Movement()
+                ? this.isSneaking
+                : this.player.isSneaking();
     }
 
     public boolean isOnLoadStatus() {
@@ -45,7 +64,9 @@ public class SpartanProtocol {
     }
 
     public Location getLocation() {
-        return this.location;
+        return SpartanBukkit.packetsEnabled_Movement()
+                ? this.location
+                : this.player.getLocation();
     }
 
     public Vector getVelocity() {
@@ -55,9 +76,14 @@ public class SpartanProtocol {
     public int getPing() {
         return this.ping;
     }
+    public boolean isMutateTeleport() { return this.mutateTeleport; }
 
     public short getTransactionID() {
         return this.transactionID;
+    }
+
+    public PlayerProfile getProfile() {
+        return this.profile;
     }
 
     // Separator
@@ -85,6 +111,10 @@ public class SpartanProtocol {
     public void setVelocity(Vector velocity) {
         this.velocity = velocity;
     }
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+    public void setMutateTeleport(boolean b) { this.mutateTeleport = b; }
 
     public void setLastTransaction() {
         if (this.lastTransaction != Long.MIN_VALUE) {
@@ -100,6 +130,10 @@ public class SpartanProtocol {
             this.transactionID = 1488;
         }
         return this.transactionID;
+    }
+
+    public void setProfile(PlayerProfile profile) {
+        this.profile = profile;
     }
 
 }

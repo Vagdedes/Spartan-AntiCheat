@@ -8,7 +8,11 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DetectionNotifications {
 
@@ -18,21 +22,17 @@ public class DetectionNotifications {
 
     public static final int defaultFrequency = Integer.MIN_VALUE;
 
-    private static final Map<UUID, Integer> notifications = Collections.synchronizedMap(
-            new LinkedHashMap<>()
-    );
+    private static final Map<UUID, Integer> notifications = new ConcurrentHashMap<>();
 
     public static List<SpartanPlayer> getPlayers(boolean all) {
         if (!notifications.isEmpty()) {
             List<SpartanPlayer> list = new ArrayList<>(notifications.size());
 
-            synchronized (notifications) {
-                for (Map.Entry<UUID, Integer> entry : notifications.entrySet()) {
-                    SpartanProtocol p = SpartanBukkit.getProtocol(entry.getKey());
+            for (Map.Entry<UUID, Integer> entry : notifications.entrySet()) {
+                SpartanProtocol p = SpartanBukkit.getProtocol(entry.getKey());
 
-                    if (p != null && canAcceptMessages(p.spartanPlayer, entry.getValue(), all)) {
-                        list.add(p.spartanPlayer);
-                    }
+                if (p != null && canAcceptMessages(p.spartanPlayer, entry.getValue(), all)) {
+                    list.add(p.spartanPlayer);
                 }
             }
             return list;
@@ -41,9 +41,7 @@ public class DetectionNotifications {
     }
 
     public static boolean isEnabled(SpartanPlayer p) {
-        synchronized (notifications) {
-            return notifications.containsKey(p.uuid);
-        }
+        return notifications.containsKey(p.uuid);
     }
 
     public static boolean hasPermission(SpartanPlayer p) {
@@ -51,11 +49,7 @@ public class DetectionNotifications {
     }
 
     public static Integer getFrequency(SpartanPlayer p, boolean absolute) {
-        Integer frequency;
-
-        synchronized (notifications) {
-            frequency = notifications.get(p.uuid);
-        }
+        Integer frequency = notifications.get(p.uuid);
         return frequency != null ? (absolute ? Math.abs(frequency) : frequency) : null;
     }
 
@@ -72,20 +66,14 @@ public class DetectionNotifications {
     }
 
     public static void set(SpartanPlayer p, int i) {
-        Integer frequency;
-
-        synchronized (notifications) {
-            frequency = notifications.put(p.uuid, i);
-        }
+        Integer frequency = notifications.put(p.uuid, i);
 
         if (frequency == null) {
             p.sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
             p.sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
-            synchronized (notifications) {
-                notifications.remove(p.uuid);
-            }
+            notifications.remove(p.uuid);
             p.sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }

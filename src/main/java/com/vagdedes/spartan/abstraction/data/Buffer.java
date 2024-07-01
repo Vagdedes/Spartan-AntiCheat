@@ -24,7 +24,7 @@ public class Buffer {
         }
 
         public long ticksPassed() {
-            return TPS.getTick(this.parent) - this.start;
+            return TPS.tick() - this.start;
         }
 
         public int set(int amount) {
@@ -48,7 +48,7 @@ public class Buffer {
 
         public void reset() {
             this.count = 0;
-            this.start = TPS.getTick(this.parent);
+            this.start = TPS.tick();
         }
 
         public int count(int amount, int maxTicks) {

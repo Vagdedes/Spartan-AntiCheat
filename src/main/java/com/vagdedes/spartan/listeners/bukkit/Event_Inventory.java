@@ -2,6 +2,7 @@ package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -21,7 +22,12 @@ public class Event_Inventory implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void ItemDrop(PlayerDropItemEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        Player n = e.getPlayer();
+
+        if (ProtocolLib.isTemporary(n)) {
+            return;
+        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
         // Detections
         p.getExecutor(Enums.HackType.ItemDrops).run(e.isCancelled());
@@ -37,6 +43,10 @@ public class Event_Inventory implements Listener {
 
         if (BlockUtils.hasMaterial(item)) {
             Player n = (Player) e.getWhoClicked();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
             SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {

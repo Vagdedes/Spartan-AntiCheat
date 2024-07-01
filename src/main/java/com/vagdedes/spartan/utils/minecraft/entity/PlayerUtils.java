@@ -68,20 +68,20 @@ public class PlayerUtils {
 
     private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
     private static final Map<Integer, Integer> fallTicks = new ConcurrentHashMap<>();
-    private static final Map<PotionEffectType, Integer> handledPotionEffects = new LinkedHashMap<>();
+    private static final Map<PotionEffectType, Long> handledPotionEffects = new LinkedHashMap<>();
 
     static {
-        handledPotionEffects.put(JUMP, AlgebraUtils.integerRound(TPS.maximum * 5));
-        handledPotionEffects.put(SPEED, AlgebraUtils.integerRound(TPS.maximum * 2));
+        handledPotionEffects.put(JUMP, AlgebraUtils.integerRound(TPS.maximum * 5L) * TPS.tickTime);
+        handledPotionEffects.put(SPEED, AlgebraUtils.integerRound(TPS.maximum * 2L) * TPS.tickTime);
 
         if (dolphinsGrace) {
-            handledPotionEffects.put(DOLPHINS_GRACE, AlgebraUtils.integerRound(TPS.maximum));
+            handledPotionEffects.put(DOLPHINS_GRACE, AlgebraUtils.integerRound(TPS.maximum) * TPS.tickTime);
         }
         if (slowFall) {
-            handledPotionEffects.put(SLOW_FALLING, 10);
+            handledPotionEffects.put(SLOW_FALLING, 10L * TPS.tickTime);
         }
         if (levitation) {
-            handledPotionEffects.put(LEVITATION, 10);
+            handledPotionEffects.put(LEVITATION, 10L * TPS.tickTime);
         }
 
         // Separator
@@ -351,7 +351,7 @@ public class PlayerUtils {
     public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
         SpartanPotionEffect potionEffect = entity.getPotionEffect(
                 potionEffectType,
-                handledPotionEffects.getOrDefault(potionEffectType, 0)
+                handledPotionEffects.getOrDefault(potionEffectType, 0L)
         );
 
         if (potionEffect != null) {

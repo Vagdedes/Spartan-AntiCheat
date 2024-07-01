@@ -23,8 +23,7 @@ import java.util.List;
 public class MovementProcessing {
 
     private static final boolean
-            v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8),
-            v1_9 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9);
+            v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
     private static final Material
             MAGMA_BLOCK = MaterialUtils.get("magma"),
             WATER = MaterialUtils.get("water"),

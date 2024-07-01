@@ -9,7 +9,6 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -20,7 +19,6 @@ import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -303,7 +301,6 @@ public class SQLFeature extends ConfigurationBuilder {
 
                         "plugin_version VARCHAR(16), " +
                         "server_version VARCHAR(7), " +
-                        "server_tps DOUBLE, " +
                         "online_players INT(11), " +
 
                         "type VARCHAR(32), " +
@@ -338,14 +335,13 @@ public class SQLFeature extends ConfigurationBuilder {
             list.add(
                     "INSERT INTO " + table
                             + " (creation_date"
-                            + ", plugin_version, server_version, server_tps, online_players"
+                            + ", plugin_version, server_version, online_players"
                             + ", type, information"
                             + ", player_uuid, player_latency, player_x, player_y, player_z"
                             + ", functionality, violation_level) "
                             + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(LocalDateTime.now()))
                             + ", " + syntaxForColumn(API.getVersion())
                             + ", " + syntaxForColumn(MultiVersion.versionString())
-                            + ", " + syntaxForColumn(TPS.get(p, false))
                             + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                             + ", " + syntaxForColumn(information)
@@ -361,15 +357,10 @@ public class SQLFeature extends ConfigurationBuilder {
 
             if (list.size() >= 10) {
                 SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
-                    List<String> newList;
-
-                    synchronized (list) {
-                        newList = new ArrayList<>(list);
-                        list.clear();
-                    }
-                    for (String insert : newList) {
+                    for (String insert : list) {
                         update(insert);
                     }
+                    list.clear();
                 });
             }
         }

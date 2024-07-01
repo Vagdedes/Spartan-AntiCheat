@@ -52,8 +52,6 @@ public class SpartanPunishments {
                 }
             }
 
-            this.parent.getProfile().punishmentHistory.increaseKicks(this.parent, kick);
-
             SpartanBukkit.transferTask(
                     this.parent,
                     () -> target.kickPlayer(kick)
@@ -85,8 +83,6 @@ public class SpartanPunishments {
                                 null);
                 target.sendMessage(warning);
                 punisher.sendMessage(feedback);
-
-                this.parent.getProfile().punishmentHistory.increaseWarnings(this.parent, reason);
             }
             return true;
         } else {

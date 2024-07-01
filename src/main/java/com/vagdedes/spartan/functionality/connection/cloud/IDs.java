@@ -8,12 +8,9 @@ import java.util.Objects;
 
 public class IDs {
 
-    private static final String
-            user = "%%__USER__%%",
-            defaultLocalID = "0";
     private static String
-            nonce = "%%__NONCE__%%",
-            localID = defaultLocalID;
+            user = "%%__USER__%%",
+            nonce = "%%__NONCE__%%";
 
     public static final boolean
             hasUserIDByDefault = !user.startsWith("%%__");
@@ -26,30 +23,37 @@ public class IDs {
         }
     }
 
-    static void setUserID(int id) {
-        localID = Integer.toString(id);
+    // Setters
+
+    static void set(int user, int nonce) {
+        IDs.user = Integer.toString(user);
+        IDs.nonce = Integer.toString(nonce);
         Config.refreshFields(false);
+    }
+
+    public static void setPlatform(int id) {
+        platform = id;
     }
 
     // Platforms
 
     public static String user() {
-        return !JarVerification.enabled ? localID : user;
+        return user;
     }
 
     public static String nonce() {
-        return !JarVerification.enabled ? (CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()) : localID) : nonce;
+        return !JarVerification.enabled ? (CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()) : user) : nonce;
     }
 
     static String resource() {
-        return !JarVerification.enabled ? localID : "%%__RESOURCE__%%";
+        return "%%__RESOURCE__%%";
+    }
+
+    static String platform() {
+        return IDs.isBuiltByBit() ? "BuiltByBit" : IDs.isPolymart() ? "Polymart" : isSpigotMC() ? "SpigotMC" : null;
     }
 
     // Platforms
-
-    public static void setPlatform(int id) {
-        platform = id;
-    }
 
     public static boolean isBuiltByBit() {
         return platform == 2 || "%%__FILEHASH__%%".length() != 16;
@@ -63,14 +67,14 @@ public class IDs {
         return platform == 1 || JarVerification.enabled && !CloudBase.hasToken() && !isBuiltByBit() && !isPolymart();
     }
 
-    public static String getPlatform(boolean notNull) {
-        return IDs.isBuiltByBit() ? "BuiltByBit" : IDs.isPolymart() ? "Polymart" : notNull || isSpigotMC() ? "SpigotMC" : null;
-    }
-
     public static String hide(String id) {
-        double version = Double.parseDouble(API.getVersion().substring(6));
-        double number = AlgebraUtils.cut(Integer.parseInt(id) / version, 6);
-        return String.valueOf(number).replace("-", "*").replace(".", "-");
+        try {
+            double version = Double.parseDouble(API.getVersion().substring(6));
+            double number = AlgebraUtils.cut(Integer.parseInt(id) / version, 6);
+            return String.valueOf(number).replace("-", "*").replace(".", "-");
+        } catch (Exception ex) {
+            return "0";
+        }
     }
 
 }

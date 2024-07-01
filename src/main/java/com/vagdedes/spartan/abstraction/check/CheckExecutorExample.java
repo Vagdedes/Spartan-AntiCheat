@@ -6,7 +6,7 @@ import me.vagdedes.spartan.system.Enums;
 public class CheckExecutorExample extends CheckExecutor {
 
     public CheckExecutorExample(Enums.HackType hackType, SpartanPlayer player) {
-        super(hackType, player);
+        super(hackType, player, 0, false);
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can
@@ -54,7 +54,7 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    protected void schedulerInternal() {
+    protected void scheduler() {
         // Checks/detections support scheduling. This method is called every
         // 1 tick which is worth approximately 50 milliseconds. This method runs
         // as the server runs, so it is called approximately 20 times per second.

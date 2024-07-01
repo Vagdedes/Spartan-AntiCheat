@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
@@ -20,6 +21,10 @@ public class Events_Player implements Listener {
 
         if (entity instanceof Player) {
             Player n = (Player) entity;
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
             SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
@@ -43,6 +48,10 @@ public class Events_Player implements Listener {
 
         if (entity instanceof Player) {
             Player n = (Player) entity;
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
             SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
@@ -60,7 +69,12 @@ public class Events_Player implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Animation(PlayerAnimationEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        Player n = e.getPlayer();
+
+        if (ProtocolLib.isTemporary(n)) {
+            return;
+        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
         // Detections
         p.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);

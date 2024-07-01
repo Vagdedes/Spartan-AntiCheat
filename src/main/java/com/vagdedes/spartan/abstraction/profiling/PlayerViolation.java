@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 
 public class PlayerViolation {
@@ -37,8 +36,8 @@ public class PlayerViolation {
         );
     }
 
-    public int getIgnoredViolations(SpartanPlayer player) {
-        return hackType.getCheck().getIgnoredViolations(player.dataType, this.identity);
+    public int getIgnoredViolations(Enums.DataType dataType) {
+        return hackType.getCheck().getIgnoredViolations(dataType, this.identity);
     }
 
 }

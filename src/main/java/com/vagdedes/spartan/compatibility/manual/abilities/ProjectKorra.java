@@ -5,6 +5,7 @@ import com.projectkorra.projectkorra.event.AbilityProgressEvent;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -19,14 +20,24 @@ public class ProjectKorra implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void AbilityStart(AbilityStartEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 60);
+            Player n = e.getAbility().getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            evadeCombatFPs(SpartanBukkit.getProtocol(n).spartanPlayer, 60);
         }
     }
 
     @EventHandler
     private void AbilityProgress(AbilityProgressEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 40);
+            Player n = e.getAbility().getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            evadeCombatFPs(SpartanBukkit.getProtocol(n).spartanPlayer, 40);
         }
     }
 
@@ -36,7 +47,12 @@ public class ProjectKorra implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                Player n = (Player) entity;
+
+                if (ProtocolLib.isTemporary(n)) {
+                    return;
+                }
+                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                 if (p != null) {
                     evadeCombatFPs(p, 60);
@@ -65,4 +81,5 @@ public class ProjectKorra implements Listener {
             );
         }
     }
+
 }

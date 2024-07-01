@@ -12,16 +12,19 @@ public class ViolationResetEvent extends Event implements Cancellable {
     private final Enums.HackType hackType;
     private boolean cancelled;
 
+    @Deprecated
     public ViolationResetEvent(Player player, Enums.HackType hackType) {
         this.player = player;
         this.hackType = hackType;
         this.cancelled = false;
     }
 
+    @Deprecated
     public Player getPlayer() {
         return player;
     }
 
+    @Deprecated
     public Enums.HackType getHackType() {
         return hackType;
     }
@@ -31,14 +34,17 @@ public class ViolationResetEvent extends Event implements Cancellable {
         return BackgroundAPI.getViolationResetTime();
     }
 
+    @Deprecated
     public boolean isCancelled() {
         return cancelled;
     }
 
+    @Deprecated
     public void setCancelled(boolean b) {
         this.cancelled = b;
     }
 
+    @Deprecated
     private static final HandlerList handlers = new HandlerList();
 
     public HandlerList getHandlers() {

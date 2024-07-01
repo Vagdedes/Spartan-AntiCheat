@@ -68,6 +68,7 @@ public class API {
         return BackgroundAPI.getPing(p);
     }
 
+    @Deprecated
     public static double getTPS() {
         return BackgroundAPI.getTPS();
     }

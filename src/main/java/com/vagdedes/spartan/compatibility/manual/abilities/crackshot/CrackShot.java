@@ -6,6 +6,7 @@ import com.shampaggon.crackshot.events.WeaponScopeEvent;
 import com.shampaggon.crackshot.events.WeaponShootEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -22,7 +23,12 @@ public class CrackShot implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            Player n = e.getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -52,7 +58,12 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponPreShoot(WeaponPreShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            Player n = e.getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -72,7 +83,12 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponShoot(WeaponShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            Player n = e.getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
             if (p == null) {
                 return;
@@ -95,7 +111,12 @@ public class CrackShot implements Listener {
             Entity entity = e.getVictim();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                Player n = (Player) entity;
+
+                if (ProtocolLib.isTemporary(n)) {
+                    return;
+                }
+                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                 if (p != null) {
                     Config.compatibility.evadeFalsePositives(
@@ -118,7 +139,12 @@ public class CrackShot implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                Player n = (Player) entity;
+
+                if (ProtocolLib.isTemporary(n)) {
+                    return;
+                }
+                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -141,7 +167,12 @@ public class CrackShot implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                Player n = (Player) entity;
+
+                if (ProtocolLib.isTemporary(n)) {
+                    return;
+                }
+                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                 if (p != null && isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(

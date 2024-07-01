@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.TridentUse;
 import org.bukkit.entity.Entity;
@@ -15,7 +16,12 @@ public class EventsHandler_1_13 implements Listener {
 
     @EventHandler
     private void TridentShoot(PlayerRiptideEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        Player n = e.getPlayer();
+
+        if (ProtocolLib.isTemporary(n)) {
+            return;
+        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
         // Handlers
         TridentUse.run(p);
@@ -29,6 +35,10 @@ public class EventsHandler_1_13 implements Listener {
 
             if (entity instanceof Player) {
                 Player n = (Player) entity;
+
+                if (ProtocolLib.isTemporary(n)) {
+                    return;
+                }
                 SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
                 if (p == null) {

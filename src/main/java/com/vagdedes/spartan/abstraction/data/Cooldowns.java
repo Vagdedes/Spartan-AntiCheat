@@ -25,7 +25,7 @@ public class Cooldowns {
             if (player == null) {
                 object -= System.currentTimeMillis();
             } else {
-                object -= TPS.getTick(player);
+                object -= TPS.tick();
             }
             return object < 0L ? 0 : object.intValue();
         }
@@ -39,7 +39,7 @@ public class Cooldowns {
         if (player == null) {
             storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
         } else {
-            storage.put(name, TPS.getTick(player) + ticks);
+            storage.put(name, TPS.tick() + ticks);
         }
     }
 
@@ -50,7 +50,7 @@ public class Cooldowns {
             }
         } else {
             for (String name : names) {
-                storage.put(name, TPS.getTick(player) + ticks);
+                storage.put(name, TPS.tick() + ticks);
             }
         }
     }

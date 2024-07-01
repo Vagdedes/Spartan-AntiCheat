@@ -24,19 +24,12 @@ public class Pattern {
             individualDataLimit = 8_192,
             individualDataBase = 2;
     static final double individualPotentialContribution = 0.1;
-    static final PlayerProfile[] artificialProfiles = new PlayerProfile[10];
     static final String
             profileOption = "profile",
             patternOption = "pattern",
             situationOption = "situation";
     private static final String[] options = {profileOption, patternOption, situationOption};
     private static final Collection<Pattern> instances = Collections.synchronizedList(new ArrayList<>(individualDataBase));
-
-    static {
-        for (int i = 0; i < artificialProfiles.length; i++) {
-            artificialProfiles[i] = new PlayerProfile();
-        }
-    }
 
     static int hashProfile(PlayerProfile playerProfile) {
         return playerProfile.getName().hashCode();
@@ -338,7 +331,6 @@ public class Pattern {
                                                 profile,
                                                 new int[]{(int) situation},
                                                 (double) pattern,
-                                                true,
                                                 true
                                         );
                                     }
@@ -397,12 +389,12 @@ public class Pattern {
     public void learn(SpartanPlayer player, int[] situation, Number pattern) {
         if (this.loaded) {
             long time = System.currentTimeMillis();
-            PlayerProfile profile = player.getProfile();
+            PlayerProfile profile = player.protocol.getProfile();
             Integer frequency = DetectionNotifications.getFrequency(player, false);
             boolean notifications = frequency != null,
                     found = false,
                     store = false,
-                    include = player.getProfile().isLegitimate()
+                    include = player.protocol.getProfile().isLegitimate()
                             && (!SpartanBukkit.testMode
                             || !notifications
                             || frequency != testingNotificationDivisorFrequency);
@@ -416,8 +408,7 @@ public class Pattern {
                             profile,
                             situation,
                             pattern.doubleValue(),
-                            false,
-                            true
+                            false
                     )) {
                         store |= include;
                     }
@@ -430,9 +421,9 @@ public class Pattern {
             if (!found && notifications) {
                 String message = AwarenessNotifications.getOptionalNotification(
                         "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
-                                + (player.getProfile().isLegitimate()
+                                + (player.protocol.getProfile().isLegitimate()
                                 ? "Continue playing LEGITIMATELY to train the algorithm and get better results."
-                                : "Since you are " + player.getProfile().evidence.getType().toString() + ", either clear your data via '/spartan info'"
+                                : "Since may be hacking, either clear your data via '/spartan info'"
                                 + " and play LEGITIMATELY or find a legitimate player to help train the algorithm and get better results.")
                 );
 

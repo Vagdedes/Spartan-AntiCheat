@@ -2,30 +2,25 @@ package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.listeners.bukkit.Event_Chunks;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.vector.SpartanVector3D;
 import com.vagdedes.spartan.utils.minecraft.vector.SpartanVector3F;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Waterlogged;
 import org.bukkit.util.Vector;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class SpartanLocation {
+public class SpartanLocation implements Cloneable {
 
-    private static final Map<Integer, Boolean> loadedChunk = new ConcurrentHashMap<>();
-    static final Map<Integer, SpartanBlock> memory = new ConcurrentHashMap<>();
     private static final boolean
             v_1_13 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13),
             v_1_17 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
@@ -34,20 +29,14 @@ public class SpartanLocation {
         return pos >> 4;
     }
 
-    private static int locationIdentifier(int world, int x, int y, int z) {
-        world = (SpartanBukkit.hashCodeMultiplier * world) + x;
-        world = (SpartanBukkit.hashCodeMultiplier * world) + y;
-        return (SpartanBukkit.hashCodeMultiplier * world) + z;
-    }
-
-    static {
-        SpartanBukkit.runRepeatingTask(loadedChunk::clear, 1L, 1L);
+    private static int locationIdentifier(int x, int y, int z) {
+        x = (SpartanBukkit.hashCodeMultiplier * x) + y;
+        return (SpartanBukkit.hashCodeMultiplier * x) + z;
     }
 
     // Object
 
-    int identifier;
-    private final long tick;
+    private final long time;
     public final World world;
     private double x, y, z;
     private float yaw, pitch;
@@ -64,8 +53,7 @@ public class SpartanLocation {
         this.z = z;
         this.yaw = yaw;
         this.pitch = pitch;
-        this.identifier = locationIdentifier(this.world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
-        this.tick = TPS.getTick(this);
+        this.time = System.currentTimeMillis();
     }
 
     public SpartanLocation(Location loc, float yaw, float pitch) { // Used for vehicles
@@ -76,19 +64,18 @@ public class SpartanLocation {
         this(loc, loc.getYaw(), loc.getPitch());
     }
 
-    private SpartanLocation(SpartanLocation loc) { // Used for copying
-        this(loc.world, loc.x, loc.y, loc.z, loc.yaw, loc.pitch);
-        this.vector = loc.vector;
-    }
-
     // Methods
 
     public SpartanLocation clone() {
-        return new SpartanLocation(this);
+        try {
+            return (SpartanLocation) super.clone();
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
-    public long ticksPassed() {
-        return TPS.getTick(this) - this.tick;
+    public long timePassed() {
+        return System.currentTimeMillis() - this.time;
     }
 
     public double getX() {
@@ -217,30 +204,9 @@ public class SpartanLocation {
 
     public SpartanLocation add(double x, double y, double z) {
         Location bukkit = new Location(this.world, this.x, this.y, this.z).add(x, y, z);
-
-        if (Math.abs(x) >= 1.0
-                || Math.abs(y) >= 1.0
-                || Math.abs(z) >= 1.0) {
-            this.x = bukkit.getX();
-            this.y = bukkit.getY();
-            this.z = bukkit.getZ();
-            this.identifier = locationIdentifier(this.world.hashCode(), getBlockX(), getBlockY(), getBlockZ());
-        } else {
-            int startX = getBlockX(),
-                    startY = getBlockY(),
-                    startZ = getBlockZ();
-
-            this.x = bukkit.getX();
-            this.y = bukkit.getY();
-            this.z = bukkit.getZ();
-            int blockX = getBlockX(),
-                    blockY = getBlockY(),
-                    blockZ = getBlockZ();
-
-            if (blockX != startX || blockY != startY || blockZ != startZ) {
-                this.identifier = locationIdentifier(this.world.hashCode(), blockX, blockY, blockZ);
-            }
-        }
+        this.x = bukkit.getX();
+        this.y = bukkit.getY();
+        this.z = bukkit.getZ();
         return this;
     }
 
@@ -250,15 +216,13 @@ public class SpartanLocation {
         if (block != null) {
             if (SpartanLocation.v_1_13) {
                 BlockData blockData = block.getBlockData();
-                this.setChunkLoaded();
                 return new SpartanBlock(
                         this,
                         blockData.getMaterial(),
                         BlockUtils.isLiquid(block),
-                        blockData instanceof Waterlogged && ((Waterlogged) blockData).isWaterlogged()
+                        BlockUtils.isWaterLogged(blockData)
                 );
             } else {
-                this.setChunkLoaded();
                 return new SpartanBlock(
                         this,
                         block.getType(),
@@ -271,59 +235,61 @@ public class SpartanLocation {
         }
     }
 
+    private SpartanBlock setAsyncBlock() {
+        BlockData data = Event_Chunks.get(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ());
+
+        if (data != null) {
+            return new SpartanBlock(
+                    this,
+                    data.getMaterial(),
+                    BlockUtils.isLiquid(data.getMaterial()),
+                    BlockUtils.isWaterLogged(data)
+            );
+        } else {
+            return new SpartanBlock(this, Material.AIR, false, false);
+        }
+    }
+
     public SpartanBlock getBlock() {
         int blockY = getBlockY();
 
         if (SpartanLocation.v_1_17 ?
                 blockY >= this.world.getMinHeight() && blockY <= this.world.getMaxHeight() :
                 blockY >= 0 && blockY <= PlayerUtils.height) {
-            SpartanBlock cache = SpartanLocation.memory.get(this.identifier);
-
-            if (cache != null && cache.ticksPassed() == 0L) {
-                return cache;
+            if (Event_Chunks.enabled()) {
+                if (SpartanBukkit.isSynchronised()) {
+                    return setBlock();
+                } else {
+                    return setAsyncBlock();
+                }
+            } else if (MultiVersion.folia
+                    || SpartanBukkit.isSynchronised()) {
+                return setBlock();
             } else {
-                if (MultiVersion.folia) {
-                    cache = setBlock();
+                int x = getChunkX(), z = getChunkZ();
 
-                    if (SpartanLocation.memory.put(this.identifier, cache) == null
-                            && SpartanLocation.memory.size() > 1_000) {
-                        Iterator<Integer> iterator = memory.keySet().iterator();
-                        iterator.next();
-                        iterator.remove();
-                    }
-                    return cache;
+                if (isChunkLoaded(x, z)) {
+                    return setBlock();
                 } else {
                     SpartanBlock[] block = new SpartanBlock[1];
-                    int x = getChunkX(), z = getChunkZ();
+                    Thread thread = Thread.currentThread();
 
-                    if (SpartanBukkit.isSynchronised() || isChunkLoaded(x, z)) {
+                    SpartanBukkit.transferTask(this.world, x, z, () -> {
                         block[0] = setBlock();
-                    } else {
-                        Thread thread = Thread.currentThread();
 
-                        SpartanBukkit.transferTask(this.world, x, z, () -> {
-                            block[0] = setBlock();
-
-                            synchronized (thread) {
-                                thread.notifyAll();
-                            }
-                        });
                         synchronized (thread) {
-                            if (block[0] == null) {
-                                try {
-                                    thread.wait();
-                                } catch (Exception ex) {
-                                    block[0] = new SpartanBlock(this, Material.AIR, false, false);
-                                    SpartanBukkit.transferTask(this.world, x, z, () -> block[0] = setBlock());
-                                }
+                            thread.notifyAll();
+                        }
+                    });
+                    synchronized (thread) {
+                        if (block[0] == null) {
+                            try {
+                                thread.wait();
+                            } catch (Exception ex) {
+                                block[0] = new SpartanBlock(this, Material.AIR, false, false);
+                                SpartanBukkit.transferTask(this.world, x, z, () -> block[0] = setBlock());
                             }
                         }
-                    }
-                    if (SpartanLocation.memory.put(this.identifier, block[0]) == null
-                            && SpartanLocation.memory.size() > 1_000) {
-                        Iterator<Integer> iterator = memory.keySet().iterator();
-                        iterator.next();
-                        iterator.remove();
                     }
                     return block[0];
                 }
@@ -334,32 +300,11 @@ public class SpartanLocation {
     }
 
     private boolean isChunkLoaded(int x, int z) {
-        int hash = (x * SpartanBukkit.hashCodeMultiplier) + z;
-        Boolean cache = loadedChunk.get(hash);
-
-        if (cache != null) {
-            return cache;
-        } else {
-            for (Chunk chunk : this.world.getLoadedChunks()) {
-                if (chunk.getX() == x && chunk.getZ() == z) {
-                    loadedChunk.put(hash, true);
-                    return true;
-                }
-            }
-            loadedChunk.put(hash, false);
-            return false;
-        }
+        return Event_Chunks.isLoaded(this.world, x, z);
     }
 
     public boolean isChunkLoaded() {
         return isChunkLoaded(getChunkX(), getChunkZ());
-    }
-
-    private void setChunkLoaded() {
-        loadedChunk.put(
-                (getChunkX() * SpartanBukkit.hashCodeMultiplier) + getChunkZ(),
-                true
-        );
     }
 
     public SpartanLocation getBlockLocation() {
@@ -476,7 +421,10 @@ public class SpartanLocation {
     private Map<Integer, SpartanLocation> getRawSurroundingLocations(double x, double y, double z) {
         Map<Integer, SpartanLocation> locations = new LinkedHashMap<>(10, 1.0f);
         SpartanLocation yOnly = this.clone().add(0, y, 0);
-        locations.put(yOnly.identifier, yOnly);
+        locations.put(
+                locationIdentifier(yOnly.getBlockX(), yOnly.getBlockY(), yOnly.getBlockZ()),
+                yOnly
+        );
 
         for (double[] positions : new double[][]{
                 {x, 0.0},
@@ -489,7 +437,10 @@ public class SpartanLocation {
                 {-x, z}
         }) {
             SpartanLocation location = this.clone().add(positions[0], y, positions[1]);
-            locations.putIfAbsent(location.identifier, location);
+            locations.putIfAbsent(
+                    locationIdentifier(location.getBlockX(), location.getBlockY(), location.getBlockZ()),
+                    location
+            );
         }
         return locations;
     }

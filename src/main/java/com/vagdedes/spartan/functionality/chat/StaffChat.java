@@ -17,10 +17,10 @@ public class StaffChat {
     public static boolean run(SpartanPlayer p, String msg) {
         if (Permissions.has(p, Enums.Permission.STAFF_CHAT)
                 && (!Compatibility.CompatibilityType.AUTHENTICATION.isFunctional()
-                || p.ticksPassed() > 1_200L)) {
+                || p.timePassed() > 60_000L)) {
             String character = Config.settings.getString("Chat.staff_chat_character");
 
-            if (character != null && character.length() > 0 && msg.startsWith(character.toLowerCase())) {
+            if (character != null && !character.isEmpty() && msg.startsWith(character.toLowerCase())) {
                 msg = msg.substring(1);
                 String message = Config.messages.getColorfulString("staff_chat_message");
                 message = message.replace("{message}", msg);

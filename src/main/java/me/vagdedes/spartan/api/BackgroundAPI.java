@@ -94,8 +94,10 @@ public class BackgroundAPI {
         return Latency.ping(p);
     }
 
+    @Deprecated
     static double getTPS() {
-        return TPS.get((SpartanPlayer) null, false);
+        AwarenessNotifications.forcefullySend("The API method 'getTPS' has been removed.");
+        return 0.0;
     }
 
     static boolean hasPermission(Player p, Permission Permission) {

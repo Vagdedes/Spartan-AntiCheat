@@ -16,14 +16,6 @@ public class PlayerViolationCommandEvent extends Event implements Cancellable {
     private final String c;
     private boolean cancelled;
 
-    public PlayerViolationCommandEvent(Player player, HackType HackType, String command) {
-        p = player;
-        h = HackType;
-        hs = new HackType[]{h};
-        c = command;
-        cancelled = false;
-    }
-
     public PlayerViolationCommandEvent(Player player, HackType HackType, Collection<HackType> HackTypes, String command) {
         p = player;
         h = HackType;

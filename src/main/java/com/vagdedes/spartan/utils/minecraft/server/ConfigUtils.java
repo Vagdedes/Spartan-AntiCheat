@@ -4,14 +4,12 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums.HackType;
@@ -35,7 +33,6 @@ public class ConfigUtils {
     public static String replaceWithSyntax(String message, HackType hackType) {
         message = replace(message, "%%", " ");
         message = replace(message, "{space}", " ");
-        message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get((SpartanPlayer) null, false), 2)));
         message = replace(message, "{online}", String.valueOf(SpartanBukkit.getPlayerCount()));
         message = replace(message, "{staff}", String.valueOf(Permissions.getStaff().size()));
         message = replace(message, "{motd}", Bukkit.getMotd());
@@ -63,7 +60,6 @@ public class ConfigUtils {
         UUID uuid = p.uuid;
         SpartanLocation loc = p.movement.getLocation();
         String worldName = p.getWorld().getName();
-        message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
         message = replace(message, "{player}", p.name);
         message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", uuid.toString());
@@ -77,10 +73,6 @@ public class ConfigUtils {
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
         message = replace(message, "{cps}", String.valueOf(p.clicks.getCount()));
-
-        PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
-        message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
-        message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
 
         if (hackType != null) {
             message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName)));
@@ -106,7 +98,6 @@ public class ConfigUtils {
                 SpartanLocation loc = p.movement.getLocation();
                 String worldName = p.getWorld().getName();
                 message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
-                message = replace(message, "{tps}", String.valueOf(AlgebraUtils.cut(TPS.get(p, false), 2)));
                 message = replace(message, "{ping}", String.valueOf(p.getPing()));
                 message = replace(message, "{world}", worldName);
                 message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
@@ -118,16 +109,12 @@ public class ConfigUtils {
                 message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
                 message = replace(message, "{cps}", String.valueOf(p.clicks.getCount()));
 
-                PunishmentHistory punishmentHistory = p.getProfile().punishmentHistory;
-                message = replace(message, "{kicks}", String.valueOf(punishmentHistory.getKicks()));
-                message = replace(message, "{warnings}", String.valueOf(punishmentHistory.getWarnings()));
-
                 if (hasHackType) {
                     message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(worldName)));
                     message = replace(message, "{vls:detection}", String.valueOf(p.getViolations(hackType).getTotalLevel()));
                 }
             } else if (hasHackType) {
-                PlayerProfile profile = ResearchEngine.getPlayerProfileAdvanced(name, false);
+                PlayerProfile profile = ResearchEngine.getPlayerProfile(name);
 
                 if (profile != null) {
                     message = replace(message, "{player:type}", profile.getDataType().toString().toLowerCase());

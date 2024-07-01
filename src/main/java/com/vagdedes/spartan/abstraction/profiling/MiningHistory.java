@@ -5,7 +5,10 @@ import org.bukkit.Material;
 import org.bukkit.World;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MiningHistory {
@@ -57,47 +60,52 @@ public class MiningHistory {
     }
 
     public final MiningOre ore;
-    private final int[] mines;
-    private final Map<String, Boolean> days;
+    private final Map<Integer, Map<String, Integer>> count;
 
-    MiningHistory(MiningOre ore, int mines) {
+    MiningHistory(MiningOre ore) {
         World.Environment[] environments = World.Environment.values();
-        this.mines = new int[environments.length];
-
-        for (World.Environment environment : environments) {
-            this.mines[environment.ordinal()] = mines;
-        }
         this.ore = ore;
-        this.days = new ConcurrentHashMap<>();
+        this.count = new ConcurrentHashMap<>(environments.length + 1, 1.0f);
     }
 
-    public int getMines() {
-        int total = 0;
+    public Set<Map.Entry<String, Integer>> getMinesEntry(World.Environment environment) {
+        return new HashSet<>(
+                count.getOrDefault(
+                        environment.ordinal(),
+                        new HashMap<>(0)
+                ).entrySet()
+        );
+    }
 
-        for (int mines : this.mines) {
-            total += mines;
+    public double getMinesDeviation(World.Environment environment) {
+        Map<String, Integer> map = count.get(environment.ordinal());
+
+        if (map == null || map.isEmpty()) {
+            return 0.0;
+        } else {
+            int mines = 0;
+
+            for (int count : map.values()) {
+                mines += count * count;
+            }
+            return Math.sqrt(mines / ((double) map.size()));
         }
-        return total;
     }
 
-    public int getMines(World.Environment environment) {
-        return mines[environment.ordinal()];
+    public void increaseMines(World.Environment environment, int amount, String date) {
+        Map<String, Integer> map = count.computeIfAbsent(
+                environment.ordinal(),
+                k -> new ConcurrentHashMap<>()
+        );
+        map.put(date, map.getOrDefault(date, 0) + amount);
     }
 
-    public int increaseMines(World.Environment environment, int amount, String date) {
-        days.putIfAbsent(date, null);
-        return mines[environment.ordinal()] += amount;
-    }
-
-    public int increaseMines(World.Environment environment, int amount) {
-        return increaseMines(
+    public void increaseMines(World.Environment environment, int amount) {
+        increaseMines(
                 environment,
                 amount,
                 new Timestamp(System.currentTimeMillis()).toString().substring(0, 10)
         );
     }
 
-    public int getDays() {
-        return days.size();
-    }
 }

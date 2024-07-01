@@ -2,7 +2,6 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
@@ -54,8 +53,10 @@ public class CloudConnections {
                                         String line = reply[0];
 
                                         if (AlgebraUtils.validInteger(line)) {
+                                            int id = Integer.parseInt(line);
                                             CloudBase.token = name;
-                                            return Integer.parseInt(line);
+                                            IDs.set(id, name.hashCode());
+                                            return id;
                                         }
                                     }
                                 }
@@ -77,7 +78,9 @@ public class CloudConnections {
                 String line = reply[0];
 
                 if (AlgebraUtils.validInteger(line)) {
-                    return Integer.parseInt(line);
+                    int id = Integer.parseInt(line);
+                    IDs.set(id, id);
+                    return id;
                 }
             }
         } catch (Exception e) {
@@ -187,11 +190,11 @@ public class CloudConnections {
         StringBuilder value = new StringBuilder();
 
         for (PlayerProfile playerProfile : ResearchEngine.getPlayerProfiles()) {
-            if (playerProfile.evidence.has(PlayerEvidence.EvidenceType.HACKER)) {
+            if (!playerProfile.isLegitimate()) {
                 SpartanPlayer player = playerProfile.getSpartanPlayer();
                 boolean isNull = player == null;
 
-                if (isNull || !Permissions.isStaff(player) && !player.getInstance().isOp()) {
+                if (isNull || !Permissions.isStaff(player)) {
                     OfflinePlayer offlinePlayer = playerProfile.getOfflinePlayer();
 
                     if (offlinePlayer != null && !offlinePlayer.isOp()) {

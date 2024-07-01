@@ -2,6 +2,7 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.GameMode;
@@ -11,14 +12,41 @@ public abstract class CheckExecutor extends DetectionExecutor {
     protected final DetectionExecutor[] detections;
     private boolean function;
 
-    public CheckExecutor(Enums.HackType hackType, SpartanPlayer player, int detections) {
+    public CheckExecutor(Enums.HackType hackType, SpartanPlayer player, int detections, boolean scheduler) {
         super(null, hackType, player);
         this.detections = new DetectionExecutor[detections];
         this.function = false;
-    }
 
-    public CheckExecutor(Enums.HackType hackType, SpartanPlayer player) {
-        this(hackType, player, 0);
+        if (scheduler) {
+            SpartanBukkit.runRepeatingTask(player, () -> {
+                function = !TPS.areLow()
+                        && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
+                        || player.getInstance().getGameMode() != GameMode.SPECTATOR)
+                        && !player.protocol.isOnLoadStatus()
+                        && player.getCancellableCompatibility() == null
+                        && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
+                        && canRun();
+
+                if (canFunctionOrJustImplemented()) {
+                    scheduler();
+                } else {
+                    cannotSchedule();
+                }
+            }, 1L, 1L);
+        } else {
+            SpartanBukkit.runRepeatingTask(
+                    player,
+                    () -> function = !TPS.areLow()
+                            && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
+                            || player.getInstance().getGameMode() != GameMode.SPECTATOR)
+                            && !player.protocol.isOnLoadStatus()
+                            && player.getCancellableCompatibility() == null
+                            && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
+                            && canRun(),
+                    1L,
+                    1L
+            );
+        }
     }
 
     protected final void addDetections(DetectionExecutor[] detections) {
@@ -43,26 +71,11 @@ public abstract class CheckExecutor extends DetectionExecutor {
 
     }
 
-    public final void scheduler() {
-        function = !TPS.areLow(player)
-                && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
-                || player.getInstance().getGameMode() != GameMode.SPECTATOR)
-                && player.getCancellableCompatibility() == null
-                && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
-                && canRun();
-
-        if (canFunctionOrJustImplemented()) {
-            schedulerInternal();
-        } else {
-            cannotSchedule();
-        }
-    }
-
     protected void cannotSchedule() {
 
     }
 
-    protected void schedulerInternal() {
+    protected void scheduler() {
 
     }
 
@@ -87,10 +100,11 @@ public abstract class CheckExecutor extends DetectionExecutor {
     }
 
     private boolean canFunctionOrJustImplemented() {
-        return function || player.ticksPassed() <= TPS.maximum;
+        return function || player.timePassed() <= TPS.maximum * TPS.tickTime;
     }
 
     final boolean canFunction() {
         return function;
     }
+
 }

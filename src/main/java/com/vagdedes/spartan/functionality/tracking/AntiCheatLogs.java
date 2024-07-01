@@ -140,7 +140,7 @@ public class AntiCheatLogs {
                             block.material,
                             null
                     );
-                    MiningHistory miningHistory = player.getProfile().getMiningHistory(ore);
+                    MiningHistory miningHistory = player.protocol.getProfile().getMiningHistory(ore);
 
                     if (miningHistory != null) {
                         String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");

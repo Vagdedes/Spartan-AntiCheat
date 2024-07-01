@@ -42,7 +42,7 @@ public class Messages extends ConfigurationBuilder {
         addOption("player_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for player&8: &2{player}");
         addOption("detection_notification", "&8[&2" + prefix + "&8] "
                 + "&4{player} &cis using &4{detection} x{vls:detection} "
-                + "&8&b| &r&f{ping}ms &8&b| &r&f{tps} TPS &8&b| &r&fsilent: {silent:detection}, {info}");
+                + "&8&b| &r&f{ping}ms &8&b| &r&fsilent: {silent:detection}, {info}");
 
         // Chat Protection
         addOption("blocked_command_message", "&8[&2" + prefix + "&8]&c You are not allowed to dispatch that command.");

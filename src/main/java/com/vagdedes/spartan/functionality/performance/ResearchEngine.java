@@ -8,7 +8,6 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
-import com.vagdedes.spartan.abstraction.profiling.PunishmentHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
@@ -28,40 +27,21 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ResearchEngine {
 
     public static final double requiredProfiles = 10;
-    private static final double minimumAverageMining = 16.0;
 
     private static final int cacheRefreshTicks = 1200;
     private static int schedulerTicks = 0;
 
     public static final Enums.DataType[] usableDataTypes = new Enums.DataType[]{Enums.DataType.JAVA, Enums.DataType.BEDROCK};
 
-    private static final Map<String, PlayerProfile> playerProfiles
-            = Collections.synchronizedMap(new LinkedHashMap<>());
+    private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
     private static final Map<MiningHistory.MiningOre, Double> averageMining = new LinkedHashMap<>(MiningHistory.MiningOre.values().length);
-    private static final double[] defaultAverageMining = new double[MiningHistory.MiningOre.values().length];
 
     static {
-        for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
-            switch (ore) {
-                case DIAMOND:
-                    defaultAverageMining[ore.ordinal()] = -32.0;
-                    break;
-                case EMERALD:
-                case ANCIENT_DEBRIS:
-                    defaultAverageMining[ore.ordinal()] = -minimumAverageMining;
-                    break;
-                case GOLD:
-                    defaultAverageMining[ore.ordinal()] = -64.0;
-                    break;
-                default:
-                    break;
-            }
-        }
-
         SpartanBukkit.runRepeatingTask(() -> {
             if (schedulerTicks == 0) {
                 schedulerTicks = cacheRefreshTicks * 10;
@@ -129,57 +109,50 @@ public class ResearchEngine {
     // Separator
 
     public static List<PlayerProfile> getPlayerProfiles() {
-        synchronized (playerProfiles) {
-            return new ArrayList<>(playerProfiles.values());
-        }
+        return new ArrayList<>(playerProfiles.values());
     }
 
     public static PlayerProfile getPlayerProfile(String name) {
-        synchronized (playerProfiles) {
-            PlayerProfile playerProfile = playerProfiles.get(name);
+        PlayerProfile playerProfile = playerProfiles.get(name);
 
-            if (playerProfile != null) {
-                return playerProfile;
-            }
-            playerProfile = new PlayerProfile(name);
-            playerProfiles.put(name, playerProfile);
+        if (playerProfile != null) {
             return playerProfile;
         }
-    }
-
-    public static PlayerProfile getPlayerProfile(SpartanPlayer player) {
-        PlayerProfile playerProfile;
-
-        synchronized (playerProfiles) {
-            playerProfile = new PlayerProfile(player);
-            playerProfiles.put(player.name, playerProfile);
-        }
+        playerProfile = new PlayerProfile(name);
+        playerProfiles.put(name, playerProfile);
         return playerProfile;
     }
 
-    public static PlayerProfile getPlayerProfileAdvanced(String name, boolean deep) {
-        synchronized (playerProfiles) {
-            PlayerProfile profile = playerProfiles.get(name);
+    public static PlayerProfile getPlayerProfile(SpartanPlayer player, boolean force) {
+        PlayerProfile playerProfile;
 
-            if (profile != null) {
-                return profile;
+        if (!force) {
+             playerProfile = playerProfiles.get(player.name);
+
+            if (playerProfile != null) {
+                playerProfile.update(player);
+                return playerProfile;
             }
-            if (deep && !playerProfiles.isEmpty()) {
-                for (PlayerProfile playerProfile : playerProfiles.values()) {
-                    if (playerProfile.getName().equalsIgnoreCase(name)) {
-                        return playerProfile;
-                    }
-                }
-            }
-            return null;
         }
+        playerProfile = new PlayerProfile(player);
+        playerProfiles.put(player.name, playerProfile);
+        return playerProfile;
     }
 
-    // Separator
+    public static PlayerProfile getPlayerProfileAdvanced(String name) {
+        PlayerProfile profile = playerProfiles.get(name);
 
-    public static double getMiningHistoryAverage(MiningHistory.MiningOre ore) {
-        Double average = averageMining.get(ore);
-        return average == null ? defaultAverageMining[ore.ordinal()] : average;
+        if (profile != null) {
+            return profile;
+        }
+        if (!playerProfiles.isEmpty()) {
+            for (PlayerProfile playerProfile : playerProfiles.values()) {
+                if (playerProfile.getName().equalsIgnoreCase(name)) {
+                    return playerProfile;
+                }
+            }
+        }
+        return null;
     }
 
     // Separator
@@ -192,11 +165,9 @@ public class ResearchEngine {
             // Separator
 
             if (!playerProfiles.isEmpty()) {
-                synchronized (playerProfiles) {
-                    for (PlayerProfile playerProfile : playerProfiles.values()) {
-                        playerProfile.getViolationHistory(hackType).clear();
-                        playerProfile.evidence.remove(hackType, true, true, true, true);
-                    }
+                for (PlayerProfile playerProfile : playerProfiles.values()) {
+                    playerProfile.getViolationHistory(hackType).clear();
+                    playerProfile.evidence.remove(hackType, true, true);
                 }
             }
 
@@ -240,7 +211,7 @@ public class ResearchEngine {
         PlayerProfile profile;
 
         if (foundPlayer) {
-            profile = p.spartanPlayer.getProfile();
+            profile = p.getProfile();
 
             for (Enums.HackType hackType : Enums.HackType.values()) {
                 p.spartanPlayer.getViolations(hackType).reset();
@@ -253,11 +224,10 @@ public class ResearchEngine {
         if (isStorageMode()) {
             // Clear Files/Database
             SpartanBukkit.analysisThread.executeWithPriority(() -> {
-                synchronized (playerProfiles) {
-                    playerProfiles.remove(playerName);
-                }
+                playerProfiles.remove(playerName);
+
                 if (foundPlayer) {
-                    p.spartanPlayer.setProfile(getPlayerProfile(p.spartanPlayer));
+                    p.setProfile(getPlayerProfile(p.spartanPlayer, true));
                 }
                 if (Config.sql.isEnabled()) {
                     Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE information LIKE '%" + playerName + "%';");
@@ -283,11 +253,10 @@ public class ResearchEngine {
                 }
             });
         } else {
-            synchronized (playerProfiles) {
-                playerProfiles.remove(playerName);
-            }
+            playerProfiles.remove(playerName);
+
             if (foundPlayer) {
-                p.spartanPlayer.setProfile(getPlayerProfile(p.spartanPlayer));
+                p.setProfile(getPlayerProfile(p.spartanPlayer, true));
             }
         }
         MainMenu.refresh();
@@ -448,13 +417,7 @@ public class ResearchEngine {
                             int greatestSplitPosition = 10; // Attention
                             String[] split = data.split(" ", greatestSplitPosition + 1);
 
-                            if (data.contains(PunishmentHistory.warningMessage)) {
-                                getPlayerProfile(split[0]).punishmentHistory.increaseWarnings(null, null);
-                            } else if (data.contains(PunishmentHistory.kickMessage)) {
-                                getPlayerProfile(split[0]).punishmentHistory.increaseKicks(null, null);
-                            } else if (data.contains(PunishmentHistory.punishmentMessage)) {
-                                getPlayerProfile(split[0]).punishmentHistory.increasePunishments(null, null);
-                            } else if (data.contains(" failed ")) {
+                            if (data.contains(" failed ")) {
                                 if (split.length >= 3) {
                                     String name = split[0];
                                     String hackTypeString = split[2];
@@ -521,20 +484,10 @@ public class ResearchEngine {
 
     private static void updateCache() {
         if (!playerProfiles.isEmpty()) {
-            Collection<PlayerProfile> playerProfiles;
-
-            synchronized (ResearchEngine.playerProfiles) {
-                playerProfiles = new ArrayList<>(ResearchEngine.playerProfiles.values());
-            }
+            Collection<PlayerProfile> playerProfiles = new ArrayList<>(ResearchEngine.playerProfiles.values());
             Enums.HackType[] hackTypes = Enums.HackType.values();
             Enums.DataType[] dataTypes = getDynamicUsableDataTypes(false);
-            int mines = 0;
             ViolationAnalysis.calculateData(playerProfiles);
-
-            for (PlayerProfile playerProfile : playerProfiles) {
-                playerProfile.evidence.judge();
-                mines += playerProfile.getOverallMiningHistory().getMines();
-            }
 
             // Separator
 
@@ -609,31 +562,6 @@ public class ResearchEngine {
             } else {
                 for (Enums.HackType hackType : hackTypes) {
                     hackType.getCheck().clearIgnoredViolations();
-                }
-            }
-
-            // Separator
-
-            for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
-                double average = 0.0, total = 0.0;
-
-                for (PlayerProfile playerProfile : playerProfiles) {
-                    if (playerProfile.isLegitimate()) {
-                        MiningHistory miningHistory = playerProfile.getMiningHistory(ore);
-                        mines = miningHistory.getMines();
-
-                        if (mines > 0) {
-                            average += mines / ((double) miningHistory.getDays());
-                            total++;
-                        }
-                    }
-
-                    if (total > 0) {
-                        average = Math.max(average / total, minimumAverageMining);
-                        averageMining.put(ore, average);
-                    } else {
-                        averageMining.remove(ore);
-                    }
                 }
             }
         } else { // We clear because there are no players

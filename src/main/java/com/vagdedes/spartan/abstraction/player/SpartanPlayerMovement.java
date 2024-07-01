@@ -3,8 +3,8 @@ package com.vagdedes.spartan.abstraction.player;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Location;
@@ -46,7 +46,7 @@ public class SpartanPlayerMovement {
     SpartanLocation schedulerFrom;
     private Vector clampVector;
 
-    SpartanPlayerMovement(SpartanPlayer parent, Player p) {
+    SpartanPlayerMovement(SpartanPlayer parent) {
         this.parent = parent;
         this.schedulerDistance = 0.0;
 
@@ -56,11 +56,11 @@ public class SpartanPlayerMovement {
         this.lastLiquidTicks = 0L;
         this.lastLiquidMaterial = Material.AIR;
 
-        SpartanLocation location = new SpartanLocation(p.getLocation());
+        SpartanLocation location = new SpartanLocation(this.parent.getInstance().getLocation());
         this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
         List<SpartanLocation> list = new ArrayList<>();
         list.add(location);
-        this.locations.put(TPS.getTick(this.parent), list);
+        this.locations.put(TPS.tick(), list);
 
         this.location = location;
         this.eventTo = location;
@@ -125,8 +125,8 @@ public class SpartanPlayerMovement {
 
     public boolean wasInLiquids() {
         return this.isSwimming()
-                || TPS.getTick(this.parent) - this.lastLiquidTicks <=
-                Math.max(Latency.getRoundedDelay(this.parent), 5L);
+                || TPS.tick() - this.lastLiquidTicks <=
+                Math.max(AlgebraUtils.integerCeil(Latency.getDelay(this.parent)), 5L);
     }
 
     public Material getLastLiquidMaterial() {
@@ -134,7 +134,7 @@ public class SpartanPlayerMovement {
     }
 
     public void setLastLiquid(Material material) {
-        lastLiquidTicks = TPS.getTick(this.parent);
+        lastLiquidTicks = TPS.tick();
         lastLiquidMaterial = material;
     }
 
@@ -145,7 +145,7 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isSwimming() {
-        if (artificialSwimming >= TPS.getTick(this.parent)) {
+        if (artificialSwimming >= TPS.tick()) {
             return true;
         } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             return this.parent.getInstance().isSwimming();
@@ -155,7 +155,7 @@ public class SpartanPlayerMovement {
     }
 
     public void setArtificialSwimming() {
-        this.artificialSwimming = TPS.getTick(this.parent) + 1;
+        this.artificialSwimming = TPS.tick() + 1;
     }
 
     // Separator
@@ -175,8 +175,7 @@ public class SpartanPlayerMovement {
     }
 
     public boolean isSneaking() {
-        return this.parent.getInstance().isSneaking()
-                || this.parent.protocol.isSneaking();
+        return this.parent.protocol.isSneaking();
     }
 
     public boolean isFlying() {
@@ -192,8 +191,7 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isSprinting() {
-        return this.parent.getInstance().isSprinting()
-                || this.parent.protocol.isSprinting();
+        return this.parent.protocol.isSprinting();
     }
 
     public boolean isSprintJumping(double vertical) {
@@ -338,17 +336,11 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    private Location getBukkitLocation() {
-        return SpartanBukkit.packetsEnabled()
-                ? this.parent.protocol.getLocation()
-                : this.parent.getInstance().getLocation();
-    }
-
     public SpartanLocation getVehicleLocation() {
         Entity vehicle = this.parent.getInstance().getVehicle();
 
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
-            Location playerLocation = this.getBukkitLocation();
+            Location playerLocation = this.parent.protocol.getLocation();
             return new SpartanLocation(
                     vehicle.getLocation(),
                     playerLocation.getYaw(),
@@ -359,47 +351,50 @@ public class SpartanPlayerMovement {
 
     public SpartanLocation getLocation() {
         SpartanLocation vehicleLocation = getVehicleLocation();
-        return vehicleLocation == null
-                ? this.getRawLocation()
-                : vehicleLocation;
+
+        if (vehicleLocation == null) {
+            this.refreshLocation(this.parent.protocol.getLocation());
+            return this.location;
+        } else {
+            return vehicleLocation;
+        }
     }
 
     public SpartanLocation getRawLocation() {
-        this.refreshLocation(this.getBukkitLocation());
-        return location;
+        return this.location;
     }
 
-    public void refreshLocation(Location location) {
+    // Separator
+
+    public Location refreshLocation(Location location) {
         if (this.location.getX() != location.getX()
                 || this.location.getY() != location.getY()
                 || this.location.getZ() != location.getZ()
                 || this.location.getYaw() != location.getYaw()
                 || this.location.getPitch() != location.getPitch()) {
-            this.setLocation(new SpartanLocation(location), false);
-        }
-    }
+            SpartanLocation spartanLocation = new SpartanLocation(location);
 
-    private void setLocation(SpartanLocation location, boolean queue) {
-        if (queue) {
             synchronized (this.locations) {
                 if (this.locations.size() == TPS.maximum) {
                     Iterator<Long> iterator = this.locations.keySet().iterator();
                     iterator.next();
                     iterator.remove();
                 }
-                this.locations.computeIfAbsent(TPS.getTick(this.parent), k -> new ArrayList<>()).add(location);
+                this.locations.computeIfAbsent(TPS.tick(), k -> new ArrayList<>()).add(spartanLocation);
             }
+            if (!this.location.world.equals(location.getWorld())) {
+                this.parent.resetTrackers();
+            }
+            this.location = spartanLocation;
+            this.setDetectionLocation(spartanLocation, false);
         }
-        if (!this.location.world.equals(location.world)) {
-            this.parent.resetTrackers();
-        }
-        this.location = location;
-        this.setDetectionLocation(location, false);
+        return location;
     }
 
     // Separator
 
-    public boolean processLastMoveEvent(SpartanLocation to, SpartanLocation from,
+    public boolean processLastMoveEvent(Location originalTo, SpartanLocation vehicle,
+                                        SpartanLocation to, SpartanLocation from,
                                         double distance, double horizontal, double vertical, double box) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
@@ -413,7 +408,9 @@ public class SpartanPlayerMovement {
                 return false;
             }
         }
-        this.setLocation(to, true);
+        if (vehicle == null) {
+            this.refreshLocation(originalTo);
+        }
         this.eventTo = to;
         this.eventFrom = from;
         this.eventPreviousDistance = this.eventDistance;

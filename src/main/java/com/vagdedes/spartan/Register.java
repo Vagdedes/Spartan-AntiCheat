@@ -50,17 +50,16 @@ public class Register extends JavaPlugin {
         enable(new Event_Vehicle(), Event_Vehicle.class);
         enable(new Event_Chat(), Event_Chat.class);
         enable(new Event_Plugin(), Event_Plugin.class);
-        enable(new Event_World(), Event_Plugin.class);
+        enable(new Event_World(), Event_World.class);
         enable(new Event_Inventory(), Event_Inventory.class);
         enable(new Event_Combat(), Event_Combat.class);
         enable(new Events_Player(), Events_Player.class);
         enable(new Event_Movement(), Event_Movement.class);
         enable(new Event_Shared(), Event_Shared.class);
+        enable(new Event_Chunks(), Event_Chunks.class);
 
         if (NPCManager.supported) {
             enable(new NPCManager(), NPCManager.class);
-        }
-        if (!MultiVersion.folia) {
         }
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             enable(new EventsHandler_1_9(), EventsHandler_1_9.class);

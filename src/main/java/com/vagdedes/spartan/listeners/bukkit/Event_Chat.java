@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.chat.ChatProtection;
 import com.vagdedes.spartan.functionality.chat.StaffChat;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
@@ -21,6 +22,9 @@ public class Event_Chat implements Listener {
     private void Chat(AsyncPlayerChatEvent e) {
         Player n = e.getPlayer();
 
+        if (ProtocolLib.isTemporary(n)) {
+            return;
+        }
         if (PlayerLimitPerIP.isLimited(n)) {
             e.setCancelled(true);
         } else {
@@ -45,7 +49,12 @@ public class Event_Chat implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Command(PlayerCommandPreprocessEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        Player n = e.getPlayer();
+
+        if (ProtocolLib.isTemporary(n)) {
+            return;
+        }
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
         String msg = e.getMessage();
 
         if (ChatProtection.runCommand(p, msg, false)) {

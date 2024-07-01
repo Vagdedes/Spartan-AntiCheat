@@ -51,7 +51,7 @@ public class Trackers {
                     trackerType,
                     Math.max(
                             enable.getOrDefault(trackerType, 0L),
-                            TPS.getTick(player) + ticks
+                            TPS.tick() + ticks
                     )
             );
         }
@@ -70,7 +70,7 @@ public class Trackers {
                     key,
                     Math.max(
                             map.getOrDefault(key, 0L),
-                            TPS.getTick(player) + ticks
+                            TPS.tick() + ticks
                     )
             );
         }
@@ -80,7 +80,7 @@ public class Trackers {
         disable.put(trackerType,
                 Math.max(
                         disable.getOrDefault(trackerType, 0L),
-                        TPS.getTick(player) + ticks
+                        TPS.tick() + ticks
                 )
         );
     }
@@ -109,7 +109,7 @@ public class Trackers {
     }
 
     private boolean has(long ticks) {
-        return ticks == -1L || ticks > TPS.getTick(player);
+        return ticks == -1L || ticks > TPS.tick();
     }
 
     public boolean has() {
@@ -164,7 +164,7 @@ public class Trackers {
 
     public boolean isDisabled(TrackerType trackerType) {
         Long ticks = disable.get(trackerType);
-        return ticks != null && ticks >= TPS.getTick(player);
+        return ticks != null && ticks >= TPS.tick();
     }
 
     public int getRemainingTicks(TrackerType trackerType, String key) {
@@ -180,7 +180,7 @@ public class Trackers {
         if (ticks == null) {
             return 0;
         } else {
-            ticks -= TPS.getTick(player);
+            ticks -= TPS.tick();
             return ticks < 0 ? 0 : ticks.intValue();
         }
     }

@@ -84,7 +84,7 @@ public class ViolationAnalysis {
                                Enums.DataType dataType) {
         for (PlayerProfile profile : playerProfiles) {
             if (profile.getDataType() == dataType) {
-                profile.evidence.remove(hackType, false, true, true, false);
+                profile.evidence.remove(hackType, true, true);
             }
         }
     }
@@ -149,7 +149,7 @@ public class ViolationAnalysis {
             }
         } else if (!playerProfiles.isEmpty()) {
             for (PlayerProfile profile : playerProfiles) {
-                profile.evidence.clear(false, true, true, false);
+                profile.evidence.clear(true, true);
             }
         }
     }
@@ -235,31 +235,25 @@ public class ViolationAnalysis {
                                 profile.evidence.add(
                                         hackType,
                                         "Probability: " + AlgebraUtils.cut(probability * 100.0, 2) + "%",
-                                        false,
                                         true,
-                                        false,
                                         false
                                 );
                             } else {
-                                profile.evidence.remove(hackType, false, true, false, false);
+                                profile.evidence.remove(hackType, true, false);
 
                                 if (probability < 1.0) {
                                     profile.evidence.add(
                                             hackType,
                                             "Probability: " + AlgebraUtils.cut(probability * 100.0, 2) + "%",
                                             false,
-                                            false,
-                                            true,
-                                            false
+                                            true
                                     );
                                 } else {
                                     profile.evidence.add(
                                             hackType,
                                             "Probability: Insufficient",
                                             false,
-                                            false,
-                                            true,
-                                            false
+                                            true
                                     );
                                 }
                             }

@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import org.bukkit.Location;
@@ -12,7 +11,6 @@ import org.bukkit.block.data.Waterlogged;
 
 public class SpartanBlock {
 
-    private final long tick;
     public final Material material;
     public final boolean liquid, waterLogged;
     public final SpartanLocation location;
@@ -22,7 +20,6 @@ public class SpartanBlock {
         this.liquid = liquid;
         this.waterLogged = waterLogged;
         this.location = location;
-        this.tick = TPS.getTick(location);
     }
 
     public SpartanBlock(Block block) {
@@ -44,15 +41,6 @@ public class SpartanBlock {
             this.liquid = BlockUtils.isLiquid(block);
             this.waterLogged = false;
         }
-        this.tick = TPS.getTick(this.location);
-    }
-
-    long ticksPassed() {
-        return TPS.getTick(this.location) - this.tick;
-    }
-
-    public void removeBlockCache() {
-        SpartanLocation.memory.remove(this.location.identifier);
     }
 
     public World getWorld() {

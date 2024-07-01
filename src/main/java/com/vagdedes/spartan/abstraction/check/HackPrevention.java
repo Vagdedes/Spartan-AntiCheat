@@ -32,12 +32,12 @@ public class HackPrevention {
         this.location = location;
         this.groundTeleport = groundTeleport;
         this.damage = damage;
-        this.expiration = TPS.getTick(player) + cancelTicks;
+        this.expiration = System.currentTimeMillis() + (Math.max(1, cancelTicks) * TPS.tickTime);
         player.getViolations(hackType).run(this, information, violations, time);
     }
 
-    boolean hasExpired(long tick) {
-        return tick > this.expiration;
+    boolean hasExpired() {
+        return System.currentTimeMillis() > this.expiration;
     }
 
     void handle(SpartanPlayer player) {

@@ -1,10 +1,13 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
+import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.utils.java.OverflowList;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
@@ -13,9 +16,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CrossServerInformation {
 
@@ -24,9 +28,12 @@ public class CrossServerInformation {
     private static final char colorSyntaxCharacter = '&';
     private static String serverName = null;
     private static final List<String>
-            notifications = Collections.synchronizedList(new ArrayList<>()),
-            configurations = Collections.synchronizedList(new ArrayList<>());
-    private static final Runnable generalTask = () -> {
+            broadcastNotifications = new CopyOnWriteArrayList<>(),
+            sendNotifications = new OverflowList<>(new CopyOnWriteArrayList<>(), 1_024),
+            configurations = new CopyOnWriteArrayList<>();
+
+    private static final Runnable
+            configurationTask = () -> {
         if (Config.settings.getBoolean(Settings.cloudSynchroniseFilesOption)) {
             String serverName = getOptionValue();
 
@@ -34,12 +41,8 @@ public class CrossServerInformation {
                 String type = "configuration";
 
                 if (!configurations.isEmpty()) {
-                    String[] configurationsArray;
-
-                    synchronized (configurations) {
-                        configurationsArray = configurations.toArray(new String[0]);
-                        configurations.clear();
-                    }
+                    String[] configurationsArray = configurations.toArray(new String[0]);
+                    configurations.clear();
                     CloudConnections.sendCrossServerInformation(type, serverName, configurationsArray);
                 }
 
@@ -83,21 +86,14 @@ public class CrossServerInformation {
                 }
             }
         } else {
-            synchronized (configurations) {
-                configurations.clear();
-            }
+            configurations.clear();
         }
-    };
-    private static final Runnable notificationsTask = () -> {
+    }, broadcastNotificationsTask = () -> {
         String type = "notification";
 
-        if (!notifications.isEmpty()) {
-            String[] notificationsArray;
-
-            synchronized (notifications) {
-                notificationsArray = notifications.toArray(new String[0]);
-                notifications.clear();
-            }
+        if (!broadcastNotifications.isEmpty()) {
+            String[] notificationsArray = broadcastNotifications.toArray(new String[0]);
+            broadcastNotifications.clear();
             CloudConnections.sendCrossServerInformation(type, serverName, notificationsArray);
         }
         List<SpartanPlayer> notificationPlayers = DetectionNotifications.getPlayers(true);
@@ -110,11 +106,35 @@ public class CrossServerInformation {
                     String[] split = information.split(CloudBase.separator, 3);
 
                     if (split.length == 2) {
-                        String notification = "§3(" + split[0] + ")§f " + split[1];
+                        sendNotifications.add("§3(" + split[0] + ")§f " + split[1]);
+                    }
+                }
+            }
+        }
+    }, sendNotificationsTask = () -> {
+        if (!sendNotifications.isEmpty()) {
+            Iterator<String> iterator = sendNotifications.iterator();
 
-                        for (SpartanPlayer p : notificationPlayers) {
-                            p.sendMessage(ChatColor.translateAlternateColorCodes(colorSyntaxCharacter, notification));
-                        }
+            if (iterator.hasNext()) {
+                String message = iterator.next();
+                SpartanProtocol notificationPlayer = null;
+
+                for (String word : message.split(" ")) {
+                    notificationPlayer = SpartanBukkit.getProtocol(word);
+
+                    if (notificationPlayer != null) {
+                        break;
+                    }
+                }
+                iterator.remove();
+
+                for (SpartanPlayer player : DetectionNotifications.getPlayers(true)) {
+                    if (!LiveViolation.hasNotificationCooldown(
+                            player,
+                            notificationPlayer != null ? notificationPlayer.spartanPlayer : null,
+                            null
+                    )) {
+                        player.sendMessage(message);
                     }
                 }
             }
@@ -127,16 +147,17 @@ public class CrossServerInformation {
                 ticks = 1200;
 
                 SpartanBukkit.connectionThread.execute(() -> {
-                    generalTask.run();
-                    notificationsTask.run();
+                    configurationTask.run();
+                    broadcastNotificationsTask.run();
                 });
             } else {
                 ticks -= 1;
 
                 if (ticks % 200 == 0) {
-                    SpartanBukkit.connectionThread.execute(notificationsTask::run);
+                    SpartanBukkit.connectionThread.execute(broadcastNotificationsTask::run);
                 }
             }
+            SpartanBukkit.connectionThread.execute(sendNotificationsTask::run);
         }, 1L, 1L);
     }
 
@@ -145,22 +166,16 @@ public class CrossServerInformation {
     }
 
     public static void clear() {
-        synchronized (notifications) {
-            synchronized (configurations) {
-                notifications.clear();
-                configurations.clear();
-            }
-        }
+        broadcastNotifications.clear();
+        sendNotifications.clear();
+        configurations.clear();
     }
 
     public static boolean queueNotification(String string, boolean absent) {
         string = string.replace(ChatColor.COLOR_CHAR, colorSyntaxCharacter);
-
-        synchronized (notifications) {
-            return absent
-                    ? !notifications.contains(string) && notifications.add(string)
-                    : notifications.add(string);
-        }
+        return absent
+                ? !broadcastNotifications.contains(string) && broadcastNotifications.add(string)
+                : broadcastNotifications.add(string);
     }
 
     public static boolean isOptionValid(String option) {
@@ -202,9 +217,7 @@ public class CrossServerInformation {
                     Object value = configuration.get(key);
                     list.add(file.getPath() + CloudBase.separator + key + CloudBase.separator + (value == null ? "NULL" : value.toString()));
                 }
-                synchronized (configurations) {
-                    configurations.addAll(list);
-                }
+                configurations.addAll(list);
             }
         }
     }

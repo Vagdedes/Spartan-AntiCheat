@@ -162,10 +162,8 @@ public abstract class PatternGeneralization {
 
     // Separator
 
-    final boolean learn(PlayerProfile profile, int[] situation, double pattern,
-                        boolean read,
-                        boolean generalize) {
-        if (generalize && this.scissors != 0) {
+    final boolean learn(PlayerProfile profile, int[] situation, double pattern, boolean read) {
+        if (this.scissors != 0) {
             pattern = AlgebraUtils.cut(pattern, this.scissors);
         }
         PatternProfile patternProfile = this.customLearn(profile, situation, (float) pattern, read);
@@ -175,15 +173,6 @@ public abstract class PatternGeneralization {
             return true;
         } else {
             return false;
-        }
-    }
-
-    final void selfLearn(int[] situation, double pattern) {
-        if (this.scissors != 0) {
-            pattern = AlgebraUtils.cut(pattern, this.scissors);
-        }
-        for (PlayerProfile playerProfile : Pattern.artificialProfiles) {
-            this.learn(playerProfile, situation, pattern, true, false);
         }
     }
 

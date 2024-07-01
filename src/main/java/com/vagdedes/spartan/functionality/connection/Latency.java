@@ -6,7 +6,6 @@ import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.entity.Player;
 
 public class Latency {
@@ -22,10 +21,6 @@ public class Latency {
                 return 0;
             }
         }
-    }
-
-    public static int getRoundedDelay(SpartanPlayer player) {
-        return AlgebraUtils.integerCeil(getDelay(player)); // Ceil because latency is more important than precision
     }
 
     public static double getDelay(SpartanPlayer player) {
@@ -50,7 +45,7 @@ public class Latency {
         if (!Config.settings.getBoolean(Settings.tpsProtectionOption)) {
             tpsDelay = 0.0;
         } else {
-            double tps = TPS.get(player, false);
+            double tps = TPS.get();
 
             if (tps >= TPS.excellent) {
                 tpsDelay = 0.0;

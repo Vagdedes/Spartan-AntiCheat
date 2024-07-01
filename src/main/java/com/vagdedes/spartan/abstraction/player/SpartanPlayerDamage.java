@@ -28,7 +28,7 @@ public class SpartanPlayerDamage {
     // Separator
 
     private final SpartanPlayer parent;
-    public final long tick;
+    public final long time;
     public final EntityDamageEvent event;
     public final SpartanLocation location;
     private final ItemStack activeItem;
@@ -36,7 +36,7 @@ public class SpartanPlayerDamage {
 
     SpartanPlayerDamage(SpartanPlayer player) {
         this.parent = player;
-        this.tick = 0L;
+        this.time = 0L;
         this.event = null;
         this.location = player.movement.getLocation();
         this.activeItem = null;
@@ -48,9 +48,9 @@ public class SpartanPlayerDamage {
         boolean abstractVelocity = false;
         player.trackers.add(Trackers.TrackerType.DAMAGE, (int) TPS.maximum);
         this.parent = player;
-        this.tick = TPS.getTick(player);
-        this.event = event;
         this.location = player.movement.getLocation();
+        this.time = System.currentTimeMillis();
+        this.event = event;
 
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent actualEvent = (EntityDamageByEntityEvent) this.event;
@@ -130,8 +130,8 @@ public class SpartanPlayerDamage {
                 : null;
     }
 
-    public long ticksPassed() {
-        return TPS.getTick(this.parent) - this.tick;
+    public long timePassed() {
+        return System.currentTimeMillis() - this.time;
     }
 
     public ItemStack getActiveItem() {
@@ -143,7 +143,7 @@ public class SpartanPlayerDamage {
     public boolean isPropellingProjectile() {
         if (this.event != null
                 && !this.event.isCancelled()
-                && this.ticksPassed() <= TPS.maximum
+                && this.timePassed() <= TPS.maximum
                 && this.parent.movement.getTicksOnAir() <= TPS.maximum
                 && this.location.getPitch() <= -60.0f
                 && this.event instanceof EntityDamageByEntityEvent) {
@@ -162,7 +162,7 @@ public class SpartanPlayerDamage {
             return false;
         } else {
             int time = AlgebraUtils.integerRound(TPS.maximum * 2.0);
-            return this.ticksPassed() <= time
+            return this.timePassed() <= time
                     && this.parent.movement.getTicksOnAir() <= time
                     && (this.boss
                     || this.explosive
@@ -180,7 +180,7 @@ public class SpartanPlayerDamage {
             switch (this.event.getCause()) {
                 case ENTITY_ATTACK:
                 case PROJECTILE:
-                    return this.ticksPassed() <= TPS.tickTime;
+                    return this.timePassed() <= TPS.tickTime;
                 default:
                     return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
                             && (event.getCause() == EntityDamageEvent.DamageCause.DRAGON_BREATH
@@ -209,7 +209,7 @@ public class SpartanPlayerDamage {
                 case CONTACT:
                 case FALL:
                 case LAVA:
-                    return this.ticksPassed() <= AlgebraUtils.integerRound(TPS.maximum / 2.0)
+                    return this.timePassed() <= AlgebraUtils.integerRound(TPS.maximum / 2.0)
                             && this.parent.movement.getTicksOnAir() <= TPS.maximum;
                 default:
                     return cause == EntityDamageEvent.DamageCause.SUFFOCATION
