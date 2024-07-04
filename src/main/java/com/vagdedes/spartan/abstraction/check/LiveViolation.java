@@ -10,10 +10,10 @@ import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LiveViolation {
 
     public static final String violationLevelIdentifier = "VL:";
-    public static final long violationTimeWorth = 2_000L;
 
     private final SpartanPlayer player;
     private final Enums.HackType hackType;
@@ -177,7 +176,7 @@ public class LiveViolation {
     private int calculateLevel(long time) {
         time -= System.currentTimeMillis();
         return time > 0L
-                ? AlgebraUtils.integerCeil(time / (double) violationTimeWorth)
+                ? AlgebraUtils.integerCeil(time / (double) hackType.violationTimeWorth)
                 : 0;
     }
 
@@ -215,14 +214,14 @@ public class LiveViolation {
         Long time = this.level.get(hash);
 
         if (time == null) {
-            this.level.put(hash, System.currentTimeMillis() + (violationTimeWorth * amount));
+            this.level.put(hash, System.currentTimeMillis() + (hackType.violationTimeWorth * amount));
         } else {
             long current = System.currentTimeMillis();
 
             if (time < current) {
-                this.level.put(hash, current + (violationTimeWorth * amount));
+                this.level.put(hash, current + (hackType.violationTimeWorth * amount));
             } else {
-                this.level.put(hash, time + (violationTimeWorth * amount));
+                this.level.put(hash, time + (hackType.violationTimeWorth * amount));
             }
         }
         InteractiveInventory.playerInfo.refresh(player.name);
@@ -390,8 +389,8 @@ public class LiveViolation {
         String information = Config.getConstruct() + player.name + " failed " + hackType
                 + " (" + violationLevelIdentifier + " " + playerViolation.level + ") "
                 + "[(Version: " + MultiVersion.versionString() + "), (IV: " + (canPrevent ? "-" : "") + ignoredViolations + ")"
-                + " (Silent: " + hackType.getCheck().isSilent(player.getWorld().getName()) + "), "
-                + ", (Packets: " + SpartanBukkit.packetsEnabled() + "), (Ping: " + player.getPing() + "ms), " +
+                + " (Silent: " + hackType.getCheck().isSilent(player.getWorld().getName()) + "),"
+                + " (Packets: " + SpartanBukkit.packetsEnabled() + "), (Ping: " + player.getPing() + "ms), " +
                 "(XYZ: " + location.getBlockX() + " " + location.getBlockY() + " "
                 + location.getBlockZ() + "), (" + playerViolation.information + ")]";
         AntiCheatLogs.logInfo(player, information, true, null, playerViolation);

@@ -2,6 +2,7 @@ package me.vagdedes.spartan.system;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
+import com.vagdedes.spartan.functionality.server.TPS;
 
 public class Enums {
 
@@ -10,6 +11,7 @@ public class Enums {
     public enum HackType {
         XRay(
                 HackCategoryType.WORLD,
+                TPS.tickTime,
                 com.vagdedes.spartan.abstraction.check.implementation.world.XRay.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -19,8 +21,9 @@ public class Enums {
                 }
         ),
         Exploits(
-                HackCategoryType.EXPLOITS,
-                com.vagdedes.spartan.abstraction.check.implementation.exploits.Exploits.class,
+                HackCategoryType.WORLD,
+                2_000L,
+                com.vagdedes.spartan.abstraction.check.implementation.world.exploits.Exploits.class,
                 new String[]{
                         "This check will prevent client",
                         "modules that may potentially hurt",
@@ -29,6 +32,7 @@ public class Enums {
         ),
         NoSwing(
                 HackCategoryType.PLAYER,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.player.NoSwing.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -38,6 +42,7 @@ public class Enums {
         ),
         IrregularMovements(
                 HackCategoryType.MOVEMENT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -47,6 +52,7 @@ public class Enums {
         ),
         ImpossibleActions(
                 HackCategoryType.WORLD,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.world.ImpossibleActions.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -56,6 +62,7 @@ public class Enums {
         ),
         ItemDrops(
                 HackCategoryType.INVENTORY,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.inventory.ItemDrops.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -65,6 +72,7 @@ public class Enums {
         ),
         AutoRespawn(
                 HackCategoryType.PLAYER,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.player.AutoRespawn.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -74,6 +82,7 @@ public class Enums {
         ),
         InventoryClicks(
                 HackCategoryType.INVENTORY,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.inventory.InventoryClicks.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -83,6 +92,7 @@ public class Enums {
         ),
         Criticals(
                 HackCategoryType.COMBAT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.combat.Criticals.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -92,6 +102,7 @@ public class Enums {
         ),
         GhostHand(
                 HackCategoryType.WORLD,
+                TPS.tickTime,
                 com.vagdedes.spartan.abstraction.check.implementation.world.GhostHand.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -101,6 +112,7 @@ public class Enums {
         ),
         BlockReach(
                 HackCategoryType.WORLD,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.world.BlockReach.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -110,6 +122,7 @@ public class Enums {
         ),
         FastBow(
                 HackCategoryType.COMBAT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.combat.FastBow.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -119,6 +132,7 @@ public class Enums {
         ),
         FastClicks(
                 HackCategoryType.COMBAT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -128,6 +142,7 @@ public class Enums {
         ),
         FastHeal(
                 HackCategoryType.PLAYER,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.player.FastHeal.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -137,6 +152,7 @@ public class Enums {
         ),
         ImpossibleInventory(
                 HackCategoryType.INVENTORY,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.inventory.ImpossibleInventory.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -147,7 +163,8 @@ public class Enums {
         ),
         HitReach(
                 HackCategoryType.COMBAT,
-                com.vagdedes.spartan.abstraction.check.implementation.combat.hitreach.HitReach.class,
+                2_000L,
+                com.vagdedes.spartan.abstraction.check.implementation.combat.HitReach.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to hit entities",
@@ -156,6 +173,7 @@ public class Enums {
         ),
         FastBreak(
                 HackCategoryType.WORLD,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.world.FastBreak.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -165,6 +183,7 @@ public class Enums {
         ),
         Speed(
                 HackCategoryType.MOVEMENT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -174,6 +193,7 @@ public class Enums {
         ),
         FastPlace(
                 HackCategoryType.WORLD,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.world.FastPlace.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -183,6 +203,7 @@ public class Enums {
         ),
         MorePackets(
                 HackCategoryType.MOVEMENT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -192,6 +213,7 @@ public class Enums {
         ),
         NoFall(
                 HackCategoryType.MOVEMENT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -201,6 +223,7 @@ public class Enums {
         ),
         Simulation(
                 HackCategoryType.MOVEMENT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.simulation.Simulation.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -210,6 +233,7 @@ public class Enums {
         ),
         FastEat(
                 HackCategoryType.PLAYER,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.player.FastEat.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -219,6 +243,7 @@ public class Enums {
         ),
         Velocity(
                 HackCategoryType.COMBAT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.combat.Velocity.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -228,6 +253,7 @@ public class Enums {
         ),
         KillAura(
                 HackCategoryType.COMBAT,
+                2_000L,
                 com.vagdedes.spartan.abstraction.check.implementation.combat.killaura.KillAura.class,
                 new String[]{
                         "This check will prevent client modules",
@@ -237,12 +263,14 @@ public class Enums {
         );
 
         private Check check;
+        public final long violationTimeWorth;
         public final HackCategoryType category;
         public final Class<?> executor;
         public final String[] description;
 
-        HackType(HackCategoryType category, Class<?> executor, String[] description) {
+        HackType(HackCategoryType category, long violationTimeWorth, Class<?> executor, String[] description) {
             this.check = null;
+            this.violationTimeWorth = violationTimeWorth;
             this.category = category;
             this.executor = executor;
             this.description = description;
@@ -287,7 +315,7 @@ public class Enums {
     }
 
     public enum HackCategoryType {
-        COMBAT, MOVEMENT, EXPLOITS, PLAYER, WORLD, INVENTORY;
+        COMBAT, MOVEMENT, PLAYER, WORLD, INVENTORY;
 
         private final String string;
 
@@ -300,12 +328,9 @@ public class Enums {
                     string = "Movement";
                     break;
                 case 2:
-                    string = "Exploits";
-                    break;
-                case 3:
                     string = "Player";
                     break;
-                case 4:
+                case 3:
                     string = "World";
                     break;
                 default:

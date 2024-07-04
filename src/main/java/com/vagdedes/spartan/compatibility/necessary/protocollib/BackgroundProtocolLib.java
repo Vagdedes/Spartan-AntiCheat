@@ -20,14 +20,12 @@ public class BackgroundProtocolLib {
             p.addPacketListener(new Velocity());
             p.addPacketListener(new Attack());
 
-            if (SpartanBukkit.movementPacketsForcedState) {
-                if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-                    p.addPacketListener(new Move());
-                    p.addPacketListener(new SendPingPong());
-                } else {
-                    p.addPacketListener(new Move_Deprecated());
-                    p.addPacketListener(new SendTransaction());
-                }
+            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
+                p.addPacketListener(new Move());
+                p.addPacketListener(new SendPingPong());
+            } else {
+                p.addPacketListener(new Move_Deprecated());
+                p.addPacketListener(new SendTransaction());
             }
             p.addPacketListener(new ServerPosition());
             //p.addPacketListener(new Debug());

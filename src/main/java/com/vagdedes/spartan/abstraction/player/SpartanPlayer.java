@@ -18,7 +18,7 @@ import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -124,17 +124,21 @@ public class SpartanPlayer {
                     if (p.movement.isFlying()) {
                         p.trackers.add(Trackers.TrackerType.FLYING, (int) TPS.maximum);
                     }
+                    if (p.movement.isGliding()) {
+                        p.trackers.add(Trackers.TrackerType.GLIDING, (int) TPS.maximum);
+                    }
+                    // Separator
+                    SpartanLocation to = p.movement.getLocation(),
+                            from = p.movement.getSchedulerFromLocation();
+
+                    if (from != null) {
+                        p.movement.schedulerDistance = to.distance(from);
+                    }
+                    p.movement.schedulerFrom = to;
 
                     // Separator
                     SpartanBukkit.runTask(p, () -> {
                         p.setStoredPotionEffects(p.getInstance().getActivePotionEffects()); // Bad
-                        SpartanLocation to = p.movement.getLocation(),
-                                from = p.movement.getSchedulerFromLocation();
-
-                        if (from != null) {
-                            p.movement.schedulerDistance = to.distance(from);
-                        }
-                        p.movement.schedulerFrom = to;
 
                         // Preventions
                         for (Enums.HackType hackType : Event_Movement.handledChecks) {
@@ -158,7 +162,7 @@ public class SpartanPlayer {
         this.uuid = p.getUniqueId();
         this.bedrockPlayer = BedrockCompatibility.isPlayer(p);
         this.dataType = bedrockPlayer ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
-        this.trackers = new Trackers(this);
+        this.trackers = new Trackers();
 
         this.name = p.getName();
         Collection<PotionEffect> collection = p.getActivePotionEffects();

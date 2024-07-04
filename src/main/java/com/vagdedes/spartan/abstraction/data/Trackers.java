@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.data;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 import java.util.LinkedHashMap;
@@ -18,7 +17,8 @@ public class Trackers {
         PISTON(TrackerFamily.VELOCITY), BUBBLE_WATER(TrackerFamily.VELOCITY),
         TRIDENT(TrackerFamily.VELOCITY), DAMAGE(TrackerFamily.VELOCITY),
 
-        VEHICLE(TrackerFamily.MOTION), FLYING(TrackerFamily.MOTION);
+        VEHICLE(TrackerFamily.MOTION), FLYING(TrackerFamily.MOTION),
+        GLIDING(TrackerFamily.MOTION);
 
         public final TrackerFamily family;
 
@@ -29,11 +29,9 @@ public class Trackers {
 
     private final Map<TrackerType, Long> enable, disable;
     private final Map<TrackerType, Map<String, Long>> child;
-    private final SpartanPlayer player;
 
-    public Trackers(SpartanPlayer player) {
+    public Trackers() {
         int length = TrackerType.values().length;
-        this.player = player;
         this.enable = new ConcurrentHashMap<>(length);
         this.disable = new ConcurrentHashMap<>(length);
         this.child = new ConcurrentHashMap<>(length);

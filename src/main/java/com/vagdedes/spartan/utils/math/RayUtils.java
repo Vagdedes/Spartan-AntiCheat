@@ -164,6 +164,25 @@ public class RayUtils {
         return false;
     }
 
+    public static boolean inBlock(SpartanPlayer player, SpartanLocation location) {
+        World world = player.getWorld();
+        Vector playerLocation = location.toVector(),
+                        min = playerLocation.clone().add(new Vector(-0.3, 0.0, -0.3)),
+                        max = playerLocation.clone().add(new Vector(0.3, 0.5, 0.3));
+
+        for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
+            for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+
+                    if (!block.material.isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
     private static float[] getRotation(Player player1, Entity entity2) {
         Vector direction = entity2.getLocation().toVector().subtract(player1.getLocation().toVector());
         float yaw = (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())),

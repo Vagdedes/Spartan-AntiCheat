@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.abstraction.player;
 
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.Bukkit;

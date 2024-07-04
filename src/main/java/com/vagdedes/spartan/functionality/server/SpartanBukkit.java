@@ -7,7 +7,6 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.*;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;

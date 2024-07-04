@@ -1,0 +1,13 @@
+[#] Fixed a HitReach null-pointer error.
+[#] Fixed a few ItemDrops & FastClicks false positives when dropping items.
+[#] Fixed a comma typo in the logs of the plugin.
+[#] Fixed an error when using the Floodgate compatibility with only Geyser.
+[#] Removed unnecessary code from the Speed check.
+[#] Fixed an Exploits movement(spoof) repeating false positive.
+[#] Fixed a XRay false positive caused by wrongly implemented statistics.
+[#] Improved the violation information of the IrregularMovements and NoFall checks.
+[#] Fixed an IrregularMovements food-sprint false positive.
+[#] Fixed an InventoryClicks shift clicking false positive.
+[#] Fixed an IrregularMovements jump(height) low-ground false positive.
+[#] Fixed an Exploits ground-spoof nearby-entities false positive.
+[#] Fixed a NoFall bouncing blocks false positive related mostly to beds.

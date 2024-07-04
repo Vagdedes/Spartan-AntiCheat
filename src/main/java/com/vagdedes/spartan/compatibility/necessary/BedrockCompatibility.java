@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.necessary;
 
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;

@@ -233,7 +233,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectType.FAST_DIGGING, 0);
+            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectType.FAST_DIGGING, 0L);
 
             if (hasteEffect != null
                     && hasteEffect.isActive()) {

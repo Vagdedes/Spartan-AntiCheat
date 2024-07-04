@@ -2,8 +2,8 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -143,7 +143,7 @@ public class CloudBase {
         if (cache) {
             disabledDetections.clear();
         } else {
-            identification = "identification=" + IDs.user() + "|" + IDs.nonce();
+            identification = "identification=" + IDs.platform() + "|" + IDs.user() + "|" + IDs.file();
         }
     }
 

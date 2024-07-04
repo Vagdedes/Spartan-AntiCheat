@@ -82,10 +82,8 @@ public class Event_Status implements Listener {
         SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
         // Objects
-        p.movement.setDetectionLocation();
-
-        // Protections
         p.resetTrackers();
+        p.movement.setDetectionLocation();
 
         // Detections
         p.getExecutor(Enums.HackType.NoFall).handle(false, null);

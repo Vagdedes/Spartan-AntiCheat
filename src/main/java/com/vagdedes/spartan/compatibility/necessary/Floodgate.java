@@ -2,9 +2,10 @@ package com.vagdedes.spartan.compatibility.necessary;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import org.geysermc.floodgate.api.FloodgateApi;
 
@@ -13,7 +14,12 @@ import java.util.UUID;
 
 public class Floodgate {
 
+    private static boolean classExists = false;
+
     public static void reload() {
+        classExists = ReflectionUtils.classExists(
+                "org.geysermc.floodgate.api.FloodgateApi"
+        );
         String message;
 
         if (PluginUtils.contains("geyser")
@@ -40,6 +46,7 @@ public class Floodgate {
 
     static boolean isBedrockPlayer(UUID uuid, String name) {
         return Compatibility.CompatibilityType.FLOODGATE.isFunctional()
+                && classExists
                 && FloodgateApi.getInstance().isFloodgatePlayer(uuid)
 
                 || name != null && isBedrockPlayer(name);

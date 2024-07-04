@@ -12,7 +12,7 @@ import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -517,7 +517,7 @@ public class ResearchEngine {
                                     if (!list.isEmpty()) {
                                         for (PlayerViolation playerViolation : list) {
                                             averages.computeIfAbsent(
-                                                    AlgebraUtils.integerFloor(playerViolation.time / (double) LiveViolation.violationTimeWorth),
+                                                    AlgebraUtils.integerFloor(playerViolation.time / (double) hackType.violationTimeWorth),
                                                     k -> new ViolationAnalysis.TimePeriod()
                                             ).add(playerProfile, playerViolation);
                                         }

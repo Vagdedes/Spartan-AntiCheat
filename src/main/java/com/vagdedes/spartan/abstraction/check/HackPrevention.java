@@ -2,6 +2,7 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.TPS;
 import me.vagdedes.spartan.system.Enums;
 
@@ -48,7 +49,10 @@ public class HackPrevention {
             player.groundTeleport();
         }
         if (this.damage > 0.0) {
-            player.damage(this.damage);
+            if (this.location == null && !this.groundTeleport
+                    || Config.settings.getBoolean("Detections.fall_damage_on_teleport")) {
+                player.damage(this.damage);
+            }
         }
     }
 

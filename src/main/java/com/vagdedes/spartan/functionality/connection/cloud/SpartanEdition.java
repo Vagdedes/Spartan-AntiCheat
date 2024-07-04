@@ -2,7 +2,6 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -15,8 +14,11 @@ import java.util.List;
 
 public class SpartanEdition {
 
-    private static final Enums.DataType dataType = Enums.DataType.JAVA,
-            oppositeType = dataType == Enums.DataType.JAVA ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
+    private static final Enums.DataType
+            currentType = Enums.DataType.JAVA,
+            oppositeType = currentType == Enums.DataType.JAVA
+                    ? Enums.DataType.BEDROCK
+                    : Enums.DataType.JAVA;
 
     private static long checkTime = 0L;
     public static final String[] jarNames = new String[]{
@@ -33,23 +35,38 @@ public class SpartanEdition {
             limitNotificationMessage = "\n§cHey, just a heads up! You have more online players than the anti-cheat can check at once."
                     + "\nClick §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.";
     private static boolean
+            firstLoad = true,
             notifyCache = false,
+            currentVersion = true,
             alternativeVersion = false;
 
     // Verification
 
     public static void refresh() {
+        if (firstLoad) {
+            firstLoad = false;
+            currentVersion = !CloudBase.hasToken();
+        }
         SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
-            if (!alternativeVersion) {
-                if (CloudConnections.ownsProduct(
-                        getProductID(oppositeType)
-                )) {
-                    alternativeVersion = true;
-                    Config.messages.clear();
+            boolean changed = false;
 
-                    for (Enums.HackType hackType : Enums.HackType.values()) {
-                        hackType.resetCheck();
-                    }
+            if (!currentVersion
+                    && CloudConnections.ownsProduct(
+                    getProductID(currentType)
+            )) {
+                currentVersion = true;
+                changed = true;
+            }
+            if (!alternativeVersion
+                    && CloudConnections.ownsProduct(
+                    getProductID(oppositeType)
+            )) {
+                alternativeVersion = true;
+                changed = true;
+            }
+            if (changed) {
+                for (Enums.HackType hackType : Enums.HackType.values()) {
+                    hackType.resetCheck();
                 }
             }
         });
@@ -58,39 +75,51 @@ public class SpartanEdition {
     // Detections
 
     public static boolean hasDetectionsPurchased(Enums.DataType dataType) {
-        return SpartanEdition.dataType == dataType || alternativeVersion;
+        return SpartanEdition.currentType == dataType
+                ? currentVersion
+                : alternativeVersion;
     }
 
     public static Enums.DataType getMissingDetection() {
-        return alternativeVersion ? null : oppositeType;
+        return currentVersion && alternativeVersion
+                ? null
+                : (currentVersion ? oppositeType : currentType);
     }
 
     // Product
 
     private static String getProductID(Enums.DataType dataType) {
         switch (dataType) {
+            case JAVA:
+                return "1";
             case BEDROCK:
                 return "16";
             default:
-                return "1";
+                return "27";
         }
     }
 
     public static String getProductID() {
-        return getProductID(dataType);
+        return getProductID(
+                currentVersion
+                        ? currentType
+                        : (alternativeVersion ? oppositeType : Enums.DataType.UNIVERSAL)
+        );
     }
 
     public static String getProductName() {
-        if (alternativeVersion) {
+        if (currentVersion && alternativeVersion) {
             return "Spartan AntiCheat: Java & Bedrock Edition";
+        } else if (currentVersion) {
+            return "Spartan AntiCheat: Java Edition";
         } else {
-            return "Spartan AntiCheat: " + dataType + " Edition";
+            return "Spartan AntiCheat: Bedrock Edition";
         }
     }
 
     // Notifications
 
-    public static boolean attemptNotification(SpartanPlayer player) {
+    public static void attemptNotification(SpartanPlayer player) {
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
         int detectionSlots = CloudBase.getDetectionSlots();
 
@@ -107,9 +136,8 @@ public class SpartanEdition {
 
                     if ((time - checkTime) >= 60_000L) {
                         checkTime = time;
-                        boolean bedrockIsMissingDetection = missingDetection == Enums.DataType.BEDROCK;
 
-                        if (bedrockIsMissingDetection == player.bedrockPlayer) {
+                        if (missingDetection == player.dataType) {
                             notifyCache = true;
                             sendVersionNotification(player, missingDetection);
                         } else {
@@ -121,10 +149,10 @@ public class SpartanEdition {
                                 checkedProfiles = new ArrayList<>(size);
 
                                 for (SpartanPlayer otherPlayer : players) {
-                                    if (bedrockIsMissingDetection == otherPlayer.bedrockPlayer) {
+                                    if (missingDetection == otherPlayer.dataType) {
                                         notifyCache = true;
                                         sendVersionNotification(player, missingDetection);
-                                        return true;
+                                        return;
                                     } else {
                                         checkedProfiles.add(player.protocol.getProfile());
                                     }
@@ -143,10 +171,10 @@ public class SpartanEdition {
 
                                 if (!playerProfiles.isEmpty()) {
                                     for (PlayerProfile profile : playerProfiles) {
-                                        if (bedrockIsMissingDetection == profile.isBedrockPlayer()) {
+                                        if (missingDetection == profile.getDataType()) {
                                             notifyCache = true;
                                             sendVersionNotification(player, missingDetection);
-                                            return true;
+                                            return;
                                         }
                                     }
                                 }
@@ -156,7 +184,6 @@ public class SpartanEdition {
                 }
             }
         }
-        return false;
     }
 
     private static void sendVersionNotification(SpartanPlayer player, Enums.DataType dataType) {

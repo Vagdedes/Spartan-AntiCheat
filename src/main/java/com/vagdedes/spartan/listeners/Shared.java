@@ -7,10 +7,10 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
-import com.vagdedes.spartan.functionality.management.Config;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
+import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
@@ -38,8 +38,8 @@ public class Shared {
         // System
         PlayerDetectionSlots.add(p);
 
-        if (!SpartanEdition.attemptNotification(p)
-                && Config.settings.getBoolean("Important.enable_watermark")) {
+        if (Config.settings.getBoolean("Important.enable_watermark")
+                && !Permissions.isStaff(p)) {
             p.sendMessage("");
             AwarenessNotifications.forcefullySend(
                     p,

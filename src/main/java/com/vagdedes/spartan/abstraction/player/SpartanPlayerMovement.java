@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.player;
 
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -56,7 +57,7 @@ public class SpartanPlayerMovement {
         this.lastLiquidTicks = 0L;
         this.lastLiquidMaterial = Material.AIR;
 
-        SpartanLocation location = new SpartanLocation(this.parent.getInstance().getLocation());
+        SpartanLocation location = new SpartanLocation(this.parent.protocol.getLocation());
         this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
         List<SpartanLocation> list = new ArrayList<>();
         list.add(location);
@@ -123,10 +124,15 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    public boolean wasInLiquids() {
+    public boolean isInLiquids() {
         return this.isSwimming()
                 || TPS.tick() - this.lastLiquidTicks <=
                 Math.max(AlgebraUtils.integerCeil(Latency.getDelay(this.parent)), 5L);
+    }
+
+    public boolean wasInLiquids() {
+        return !this.isInLiquids()
+                && TPS.tick() - this.lastLiquidTicks <= TPS.maximum;
     }
 
     public Material getLastLiquidMaterial() {
@@ -259,6 +265,15 @@ public class SpartanPlayerMovement {
     public boolean isGliding() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             return this.parent.getInstance().isGliding();
+        } else {
+            return false;
+        }
+    }
+
+    public boolean wasGliding() {
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+            return !this.parent.getInstance().isGliding()
+                    && this.parent.trackers.has(Trackers.TrackerType.GLIDING);
         } else {
             return false;
         }

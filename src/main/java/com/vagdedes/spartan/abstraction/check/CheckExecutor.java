@@ -11,6 +11,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
 
     protected final DetectionExecutor[] detections;
     private boolean function;
+    private Object scheduler;
 
     public CheckExecutor(Enums.HackType hackType, SpartanPlayer player, int detections, boolean scheduler) {
         super(null, hackType, player);
@@ -18,34 +19,37 @@ public abstract class CheckExecutor extends DetectionExecutor {
         this.function = false;
 
         if (scheduler) {
-            SpartanBukkit.runRepeatingTask(player, () -> {
-                function = !TPS.areLow()
-                        && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
-                        || player.getInstance().getGameMode() != GameMode.SPECTATOR)
-                        && !player.protocol.isOnLoadStatus()
-                        && player.getCancellableCompatibility() == null
-                        && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
-                        && canRun();
-
-                if (canFunctionOrJustImplemented()) {
-                    scheduler();
+            this.scheduler = SpartanBukkit.runRepeatingTask(player, () -> {
+                if (this.scheduler != null && !player.getInstance().isOnline()) {
+                    SpartanBukkit.cancelTask(this.scheduler);
                 } else {
-                    cannotSchedule();
-                }
-            }, 1L, 1L);
-        } else {
-            SpartanBukkit.runRepeatingTask(
-                    player,
-                    () -> function = !TPS.areLow()
-                            && (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
+                    function = (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
                             || player.getInstance().getGameMode() != GameMode.SPECTATOR)
                             && !player.protocol.isOnLoadStatus()
                             && player.getCancellableCompatibility() == null
                             && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
-                            && canRun(),
-                    1L,
-                    1L
-            );
+                            && canRun();
+
+                    if (canFunctionOrJustImplemented()) {
+                        scheduler();
+                    } else {
+                        cannotSchedule();
+                    }
+                }
+            }, 1L, 1L);
+        } else {
+            this.scheduler = SpartanBukkit.runRepeatingTask(player, () -> {
+                if (this.scheduler != null && !player.getInstance().isOnline()) {
+                    SpartanBukkit.cancelTask(this.scheduler);
+                } else {
+                    function = (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)
+                            || player.getInstance().getGameMode() != GameMode.SPECTATOR)
+                            && !player.protocol.isOnLoadStatus()
+                            && player.getCancellableCompatibility() == null
+                            && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName(), player)
+                            && canRun();
+                }
+            }, 1L, 1L);
         }
     }
 

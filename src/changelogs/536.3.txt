@@ -1,0 +1,14 @@
+[+] Added new description to the Player Info inventory menu.
+[+] Updated the verification of the Cloud feature, update to maintain access to it.
+[#] Fixed a few Speed ground-invalid false positives
+[#] Fixed a non-such method console error when retrieving server TPS.
+[#] Fixed an issue where punishments repeat themselves after player is logged out.
+[#] Made the NoFall check more lenient as far as its violations and preventions go.
+[#] Improved the prevention system to consider configuration options in more scenarios.
+[#] Fixed a BlockReach false positive caused by bedrock players.
+[#] Fixed an IrregularMovements step false positive caused by several velocities.
+[#] Fixed an IrregularMovements gravity false positive caused by elytra gliding.
+[#] Fixed FastBreak false positives caused by latency and haste effects.
+[#] Fixed many GhostHand false positives by making the check not retain violations for long.
+[#] Potentially fixed an ImpossibleActions scaffold random block placement false positive.
+[#] The Exploits check now belongs to the World category.

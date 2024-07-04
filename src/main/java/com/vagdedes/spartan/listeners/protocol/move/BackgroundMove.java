@@ -34,61 +34,63 @@ public class BackgroundMove {
     }
 
     private static void movePacket(PacketEvent event, SpartanProtocol protocol) {
-        PacketContainer packet = event.getPacket();
-        PacketType type = event.getPacket().getType();
+        if (SpartanBukkit.packetsEnabled_Movement()) {
+            PacketContainer packet = event.getPacket();
+            PacketType type = event.getPacket().getType();
 
-        if (!protocol.teleportEngine.isEmpty()) {
-            for (TeleportData teleportData : protocol.teleportEngine) {
-                Location teleportLocation = protocol.getLocation().clone().add(teleportData.getLocation());
-                Location teleportSilentLocation = teleportData.getLocation();
-                int hl = protocol.getLocation().toVector().hashCode();
-                int ht = teleportLocation.toVector().hashCode();
-                int hSt = teleportSilentLocation.toVector().hashCode();
-                if (hl == ht) {
-                    protocol.setLocation(teleportLocation);
-                    protocol.teleportEngine.remove(teleportData);
-                } else if (hl == hSt) {
-                    protocol.setLocation(teleportSilentLocation);
-                    protocol.teleportEngine.remove(teleportData);
+            if (!protocol.teleportEngine.isEmpty()) {
+                for (TeleportData teleportData : protocol.teleportEngine) {
+                    Location teleportLocation = protocol.getLocation().clone().add(teleportData.getLocation());
+                    Location teleportSilentLocation = teleportData.getLocation();
+                    int hl = protocol.getLocation().toVector().hashCode();
+                    int ht = teleportLocation.toVector().hashCode();
+                    int hSt = teleportSilentLocation.toVector().hashCode();
+                    if (hl == ht) {
+                        protocol.setLocation(teleportLocation);
+                        protocol.teleportEngine.remove(teleportData);
+                    } else if (hl == hSt) {
+                        protocol.setLocation(teleportSilentLocation);
+                        protocol.teleportEngine.remove(teleportData);
+                    }
                 }
             }
-        }
 
-        if (type.equals(PacketType.Play.Client.LOOK)) {
-            Location from = protocol.getLocation().clone();
-            protocol.getLocation().setYaw(packet.getFloat().read(0));
-            protocol.getLocation().setPitch(packet.getFloat().read(1));
-            Shared.movement(new PlayerMoveEvent(
-                    event.getPlayer(),
-                    from,
-                    protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
-            ));
-        } else if (type.equals(PacketType.Play.Client.POSITION_LOOK)) {
-            Location from = protocol.getLocation().clone(),
-                    location = readLocation(event);
-            protocol.getLocation().setX(location.getX());
-            protocol.getLocation().setY(location.getY());
-            protocol.getLocation().setZ(location.getZ());
-            protocol.getLocation().setYaw(packet.getFloat().read(0));
-            protocol.getLocation().setPitch(packet.getFloat().read(1));
-            Shared.movement(new PlayerMoveEvent(
-                    event.getPlayer(),
-                    from,
-                    protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
-            ));
-        } else if (type.equals(PacketType.Play.Client.POSITION)) {
-            Location from = protocol.getLocation().clone(),
-                    location = readLocation(event);
-            protocol.getLocation().setX(location.getX());
-            protocol.getLocation().setY(location.getY());
-            protocol.getLocation().setZ(location.getZ());
-            Shared.movement(new PlayerMoveEvent(
-                    event.getPlayer(),
-                    from,
-                    protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
-            ));
+            if (type.equals(PacketType.Play.Client.LOOK)) {
+                Location from = protocol.getLocation().clone();
+                protocol.getLocation().setYaw(packet.getFloat().read(0));
+                protocol.getLocation().setPitch(packet.getFloat().read(1));
+                Shared.movement(new PlayerMoveEvent(
+                        event.getPlayer(),
+                        from,
+                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                ));
+            } else if (type.equals(PacketType.Play.Client.POSITION_LOOK)) {
+                Location from = protocol.getLocation().clone(),
+                        location = readLocation(event);
+                protocol.getLocation().setX(location.getX());
+                protocol.getLocation().setY(location.getY());
+                protocol.getLocation().setZ(location.getZ());
+                protocol.getLocation().setYaw(packet.getFloat().read(0));
+                protocol.getLocation().setPitch(packet.getFloat().read(1));
+                Shared.movement(new PlayerMoveEvent(
+                        event.getPlayer(),
+                        from,
+                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                ));
+            } else if (type.equals(PacketType.Play.Client.POSITION)) {
+                Location from = protocol.getLocation().clone(),
+                        location = readLocation(event);
+                protocol.getLocation().setX(location.getX());
+                protocol.getLocation().setY(location.getY());
+                protocol.getLocation().setZ(location.getZ());
+                Shared.movement(new PlayerMoveEvent(
+                        event.getPlayer(),
+                        from,
+                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                ));
+            }
+            protocol.setOnGround(onGroundPacketLevel(event));
         }
-        protocol.setOnGround(onGroundPacketLevel(event));
     }
 
     public static Location readLocation(PacketEvent event) {

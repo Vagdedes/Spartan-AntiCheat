@@ -8,6 +8,7 @@ import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.tracking.Piston;
+import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -39,6 +40,7 @@ public class Event_World implements Listener {
             p.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
             p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, b);
         }
+        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, e);
 
         // Detections
         AntiCheatLogs.logMining(p, b, cancelled);
@@ -117,7 +119,16 @@ public class Event_World implements Listener {
                     customBlock = notNull && ItemsAdder.is(nb);
 
             // Object
-            p.calculateClicks(action == Action.LEFT_CLICK_AIR);
+            p.calculateClicks(
+                    action == Action.LEFT_CLICK_AIR
+                            && (p.getLastDamageDealt().timePassed() <= 1_000
+                            || p.getLastDamageReceived().timePassed() <= 1_000)
+                            && !p.getNearbyEntities(
+                            CombatUtils.maxHitDistance,
+                            CombatUtils.maxHitDistance,
+                            CombatUtils.maxHitDistance
+                    ).isEmpty()
+            );
 
             if (notNull) {
                 // Detections

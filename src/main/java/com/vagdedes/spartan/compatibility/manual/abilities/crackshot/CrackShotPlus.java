@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.management.Config;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.DeeCaaD.CrackShotPlus.Events.WeaponSecondScopeEvent;
 import me.vagdedes.spartan.system.Enums;
