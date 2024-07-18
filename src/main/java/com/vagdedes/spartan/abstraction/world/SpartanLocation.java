@@ -2,7 +2,8 @@ package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks_v1_13;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
@@ -236,17 +237,32 @@ public class SpartanLocation implements Cloneable {
     }
 
     private SpartanBlock setAsyncBlock() {
-        BlockData data = Event_Chunks.get(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ());
+        if (SpartanLocation.v_1_13) {
+            BlockData data = Event_Chunks_v1_13.getBlockData(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ());
 
-        if (data != null) {
-            return new SpartanBlock(
-                    this,
-                    data.getMaterial(),
-                    BlockUtils.isLiquid(data.getMaterial()),
-                    BlockUtils.isWaterLogged(data)
-            );
+            if (data != null) {
+                return new SpartanBlock(
+                        this,
+                        data.getMaterial(),
+                        BlockUtils.isLiquid(data.getMaterial()),
+                        BlockUtils.isWaterLogged(data)
+                );
+            } else {
+                return new SpartanBlock(this, Material.AIR, false, false);
+            }
         } else {
-            return new SpartanBlock(this, Material.AIR, false, false);
+            Material type = Event_Chunks.getBlockType(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ());
+
+            if (type != null) {
+                return new SpartanBlock(
+                        this,
+                        type,
+                        BlockUtils.isLiquid(type),
+                        false
+                );
+            } else {
+                return new SpartanBlock(this, Material.AIR, false, false);
+            }
         }
     }
 

@@ -7,66 +7,20 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Messages;
 import com.vagdedes.spartan.abstraction.configuration.implementation.SQLFeature;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
-import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.File;
 
 public class Config {
 
-    public static final String checksFileName = "checks.yml";
-
-    private static YamlConfiguration configuration = null;
-    private static String construct = null;
     public static Settings settings = new Settings();
     public static SQLFeature sql = new SQLFeature();
     public static Messages messages = new Messages();
     public static Compatibility compatibility = new Compatibility();
-
-    static {
-        refreshFields(false);
-    }
-
-    // Separator
-
-    public static File getFile() {
-        return new File(Register.plugin.getDataFolder() + "/" + checksFileName);
-    }
-
-    public static YamlConfiguration getConfiguration() { // Synchronise it in all uses
-        if (configuration == null) {
-            File file = getFile();
-
-            if (file.exists()) {
-                configuration = YamlConfiguration.loadConfiguration(file);
-            } else {
-                try {
-                    if (file.createNewFile()) {
-                        configuration = YamlConfiguration.loadConfiguration(file);
-                    } else {
-                        configuration = null;
-                    }
-                } catch (Exception ignored) {
-                    configuration = null;
-                }
-            }
-        }
-        return configuration;
-    }
-
-    public static String getConstruct() {
-        return construct;
-    }
 
     // Separator
 
@@ -84,50 +38,12 @@ public class Config {
 
     // Separator
 
-    public static void refreshFields(boolean clearChecksCache) {
-        // Configuration
-        File file = getFile();
-
-        if (!file.exists()) {
-            try {
-                if (file.createNewFile()) {
-                    configuration = YamlConfiguration.loadConfiguration(file);
-                } else {
-                    configuration = null;
-                }
-            } catch (Exception ignored) {
-                configuration = null;
-            }
-        } else {
-            configuration = YamlConfiguration.loadConfiguration(file);
-        }
-
-        // Identification & Labelling
-        construct = "[Spartan " + API.getVersion() + "/" + IDs.hide(IDs.user()) + "/" + IDs.hide(IDs.file()) + "] ";
-        CloudBase.clear(false);
-        CrossServerInformation.refresh();
-
-        // Check Cache
-        if (clearChecksCache) {
-            for (HackType hackType : Enums.HackType.values()) {
-                hackType.resetCheck();
-            }
-        }
-    }
-
-    public static void createConfigurations(boolean local) {
-        if (!local) { // Always first
-            File file = getFile();
-
-            if (file.exists()) {
-                CrossServerInformation.sendConfiguration(file);
-            }
-        }
-        settings.create(local); // Always Second (Research Engine File Logs)
-        sql.create(local); // Always Third (Research Engine SQL Logs)
-        messages.create(local);
-        Compatibility.create(local);
-        Wave.create(local);
+    public static void createConfigurations() {
+        settings.create(); // Always Second (Research Engine File Logs)
+        sql.create(); // Always Third (Research Engine SQL Logs)
+        messages.create();
+        Compatibility.create();
+        Wave.create();
     }
 
     // Separator
@@ -135,12 +51,12 @@ public class Config {
     public static void create() {
         boolean enabledPlugin = Register.isPluginEnabled();
 
-        // Utilities
-        refreshFields(true);
-
+        for (HackType hackType : Enums.HackType.values()) {
+            hackType.resetCheck();
+        }
         if (enabledPlugin) {
             // Configuration
-            createConfigurations(false); // Always First
+            createConfigurations(); // Always First
 
             // System
             AwarenessNotifications.refresh();
@@ -199,13 +115,13 @@ public class Config {
 
     public static void enableSilentChecking() {
         for (HackType hackType : Enums.HackType.values()) {
-            hackType.getCheck().setSilent(true);
+            hackType.getCheck().setSilent(null, true);
         }
     }
 
     public static void disableSilentChecking() {
         for (HackType hackType : Enums.HackType.values()) {
-            hackType.getCheck().setSilent(false);
+            hackType.getCheck().setSilent(null, false);
         }
     }
 }

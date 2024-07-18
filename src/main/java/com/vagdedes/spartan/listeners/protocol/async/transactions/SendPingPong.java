@@ -29,6 +29,7 @@ public class SendPingPong extends PacketAdapter {
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
+        if (packet.getShorts().getValues().isEmpty()) return;
         if (Objects.equals(packet.getShorts().read(0), protocol.getTransactionID())) {
             protocol.setLastTransaction();
             PacketContainer transaction = new PacketContainer(PacketType.Play.Server.PING);

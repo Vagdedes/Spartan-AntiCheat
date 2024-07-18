@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.data;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 import java.util.Iterator;
@@ -10,16 +9,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Buffer {
 
     private final Map<String, IndividualBuffer> storage;
-    private final SpartanPlayer player;
 
     public static class IndividualBuffer {
 
-        private final SpartanPlayer parent;
         private int count;
         private long start;
 
-        public IndividualBuffer(SpartanPlayer player) {
-            this.parent = player;
+        public IndividualBuffer() {
             this.reset();
         }
 
@@ -60,8 +56,7 @@ public class Buffer {
 
     }
 
-    public Buffer(SpartanPlayer player) {
-        this.player = player;
+    public Buffer() {
         this.storage = new ConcurrentHashMap<>();
     }
 
@@ -74,7 +69,7 @@ public class Buffer {
         IndividualBuffer obj = storage.get(name);
 
         if (obj == null) {
-            obj = new IndividualBuffer(this.player);
+            obj = new IndividualBuffer();
             storage.put(name, obj);
         }
         obj.reset();
@@ -84,7 +79,7 @@ public class Buffer {
     public int increase(String name, int amount) {
         return storage.computeIfAbsent(
                 name,
-                k -> new IndividualBuffer(this.player)
+                k -> new IndividualBuffer()
         ).increase(amount);
     }
 
@@ -107,12 +102,12 @@ public class Buffer {
     public int count(String name, int maxTicks) {
         return storage.computeIfAbsent(
                 name,
-                k -> new IndividualBuffer(this.player)
+                k -> new IndividualBuffer()
         ).count(1, maxTicks);
     }
 
     public double ratio(String name, int minimumTicks, int maxTicks) {
-        IndividualBuffer obj = storage.computeIfAbsent(name, k -> new IndividualBuffer(this.player));
+        IndividualBuffer obj = storage.computeIfAbsent(name, k -> new IndividualBuffer());
         double ticksPassed = obj.ticksPassed();
         int count;
 

@@ -2,7 +2,6 @@ package com.vagdedes.spartan.listeners;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.event.PlayerAttackEvent;
-import com.vagdedes.spartan.abstraction.event.PlayerStayEvent;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
@@ -77,13 +76,6 @@ public class Shared {
         p.getExecutor(Enums.HackType.Speed).handle(cancelled, e);
         p.getExecutor(Enums.HackType.Velocity).handle(cancelled, e);
         p.getExecutor(Enums.HackType.NoFall).handle(false, null);
-    }
-
-    public static void stay(PlayerStayEvent e) { // Packets Only
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
-
-        // Detections
-        p.getExecutor(Enums.HackType.Speed).handle(false, e);
     }
 
     public static void attack(PlayerAttackEvent e) {

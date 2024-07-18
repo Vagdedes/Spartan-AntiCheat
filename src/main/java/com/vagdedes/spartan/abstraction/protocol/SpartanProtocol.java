@@ -38,7 +38,7 @@ public class SpartanProtocol {
         this.lastTransaction = Long.MIN_VALUE;
         this.teleportEngine = new LinkedList<>();
         this.mutateTeleport = false;
-        this.profile = ResearchEngine.getPlayerProfile(this.spartanPlayer, false);
+        this.setProfile(ResearchEngine.getPlayerProfile(this.spartanPlayer, false));
     }
 
     public boolean isOnGround() {

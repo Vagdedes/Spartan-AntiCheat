@@ -3,8 +3,6 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.chat.ChatProtection;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -25,10 +23,7 @@ public class Settings extends ConfigurationBuilder {
         super("settings");
     }
 
-    public static final String
-            tpsProtectionOption = "Protections.use_tps_protection",
-            cloudServerNameOption = "Cloud.server_name",
-            cloudSynchroniseFilesOption = "Cloud.synchronise_files";
+    public static final String crossServerNotificationsName = "Important.server_name";
     private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
     private Collection<String> punishments = null;
 
@@ -44,15 +39,11 @@ public class Settings extends ConfigurationBuilder {
     public void clear() {
         punishments = null;
         internalClear();
-
-        // Systems based in this configuration
-        ChatProtection.clear();
     }
 
     @Override
-    public void create(boolean local) {
+    public void create() {
         file = new File(directory);
-        boolean exists = file.exists();
         clear();
 
         addOption("Punishments.broadcast_on_punishment", true);
@@ -65,14 +56,6 @@ public class Settings extends ConfigurationBuilder {
         addOption("Notifications.awareness_notifications", true);
         addOption("Notifications.message_clickable_command", "/teleport {player}");
 
-        addOption("Chat.message_cooldown", 0);
-        addOption("Chat.command_cooldown", 0);
-        addOption("Chat.prevent_same_message", false);
-        addOption("Chat.blocked_words", "blockedWord1, blockedWord2");
-        addOption("Chat.blocked_commands", "blockedCommand1, blockedCommand2");
-        addOption("Chat.staff_chat_character", "@");
-
-        addOption(tpsProtectionOption, true);
         addOption("Protections.max_supported_player_latency", TPS.tickTimeInteger * 100);
         addOption("Protections.player_limit_per_ip", 0);
 
@@ -82,9 +65,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Important.bedrock_player_prefix", ".");
         addOption("Important.enable_npc", true);
         addOption("Important.enable_watermark", true);
-
-        addOption(cloudServerNameOption, "specify server name");
-        addOption(cloudSynchroniseFilesOption, true);
+        addOption(crossServerNotificationsName, "");
 
         addOption("Detections.ground_teleport_on_detection", true);
         addOption("Detections.fall_damage_on_teleport", false);
@@ -92,18 +73,13 @@ public class Settings extends ConfigurationBuilder {
         addOption("Discord.webhook_hex_color", "4caf50");
         addOption("Discord.checks_webhook_url", "");
         addOption("Discord.punishments_webhook_url", "");
-        addOption("Discord.communication_webhook_url", "");
-
-        if (!local && exists) {
-            CrossServerInformation.sendConfiguration(file);
-        }
     }
 
     public void runOnLogin(SpartanPlayer p) {
         if (getBoolean("Notifications.enable_notifications_on_login")
                 && DetectionNotifications.hasPermission(p)
                 && !DetectionNotifications.isEnabled(p)) {
-            DetectionNotifications.set(p, 0);
+            DetectionNotifications.set(p, DetectionNotifications.defaultFrequency);
         }
     }
 

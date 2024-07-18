@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.listeners.bukkit;
+package com.vagdedes.spartan.listeners.bukkit.chunks;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -7,8 +7,8 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -23,16 +23,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Event_Chunks implements Listener {
 
     private static final Map<Long, Boolean> loaded = new ConcurrentHashMap<>();
-    private static final Map<World, Map<Long, ChunkData>> map = new ConcurrentHashMap<>();
-    private static final boolean heightSupport = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
+    static final Map<World, Map<Long, ChunkData>> map = new ConcurrentHashMap<>();
+    static final boolean heightSupport = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
 
     // Separator
 
-    private static final class ChunkData {
+    static final class ChunkData {
 
         private long creation;
         private boolean queued;
-        private ChunkSnapshot snapshot;
+        ChunkSnapshot snapshot;
 
         private ChunkData(ChunkSnapshot snapshot) {
             this.creation = System.currentTimeMillis();
@@ -111,7 +111,7 @@ public class Event_Chunks implements Listener {
         return false;
     }
 
-    public static BlockData get(World world, int x, int y, int z) {
+    public static Material getBlockType(World world, int x, int y, int z) {
         if (y < (heightSupport ? world.getMinHeight() : 0)
                 || y >= (heightSupport ? world.getMaxHeight() : PlayerUtils.height)) {
             return null;
@@ -126,7 +126,7 @@ public class Event_Chunks implements Listener {
         if (data == null) {
             return null;
         }
-        return data.snapshot.getBlockData(x & 0xF, y, z & 0xF);
+        return data.snapshot.getBlockType(x & 0xF, y, z & 0xF);
     }
 
     private static boolean hasPlayers(World world, int x, int z) {
@@ -146,7 +146,7 @@ public class Event_Chunks implements Listener {
         return false;
     }
 
-    static void cache(Chunk chunk, boolean force) {
+    public static void cache(Chunk chunk, boolean force) {
         World world = chunk.getWorld();
 
         if (!force && !hasPlayers(world, chunk.getX(), chunk.getZ())) {
@@ -200,8 +200,10 @@ public class Event_Chunks implements Listener {
         World world = e.getWorld();
         Map<Long, ChunkData> subMap = map.remove(world);
 
-        for (ChunkData data : subMap.values()) {
-            loaded.remove(totalHash(world, data.snapshot.getX(), data.snapshot.getZ()));
+        if (subMap != null) {
+            for (ChunkData data : subMap.values()) {
+                loaded.remove(totalHash(world, data.snapshot.getX(), data.snapshot.getZ()));
+            }
         }
         for (Chunk chunk : world.getLoadedChunks()) {
             loaded.remove(totalHash(world, chunk.getX(), chunk.getZ()));

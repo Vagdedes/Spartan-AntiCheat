@@ -2,7 +2,9 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -15,8 +17,6 @@ import org.bukkit.OfflinePlayer;
 
 import java.io.File;
 import java.net.URLEncoder;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 public class CloudConnections {
@@ -121,29 +121,6 @@ public class CloudConnections {
         return 5;
     }
 
-    public static String[] getCrossServerInformation(String type, String name) {
-        try {
-            String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
-                            + "&action=get&data=crossServerInformation&version=" + CloudBase.version
-                            + "&value=" + URLEncoder.encode(Bukkit.getPort() + CloudBase.separator + type + (name != null ? (CloudBase.separator + name) : ""), "UTF-8"),
-                    "GET", null, RequestUtils.defaultTimeOut / 2);
-
-            if (results.length > 0) {
-                List<String> list = new LinkedList<>();
-
-                for (String result : results) {
-                    list.add(StringUtils.decodeBase64(result));
-                }
-                return list.toArray(new String[0]);
-            } else {
-                return new String[]{};
-            }
-        } catch (Exception e) {
-            CloudBase.throwError(e, "crossServerInformation:GET");
-            return new String[]{};
-        }
-    }
-
     static String[][] getStaffAnnouncements() { // Once
         try {
             String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
@@ -164,33 +141,11 @@ public class CloudConnections {
         return new String[][]{};
     }
 
-    static void sendCrossServerInformation(String type, String name, String[] array) {
-        try {
-            StringBuilder information = new StringBuilder();
-
-            for (String string : array) {
-                information.append(StringUtils.encodeBase64(string)).append(CloudBase.separator);
-            }
-            int length = information.length();
-            int separatorLength = CloudBase.separator.length();
-
-            if (length > separatorLength) {
-                information = new StringBuilder(information.substring(0, length - separatorLength));
-                RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + " " +
-                                CloudBase.identification + "&action=add&data=crossServerInformation&version=" + CloudBase.version
-                                + "&value=" + URLEncoder.encode(Bukkit.getPort() + CloudBase.separator + type + CloudBase.separator + name + CloudBase.separator + information, "UTF-8"),
-                        "POST", null, RequestUtils.defaultTimeOut / 2);
-            }
-        } catch (Exception e) {
-            CloudBase.throwError(e, "crossServerInformation:ADD");
-        }
-    }
-
     static void punishPlayers() {
         StringBuilder value = new StringBuilder();
 
         for (PlayerProfile playerProfile : ResearchEngine.getPlayerProfiles()) {
-            if (!playerProfile.isLegitimate()) {
+            if (playerProfile.evidence.has(PlayerEvidence.prevention)) {
                 SpartanPlayer player = playerProfile.getSpartanPlayer();
                 boolean isNull = player == null;
 
@@ -254,14 +209,14 @@ public class CloudConnections {
                 SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                     try {
                         int webhookVersion = 2;
-                        String crossServerInformationOption = CrossServerInformation.getOptionValue();
+                        String crossServerInformationOption = CrossServerNotifications.getServerName();
                         RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
                                 + "&action=add&data=discordWebhooks&version=" + CloudBase.version + "&value="
                                 + URLEncoder.encode(
                                 webhookVersion + CloudBase.separator
                                         + url + CloudBase.separator
                                         + color + CloudBase.separator
-                                        + (CrossServerInformation.isOptionValid(crossServerInformationOption) ? crossServerInformationOption : "NULL") + CloudBase.separator
+                                        + (!crossServerInformationOption.isEmpty() ? crossServerInformationOption : "NULL") + CloudBase.separator
                                         + name + CloudBase.separator
                                         + uuid + CloudBase.separator
                                         + x + CloudBase.separator

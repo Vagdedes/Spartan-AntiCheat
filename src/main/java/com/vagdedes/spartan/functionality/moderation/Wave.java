@@ -2,7 +2,6 @@ package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -51,16 +50,11 @@ public class Wave {
         }, 1L, 1L);
     }
 
-    public static void create(boolean local) {
+    public static void create() {
         file = new File(Register.plugin.getDataFolder() + "/storage.yml");
-        boolean exists = file.exists();
 
-        if (!exists) {
+        if (!file.exists()) {
             ConfigUtils.add(file, section + "." + UUID.randomUUID() + ".command", "ban {player} wave punishment example");
-        }
-
-        if (!local && exists) {
-            CrossServerInformation.sendConfiguration(file);
         }
     }
 

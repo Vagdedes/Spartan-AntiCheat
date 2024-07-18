@@ -8,7 +8,6 @@ import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.Shared;
 import com.vagdedes.spartan.listeners.protocol.async.LagCompensation;
-import com.vagdedes.spartan.listeners.protocol.modules.TeleportData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -38,6 +37,7 @@ public class BackgroundMove {
             PacketContainer packet = event.getPacket();
             PacketType type = event.getPacket().getType();
 
+            /*
             if (!protocol.teleportEngine.isEmpty()) {
                 for (TeleportData teleportData : protocol.teleportEngine) {
                     Location teleportLocation = protocol.getLocation().clone().add(teleportData.getLocation());
@@ -54,6 +54,8 @@ public class BackgroundMove {
                     }
                 }
             }
+
+             */
 
             if (type.equals(PacketType.Play.Client.LOOK)) {
                 Location from = protocol.getLocation().clone();

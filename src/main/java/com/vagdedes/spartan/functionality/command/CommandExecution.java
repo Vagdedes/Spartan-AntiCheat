@@ -344,10 +344,10 @@ public class CommandExecution implements CommandExecutor {
                             String divisorString = args[1];
 
                             if (AlgebraUtils.validInteger(divisorString)) {
-                                int divisor = Integer.parseInt(divisorString);
+                                int frequency = Integer.parseInt(divisorString);
 
-                                if (divisor >= 0) {
-                                    DetectionNotifications.set(player, divisor);
+                                if (frequency >= 0) {
+                                    DetectionNotifications.set(player, frequency);
                                 } else {
                                     sender.sendMessage(Config.messages.getColorfulString("failed_command"));
                                 }

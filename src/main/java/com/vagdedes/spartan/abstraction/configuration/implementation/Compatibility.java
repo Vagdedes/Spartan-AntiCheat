@@ -14,7 +14,6 @@ import com.vagdedes.spartan.compatibility.manual.entity.Vehicles;
 import com.vagdedes.spartan.compatibility.manual.world.AcidRain;
 import com.vagdedes.spartan.compatibility.necessary.Floodgate;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
@@ -41,7 +40,7 @@ public class Compatibility {
         ADVANCED_ABILITIES("AdvancedAbilities"), CRACK_SHOT("CrackShot"),
         CRACK_SHOT_PLUS("CrackShotPlus"), CRAFT_BOOK("CraftBook"),
         MAGIC_SPELLS("MagicSpells"), PROTOCOL_LIB("ProtocolLib"),
-        MC_MMO("mcMMO"), AUTHENTICATION("Authentication"),
+        MC_MMO("mcMMO"), PROTOCOL_SUPPORT("ProtocolSupport"),
         TREE_FELLER("TreeFeller"), VEIN_MINER("VeinMiner"),
         GRAPPLING_HOOK("GrapplingHook"), RECENT_PVP_MECHANICS("RecentPvPMechanics"),
         MINE_BOMB("MineBomb"), SUPER_PICKAXE("SuperPickaxe"),
@@ -54,8 +53,7 @@ public class Compatibility {
         ITEMS_ADDER("ItemsAdder"), RAMPEN_DRILLS("RampenDrills"),
         OLD_COMBAT_MECHANICS("OldCombatMechanics"), CUSTOM_KNOCKBACK("CustomKnockback"),
         PROJECT_KORRA("ProjectKorra"), ACID_RAIN("AcidRain"),
-        FILE_GUI("FileGUI"), FLOODGATE("Floodgate"),
-        PROTOCOL_SUPPORT("ProtocolSupport");
+        FILE_GUI("FileGUI"), FLOODGATE("Floodgate");
 
         private boolean enabled, forced, functional, elseRunnable;
         private final String name;
@@ -84,11 +82,6 @@ public class Compatibility {
                     hardcoded = true;
                     contains = false;
                     name = this.toString().toLowerCase();
-                    break;
-                case AUTHENTICATION: // General
-                    hardcoded = true;
-                    contains = true;
-                    name = "auth";
                     break;
                 default:
                     hardcoded = false;
@@ -393,7 +386,7 @@ public class Compatibility {
             if (!create) {
                 return false;
             }
-            create(false);
+            create();
         }
         boolean value = YamlConfiguration.loadConfiguration(file).getBoolean(path);
         bool.put(path, value);
@@ -408,15 +401,10 @@ public class Compatibility {
         refresh(false);
     }
 
-    public static void create(boolean local) {
+    public static void create() {
         file = new File(staticDirectory);
-        boolean exists = file.exists();
         bool.clear();
         refresh(true);
-
-        if (!local && exists) {
-            CrossServerInformation.sendConfiguration(file);
-        }
     }
 
     // Separator

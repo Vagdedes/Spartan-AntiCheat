@@ -23,19 +23,16 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 public class AntiCheatLogs {
 
     public static final String
-            dateFormatChanger = ".",
-            usualDateFormat = "yyyy/MM/dd HH:mm:ss",
-            dateFormat = "yyyy/MM/dd HH:mm:ss" + dateFormatChanger + "SSSSSSSSS",
+            dateFormat = "yyyy/MM/dd HH:mm:ss:SSSSSSSSS",
             folderPath = Register.plugin.getDataFolder() + "/logs";
 
     private static Timestamp time = new Timestamp(System.currentTimeMillis());
     private static File savedFile = createFile(time);
-    private static YamlConfiguration fileConfiguration = null;
+    private static YamlConfiguration fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
 
     private static File createFile(Timestamp timestamp) {
         return new File(
@@ -57,8 +54,7 @@ public class AntiCheatLogs {
         if (fileConfiguration != null) {
             SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
                 fileConfiguration.set(
-                        "(" + new Random().nextInt() + ")"
-                                + "[" + DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()) + "]",
+                        DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()),
                         information
                 );
                 save();
@@ -68,11 +64,8 @@ public class AntiCheatLogs {
 
     // Separator
 
-    public static void logInfo(SpartanPlayer p, String info, boolean console) {
-        logInfo(p, info, console, null, null);
-    }
-
     public static void logInfo(SpartanPlayer p,
+                               String notification,
                                String information,
                                boolean console,
                                Material material,
@@ -89,24 +82,12 @@ public class AntiCheatLogs {
                 }
                 time = now;
                 savedFile = createFile(time);
-
-                try {
-                    if (savedFile.createNewFile()) {
-                        fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
-                        storeInFile(information);
-                    } else {
-                        fileConfiguration = null;
-                        savedFile = null;
-                    }
-                } catch (Exception ignored) {
-                    fileConfiguration = null;
-                    savedFile = null;
-                }
+                fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
             } else {
                 storeInFile(information);
             }
         }
-        Config.sql.logInfo(p, information, material, playerViolation);
+        Config.sql.logInfo(p, notification, information, material, playerViolation);
     }
 
     public static void logMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
@@ -135,6 +116,7 @@ public class AntiCheatLogs {
                 if (event == null || !event.isCancelled()) {
                     AntiCheatLogs.logInfo(
                             player,
+                            null,
                             log,
                             false,
                             block.material,

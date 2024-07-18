@@ -5,6 +5,7 @@ import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.utils.java.OverflowMap;
 import es.pollitoyeye.vehicles.enums.VehicleType;
 import es.pollitoyeye.vehicles.events.VehicleEnterEvent;
 import es.pollitoyeye.vehicles.events.VehicleExitEvent;
@@ -13,8 +14,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class Vehicles implements Listener {
 
+    private static final Cooldowns cooldowns = new Cooldowns(
+            new OverflowMap<>(new ConcurrentHashMap<>(), 512)
+    );
     private static final String key = Compatibility.CompatibilityType.VEHICLES + "=compatibility=";
     public static final String
             DRILL = "drill",
@@ -59,20 +65,16 @@ public class Vehicles implements Listener {
     }
 
     private static void add(SpartanPlayer p, String type) {
-        p.cooldowns.add(key + type, 20);
-    }
-
-    private static boolean has(Cooldowns cooldowns, String type) {
-        return !cooldowns.canDo(key + type);
+        cooldowns.add(p.uuid + "=" + key + type, 20);
     }
 
     public static boolean has(SpartanPlayer p, String type) {
-        return has(p.cooldowns, type);
+        return !cooldowns.canDo(p.uuid + "=" + key + type);
     }
 
     public static boolean has(SpartanPlayer p, String[] types) {
         for (String type : types) {
-            if (has(p.cooldowns, type)) {
+            if (has(p, type)) {
                 return true;
             }
         }

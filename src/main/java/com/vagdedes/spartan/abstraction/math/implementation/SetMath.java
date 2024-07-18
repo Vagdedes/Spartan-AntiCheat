@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.math.implementation;
 
 import com.vagdedes.spartan.abstraction.math.AbstractKeyMath;
+import com.vagdedes.spartan.utils.math.statistics.StatisticsMath;
 
 import java.util.*;
 
@@ -181,7 +182,7 @@ public class SetMath implements AbstractKeyMath {
 
     @Override
     public double getCumulativeProbability(Number number, double defaultValue) {
-        return this.getCumulativeProbability(this.getZScore(number, defaultValue));
+        return StatisticsMath.getCumulativeProbability(this.getZScore(number, defaultValue));
     }
 
     @Override

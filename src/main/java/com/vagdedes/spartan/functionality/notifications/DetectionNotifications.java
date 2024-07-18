@@ -2,7 +2,6 @@ package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -24,14 +23,14 @@ public class DetectionNotifications {
 
     private static final Map<UUID, Integer> notifications = new ConcurrentHashMap<>();
 
-    public static List<SpartanPlayer> getPlayers(boolean all) {
+    public static List<SpartanPlayer> getPlayers() {
         if (!notifications.isEmpty()) {
             List<SpartanPlayer> list = new ArrayList<>(notifications.size());
 
-            for (Map.Entry<UUID, Integer> entry : notifications.entrySet()) {
-                SpartanProtocol p = SpartanBukkit.getProtocol(entry.getKey());
+            for (UUID uuid : notifications.keySet()) {
+                SpartanProtocol p = SpartanBukkit.getProtocol(uuid);
 
-                if (p != null && canAcceptMessages(p.spartanPlayer, entry.getValue(), all)) {
+                if (p != null) {
                     list.add(p.spartanPlayer);
                 }
             }
@@ -48,21 +47,12 @@ public class DetectionNotifications {
         return Permissions.has(p, Enums.Permission.NOTIFICATIONS);
     }
 
-    public static Integer getFrequency(SpartanPlayer p, boolean absolute) {
-        Integer frequency = notifications.get(p.uuid);
-        return frequency != null ? (absolute ? Math.abs(frequency) : frequency) : null;
+    public static Integer getFrequency(SpartanPlayer p) {
+        return notifications.get(p.uuid);
     }
 
-    public static boolean canAcceptMessages(SpartanPlayer p, Integer frequency, boolean all) {
-        return frequency != null
-                && (frequency < 0
-                && frequency != defaultFrequency
-
-                || (all
-                || frequency >= 0
-                || !ResearchEngine.enoughData()
-                || Config.settings.getBoolean("Notifications.individual_only_notifications"))
-                && hasPermission(p));
+    public static void remove(SpartanPlayer p) {
+        notifications.remove(p.uuid);
     }
 
     public static void set(SpartanPlayer p, int i) {
@@ -75,6 +65,15 @@ public class DetectionNotifications {
         } else {
             notifications.remove(p.uuid);
             p.sendMessage(Config.messages.getColorfulString("notifications_disable"));
+        }
+    }
+
+    // Separator
+
+    public static void runOnLeave(SpartanPlayer p) {
+        if (notifications.containsKey(p.uuid)
+                && !DetectionNotifications.hasPermission(p)) {
+            notifications.remove(p.uuid);
         }
     }
 

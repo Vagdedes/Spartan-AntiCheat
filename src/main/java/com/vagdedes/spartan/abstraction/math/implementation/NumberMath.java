@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.math.implementation;
 
 import com.vagdedes.spartan.abstraction.math.AbstractMath;
+import com.vagdedes.spartan.utils.math.statistics.StatisticsMath;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -170,7 +171,7 @@ public class NumberMath implements AbstractMath {
 
     @Override
     public double getCumulativeProbability(Number number, double defaultValue) {
-        return this.getCumulativeProbability(this.getZScore(number, defaultValue));
+        return StatisticsMath.getCumulativeProbability(this.getZScore(number, defaultValue));
     }
 
     @Override

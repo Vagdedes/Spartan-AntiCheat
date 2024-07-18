@@ -269,25 +269,20 @@ public class Enums {
         public final String[] description;
 
         HackType(HackCategoryType category, long violationTimeWorth, Class<?> executor, String[] description) {
-            this.check = null;
             this.violationTimeWorth = violationTimeWorth;
             this.category = category;
             this.executor = executor;
             this.description = description;
+            this.check = new Check(this);
         }
 
         public Check getCheck() {
-            return check != null ? check : (check = new Check(this));
+            return check;
         }
 
         public void resetCheck() {
             if (this.check != null) {
-                this.check.clearConfigurationCache();
-                this.check = new Check(
-                        this,
-                        this.check.copyIgnoredViolations(),
-                        true
-                );
+                this.check = new Check(this);
             }
         }
     }

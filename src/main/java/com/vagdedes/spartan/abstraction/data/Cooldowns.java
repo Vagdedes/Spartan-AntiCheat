@@ -1,19 +1,15 @@
 package com.vagdedes.spartan.abstraction.data;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Cooldowns {
 
     private final Map<String, Long> storage;
-    private final SpartanPlayer player;
 
-    public Cooldowns(SpartanPlayer player) {
-        this.storage = new ConcurrentHashMap<>();
-        this.player = player;
+    public Cooldowns(Map<String, Long> map) {
+        this.storage = map;
     }
 
     public int get(String name) {
@@ -22,11 +18,7 @@ public class Cooldowns {
         if (object == null) {
             return 0;
         } else {
-            if (player == null) {
-                object -= System.currentTimeMillis();
-            } else {
-                object -= TPS.tick();
-            }
+            object -= TPS.tick();
             return object < 0L ? 0 : object.intValue();
         }
     }
@@ -36,22 +28,12 @@ public class Cooldowns {
     }
 
     public void add(String name, int ticks) {
-        if (player == null) {
-            storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
-        } else {
-            storage.put(name, TPS.tick() + ticks);
-        }
+        storage.put(name, TPS.tick() + ticks);
     }
 
     public void add(String[] names, int ticks) {
-        if (player == null) {
-            for (String name : names) {
-                storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
-            }
-        } else {
-            for (String name : names) {
-                storage.put(name, TPS.tick() + ticks);
-            }
+        for (String name : names) {
+            storage.put(name, TPS.tick() + ticks);
         }
     }
 

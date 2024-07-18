@@ -1,24 +1,35 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.tracking.Piston;
+import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.Collection;
+
 public class Event_World implements Listener {
+
+    private static final boolean v1_21 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_21);
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockBreak(BlockBreakEvent e) {
@@ -160,9 +171,33 @@ public class Event_World implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    private void PistonEvent(BlockPistonExtendEvent e) {
+    private void Piston(BlockPistonExtendEvent e) {
         // Handlers
         Piston.run(e.getBlock(), e.getBlocks());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    private void EntityExplosion(EntityExplodeEvent e) {
+        if (v1_21 && SpartanBukkit.getPlayerCount() > 0) {
+            double maximum = 4.0;
+            Location location = e.getLocation();
+            Collection<Entity> entities = location.getNearbyEntities(
+                    maximum,
+                    maximum,
+                    maximum
+            );
+
+            if (!entities.isEmpty()) {
+                for (Entity entity : entities) {
+                    if (entity instanceof Player) {
+                        SpartanBukkit.getProtocol((Player) entity).spartanPlayer.trackers.add(
+                                Trackers.TrackerType.ABSTRACT_VELOCITY,
+                                AlgebraUtils.integerCeil(maximum - entity.getLocation().distance(location)) * 5
+                        );
+                    }
+                }
+            }
+        }
     }
 
 }

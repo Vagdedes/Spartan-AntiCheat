@@ -75,7 +75,7 @@ public class ManageChecks extends InventoryMenu {
                 Check check = Config.getCheckByName(item);
 
                 if (check != null) {
-                    check.setSilent(!check.isSilent(null));
+                    check.setSilent(null, !check.isSilent(null, null));
                 }
                 open(player);
             } else if (clickType.isShiftClick()) {
@@ -97,20 +97,16 @@ public class ManageChecks extends InventoryMenu {
     private void addCheck(SpartanPlayer player, HackType hackType) {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null, null),
-                silent = check.isSilent(null),
+                silent = check.isSilent(null, null),
                 bypassing = Permissions.isBypassing(player, hackType);
         String[] disabledDetections = CloudBase.getShownDisabledDetections(hackType);
         String enabledOption, silentOption, colour, secondColour;
         ItemStack item;
 
-        if (check.supportsSilent) {
-            if (silent) {
-                silentOption = "§7Right click to §cdisable §7silent checking.";
-            } else {
-                silentOption = "§7Right click to §aenable §7silent checking.";
-            }
+        if (silent) {
+            silentOption = "§7Right click to §cdisable §7silent checking.";
         } else {
-            silentOption = null;
+            silentOption = "§7Right click to §aenable §7silent checking.";
         }
 
         if (enabled) {
@@ -153,7 +149,7 @@ public class ManageChecks extends InventoryMenu {
         lore.add("");
         lore.add((enabled ? "§a" : "§c") + "Enabled §8/ "
                 + (silent ? "§a" : "§c") + "Silent §8/ "
-                + (check.canPunish ? "§a" : "§c") + "Punishments §8/ "
+                + (check.canPunish(null) ? "§a" : "§c") + "Punishments §8/ "
                 + (bypassing ? "§a" : "§c") + "Bypassing");
         int counter = 0;
 

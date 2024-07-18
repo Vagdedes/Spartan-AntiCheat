@@ -15,7 +15,8 @@ public class AutoUpdater {
 
     private static final String fileType = ".jar";
     private static File fileToReplace = null, downloadedFile = null;
-    public static final int NOT_CHECKED = 0,
+    public static final int
+            NOT_CHECKED = 0,
             NOT_OUTDATED = -1,
             OUTDATED = 1,
             UPDATE_SUCCESS = 2,

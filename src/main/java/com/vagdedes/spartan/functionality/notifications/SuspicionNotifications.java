@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -18,15 +18,14 @@ public class SuspicionNotifications {
 
     static void run() {
         SpartanBukkit.runRepeatingTask(() -> { // Here because there are no other class calls
-            if (ResearchEngine.enoughData()
-                    && !Config.settings.getBoolean("Notifications.individual_only_notifications")) {
+            if (!Config.settings.getBoolean("Notifications.individual_only_notifications")) {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
                 Iterator<SpartanPlayer> iterator = players.iterator();
 
                 while (iterator.hasNext()) {
-                    Integer divisor = DetectionNotifications.getFrequency(iterator.next(), false);
+                    Integer frequency = DetectionNotifications.getFrequency(iterator.next());
 
-                    if (divisor == null || divisor != DetectionNotifications.defaultFrequency) {
+                    if (frequency == null || frequency < 100) {
                         iterator.remove();
                     }
                 }
@@ -40,7 +39,7 @@ public class SuspicionNotifications {
         int size = 0, commaLength = comma.length();
 
         for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
-            Collection<Enums.HackType> list = player.protocol.getProfile().evidence.getKnowledgeList(false);
+            Collection<Enums.HackType> list = player.protocol.getProfile().evidence.getKnowledgeList(PlayerEvidence.notification);
 
             if (!list.isEmpty()) {
                 StringBuilder evidence = new StringBuilder();

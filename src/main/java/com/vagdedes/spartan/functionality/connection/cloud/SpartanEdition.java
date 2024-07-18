@@ -2,6 +2,7 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -30,8 +31,7 @@ public class SpartanEdition {
     private static final String
             type = "{type}",
             product = "{product}",
-            versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections."
-                    + (SpartanBukkit.canAdvertise ? "\nClick §n" + product + " §r§cto §lfix this§r§c." : ""),
+            versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections.",
             limitNotificationMessage = "\n§cHey, just a heads up! You have more online players than the anti-cheat can check at once."
                     + "\nClick §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.";
     private static boolean
@@ -48,26 +48,17 @@ public class SpartanEdition {
             currentVersion = !CloudBase.hasToken();
         }
         SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
-            boolean changed = false;
-
             if (!currentVersion
                     && CloudConnections.ownsProduct(
                     getProductID(currentType)
             )) {
                 currentVersion = true;
-                changed = true;
             }
             if (!alternativeVersion
                     && CloudConnections.ownsProduct(
                     getProductID(oppositeType)
             )) {
                 alternativeVersion = true;
-                changed = true;
-            }
-            if (changed) {
-                for (Enums.HackType hackType : Enums.HackType.values()) {
-                    hackType.resetCheck();
-                }
             }
         });
     }
@@ -80,10 +71,14 @@ public class SpartanEdition {
                 : alternativeVersion;
     }
 
-    public static Enums.DataType getMissingDetection() {
-        return currentVersion && alternativeVersion
-                ? null
-                : (currentVersion ? oppositeType : currentType);
+    private static Enums.DataType[] getMissingDetections() {
+        return !currentVersion && !alternativeVersion
+                ? new Enums.DataType[]{currentType, oppositeType}
+                : !currentVersion
+                ? new Enums.DataType[]{currentType}
+                : !alternativeVersion
+                ? new Enums.DataType[]{oppositeType}
+                : new Enums.DataType[]{};
     }
 
     // Product
@@ -120,26 +115,29 @@ public class SpartanEdition {
     // Notifications
 
     public static void attemptNotification(SpartanPlayer player) {
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-        int detectionSlots = CloudBase.getDetectionSlots();
+        Enums.DataType[] missingDetections = getMissingDetections();
 
-        if (detectionSlots <= 0
-                || players.size() <= detectionSlots
-                || !sendLimitNotification(player)) {
-            Enums.DataType missingDetection = getMissingDetection();
+        if (missingDetections.length == ResearchEngine.usableDataTypes.length) {
+            sendVersionNotification(player, null);
+        } else {
+            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+            int detectionSlots = CloudBase.getDetectionSlots();
 
-            if (missingDetection != null) {
+            if (missingDetections.length > 0
+                    && (detectionSlots <= 0
+                    || players.size() <= detectionSlots
+                    || !sendLimitNotification(player))) {
                 if (notifyCache) {
-                    sendVersionNotification(player, missingDetection);
+                    sendVersionNotification(player, missingDetections[0]);
                 } else {
                     long time = System.currentTimeMillis();
 
                     if ((time - checkTime) >= 60_000L) {
                         checkTime = time;
 
-                        if (missingDetection == player.dataType) {
+                        if (missingDetections[0] == player.dataType) {
                             notifyCache = true;
-                            sendVersionNotification(player, missingDetection);
+                            sendVersionNotification(player, missingDetections[0]);
                         } else {
                             players.remove(player);
                             int size = players.size();
@@ -149,9 +147,9 @@ public class SpartanEdition {
                                 checkedProfiles = new ArrayList<>(size);
 
                                 for (SpartanPlayer otherPlayer : players) {
-                                    if (missingDetection == otherPlayer.dataType) {
+                                    if (missingDetections[0] == otherPlayer.dataType) {
                                         notifyCache = true;
-                                        sendVersionNotification(player, missingDetection);
+                                        sendVersionNotification(player, missingDetections[0]);
                                         return;
                                     } else {
                                         checkedProfiles.add(player.protocol.getProfile());
@@ -171,9 +169,9 @@ public class SpartanEdition {
 
                                 if (!playerProfiles.isEmpty()) {
                                     for (PlayerProfile profile : playerProfiles) {
-                                        if (missingDetection == profile.getDataType()) {
+                                        if (profile.hasData(missingDetections[0])) {
                                             notifyCache = true;
-                                            sendVersionNotification(player, missingDetection);
+                                            sendVersionNotification(player, missingDetections[0]);
                                             return;
                                         }
                                     }
@@ -188,20 +186,29 @@ public class SpartanEdition {
 
     private static void sendVersionNotification(SpartanPlayer player, Enums.DataType dataType) {
         if (Permissions.isStaff(player)) {
-            String message = AwarenessNotifications.getNotification(
-                    versionNotificationMessage
-                            .replace(type, dataType.toString())
-                            .replace(
-                                    product,
-                                    IDs.isBuiltByBit()
-                                            ? (dataType == Enums.DataType.JAVA
-                                            ? "https://builtbybit.com/resources/12832"
-                                            : "https://builtbybit.com/resources/11196")
-                                            : (dataType == Enums.DataType.JAVA
-                                            ? "https://polymart.org/resource/3600"
-                                            : "https://polymart.org/resource/350")
-                            )
-            );
+            String message;
+
+            if (dataType == null) {
+                message = "\n§cHey, just a heads up!"
+                        + " Your owned editions of Spartan could not be verified."
+                        + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this.";
+            } else {
+                message = AwarenessNotifications.getNotification(
+                        versionNotificationMessage
+                                + (IDs.canAdvertise() ? "\nClick §n" + product + "§r§c to §lfix this§r§c." : "")
+                                .replace(type, dataType.toString())
+                                .replace(
+                                        product,
+                                        IDs.isBuiltByBit()
+                                                ? (dataType == Enums.DataType.JAVA
+                                                ? "https://builtbybit.com/resources/12832"
+                                                : "https://builtbybit.com/resources/11196")
+                                                : (dataType == Enums.DataType.JAVA
+                                                ? "https://polymart.org/resource/3600"
+                                                : "https://polymart.org/resource/350")
+                                )
+                );
+            }
 
             if (AwarenessNotifications.canSend(player.uuid, "alternative-version", notificationCooldown)) {
                 player.sendImportantMessage(message);

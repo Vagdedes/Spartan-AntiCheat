@@ -6,7 +6,7 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibili
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.connection.cloud.*;
+import com.vagdedes.spartan.functionality.connection.cloud.AutoUpdater;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -19,12 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SpartanBukkit {
 
-    public static final boolean
-            movementPacketsForcedState = false,
-            testMode = !JarVerification.enabled && !CloudBase.hasToken()
-                    && !IDs.isBuiltByBit() && !IDs.isPolymart()
-                    && Bukkit.getMotd().contains(Register.plugin.getName()),
-            canAdvertise = !JarVerification.enabled || IDs.isBuiltByBit() || IDs.isPolymart();
+    public static final boolean movementPacketsForcedState = false;
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
@@ -218,7 +213,6 @@ public class SpartanBukkit {
         AutoUpdater.complete();
         playerProtocol.clear();
         Threads.disable();
-        CrossServerInformation.clear();
         PlayerLimitPerIP.clear();
         NPCManager.clear();
         Config.create();

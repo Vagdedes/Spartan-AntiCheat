@@ -4,9 +4,8 @@ import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.functionality.connection.cloud.CrossServerInformation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -19,9 +18,6 @@ import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SQLFeature extends ConfigurationBuilder {
 
@@ -32,7 +28,6 @@ public class SQLFeature extends ConfigurationBuilder {
     private static boolean enabled = false;
 
     private static Connection con = null;
-    private static final List<String> list = new CopyOnWriteArrayList<>();
 
     // Separator
 
@@ -137,14 +132,6 @@ public class SQLFeature extends ConfigurationBuilder {
     }
 
     public void refreshDatabase() {
-        // Queries
-        if (!list.isEmpty()) {
-            for (String insert : list) {
-                update(insert);
-            }
-            list.clear();
-        }
-
         if (isConnected(false)) {
             try {
                 con.close();
@@ -161,9 +148,8 @@ public class SQLFeature extends ConfigurationBuilder {
     // Separator
 
     @Override
-    public void create(boolean local) {
+    public void create() {
         file = new File(directory);
-        boolean exists = file.exists();
         addOption("host", "");
         addOption("user", "");
         addOption("password", "");
@@ -177,11 +163,7 @@ public class SQLFeature extends ConfigurationBuilder {
         addOption("escape_special_characters", false);
         refreshConfiguration();
 
-        SpartanBukkit.dataThread.executeWithPriority(this::connect);
-
-        if (!local && exists) {
-            CrossServerInformation.sendConfiguration(file);
-        }
+        SpartanBukkit.connectionThread.executeWithPriority(this::connect);
     }
 
     // Separator
@@ -249,7 +231,7 @@ public class SQLFeature extends ConfigurationBuilder {
                         createTable(table);
                     }
                 } catch (SQLException e) {
-                    AwarenessNotifications.forcefullySend(Config.getConstruct() + "SQL Initial Connection Error:\n" + e.getMessage());
+                    AwarenessNotifications.forcefullySend("SQL Initial Connection Error:\n" + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -299,6 +281,7 @@ public class SQLFeature extends ConfigurationBuilder {
                         "id INT(11) NOT NULL AUTO_INCREMENT, " +
                         "creation_date VARCHAR(30), " +
 
+                        "server_name VARCHAR(64), " +
                         "plugin_version VARCHAR(16), " +
                         "server_version VARCHAR(7), " +
                         "online_players INT(11), " +
@@ -307,13 +290,15 @@ public class SQLFeature extends ConfigurationBuilder {
                         "information VARCHAR(4096), " +
 
                         "player_uuid VARCHAR(36), " +
+                        "player_name VARCHAR(24), " +
                         "player_latency INT(11), " +
                         "player_x INT(11), " +
                         "player_y INT(11), " +
                         "player_z INT(11), " +
 
                         "functionality VARCHAR(32), " +
-                        "violation_level INT(3), " +
+                        "violation_level INT(11), " +
+                        "violation_increase INT(11), " +
 
                         "primary key (id));"
         );
@@ -322,6 +307,7 @@ public class SQLFeature extends ConfigurationBuilder {
     // Separator
 
     public void logInfo(SpartanPlayer p,
+                        String notification,
                         String information,
                         Material material,
                         PlayerViolation playerViolation) {
@@ -330,39 +316,33 @@ public class SQLFeature extends ConfigurationBuilder {
             boolean hasPlayer = p != null,
                     hasCheck = playerViolation != null,
                     hasMaterial = material != null;
-            UUID uuid = hasPlayer ? p.uuid : null;
             SpartanLocation location = hasPlayer ? p.movement.getLocation() : null;
-            list.add(
+            SpartanBukkit.connectionThread.execute(() -> update(
                     "INSERT INTO " + table
                             + " (creation_date"
-                            + ", plugin_version, server_version, online_players"
-                            + ", type, information"
-                            + ", player_uuid, player_latency, player_x, player_y, player_z"
-                            + ", functionality, violation_level) "
+                            + ", server_name, plugin_version, server_version, online_players"
+                            + ", type, notification, information"
+                            + ", player_uuid, player_name, player_latency, player_x, player_y, player_z"
+                            + ", functionality, violation_level, violation_increase) "
                             + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(LocalDateTime.now()))
+                            + ", " + syntaxForColumn(CrossServerNotifications.getServerName())
                             + ", " + syntaxForColumn(API.getVersion())
                             + ", " + syntaxForColumn(MultiVersion.versionString())
                             + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
+                            + ", " + (notification != null ? syntaxForColumn(notification) : "NULL")
                             + ", " + syntaxForColumn(information)
-                            + ", " + (hasPlayer ? syntaxForColumn(uuid) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.uuid) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.name) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
                             + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(playerViolation.hackType) : "NULL")
                             + ", " + (hasCheck ? syntaxForColumn(playerViolation.level) : "NULL")
+                            + ", " + (hasCheck ? syntaxForColumn(playerViolation.increase) : "NULL")
                             + ");"
-            );
-
-            if (list.size() >= 10) {
-                SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
-                    for (String insert : list) {
-                        update(insert);
-                    }
-                    list.clear();
-                });
-            }
+            ));
         }
     }
 

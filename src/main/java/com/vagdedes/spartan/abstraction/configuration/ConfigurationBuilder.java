@@ -34,7 +34,7 @@ public abstract class ConfigurationBuilder {
 
     protected YamlConfiguration getPath() {
         if (!file.exists()) {
-            create(false);
+            create();
         }
         return YamlConfiguration.loadConfiguration(file);
     }
@@ -105,7 +105,7 @@ public abstract class ConfigurationBuilder {
             return data;
         }
         if (!file.exists()) {
-            create(false);
+            create();
         }
         String value = getPath().getString(path);
 
@@ -142,7 +142,7 @@ public abstract class ConfigurationBuilder {
 
     abstract public void clear();
 
-    abstract public void create(boolean local);
+    abstract public void create();
 
     protected void addOption(String option, String value) {
         ConfigUtils.add(file, option, value);

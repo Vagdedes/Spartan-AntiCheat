@@ -390,14 +390,12 @@ public class Pattern {
         if (this.loaded) {
             long time = System.currentTimeMillis();
             PlayerProfile profile = player.protocol.getProfile();
-            Integer frequency = DetectionNotifications.getFrequency(player, false);
+            Integer frequency = DetectionNotifications.getFrequency(player);
             boolean notifications = frequency != null,
                     found = false,
                     store = false,
-                    include = player.protocol.getProfile().isLegitimate()
-                            && (!SpartanBukkit.testMode
-                            || !notifications
-                            || frequency != testingNotificationDivisorFrequency);
+                    include = !notifications
+                            || frequency != testingNotificationDivisorFrequency;
 
             synchronized (this.generalizations) {
                 for (PatternGeneralization generalization : this.generalizations.values()) {
@@ -421,10 +419,7 @@ public class Pattern {
             if (!found && notifications) {
                 String message = AwarenessNotifications.getOptionalNotification(
                         "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
-                                + (player.protocol.getProfile().isLegitimate()
-                                ? "Continue playing LEGITIMATELY to train the algorithm and get better results."
-                                : "Since may be hacking, either clear your data via '/spartan info'"
-                                + " and play LEGITIMATELY or find a legitimate player to help train the algorithm and get better results.")
+                                + "Continue playing LEGITIMATELY to train the algorithm and get better results."
                 );
 
                 if (message != null

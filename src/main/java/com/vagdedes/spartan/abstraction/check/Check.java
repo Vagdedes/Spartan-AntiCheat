@@ -20,22 +20,18 @@ public class Check {
 
     // Static
 
-    public static final int
-            maxCommands = 10,
-            standardIgnoredViolations = 3;
+    public static final int maxCommands = 10;
+    private static final File file = new File(
+            Register.plugin.getDataFolder() + "/checks.yml"
+    );
 
     // Object
 
     public final Enums.HackType hackType;
     private String name;
     private final Map<String, Object> options;
-    private boolean silent;
     public final boolean handleCancelledEvents;
-    private final Map<Enums.DataType, Map<Integer, Integer>> ignoredViolations;
-    private final boolean[] enabled;
-    public final boolean
-            canPunish,
-            supportsSilent;
+    private final boolean[] enabled, silent, punish;
     private final String[]
             disabledWorlds,
             silentWorlds;
@@ -43,52 +39,51 @@ public class Check {
     // Object Methods
 
     public Check(Enums.HackType hackType) {
-        this(hackType, new LinkedHashMap<>(), false);
-    }
-
-    public Check(Enums.HackType hackType,
-                 Map<Enums.DataType, Map<Integer, Integer>> ignoredViolations,
-                 boolean copy) {
         this.options = Collections.synchronizedMap(new LinkedHashMap<>());
         this.hackType = hackType;
-        this.ignoredViolations = copy ? ignoredViolations : Collections.synchronizedMap(ignoredViolations);
 
         // Separator
 
-        Object silent = getOption("silent", false, false),
-                handleCancelledEvents = getOption("cancelled_event", false, false);
+        Object handleCancelledEvents = getOption("cancelled_event", false, false);
 
         String name = getOption("name", this.hackType.toString(), false).toString(),
                 worlds_config = getOption("disabled_worlds", "exampleDisabledWorld1, exampleDisabledWorld2", false).toString(),
                 silents_config = getOption("silent_worlds", "exampleSilentWorld1, exampleSilentWorld2", false).toString();
 
         // Separator
-        Enums.DataType[] dataTypes = ResearchEngine.getDynamicUsableDataTypes(false);
         this.enabled = new boolean[ResearchEngine.usableDataTypes.length];
-        Object oldOptionValue = getOption("enabled", null, false);
-        boolean hasOldOption = oldOptionValue instanceof Boolean;
+        this.silent = new boolean[ResearchEngine.usableDataTypes.length];
+        this.punish = new boolean[ResearchEngine.usableDataTypes.length];
 
-        if (hasOldOption) {
-            setOption("enabled", null);
-        }
-
-        for (Enums.DataType dataType : dataTypes) {
+        for (Enums.DataType dataType : ResearchEngine.usableDataTypes) {
             Object optionValue = getOption(
                     "enabled." + dataType.toString().toLowerCase(),
-                    hasOldOption ? oldOptionValue : true,
+                    true,
                     false
             );
             this.enabled[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
                     optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
                             optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
                                     Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            optionValue = getOption(
+                    "silent." + dataType.toString().toLowerCase(),
+                    false,
+                    false
+            );
+            this.silent[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
+                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
+                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
+                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            optionValue = getOption(
+                    "punish." + dataType.toString().toLowerCase(),
+                    true,
+                    false
+            );
+            this.punish[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
+                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
+                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
+                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
         }
-
-        Object punish = getOption("punish", hackType != Enums.HackType.GhostHand, false); // GhostHand: can punish by default
-        this.canPunish = punish instanceof Boolean ? (boolean) punish :
-                punish instanceof Long || punish instanceof Integer || punish instanceof Short ? ((long) punish) > 0L :
-                        punish instanceof Double || punish instanceof Float ? ((double) punish) > 0.0 :
-                                Boolean.parseBoolean(punish.toString().toLowerCase());
 
         // Separator
 
@@ -96,25 +91,6 @@ public class Check {
             this.name = name;
         } else {
             this.name = hackType.toString();
-        }
-
-        // Separator
-
-        if (silent != null) {
-            this.supportsSilent = true;
-
-            if (silent instanceof Boolean) {
-                this.silent = (boolean) silent;
-            } else if (silent instanceof Long || silent instanceof Integer || silent instanceof Short) {
-                this.silent = ((long) silent) > 0L;
-            } else if (silent instanceof Double || silent instanceof Float) {
-                this.silent = ((double) silent) > 0.0;
-            } else {
-                this.silent = Boolean.parseBoolean(silent.toString().toLowerCase());
-            }
-        } else {
-            this.supportsSilent = false;
-            this.silent = false;
         }
 
         // Separator
@@ -163,7 +139,7 @@ public class Check {
 
         // Separator
 
-        if (supportsSilent && silents_config != null) {
+        if (silents_config != null) {
             String[] worldsSplit = silents_config.split(",");
             int size = worldsSplit.length;
 
@@ -190,24 +166,21 @@ public class Check {
         }
     }
 
-    public void clearConfigurationCache() {
-        synchronized (options) {
-            options.clear();
-        }
-    }
-
     // Separator
 
     public boolean isEnabled(Enums.DataType dataType, String world, SpartanPlayer player) {
-        Enums.DataType[] dataTypes = ResearchEngine.getDynamicUsableDataTypes(false);
-
         if (dataType == null) {
-            for (Enums.DataType type : dataTypes) {
+            boolean enabled = false;
+
+            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
                 if (this.enabled[type.ordinal()]) {
-                    return true;
+                    enabled = true;
+                    break;
                 }
             }
-            return false;
+            if (!enabled) {
+                return false;
+            }
         } else if (!this.enabled[dataType.ordinal()]) {
             return false;
         }
@@ -221,11 +194,11 @@ public class Check {
         Enums.DataType[] dataTypes;
 
         if (dataType == null) {
-            dataTypes = ResearchEngine.getDynamicUsableDataTypes(false);
+            dataTypes = ResearchEngine.usableDataTypes;
         } else {
             dataTypes = null;
 
-            for (Enums.DataType type : ResearchEngine.getDynamicUsableDataTypes(false)) {
+            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
                 if (type == dataType) {
                     dataTypes = new Enums.DataType[]{dataType};
                     break;
@@ -239,7 +212,7 @@ public class Check {
         for (Enums.DataType type : dataTypes) {
             int ordinal = type.ordinal();
 
-            if (enabled[ordinal] != b) {
+            if (this.enabled[ordinal] != b) {
                 CheckToggleEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
@@ -253,7 +226,9 @@ public class Check {
                     this.enabled[ordinal] = b;
 
                     if (!b) {
-                        clearConfigurationCache();
+                        synchronized (options) {
+                            options.clear();
+                        }
 
                         for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
                             player.getViolations(hackType).reset();
@@ -304,12 +279,10 @@ public class Check {
     // Separator
 
     private boolean setOption(String option, Object value) {
-        File file = Config.getFile();
-
         try {
             if (file.exists() || file.createNewFile()) {
                 String key = this.hackType + "." + option;
-                YamlConfiguration configuration = Config.getConfiguration();
+                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
                 if (configuration != null) {
                     configuration.set(key, value);
@@ -353,22 +326,17 @@ public class Check {
     }
 
     public Set<String[]> getStoredOptions() {
-        File file = Config.getFile();
-
         if (file.exists()) {
             Set<String[]> set = new LinkedHashSet<>(30);
-            YamlConfiguration configuration = Config.getConfiguration();
+            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            String hackTypeString = this.hackType.toString();
 
-            if (configuration != null) {
-                String hackTypeString = this.hackType.toString();
+            for (String key : configuration.getKeys(true)) {
+                if (key.split("\\.", 2)[0].equalsIgnoreCase(hackTypeString)) {
+                    Object option = configuration.get(key, null);
 
-                for (String key : configuration.getKeys(true)) {
-                    if (key.split("\\.", 2)[0].equalsIgnoreCase(hackTypeString)) {
-                        Object option = configuration.get(key, null);
-
-                        if (option != null) {
-                            set.add(new String[]{key, option.toString()});
-                        }
+                    if (option != null) {
+                        set.add(new String[]{key, option.toString()});
                     }
                 }
             }
@@ -387,45 +355,28 @@ public class Check {
                 }
             }
         }
-        File file = Config.getFile();
-
         try {
             if (file.exists() || file.createNewFile()) {
                 String key = this.hackType + "." + option;
                 boolean isDefaultNull = def == null;
-                YamlConfiguration configuration = Config.getConfiguration();
+                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-                if (configuration != null) {
-                    if (cache) {
-                        synchronized (options) {
-                            if (configuration.contains(key)) {
-                                Object value = configuration.get(key, def);
-
-                                if (!isDefaultNull) {
-                                    options.put(option, value);
-                                }
-                                return value;
-                            }
-                            if (!isDefaultNull) {
-                                configuration.set(key, def);
-
-                                try {
-                                    configuration.save(file);
-                                    options.put(option, def);
-                                } catch (Exception ex) {
-                                    AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
-                                    ex.printStackTrace();
-                                }
-                            }
-                        }
-                    } else {
+                if (cache) {
+                    synchronized (options) {
                         if (configuration.contains(key)) {
-                            return configuration.get(key, def);
-                        } else if (!isDefaultNull) {
+                            Object value = configuration.get(key, def);
+
+                            if (!isDefaultNull) {
+                                options.put(option, value);
+                            }
+                            return value;
+                        }
+                        if (!isDefaultNull) {
                             configuration.set(key, def);
 
                             try {
                                 configuration.save(file);
+                                options.put(option, def);
                             } catch (Exception ex) {
                                 AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                                 ex.printStackTrace();
@@ -433,7 +384,18 @@ public class Check {
                         }
                     }
                 } else {
-                    AwarenessNotifications.forcefullySend("Failed to load checks configuration (2).");
+                    if (configuration.contains(key)) {
+                        return configuration.get(key, def);
+                    } else if (!isDefaultNull) {
+                        configuration.set(key, def);
+
+                        try {
+                            configuration.save(file);
+                        } catch (Exception ex) {
+                            AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
+                            ex.printStackTrace();
+                        }
+                    }
                 }
             } else {
                 AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
@@ -504,10 +466,38 @@ public class Check {
 
     // Separator
 
-    public boolean isSilent(String world) {
-        return !supportsSilent
-                || silent
-                || world != null && isSilentOnWorld(world);
+    public boolean canPunish(Enums.DataType dataType) {
+        if (dataType == null) {
+            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+                if (this.punish[type.ordinal()]) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return this.punish[dataType.ordinal()];
+        }
+    }
+
+    // Separator
+
+    public boolean isSilent(Enums.DataType dataType, String world) {
+        if (dataType == null) {
+            boolean enabled = false;
+
+            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+                if (this.silent[type.ordinal()]) {
+                    enabled = true;
+                    break;
+                }
+            }
+            if (!enabled) {
+                return false;
+            }
+        } else if (!this.silent[dataType.ordinal()]) {
+            return false;
+        }
+        return world != null && isSilentOnWorld(world);
     }
 
     public boolean isSilentOnWorld(String world) {
@@ -527,60 +517,48 @@ public class Check {
         return silentWorlds;
     }
 
-    public boolean setSilent(boolean b) {
-        if (supportsSilent && silent != b) {
-            if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                CheckSilentToggleEvent event = new CheckSilentToggleEvent(this.hackType, Enums.ToggleAction.DISABLE);
-                Register.manager.callEvent(event);
+    public void setSilent(Enums.DataType dataType, boolean b) {
+        Enums.DataType[] dataTypes;
 
-                if (event.isCancelled()) {
-                    return false;
+        if (dataType == null) {
+            dataTypes = ResearchEngine.usableDataTypes;
+        } else {
+            dataTypes = null;
+
+            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+                if (type == dataType) {
+                    dataTypes = new Enums.DataType[]{dataType};
+                    break;
                 }
             }
-            this.silent = b;
-            return setOption("silent", b);
-        } else {
-            return false;
-        }
-    }
 
-    // Separator
-
-    public void setIgnoredViolations(Enums.DataType dataType, Map<Integer, Double> map) {
-        synchronized (ignoredViolations) {
-            for (Map.Entry<Integer, Double> entry : map.entrySet()) {
-                ignoredViolations.computeIfAbsent(
-                        dataType,
-                        k -> new LinkedHashMap<>()
-                ).put(
-                        entry.getKey(),
-                        AlgebraUtils.integerCeil(entry.getValue()) // Ceil to be the safest
-                );
+            if (dataTypes == null) {
+                return;
             }
         }
-    }
+        for (Enums.DataType type : dataTypes) {
+            int ordinal = type.ordinal();
 
-    public void clearIgnoredViolations() {
-        synchronized (ignoredViolations) {
-            ignoredViolations.clear();
-        }
-    }
+            if (this.silent[ordinal] != b) {
+                CheckSilentToggleEvent event;
 
-    public Map<Enums.DataType, Map<Integer, Integer>> copyIgnoredViolations() {
-        return ignoredViolations;
-    }
+                if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                    event = new CheckSilentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
+                    Register.manager.callEvent(event);
+                } else {
+                    event = null;
+                }
 
-    public int getIgnoredViolations(Enums.DataType dataType, int hash) {
-        synchronized (ignoredViolations) {
-            Map<Integer, Integer> map = ignoredViolations.get(dataType);
+                if (event == null || !event.isCancelled()) {
+                    this.silent[ordinal] = b;
 
-            if (map == null) {
-                return standardIgnoredViolations;
-            } else {
-                Integer integer = map.get(hash);
-                return integer == null
-                        ? standardIgnoredViolations
-                        : Math.max(integer, standardIgnoredViolations);
+                    if (!b) {
+                        synchronized (options) {
+                            options.clear();
+                        }
+                    }
+                    setOption("silent." + type.toString().toLowerCase(), b);
+                }
             }
         }
     }

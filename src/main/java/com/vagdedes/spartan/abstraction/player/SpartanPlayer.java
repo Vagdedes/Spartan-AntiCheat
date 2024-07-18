@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.abstraction.player;
 
+import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
 import com.vagdedes.spartan.abstraction.data.Clicks;
-import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
@@ -23,8 +23,8 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.Elytra;
-import com.vagdedes.spartan.listeners.bukkit.Event_Chunks;
 import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
+import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
@@ -63,7 +63,6 @@ public class SpartanPlayer {
     public final SpartanPlayerMovement movement;
     public final SpartanPunishments punishments;
     public final Buffer buffer;
-    public final Cooldowns cooldowns;
     public final Trackers trackers;
     public final Clicks clicks;
 
@@ -83,7 +82,7 @@ public class SpartanPlayer {
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
             if (!players.isEmpty()) {
-                if (Event_Chunks.enabled()) {
+                if (MultiVersion.folia || Event_Chunks.enabled()) {
                     Set<Integer> worldHashes = new HashSet<>();
 
                     for (World world : Bukkit.getWorlds()) {
@@ -191,8 +190,7 @@ public class SpartanPlayer {
         }
         this.time = System.currentTimeMillis();
 
-        this.buffer = new Buffer(this);
-        this.cooldowns = new Cooldowns(this);
+        this.buffer = new Buffer();
         this.executors = new CheckExecutor[hackTypes.length];
         this.violations = new LiveViolation[hackTypes.length];
 
@@ -212,7 +210,7 @@ public class SpartanPlayer {
     }
 
     public boolean debug(boolean function, boolean broadcast, boolean cutDecimals, Object... message) {
-        if (function && SpartanBukkit.testMode) {
+        if (function && Bukkit.getMotd().contains(Register.plugin.getName())) {
             Player p = getInstance();
 
             if (p.isWhitelisted()) {
@@ -535,7 +533,7 @@ public class SpartanPlayer {
     // Separator
 
     public List<Entity> getNearbyEntities(double x, double y, double z) {
-        if (Event_Chunks.enabled()) {
+        if (MultiVersion.folia || Event_Chunks.enabled()) {
             Map<Long, List<Entity>> perChunk = entities.get(this.getWorld().getName().hashCode());
 
             if (perChunk != null) {
