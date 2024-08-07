@@ -35,6 +35,7 @@ public class BackgroundMove {
     private static void movePacket(PacketEvent event, SpartanProtocol protocol) {
         if (SpartanBukkit.packetsEnabled_Movement()) {
             PacketContainer packet = event.getPacket();
+            protocol.setOnGround(onGroundPacketLevel(event));
             PacketType type = event.getPacket().getType();
 
             /*
@@ -91,7 +92,6 @@ public class BackgroundMove {
                         protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
                 ));
             }
-            protocol.setOnGround(onGroundPacketLevel(event));
         }
     }
 

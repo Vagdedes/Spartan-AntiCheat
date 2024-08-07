@@ -9,12 +9,12 @@ import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
@@ -178,7 +178,7 @@ public class ManageChecks extends InventoryMenu {
         // Separator
 
         if (enabled && silent) {
-            item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
+            item.addUnsafeEnchantment(EnchantmentUtils.DURABILITY, 1);
         }
         add(colour + check.getName() + " " + secondColour + hackType.category.toString() + " Check", lore, item, -1);
     }

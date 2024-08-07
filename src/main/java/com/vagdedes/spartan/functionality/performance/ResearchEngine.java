@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
@@ -12,7 +13,9 @@ import com.vagdedes.spartan.abstraction.profiling.ViolationHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -35,9 +38,9 @@ public class ResearchEngine {
     private static boolean firstLoad = false;
     public static Map<Enums.HackType, Boolean> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
-    public static final Enums.DataType[] usableDataTypes = new Enums.DataType[]{
-            Enums.DataType.JAVA,
-            Enums.DataType.BEDROCK
+    public static final Check.DataType[] usableDataTypes = new Check.DataType[]{
+            Check.DataType.JAVA,
+            Check.DataType.BEDROCK
     };
     private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
 
@@ -88,19 +91,19 @@ public class ResearchEngine {
         return playerProfile;
     }
 
-    public static PlayerProfile getPlayerProfile(SpartanPlayer player, boolean force) {
+    public static PlayerProfile getPlayerProfile(SpartanProtocol protocol, boolean force) {
         PlayerProfile playerProfile;
 
         if (!force) {
-            playerProfile = playerProfiles.get(player.name.toLowerCase());
+            playerProfile = playerProfiles.get(protocol.spartanPlayer.name.toLowerCase());
 
             if (playerProfile != null) {
-                playerProfile.update(player);
+                playerProfile.update(protocol);
                 return playerProfile;
             }
         }
-        playerProfile = new PlayerProfile(player);
-        playerProfiles.put(player.name.toLowerCase(), playerProfile);
+        playerProfile = new PlayerProfile(protocol);
+        playerProfiles.put(protocol.spartanPlayer.name.toLowerCase(), playerProfile);
         return playerProfile;
     }
 
@@ -178,7 +181,7 @@ public class ResearchEngine {
                     playerProfiles.remove(playerName);
 
                     if (foundPlayer) {
-                        p.setProfile(getPlayerProfile(p.spartanPlayer, true));
+                        p.setProfile(getPlayerProfile(p, true));
                     }
                     if (Config.sql.isEnabled()) {
                         Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE information LIKE '%" + playerName + "%';");
@@ -207,7 +210,7 @@ public class ResearchEngine {
                 playerProfiles.remove(playerName);
 
                 if (foundPlayer) {
-                    p.setProfile(getPlayerProfile(p.spartanPlayer, true));
+                    p.setProfile(getPlayerProfile(p, true));
                 }
             }
             MainMenu.refresh();
@@ -255,7 +258,7 @@ public class ResearchEngine {
         return null;
     }
 
-    private static Enums.DataType getDataType(String s) {
+    private static Check.DataType getDataType(String s) {
         String find = "(" + LiveViolation.javaPlayerIdentifier + " ";
         int index = s.indexOf(find);
 
@@ -264,13 +267,13 @@ public class ResearchEngine {
             index = s.indexOf(")");
             s = s.substring(0, index);
 
-            for (Enums.DataType dataType : usableDataTypes) {
+            for (Check.DataType dataType : usableDataTypes) {
                 if (s.equals(dataType.toString())) {
                     return dataType;
                 }
             }
         }
-        return Enums.DataType.JAVA;
+        return Check.DataType.JAVA;
     }
 
     private static boolean isStorageMode() {
@@ -491,7 +494,7 @@ public class ResearchEngine {
                 }
             }
 
-            for (Enums.DataType dataType : usableDataTypes) {
+            for (Check.DataType dataType : usableDataTypes) {
                 for (Enums.HackType hackType : (force
                         ? Arrays.asList(Enums.HackType.values())
                         : violationFired.keySet())) {
@@ -575,6 +578,25 @@ public class ResearchEngine {
                     }
                 }
                 violationFired.clear();
+            }
+        }
+        if (playerProfiles.size() < TPS.maximum) {
+            String message = AwarenessNotifications.getOptionalNotification(
+                    "The plugin has not yet collected enough data."
+                    + " This problem is normal and will be resolved as more players join your server."
+                    + " Due to the limited data, certain checks may not notify, prevent or punish players."
+            );
+
+            if (message != null) {
+                List<SpartanPlayer> players = Permissions.getStaff();
+
+                if (!players.isEmpty()) {
+                    for (SpartanPlayer p : players) {
+                        if (AwarenessNotifications.canSend(p.uuid, "limited-data", 60 * 60)) {
+                            p.sendMessage(message);
+                        }
+                    }
+                }
             }
         }
     }

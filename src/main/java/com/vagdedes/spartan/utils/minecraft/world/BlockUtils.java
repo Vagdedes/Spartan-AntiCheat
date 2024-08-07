@@ -954,7 +954,7 @@ public class BlockUtils {
             helper.add(Material.KELP);
             helper.add(Material.KELP_PLANT);
             helper.add(Material.BEETROOTS);
-            helper.add(Material.GRASS);
+            helper.add(MaterialUtils.GRASS_BLOCK);
             helper.add(Material.FERN);
             helper.add(Material.LARGE_FERN);
             helper.add(Material.SUNFLOWER);
@@ -971,7 +971,11 @@ public class BlockUtils {
             for (Material m : materials) {
                 String s = m.toString();
 
-                if (endsWith(s, "_BUTTON") || !startsWith(s, "POTTED_") && (endsWith(s, "_SAPLING") || endsWith(s, "_TULIP"))) {
+                if (endsWith(s, "_BUTTON")
+
+                        || !startsWith(s, "POTTED_")
+                        && (endsWith(s, "_SAPLING")
+                        || endsWith(s, "_TULIP"))) {
                     helper.add(m);
                 }
             }

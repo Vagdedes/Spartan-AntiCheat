@@ -1,7 +1,9 @@
 package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 
 import java.util.*;
@@ -17,7 +19,7 @@ public class PlayerDetectionSlots {
             int amount = CloudBase.getDetectionSlots();
 
             if (amount > 0) {
-                Set<UUID> players = SpartanBukkit.getUUIDs();
+                Set<Map.Entry<UUID, SpartanProtocol>> players = SpartanBukkit.getPlayerEntries();
                 int playerAmount = players.size();
 
                 if (playerAmount <= amount) {
@@ -25,7 +27,10 @@ public class PlayerDetectionSlots {
                         synchronized (list) {
                             priority.clear();
                             list.clear();
-                            list.addAll(players);
+
+                            for (Map.Entry<UUID, SpartanProtocol> entry : players) {
+                                list.add(entry.getKey());
+                            }
                         }
                     }
                 } else {
@@ -45,14 +50,18 @@ public class PlayerDetectionSlots {
 
                     // Add non-prioritised players that are not being checked
                     synchronized (list) {
-                        for (UUID uuid : players) {
-                            if (!list.contains(uuid)) {
-                                if (newList.size() < amount) {
-                                    newList.add(uuid);
-                                } else {
-                                    synchronized (priority) {
-                                        if (!priority.contains(uuid)) {
-                                            priority.add(uuid);
+                        for (Map.Entry<UUID, SpartanProtocol> entry : players) {
+                            if (Config.isEnabled(entry.getValue().spartanPlayer.dataType)) {
+                                UUID uuid = entry.getKey();
+
+                                if (!list.contains(uuid)) {
+                                    if (newList.size() < amount) {
+                                        newList.add(uuid);
+                                    } else {
+                                        synchronized (priority) {
+                                            if (!priority.contains(uuid)) {
+                                                priority.add(uuid);
+                                            }
                                         }
                                     }
                                 }
@@ -60,13 +69,17 @@ public class PlayerDetectionSlots {
                         }
 
                         // Add non-prioritised players that are being checked
-                        for (UUID uuid : list) {
-                            if (newList.size() < amount) {
-                                newList.add(uuid);
-                            } else {
-                                synchronized (priority) {
-                                    if (!priority.contains(uuid)) {
-                                        priority.add(uuid);
+                        for (Map.Entry<UUID, SpartanProtocol> entry : players) {
+                            if (Config.isEnabled(entry.getValue().spartanPlayer.dataType)) {
+                                UUID uuid = entry.getKey();
+
+                                if (newList.size() < amount) {
+                                    newList.add(uuid);
+                                } else {
+                                    synchronized (priority) {
+                                        if (!priority.contains(uuid)) {
+                                            priority.add(uuid);
+                                        }
                                     }
                                 }
                             }
@@ -92,15 +105,16 @@ public class PlayerDetectionSlots {
         }
     }
 
-    private static boolean add(UUID uuid, int optionAmount) {
+    private static boolean add(SpartanPlayer player, int optionAmount) {
         synchronized (list) {
-            if (list.contains(uuid)) {
+            if (list.contains(player.uuid)) {
                 return true;
-            } else if (list.size() < optionAmount) {
-                list.add(uuid);
+            } else if (list.size() < optionAmount
+                    && Config.isEnabled(player.dataType)) {
+                list.add(player.uuid);
 
                 synchronized (priority) {
-                    priority.remove(uuid);
+                    priority.remove(player.uuid);
                 }
                 return true;
             } else {
@@ -111,16 +125,16 @@ public class PlayerDetectionSlots {
 
     public static boolean add(SpartanPlayer player) {
         int amount = CloudBase.getDetectionSlots();
-        return amount > 0 && add(player.uuid, amount);
+        return amount > 0 && add(player, amount);
     }
 
-    public static boolean isChecked(UUID uuid) {
+    public static boolean isChecked(SpartanPlayer player) {
         int amount = CloudBase.getDetectionSlots();
 
         if (amount <= 0) {
             return true;
         } else {
-            return add(uuid, amount);
+            return add(player, amount);
         }
     }
 

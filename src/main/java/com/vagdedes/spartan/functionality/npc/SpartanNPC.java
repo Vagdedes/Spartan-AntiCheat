@@ -4,9 +4,9 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import org.bukkit.*;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.EquipmentSlot;
@@ -77,7 +77,7 @@ public class SpartanNPC {
         armorStand.getEquipment().setBoots(itemStack);
 
         itemStack = new ItemStack(Material.IRON_SWORD);
-        itemStack.addEnchantment(Enchantment.DURABILITY, 1);
+        itemStack.addEnchantment(EnchantmentUtils.DURABILITY, 1);
         armorStand.getEquipment().setItemInHand(itemStack);
     }
 

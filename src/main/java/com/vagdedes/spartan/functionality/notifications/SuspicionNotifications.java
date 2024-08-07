@@ -8,6 +8,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -20,25 +21,29 @@ public class SuspicionNotifications {
         SpartanBukkit.runRepeatingTask(() -> { // Here because there are no other class calls
             if (!Config.settings.getBoolean("Notifications.individual_only_notifications")) {
                 List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-                Iterator<SpartanPlayer> iterator = players.iterator();
 
-                while (iterator.hasNext()) {
-                    Integer frequency = DetectionNotifications.getFrequency(iterator.next());
+                if (!players.isEmpty()) {
+                    List<SpartanPlayer> staff = new ArrayList<>(players);
+                    Iterator<SpartanPlayer> iterator = staff.iterator();
 
-                    if (frequency == null || frequency < 100) {
-                        iterator.remove();
+                    while (iterator.hasNext()) {
+                        Integer frequency = DetectionNotifications.getFrequency(iterator.next());
+
+                        if (frequency == null || frequency < 100) {
+                            iterator.remove();
+                        }
                     }
+                    run(staff, players);
                 }
-                run(players);
             }
         }, 1L, 300L);
     }
 
-    private static void run(List<SpartanPlayer> playersList) {
+    private static void run(List<SpartanPlayer> staff, List<SpartanPlayer> online) {
         StringBuilder players = new StringBuilder();
         int size = 0, commaLength = comma.length();
 
-        for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
+        for (SpartanPlayer player : online) {
             Collection<Enums.HackType> list = player.protocol.getProfile().evidence.getKnowledgeList(PlayerEvidence.notification);
 
             if (!list.isEmpty()) {
@@ -46,12 +51,7 @@ public class SuspicionNotifications {
 
                 for (Enums.HackType hackType : list) {
                     if (player.getViolations(hackType).hasLevel()) {
-                        evidence = new StringBuilder(
-                                evidence
-                                        .append(hackType.getCheck().getName())
-                                        .append(comma)
-                                        .substring(0, evidence.length() - commaLength)
-                        );
+                        evidence.append(hackType.getCheck().getName()).append(comma);
                     }
                 }
 
@@ -63,7 +63,7 @@ public class SuspicionNotifications {
                             "checks",
                             player.uuid, player.name,
                             location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                            "Suspected For Hacking", evidence.toString()
+                            "Suspected for", evidence.substring(0, evidence.length() - commaLength)
                     );
                 }
             }
@@ -74,9 +74,9 @@ public class SuspicionNotifications {
                     .replace("{size}", String.valueOf(size))
                     .replace("{players}", players.substring(0, players.length() - comma.length()));
 
-            if (!playersList.isEmpty()) {
-                for (SpartanPlayer staff : playersList) {
-                    staff.sendMessage(message);
+            if (!staff.isEmpty()) {
+                for (SpartanPlayer player : staff) {
+                    player.sendMessage(message);
                 }
             }
         }

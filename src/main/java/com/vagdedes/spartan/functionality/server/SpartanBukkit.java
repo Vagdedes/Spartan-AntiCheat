@@ -61,13 +61,8 @@ public class SpartanBukkit {
         return list;
     }
 
-    public static Set<Map.Entry<UUID, SpartanPlayer>> getPlayerEntries() {
-        Map<UUID, SpartanPlayer> map = new LinkedHashMap<>(playerProtocol.size() + 1, 1.0f);
-
-        for (Map.Entry<UUID, SpartanProtocol> entry : playerProtocol.entrySet()) {
-            map.put(entry.getKey(), entry.getValue().spartanPlayer);
-        }
-        return map.entrySet();
+    public static Set<Map.Entry<UUID, SpartanProtocol>> getPlayerEntries() {
+        return playerProtocol.entrySet();
     }
 
     // Separator

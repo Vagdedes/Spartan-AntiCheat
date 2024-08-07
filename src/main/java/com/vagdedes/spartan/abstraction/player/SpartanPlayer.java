@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
@@ -59,14 +60,13 @@ public class SpartanPlayer {
     public final String name;
     public final UUID uuid;
     private final Map<PotionEffectType, SpartanPotionEffect> potionEffects;
-    public final Enums.DataType dataType;
+    public final Check.DataType dataType;
     public final SpartanPlayerMovement movement;
     public final SpartanPunishments punishments;
     public final Buffer buffer;
     public final Trackers trackers;
     public final Clicks clicks;
 
-    private final long time;
     private final Map<EntityDamageEvent.DamageCause, SpartanPlayerDamage>
             damageReceived,
             damageDealt;
@@ -160,7 +160,7 @@ public class SpartanPlayer {
         this.protocol = protocol;
         this.uuid = p.getUniqueId();
         this.bedrockPlayer = BedrockCompatibility.isPlayer(p);
-        this.dataType = bedrockPlayer ? Enums.DataType.BEDROCK : Enums.DataType.JAVA;
+        this.dataType = bedrockPlayer ? Check.DataType.BEDROCK : Check.DataType.JAVA;
         this.trackers = new Trackers();
 
         this.name = p.getName();
@@ -188,7 +188,6 @@ public class SpartanPlayer {
                     new SpartanPlayerDamage(this)
             );
         }
-        this.time = System.currentTimeMillis();
 
         this.buffer = new Buffer();
         this.executors = new CheckExecutor[hackTypes.length];
@@ -346,10 +345,6 @@ public class SpartanPlayer {
 
     public Player getInstance() {
         return this.protocol.player;
-    }
-
-    public long timePassed() {
-        return System.currentTimeMillis() - this.time;
     }
 
     // Separator
@@ -721,4 +716,5 @@ public class SpartanPlayer {
                 this.protocol.getPing()
         );
     }
+
 }

@@ -71,7 +71,7 @@ public class PlayerUtils {
     private static final Map<PotionEffectType, Long> handledPotionEffects = new LinkedHashMap<>();
 
     static {
-        handledPotionEffects.put(JUMP, AlgebraUtils.integerRound(TPS.maximum * 5L) * TPS.tickTime);
+        handledPotionEffects.put(PotionEffectUtils.JUMP, AlgebraUtils.integerRound(TPS.maximum * 5L) * TPS.tickTime);
         handledPotionEffects.put(SPEED, AlgebraUtils.integerRound(TPS.maximum * 2L) * TPS.tickTime);
 
         if (dolphinsGrace) {

@@ -9,6 +9,7 @@ import com.vagdedes.spartan.utils.math.TrigonometryUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
@@ -16,9 +17,17 @@ import java.util.List;
 
 public class CombatUtils {
 
-    public static final long combatTimeRequirement = 2_500L;
     public static final double maxHitDistance = 6.0;
     public static final double[] playerWidthAndHeight = new double[]{0.6, 1.8};
+
+    public static EntityDamageEvent.DamageCause findDamageCause(String string) {
+        for (EntityDamageEvent.DamageCause cause : EntityDamageEvent.DamageCause.values()) {
+            if (cause.name().equalsIgnoreCase(string)) {
+                return cause;
+            }
+        }
+        return null;
+    }
 
     public static Vector getDirection(float yaw, float pitch) {
         double rotX = Math.toRadians((double) yaw),
@@ -70,6 +79,12 @@ public class CombatUtils {
 
         if (entityType.toString().equals("PIG_ZOMBIE")) {
             return new double[]{0.6, 1.95};
+        }
+        switch (entityType.toString()) {
+            case "SNOWMAN":
+                return new double[]{0.7, 1.9};
+            case "MUSHROOM_COW":
+                return new double[]{0.9, 1.4};
         }
         switch (entityType) {
             case PLAYER:
@@ -124,7 +139,6 @@ public class CombatUtils {
             case HORSE:
                 return ((Horse) entity).isAdult() ? new double[]{1.3964, 0.8} : new double[]{0.6982, 0.8};
             case COW:
-            case MUSHROOM_COW:
                 return ((Cow) entity).isAdult() ? new double[]{0.9, 1.4} : new double[]{0.45, 0.7};
             case CHICKEN:
                 return ((Chicken) entity).isAdult() ? new double[]{0.4, 0.7} : new double[]{0.2, 0.35};
@@ -138,7 +152,7 @@ public class CombatUtils {
                 return new double[]{3.6, 11.7};
             case SILVERFISH:
                 return new double[]{0.4, 0.3};
-            case SNOWMAN:
+            case SNOW_GOLEM:
                 return new double[]{0.7, 1.9};
             case IRON_GOLEM:
                 return new double[]{1.4, 2.7};

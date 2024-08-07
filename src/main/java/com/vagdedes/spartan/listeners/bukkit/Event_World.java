@@ -43,6 +43,7 @@ public class Event_World implements Listener {
         Event_Chunks.cache(nb.getChunk(), true);
         SpartanBlock b = new SpartanBlock(nb);
         boolean cancelled = e.isCancelled();
+        p.movement.judgeGround();
 
         // Detections
         if (!ItemsAdder.is(nb)) {
@@ -179,12 +180,11 @@ public class Event_World implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void EntityExplosion(EntityExplodeEvent e) {
         if (v1_21 && SpartanBukkit.getPlayerCount() > 0) {
-            double maximum = 4.0;
             Location location = e.getLocation();
             Collection<Entity> entities = location.getNearbyEntities(
-                    maximum,
-                    maximum,
-                    maximum
+                    CombatUtils.maxHitDistance,
+                    CombatUtils.maxHitDistance,
+                    CombatUtils.maxHitDistance
             );
 
             if (!entities.isEmpty()) {
@@ -192,7 +192,9 @@ public class Event_World implements Listener {
                     if (entity instanceof Player) {
                         SpartanBukkit.getProtocol((Player) entity).spartanPlayer.trackers.add(
                                 Trackers.TrackerType.ABSTRACT_VELOCITY,
-                                AlgebraUtils.integerCeil(maximum - entity.getLocation().distance(location)) * 5
+                                AlgebraUtils.integerCeil(
+                                        CombatUtils.maxHitDistance - entity.getLocation().distance(location)
+                                ) * 5
                         );
                     }
                 }

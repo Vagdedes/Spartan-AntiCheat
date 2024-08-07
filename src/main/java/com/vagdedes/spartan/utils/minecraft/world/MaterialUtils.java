@@ -5,11 +5,11 @@ import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
@@ -18,8 +18,16 @@ public class MaterialUtils {
     private static final Map<String, Material> alternative = new LinkedHashMap<>(60);
     private static final Map<Material, Double> baseMultiplier = new LinkedHashMap<>((7 * 5) + 1);
     private static final double specialMultiplier = 1.5;
+    public static final Material GRASS_BLOCK;
 
     static {
+        Material grassBlock = findMaterial("GRASS");
+
+        if (grassBlock == null) {
+            grassBlock = Material.GRASS_BLOCK;
+        }
+        GRASS_BLOCK = grassBlock;
+
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             alternative.put("water", Material.WATER);
             alternative.put("lava", Material.LAVA);
@@ -224,7 +232,7 @@ public class MaterialUtils {
                 if (!canHarvest) {
                     multiplier = 1.0;
                 } else {
-                    int enchantmentLevel = itemStack.getEnchantmentLevel(Enchantment.DIG_SPEED);
+                    int enchantmentLevel = itemStack.getEnchantmentLevel(EnchantmentUtils.DIG_SPEED);
 
                     if (enchantmentLevel > 0) {
                         multiplier += Math.pow(enchantmentLevel, 2) + 1.0;
@@ -233,7 +241,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectType.FAST_DIGGING, 0L);
+            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectUtils.FAST_DIGGING, 0L);
 
             if (hasteEffect != null
                     && hasteEffect.isActive()) {
@@ -241,7 +249,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            SpartanPotionEffect miningFatigueEffect = player.getPotionEffect(PotionEffectType.SLOW_DIGGING, 0);
+            SpartanPotionEffect miningFatigueEffect = player.getPotionEffect(PotionEffectUtils.SLOW_DIGGING, 0);
 
             if (miningFatigueEffect != null
                     && miningFatigueEffect.isActive()) {
@@ -260,7 +268,7 @@ public class MaterialUtils {
             if (water) {
                 boolean aquaInfinity = false;
 
-                if (itemStack.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
+                if (itemStack.getEnchantmentLevel(EnchantmentUtils.WATER_WORKER) > 0) {
                     aquaInfinity = true;
                 } else {
                     PlayerInventory inventory = player.getInventory();
@@ -269,7 +277,7 @@ public class MaterialUtils {
                     items.add(inventory.getItemInHand());
 
                     for (ItemStack item : items) {
-                        if (item != null && item.getEnchantmentLevel(Enchantment.WATER_WORKER) > 0) {
+                        if (item != null && item.getEnchantmentLevel(EnchantmentUtils.WATER_WORKER) > 0) {
                             aquaInfinity = true;
                             break;
                         }
@@ -304,5 +312,14 @@ public class MaterialUtils {
             return AlgebraUtils.integerRound(ticks * 50L);
         }
         return -1L;
+    }
+
+    private static Material findMaterial(String string) {
+        for (Material material : Material.values()) {
+            if (material.toString().equalsIgnoreCase(string)) {
+                return material;
+            }
+        }
+        return null;
     }
 }

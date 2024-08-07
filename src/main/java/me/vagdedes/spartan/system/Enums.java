@@ -341,29 +341,4 @@ public class Enums {
 
     }
 
-    public enum DataType {
-        JAVA, BEDROCK, UNIVERSAL;
-
-        private final String string;
-
-        DataType() {
-            switch (this.ordinal()) {
-                case 0:
-                    this.string = "Java";
-                    break;
-                case 1:
-                    this.string = "Bedrock";
-                    break;
-                default:
-                    this.string = "Universal";
-                    break;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return string;
-        }
-    }
-
 }

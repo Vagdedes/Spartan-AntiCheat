@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.inventory.implementation;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
@@ -17,7 +18,6 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
-import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -80,9 +80,9 @@ public class MainMenu extends InventoryMenu {
             lore.add("§7Detection Slots§8: §a" + slots + " (" + Math.max(slots - players, 0) + " remaining)");
         }
         lore.add("§7Detections Available§8: "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.JAVA) ? "§a" : "§c") + Enums.DataType.JAVA
+                + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
                 + " §8/ "
-                + (SpartanEdition.hasDetectionsPurchased(Enums.DataType.BEDROCK) ? "§a" : "§c") + Enums.DataType.BEDROCK);
+                + (SpartanEdition.hasDetectionsPurchased(Check.DataType.BEDROCK) ? "§a" : "§c") + Check.DataType.BEDROCK);
         Runtime runtime = Runtime.getRuntime();
 
         lore.add("§7Server Version§8: §a" + MultiVersion.versionString());

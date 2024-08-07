@@ -104,7 +104,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
     }
 
     private boolean canFunctionOrJustImplemented() {
-        return function || player.timePassed() <= TPS.maximum * TPS.tickTime;
+        return function || player.protocol.timePassed() <= TPS.maximum * TPS.tickTime;
     }
 
     final boolean canFunction() {

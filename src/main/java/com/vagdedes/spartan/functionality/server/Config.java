@@ -124,4 +124,15 @@ public class Config {
             hackType.getCheck().setSilent(null, false);
         }
     }
+
+    // Separator
+
+    public static boolean isEnabled(Check.DataType dataType) {
+        for (HackType hackType : Enums.HackType.values()) {
+            if (hackType.getCheck().isEnabled(dataType, null, null)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

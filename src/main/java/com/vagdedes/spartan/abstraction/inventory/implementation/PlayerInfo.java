@@ -138,8 +138,10 @@ public class PlayerInfo extends InventoryMenu {
 
         // Separator
 
-        Enums.DataType dataType = isOnline ? player.dataType : null;
-        boolean notChecked = isOnline && !PlayerDetectionSlots.isChecked(player.uuid);
+        Check.DataType dataType = isOnline ? player.dataType : null;
+        boolean notChecked = isOnline
+                && !PlayerDetectionSlots.isChecked(player)
+                && Config.isEnabled(player.dataType);
         String cancellableCompatibility = isOnline ? player.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
@@ -165,7 +167,7 @@ public class PlayerInfo extends InventoryMenu {
 
     private String getDetectionState(SpartanPlayer player,
                                      HackType hackType,
-                                     Enums.DataType dataType,
+                                     Check.DataType dataType,
                                      String cancellableCompatibility,
                                      boolean hasPlayer,
                                      boolean notChecked) {

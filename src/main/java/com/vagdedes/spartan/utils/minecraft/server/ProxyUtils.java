@@ -2,6 +2,7 @@ package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -34,10 +35,10 @@ public class ProxyUtils {
             boolean isNull = player == null;
 
             if (isNull || !player.isOp()) {
-                Set<Map.Entry<UUID, SpartanPlayer>> entries = SpartanBukkit.getPlayerEntries();
+                Set<Map.Entry<UUID, SpartanProtocol>> entries = SpartanBukkit.getPlayerEntries();
 
                 if (!isNull) {
-                    Iterator<Map.Entry<UUID, SpartanPlayer>> iterator = entries.iterator();
+                    Iterator<Map.Entry<UUID, SpartanProtocol>> iterator = entries.iterator();
 
                     while (iterator.hasNext()) {
                         UUID uuid = iterator.next().getKey();
@@ -49,8 +50,8 @@ public class ProxyUtils {
                     }
                 }
                 if (!entries.isEmpty()) { // 1 because we already know we have one player
-                    for (Map.Entry<UUID, SpartanPlayer> entry : entries) {
-                        SpartanPlayer loopPlayer = entry.getValue();
+                    for (Map.Entry<UUID, SpartanProtocol> entry : entries) {
+                        SpartanPlayer loopPlayer = entry.getValue().spartanPlayer;
 
                         if (loopPlayer.getInstance().isOp()) {
                             player = loopPlayer.getInstance();

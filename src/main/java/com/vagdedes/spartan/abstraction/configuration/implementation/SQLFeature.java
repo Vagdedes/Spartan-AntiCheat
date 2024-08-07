@@ -288,6 +288,7 @@ public class SQLFeature extends ConfigurationBuilder {
 
                         "type VARCHAR(32), " +
                         "information VARCHAR(4096), " +
+                        "notification VARCHAR(4096), " +
 
                         "player_uuid VARCHAR(36), " +
                         "player_name VARCHAR(24), " +

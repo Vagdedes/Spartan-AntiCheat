@@ -26,10 +26,15 @@ public class SendTransaction extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         PacketContainer packet = event.getPacket();
+
+        if (packet.getShorts().getValues().isEmpty()) {
+            return;
+        }
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-        if (Objects.equals(packet.getShorts().read(0), protocol.getTransactionID())) {
+        if (protocol.timePassed() >= BackgroundTransaction.refreshRate
+                && Objects.equals(packet.getShorts().read(0), protocol.getTransactionID())) {
             protocol.setLastTransaction();
             PacketContainer transaction = new PacketContainer(PacketType.Play.Server.TRANSACTION);
             transaction.getShorts().write(0, protocol.increaseTransactionID());

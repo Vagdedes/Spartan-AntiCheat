@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
@@ -8,18 +9,17 @@ import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
-import me.vagdedes.spartan.system.Enums;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SpartanEdition {
 
-    private static final Enums.DataType
-            currentType = Enums.DataType.JAVA,
-            oppositeType = currentType == Enums.DataType.JAVA
-                    ? Enums.DataType.BEDROCK
-                    : Enums.DataType.JAVA;
+    private static final Check.DataType
+            currentType = Check.DataType.JAVA,
+            oppositeType = currentType == Check.DataType.JAVA
+                    ? Check.DataType.BEDROCK
+                    : Check.DataType.JAVA;
 
     private static long checkTime = 0L;
     public static final String[] jarNames = new String[]{
@@ -65,25 +65,25 @@ public class SpartanEdition {
 
     // Detections
 
-    public static boolean hasDetectionsPurchased(Enums.DataType dataType) {
+    public static boolean hasDetectionsPurchased(Check.DataType dataType) {
         return SpartanEdition.currentType == dataType
                 ? currentVersion
                 : alternativeVersion;
     }
 
-    private static Enums.DataType[] getMissingDetections() {
+    private static Check.DataType[] getMissingDetections() {
         return !currentVersion && !alternativeVersion
-                ? new Enums.DataType[]{currentType, oppositeType}
+                ? new Check.DataType[]{currentType, oppositeType}
                 : !currentVersion
-                ? new Enums.DataType[]{currentType}
+                ? new Check.DataType[]{currentType}
                 : !alternativeVersion
-                ? new Enums.DataType[]{oppositeType}
-                : new Enums.DataType[]{};
+                ? new Check.DataType[]{oppositeType}
+                : new Check.DataType[]{};
     }
 
     // Product
 
-    private static String getProductID(Enums.DataType dataType) {
+    private static String getProductID(Check.DataType dataType) {
         switch (dataType) {
             case JAVA:
                 return "1";
@@ -98,7 +98,7 @@ public class SpartanEdition {
         return getProductID(
                 currentVersion
                         ? currentType
-                        : (alternativeVersion ? oppositeType : Enums.DataType.UNIVERSAL)
+                        : (alternativeVersion ? oppositeType : Check.DataType.UNIVERSAL)
         );
     }
 
@@ -115,7 +115,7 @@ public class SpartanEdition {
     // Notifications
 
     public static void attemptNotification(SpartanPlayer player) {
-        Enums.DataType[] missingDetections = getMissingDetections();
+        Check.DataType[] missingDetections = getMissingDetections();
 
         if (missingDetections.length == ResearchEngine.usableDataTypes.length) {
             sendVersionNotification(player, null);
@@ -184,7 +184,7 @@ public class SpartanEdition {
         }
     }
 
-    private static void sendVersionNotification(SpartanPlayer player, Enums.DataType dataType) {
+    private static void sendVersionNotification(SpartanPlayer player, Check.DataType dataType) {
         if (Permissions.isStaff(player)) {
             String message;
 
@@ -194,16 +194,16 @@ public class SpartanEdition {
                         + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this.";
             } else {
                 message = AwarenessNotifications.getNotification(
-                        versionNotificationMessage
-                                + (IDs.canAdvertise() ? "\nClick §n" + product + "§r§c to §lfix this§r§c." : "")
+                        (versionNotificationMessage
+                                + (IDs.canAdvertise() ? "\nClick §n" + product + "§r§c to §lfix this§r§c." : ""))
                                 .replace(type, dataType.toString())
                                 .replace(
                                         product,
                                         IDs.isBuiltByBit()
-                                                ? (dataType == Enums.DataType.JAVA
+                                                ? (dataType == Check.DataType.JAVA
                                                 ? "https://builtbybit.com/resources/12832"
                                                 : "https://builtbybit.com/resources/11196")
-                                                : (dataType == Enums.DataType.JAVA
+                                                : (dataType == Check.DataType.JAVA
                                                 ? "https://polymart.org/resource/3600"
                                                 : "https://polymart.org/resource/350")
                                 )

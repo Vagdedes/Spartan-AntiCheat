@@ -58,7 +58,7 @@ public class LiveViolation {
 
     void run(HackPrevention newPrevention, String information, double increase, long time) {
         synchronized (this) {
-            if (PlayerDetectionSlots.isChecked(player.uuid)
+            if (PlayerDetectionSlots.isChecked(player)
                     && !CloudBase.isInformationCancelled(hackType, information)
                     && (disableCause == null
                     || disableCause.hasExpired()

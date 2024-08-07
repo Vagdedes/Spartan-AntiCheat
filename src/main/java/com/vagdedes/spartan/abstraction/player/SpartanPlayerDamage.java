@@ -5,6 +5,8 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -14,16 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class SpartanPlayerDamage {
 
-    private static EntityDamageEvent.DamageCause findDamageCause(String string) {
-        for (EntityDamageEvent.DamageCause cause : EntityDamageEvent.DamageCause.values()) {
-            if (cause.name().equalsIgnoreCase(string)) {
-                return cause;
-            }
-        }
-        return null;
-    }
-
-    private static final EntityDamageEvent.DamageCause WORLD_BORDER = findDamageCause("WORLD_BORDER");
+    private static final EntityDamageEvent.DamageCause WORLD_BORDER = CombatUtils.findDamageCause("WORLD_BORDER");
 
     // Separator
 
@@ -77,7 +70,7 @@ public class SpartanPlayerDamage {
                             && (this.activeItem.getType() == Material.BOW
                             || MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)
                             && this.activeItem.getType() == Material.CROSSBOW)) {
-                        int level = this.activeItem.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK);
+                        int level = this.activeItem.getEnchantmentLevel(EnchantmentUtils.ARROW_KNOCKBACK);
 
                         if (level > 2) {
                             this.parent.trackers.add(

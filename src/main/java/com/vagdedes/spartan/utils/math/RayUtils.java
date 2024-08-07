@@ -7,6 +7,7 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.entity.AxisAlignedBB;
 import com.vagdedes.spartan.utils.minecraft.entity.MovingObjectPosition;
 import com.vagdedes.spartan.utils.minecraft.vector.Vec3;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -163,6 +164,25 @@ public class RayUtils {
         }
         return false;
     }
+    public static boolean isSolidBlock(SpartanPlayer player, SpartanLocation location) {
+        World world = player.getWorld();
+        Vector playerLocation = location.toVector(),
+                        min = playerLocation.clone().add(new Vector(-0.3, -0.3, -0.3)),
+                        max = playerLocation.clone().add(new Vector(0.3, 0.3, 0.3));
+
+        for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
+            for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+
+                    if (block.material.isSolid()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public static boolean inBlock(SpartanPlayer player, SpartanLocation location) {
         World world = player.getWorld();
@@ -175,7 +195,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (!block.material.isEmpty()) {
+                    if (BlockUtils.isSolid(block.material)) {
                         return true;
                     }
                 }

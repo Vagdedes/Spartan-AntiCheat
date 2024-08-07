@@ -20,6 +20,31 @@ public class Check {
 
     // Static
 
+    public enum DataType {
+        JAVA, BEDROCK, UNIVERSAL;
+
+        private final String string;
+
+        DataType() {
+            switch (this.ordinal()) {
+                case 0:
+                    this.string = "Java";
+                    break;
+                case 1:
+                    this.string = "Bedrock";
+                    break;
+                default:
+                    this.string = "Universal";
+                    break;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return string;
+        }
+    }
+
     public static final int maxCommands = 10;
     private static final File file = new File(
             Register.plugin.getDataFolder() + "/checks.yml"
@@ -55,7 +80,7 @@ public class Check {
         this.silent = new boolean[ResearchEngine.usableDataTypes.length];
         this.punish = new boolean[ResearchEngine.usableDataTypes.length];
 
-        for (Enums.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
             Object optionValue = getOption(
                     "enabled." + dataType.toString().toLowerCase(),
                     true,
@@ -168,11 +193,11 @@ public class Check {
 
     // Separator
 
-    public boolean isEnabled(Enums.DataType dataType, String world, SpartanPlayer player) {
+    public boolean isEnabled(Check.DataType dataType, String world, SpartanPlayer player) {
         if (dataType == null) {
             boolean enabled = false;
 
-            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (this.enabled[type.ordinal()]) {
                     enabled = true;
                     break;
@@ -190,17 +215,17 @@ public class Check {
                 && !Permissions.isBypassing(player, hackType));
     }
 
-    public void setEnabled(Enums.DataType dataType, boolean b) {
-        Enums.DataType[] dataTypes;
+    public void setEnabled(Check.DataType dataType, boolean b) {
+        Check.DataType[] dataTypes;
 
         if (dataType == null) {
             dataTypes = ResearchEngine.usableDataTypes;
         } else {
             dataTypes = null;
 
-            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (type == dataType) {
-                    dataTypes = new Enums.DataType[]{dataType};
+                    dataTypes = new Check.DataType[]{dataType};
                     break;
                 }
             }
@@ -209,7 +234,7 @@ public class Check {
                 return;
             }
         }
-        for (Enums.DataType type : dataTypes) {
+        for (Check.DataType type : dataTypes) {
             int ordinal = type.ordinal();
 
             if (this.enabled[ordinal] != b) {
@@ -466,9 +491,9 @@ public class Check {
 
     // Separator
 
-    public boolean canPunish(Enums.DataType dataType) {
+    public boolean canPunish(Check.DataType dataType) {
         if (dataType == null) {
-            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (this.punish[type.ordinal()]) {
                     return true;
                 }
@@ -481,11 +506,11 @@ public class Check {
 
     // Separator
 
-    public boolean isSilent(Enums.DataType dataType, String world) {
+    public boolean isSilent(Check.DataType dataType, String world) {
         if (dataType == null) {
             boolean enabled = false;
 
-            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (this.silent[type.ordinal()]) {
                     enabled = true;
                     break;
@@ -497,7 +522,7 @@ public class Check {
         } else if (!this.silent[dataType.ordinal()]) {
             return false;
         }
-        return world != null && isSilentOnWorld(world);
+        return world == null || isSilentOnWorld(world);
     }
 
     public boolean isSilentOnWorld(String world) {
@@ -517,17 +542,17 @@ public class Check {
         return silentWorlds;
     }
 
-    public void setSilent(Enums.DataType dataType, boolean b) {
-        Enums.DataType[] dataTypes;
+    public void setSilent(Check.DataType dataType, boolean b) {
+        Check.DataType[] dataTypes;
 
         if (dataType == null) {
             dataTypes = ResearchEngine.usableDataTypes;
         } else {
             dataTypes = null;
 
-            for (Enums.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (type == dataType) {
-                    dataTypes = new Enums.DataType[]{dataType};
+                    dataTypes = new Check.DataType[]{dataType};
                     break;
                 }
             }
@@ -536,7 +561,7 @@ public class Check {
                 return;
             }
         }
-        for (Enums.DataType type : dataTypes) {
+        for (Check.DataType type : dataTypes) {
             int ordinal = type.ordinal();
 
             if (this.silent[ordinal] != b) {

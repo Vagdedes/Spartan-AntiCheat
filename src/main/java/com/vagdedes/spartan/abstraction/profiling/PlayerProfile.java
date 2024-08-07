@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
@@ -38,7 +39,7 @@ public class PlayerProfile {
         this.violationHistory = new ViolationHistory[ResearchEngine.usableDataTypes.length][hackTypes.length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
-        for (Enums.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
             for (Enums.HackType hackType : hackTypes) {
                 this.violationHistory[dataType.ordinal()][hackType.ordinal()] = new ViolationHistory();
             }
@@ -48,19 +49,18 @@ public class PlayerProfile {
         }
     }
 
-    public PlayerProfile(SpartanPlayer player) {
+    public PlayerProfile(SpartanProtocol protocol) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        this.uuid = player.uuid;
-        this.name = player.name;
-        this.offlinePlayer = player.getInstance(); // Attention
+        this.uuid = protocol.spartanPlayer.uuid;
+        this.name = protocol.spartanPlayer.name;
+        this.offlinePlayer = protocol.player; // Attention
         this.evidence = new PlayerEvidence();
         this.skull = null;
-        this.offlinePlayer = null;
 
         this.violationHistory = new ViolationHistory[ResearchEngine.usableDataTypes.length][hackTypes.length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
-        for (Enums.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
             for (Enums.HackType hackType : hackTypes) {
                 this.violationHistory[dataType.ordinal()][hackType.ordinal()] = new ViolationHistory();
             }
@@ -70,8 +70,8 @@ public class PlayerProfile {
         }
     }
 
-    public void update(SpartanPlayer player) {
-        this.uuid = player.uuid;
+    public void update(SpartanProtocol protocol) {
+        this.uuid = protocol.spartanPlayer.uuid;
     }
 
     // Separator
@@ -141,7 +141,7 @@ public class PlayerProfile {
 
     // Separator
 
-    public ViolationHistory getViolationHistory(Enums.DataType dataType, Enums.HackType hackType) {
+    public ViolationHistory getViolationHistory(Check.DataType dataType, Enums.HackType hackType) {
         return violationHistory[dataType.ordinal()][hackType.ordinal()];
     }
 
@@ -149,7 +149,7 @@ public class PlayerProfile {
         return miningHistory[ore.ordinal()];
     }
 
-    public boolean hasData(Enums.DataType dataType) {
+    public boolean hasData(Check.DataType dataType) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             if (!violationHistory[dataType.ordinal()][hackType.ordinal()].isEmpty()) {
                 return true;
