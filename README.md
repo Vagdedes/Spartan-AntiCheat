@@ -5,7 +5,7 @@
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vSu-WfjoyG8ipSI4tw3CqgmYh8gGDriSgD8gZTQ8HqU4k8jq9eYE8gzW3oiuKf6qzuvH7GTxssnMO_5/pub"><a href="https://www.idealistic.ai/discord"><img src="https://vagdedes.com/.images/spartan/support.png"></a>
 
-<a href="https://docs.google.com/document/d/e/2PACX-1vSu-WfjoyG8ipSI4tw3CqgmYh8gGDriSgD8gZTQ8HqU4k8jq9eYE8gzW3oiuKf6qzuvH7GTxssnMO_5/pub"><img src="https://vagdedes.com/.images/spartan/customization.png"></a>
+<a href="https://docs.google.com/document/d/e/2PACX-1vSQNpqN8qXLUU2PVWNuiLLeGMuCuppGROX1HOWuZo5DeXLvQe41WV_xk5EI7CkqjAskNgqPLOh210_0/pub"><img src="https://vagdedes.com/.images/spartan/customization.png"></a>
 
 <a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long_1.png"></a>
 <a href="https://docs.google.com/document/d/e/2PACX-1vSCY6OL2I8v8xB7FPNnXoZc8274EbpsNsMlUgCEANpJck3wNokdlb_-WDgTBypKbiONEGt7ekWBDk2X/pub"><img src="https://vagdedes.com/.images/spartan/long_2.png"></a>
