@@ -1,4 +1,9 @@
-## To build your own jar (1) ensure Maven is working properly, (2) include all local dependencies and (3) modify the <a href="https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/main/java/me/vagdedes/spartan/system/Enums.java">HackType enums</a> to your needs.
+How to build your own jar:
+1. Ensure Maven is working properly to get the <a href="https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/pom.xml">web dependencies</a>.
+2. Include all local dependencies already included in <a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/dependencies">this folder</a>.
+3. Modify the <a href="https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/main/java/me/vagdedes/spartan/system/Enums.java">HackType enums</a> to your needs, our original checks are not included.
+4. Create your own checks by using the CheckExecutor abstract class <a href="https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/main/java/com/vagdedes/spartan/abstraction/check/CheckExecutorExample.java">(Example)</a>.
+#
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/what.png"></a>
 
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple.png"></a>
