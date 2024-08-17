@@ -6,6 +6,7 @@ import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;

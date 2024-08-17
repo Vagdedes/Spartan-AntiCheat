@@ -57,11 +57,11 @@ public class Event_World implements Listener {
         // Detections
         AntiCheatLogs.logMining(p, b, cancelled);
 
-        if (p.getViolations(Enums.HackType.NoSwing).prevent()
-                || p.getViolations(Enums.HackType.BlockReach).prevent()
-                || p.getViolations(Enums.HackType.FastBreak).prevent()
-                || p.getViolations(Enums.HackType.GhostHand).prevent()
-                || p.getViolations(Enums.HackType.XRay).prevent()) {
+        if (p.getExecutor(Enums.HackType.NoSwing).prevent()
+                || p.getExecutor(Enums.HackType.BlockReach).prevent()
+                || p.getExecutor(Enums.HackType.FastBreak).prevent()
+                || p.getExecutor(Enums.HackType.GhostHand).prevent()
+                || p.getExecutor(Enums.HackType.XRay).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -90,9 +90,9 @@ public class Event_World implements Listener {
             p.getExecutor(Enums.HackType.FastPlace).handle(cancelled, e);
         }
 
-        if (p.getViolations(Enums.HackType.FastPlace).prevent()
-                || p.getViolations(Enums.HackType.BlockReach).prevent()
-                || p.getViolations(Enums.HackType.ImpossibleActions).prevent()) {
+        if (p.getExecutor(Enums.HackType.FastPlace).prevent()
+                || p.getExecutor(Enums.HackType.BlockReach).prevent()
+                || p.getExecutor(Enums.HackType.ImpossibleActions).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -109,7 +109,7 @@ public class Event_World implements Listener {
         // Detections
         p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getLines());
 
-        if (p.getViolations(Enums.HackType.Exploits).prevent()) {
+        if (p.getExecutor(Enums.HackType.Exploits).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -164,8 +164,8 @@ public class Event_World implements Listener {
             }
             p.getExecutor(Enums.HackType.FastBow).handle(false, e);
 
-            if (p.getViolations(Enums.HackType.GhostHand).prevent()
-                    || p.getViolations(Enums.HackType.FastClicks).prevent()) {
+            if (p.getExecutor(Enums.HackType.GhostHand).prevent()
+                    || p.getExecutor(Enums.HackType.FastClicks).prevent()) {
                 e.setCancelled(true);
             }
         }

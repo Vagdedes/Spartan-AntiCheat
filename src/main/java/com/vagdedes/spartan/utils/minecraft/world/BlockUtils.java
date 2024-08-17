@@ -4,6 +4,7 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;

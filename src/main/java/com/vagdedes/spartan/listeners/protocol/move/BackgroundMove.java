@@ -3,10 +3,12 @@ package com.vagdedes.spartan.listeners.protocol.move;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.vagdedes.spartan.abstraction.check.implementation.movement.simulation.modules.MCClient;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.Shared;
+import com.vagdedes.spartan.listeners.protocol.Join;
 import com.vagdedes.spartan.listeners.protocol.async.LagCompensation;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,12 +18,15 @@ public class BackgroundMove {
 
     static void run(PacketEvent event) {
         Player player = event.getPlayer();
+        MCClient client = Join.getContainer().get(player.getUniqueId());
 
         if (ProtocolLib.isTemporary(player)) {
             return;
         }
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        if (System.currentTimeMillis() - client.lastPacketTime > 4) client.verifiedPacket++;
         movePacket(event, protocol);
+        client.lastPacketTime = System.currentTimeMillis();
 
         if (!invalidTeleport(protocol.getLocation())
                 && protocol.isOnLoadStatus()) {

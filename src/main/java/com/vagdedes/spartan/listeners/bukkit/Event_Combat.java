@@ -49,11 +49,11 @@ public class Event_Combat implements Listener {
 
                         if (entityIsPlayer || entity instanceof LivingEntity) {
                             for (Enums.HackType hackType : handledChecks) {
-                                if (p.getViolations(hackType).prevent()) {
+                                if (p.getExecutor(hackType).prevent()) {
                                     e.setCancelled(true);
                                 }
                             }
-                            if (p.getViolations(Enums.HackType.FastClicks).prevent()) {
+                            if (p.getExecutor(Enums.HackType.FastClicks).prevent()) {
                                 e.setCancelled(true);
                             }
                         }
@@ -172,7 +172,7 @@ public class Event_Combat implements Listener {
                 // Detections
                 p.getExecutor(Enums.HackType.FastBow).handle(e.isCancelled(), e);
 
-                if (p.getViolations(Enums.HackType.FastBow).prevent()) {
+                if (p.getExecutor(Enums.HackType.FastBow).prevent()) {
                     e.setCancelled(true);
                 }
             }

@@ -11,9 +11,9 @@ import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
-import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 
@@ -158,7 +158,7 @@ public class MovementProcessing {
                                    boolean elytra, boolean velocity,
                                    boolean flight, boolean attributes) {
         if ((elytra || !player.movement.isGliding())
-                && (flight || !player.movement.isFlying() && !player.trackers.has(Trackers.TrackerType.FLYING))
+                && (flight || !player.movement.wasFlying())
                 && (velocity || !player.trackers.has(Trackers.TrackerType.ABSTRACT_VELOCITY))
                 && (attributes || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()

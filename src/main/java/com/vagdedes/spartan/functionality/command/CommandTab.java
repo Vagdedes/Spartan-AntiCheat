@@ -20,6 +20,7 @@ public class CommandTab implements TabCompleter {
 
     static {
         commands.put("menu", new Enums.Permission[]{Enums.Permission.INFO, Enums.Permission.MANAGE});
+        commands.put("panic", new Enums.Permission[]{Enums.Permission.MANAGE});
         commands.put("toggle", new Enums.Permission[]{Enums.Permission.MANAGE});
         commands.put("rl", new Enums.Permission[]{Enums.Permission.RELOAD});
         commands.put("reload", new Enums.Permission[]{Enums.Permission.RELOAD});
@@ -28,6 +29,14 @@ public class CommandTab implements TabCompleter {
         commands.put("kick", new Enums.Permission[]{Enums.Permission.KICK});
         commands.put("warn", new Enums.Permission[]{Enums.Permission.WARN});
         commands.put("bypass", new Enums.Permission[]{Enums.Permission.USE_BYPASS});
+        commands.put("conditions", new Enums.Permission[]{Enums.Permission.CONDITION});
+        commands.put("moderation", new Enums.Permission[]{
+                Enums.Permission.KICK,
+                Enums.Permission.WARN,
+                Enums.Permission.USE_BYPASS,
+                Enums.Permission.WAVE
+        });
+        commands.put("proxy-command", new Enums.Permission[]{});
         commands.put("wave add", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave remove", new Enums.Permission[]{Enums.Permission.WAVE});
         commands.put("wave clear", new Enums.Permission[]{Enums.Permission.WAVE});
@@ -53,11 +62,15 @@ public class CommandTab implements TabCompleter {
                 } else {
                     add = false;
 
-                    for (Enums.Permission permission : entry.getValue()) {
-                        if (Permissions.has(p, permission)) {
-                            add = true;
-                            break;
+                    if (entry.getValue().length > 0) {
+                        for (Enums.Permission permission : entry.getValue()) {
+                            if (Permissions.has(p, permission)) {
+                                add = true;
+                                break;
+                            }
                         }
+                    } else {
+                        add = Permissions.has(p, Enums.Permission.ADMIN);
                     }
                 }
 

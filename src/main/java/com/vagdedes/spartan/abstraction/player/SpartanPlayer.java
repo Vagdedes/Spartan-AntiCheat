@@ -3,7 +3,6 @@ package com.vagdedes.spartan.abstraction.player;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
-import com.vagdedes.spartan.abstraction.check.LiveViolation;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
 import com.vagdedes.spartan.abstraction.data.Clicks;
@@ -23,8 +22,6 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.functionality.tracking.Elytra;
-import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
 import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -71,7 +68,6 @@ public class SpartanPlayer {
             damageReceived,
             damageDealt;
     private final CheckExecutor[] executors;
-    private final LiveViolation[] violations;
 
     private SpartanPlayerDamage
             lastDamageReceived,
@@ -115,37 +111,12 @@ public class SpartanPlayer {
                     entities.clear();
                 }
                 for (SpartanPlayer p : players) {
-                    p.movement.judgeGround();
-
-                    if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-                        Elytra.judge(p, false);
+                    if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+                        SpartanBukkit.runTask(p, () -> {
+                            p.setStoredPotionEffects(p.getInstance().getActivePotionEffects());
+                        });
                     }
-                    if (p.movement.isFlying()) {
-                        p.trackers.add(Trackers.TrackerType.FLYING, (int) TPS.maximum);
-                    }
-                    if (p.movement.isGliding()) {
-                        p.trackers.add(Trackers.TrackerType.GLIDING, (int) TPS.maximum);
-                    }
-                    // Separator
-                    SpartanLocation to = p.movement.getLocation(),
-                            from = p.movement.getSchedulerFromLocation();
-
-                    if (from != null) {
-                        p.movement.schedulerDistance = to.distance(from);
-                    }
-                    p.movement.schedulerFrom = to;
-
-                    // Separator
-                    SpartanBukkit.runTask(p, () -> {
-                        p.setStoredPotionEffects(p.getInstance().getActivePotionEffects()); // Bad
-
-                        // Preventions
-                        for (Enums.HackType hackType : Event_Movement.handledChecks) {
-                            if (p.getViolations(hackType).prevent()) {
-                                break;
-                            }
-                        }
-                    });
+                    p.movement.schedulerFrom = p.movement.getLocation();
                 }
             }
         }, 1L, 1L);
@@ -191,17 +162,13 @@ public class SpartanPlayer {
 
         this.buffer = new Buffer();
         this.executors = new CheckExecutor[hackTypes.length];
-        this.violations = new LiveViolation[hackTypes.length];
 
         for (Enums.HackType hackType : hackTypes) {
-            int id = hackType.ordinal();
-            this.violations[id] = new LiveViolation(this, hackType);
-
             try {
                 CheckExecutor executor = (CheckExecutor) hackType.executor
                         .getConstructor(hackType.getClass(), this.getClass())
                         .newInstance(hackType, this);
-                this.executors[id] = executor;
+                this.executors[hackType.ordinal()] = executor;
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -268,12 +235,6 @@ public class SpartanPlayer {
         for (Trackers.TrackerType handlerType : Trackers.TrackerType.values()) {
             trackers.remove(handlerType);
         }
-    }
-
-    // Separator
-
-    public LiveViolation getViolations(Enums.HackType hackType) {
-        return violations[hackType.ordinal()];
     }
 
     // Separator

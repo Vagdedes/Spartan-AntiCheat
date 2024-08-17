@@ -83,7 +83,10 @@ public class PlayerStateLists {
             List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
 
             for (PlayerProfile playerProfile : playerProfiles) {
-                if (playerProfile.evidence.has(PlayerEvidence.prevention)) {
+                if (playerProfile.evidence.has(
+                        PlayerEvidence.preventionProbability,
+                        PlayerEvidence.preventionRatio
+                )) {
                     list.add(playerProfile);
                 }
             }
@@ -107,7 +110,10 @@ public class PlayerStateLists {
 
         if (listSize > 0) {
             for (PlayerProfile playerProfile : playerProfiles) {
-                Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(PlayerEvidence.prevention);
+                Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(
+                        PlayerEvidence.preventionProbability,
+                        PlayerEvidence.preventionRatio
+                );
 
                 if (!evidenceDetails.isEmpty()) {
                     lore.clear();

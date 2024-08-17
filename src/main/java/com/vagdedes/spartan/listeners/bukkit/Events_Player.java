@@ -36,7 +36,7 @@ public class Events_Player implements Listener {
             p.getExecutor(Enums.HackType.FastEat).handle(cancelled, e);
             p.getExecutor(Enums.HackType.FastHeal).handle(cancelled, e);
 
-            if (p.getViolations(Enums.HackType.FastEat).prevent()) {
+            if (p.getExecutor(Enums.HackType.FastEat).prevent()) {
                 e.setCancelled(true);
             }
         }
@@ -61,7 +61,7 @@ public class Events_Player implements Listener {
             // Detections
             p.getExecutor(Enums.HackType.FastHeal).handle(e.isCancelled(), e);
 
-            if (p.getViolations(Enums.HackType.FastHeal).prevent()) {
+            if (p.getExecutor(Enums.HackType.FastHeal).prevent()) {
                 e.setCancelled(true);
             }
         }

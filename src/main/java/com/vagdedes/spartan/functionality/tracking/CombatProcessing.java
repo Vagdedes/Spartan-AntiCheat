@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
@@ -12,10 +11,8 @@ import org.bukkit.entity.LivingEntity;
 public class CombatProcessing {
 
     public static boolean canCheck(SpartanPlayer player) {
-        if (!player.movement.isCrawling()
-                && !player.movement.isFlying()
-                && !player.trackers.has(Trackers.TrackerType.FLYING)
-                && !player.movement.isGliding()
+        if (!player.movement.isLowEyeHeight() // Covers swimming & gliding
+                && !player.movement.wasFlying()
                 && player.getInstance().getVehicle() == null
                 && !mcMMO.hasGeneralAbility(player)
                 && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0) {

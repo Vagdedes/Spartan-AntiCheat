@@ -332,7 +332,7 @@ public class CloudBase {
 
                     if (!players.isEmpty()) {
                         for (SpartanPlayer p : players) {
-                            SpartanEdition.attemptNotification(p);
+                            SpartanEdition.attemptNotifications(p);
                         }
                     }
                 });

@@ -104,6 +104,20 @@ public class CloudConnections {
         return false;
     }
 
+    static boolean hasAccount() { // Once
+        try {
+            String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
+                    + "&action=get&data=hasAccount&version=" + CloudBase.version);
+
+            if (results.length > 0) {
+                return results[0].equals("true");
+            }
+        } catch (Exception e) {
+            CloudBase.throwError(e, "hasAccount:GET");
+        }
+        return false;
+    }
+
     // Multiple
 
     static int getDetectionSlots() { // Once
@@ -145,7 +159,7 @@ public class CloudConnections {
         StringBuilder value = new StringBuilder();
 
         for (PlayerProfile playerProfile : ResearchEngine.getPlayerProfiles()) {
-            if (playerProfile.evidence.has(PlayerEvidence.prevention)) {
+            if (playerProfile.evidence.has(PlayerEvidence.preventionProbability, PlayerEvidence.preventionRatio)) {
                 SpartanPlayer player = playerProfile.getSpartanPlayer();
                 boolean isNull = player == null;
 

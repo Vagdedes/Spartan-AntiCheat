@@ -45,6 +45,7 @@ public class Check {
         }
     }
 
+    public static boolean panic = false;
     public static final int maxCommands = 10;
     private static final File file = new File(
             Register.plugin.getDataFolder() + "/checks.yml"
@@ -211,7 +212,7 @@ public class Check {
         }
         return (world == null || isEnabledOnWorld(world))
                 && (player == null
-                || player.getViolations(hackType).getDisableCause() == null
+                || player.getExecutor(hackType).getDisableCause() == null
                 && !Permissions.isBypassing(player, hackType));
     }
 
@@ -256,7 +257,7 @@ public class Check {
                         }
 
                         for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
-                            player.getViolations(hackType).reset();
+                            player.getExecutor(hackType).resetLevel();
                         }
                     }
                     setOption("enabled." + type.toString().toLowerCase(), b);
@@ -492,6 +493,9 @@ public class Check {
     // Separator
 
     public boolean canPunish(Check.DataType dataType) {
+        if (panic) {
+            return false;
+        }
         if (dataType == null) {
             for (Check.DataType type : ResearchEngine.usableDataTypes) {
                 if (this.punish[type.ordinal()]) {
@@ -507,6 +511,9 @@ public class Check {
     // Separator
 
     public boolean isSilent(Check.DataType dataType, String world) {
+        if (panic) {
+            return true;
+        }
         if (dataType == null) {
             boolean enabled = false;
 

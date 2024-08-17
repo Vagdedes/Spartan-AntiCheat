@@ -438,7 +438,7 @@ public class Compatibility {
                                     Enums.HackType[] hackTypes,
                                     int ticks) {
         for (Enums.HackType hackType : hackTypes) {
-            player.getViolations(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+            player.getExecutor(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
         }
     }
 
@@ -446,7 +446,7 @@ public class Compatibility {
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackType hackType,
                                     int ticks) {
-        player.getViolations(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+        player.getExecutor(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
     }
 
     public void evadeFalsePositives(SpartanPlayer player,
@@ -456,7 +456,7 @@ public class Compatibility {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             for (Enums.HackCategoryType type : types) {
                 if (hackType.category == type) {
-                    player.getViolations(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+                    player.getExecutor(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
                     break;
                 }
             }
@@ -469,7 +469,7 @@ public class Compatibility {
                                     int ticks) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             if (hackType.category == type) {
-                player.getViolations(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+                player.getExecutor(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
             }
         }
     }

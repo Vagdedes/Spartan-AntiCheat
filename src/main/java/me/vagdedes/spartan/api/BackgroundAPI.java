@@ -121,7 +121,7 @@ public class BackgroundAPI {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
         if (player != null) {
-            return player.getViolations(hackType).getLevel();
+            return player.getExecutor(hackType).getLevel();
         } else {
             return 0;
         }
@@ -140,7 +140,7 @@ public class BackgroundAPI {
             int total = 0;
 
             for (HackType hackType : Enums.HackType.values()) {
-                total += player.getViolations(hackType).getLevel();
+                total += player.getExecutor(hackType).getLevel();
             }
             return total;
         } else {
@@ -203,7 +203,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
             if (player != null) {
-                player.getViolations(hackType).addDisableCause("Developer-API", null, ticks);
+                player.getExecutor(hackType).addDisableCause("Developer-API", null, ticks);
             }
         }
     }
@@ -214,7 +214,7 @@ public class BackgroundAPI {
 
             if (player != null) {
                 for (HackType hackType : Enums.HackType.values()) {
-                    player.getViolations(hackType).addDisableCause("Developer-API", string, ticks);
+                    player.getExecutor(hackType).addDisableCause("Developer-API", string, ticks);
                 }
             }
         }
@@ -237,7 +237,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
             if (player != null) {
-                player.getViolations(hackType).addSilentCause("Developer-API", null, 0);
+                player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
             }
         }
     }
@@ -247,7 +247,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
             if (player != null) {
-                player.getViolations(hackType).removeSilentCause();
+                player.getExecutor(hackType).removeSilentCause();
             }
         }
     }
@@ -257,7 +257,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
             if (player != null) {
-                player.getViolations(hackType).removeDisableCause();
+                player.getExecutor(hackType).removeDisableCause();
             }
         }
     }
@@ -267,7 +267,7 @@ public class BackgroundAPI {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
             if (player != null) {
-                player.getViolations(hackType).addSilentCause("Developer-API", null, 0);
+                player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
             }
         }
     }
@@ -278,7 +278,7 @@ public class BackgroundAPI {
 
             for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
                 for (HackType hackType : hackTypes) {
-                    player.getViolations(hackType).reset();
+                    player.getExecutor(hackType).resetLevel();
                 }
             }
         }
@@ -290,7 +290,7 @@ public class BackgroundAPI {
 
             if (player != null) {
                 for (HackType hackType : Enums.HackType.values()) {
-                    player.getViolations(hackType).reset();
+                    player.getExecutor(hackType).resetLevel();
                 }
             }
         }

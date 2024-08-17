@@ -1,3 +1,0 @@
-[#] Fixed silent option not working in certain cases.
-[#] Fixed a console error caused by missing class method.
-[#] Improved the suspicion notifications with better discord webhooks

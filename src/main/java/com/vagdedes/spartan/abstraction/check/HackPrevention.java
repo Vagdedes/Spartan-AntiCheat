@@ -34,7 +34,7 @@ public class HackPrevention {
         this.groundTeleport = groundTeleport;
         this.damage = damage;
         this.expiration = System.currentTimeMillis() + (Math.max(1, cancelTicks) * TPS.tickTime);
-        player.getViolations(hackType).run(this, information, violations, time);
+        player.getExecutor(hackType).violate(this, information, violations, time);
     }
 
     boolean hasExpired() {

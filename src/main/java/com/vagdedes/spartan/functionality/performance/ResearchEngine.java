@@ -2,7 +2,7 @@ package com.vagdedes.spartan.functionality.performance;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.LiveViolation;
+import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
@@ -168,7 +168,7 @@ public class ResearchEngine {
                 profile = p.getProfile();
 
                 for (Enums.HackType hackType : Enums.HackType.values()) {
-                    p.spartanPlayer.getViolations(hackType).reset();
+                    p.spartanPlayer.getExecutor(hackType).resetLevel();
                 }
             } else {
                 profile = getPlayerProfile(playerName);
@@ -228,7 +228,7 @@ public class ResearchEngine {
     }
 
     private static int[] getDetectionViolationLevel(String s) {
-        String search = "(" + LiveViolation.violationLevelIdentifier + " ";
+        String search = "(" + CheckExecutor.violationLevelIdentifier + " ";
         int index1 = s.indexOf(search);
 
         if (index1 > -1) {
@@ -259,7 +259,7 @@ public class ResearchEngine {
     }
 
     private static Check.DataType getDataType(String s) {
-        String find = "(" + LiveViolation.javaPlayerIdentifier + " ";
+        String find = "(" + CheckExecutor.javaPlayerIdentifier + " ";
         int index = s.indexOf(find);
 
         if (index > -1) {
@@ -498,7 +498,7 @@ public class ResearchEngine {
                 for (Enums.HackType hackType : (force
                         ? Arrays.asList(Enums.HackType.values())
                         : violationFired.keySet())) {
-                    Map<PlayerProfile, int[]> wave = new LinkedHashMap<>();
+                    Map<PlayerProfile, double[]> wave = new LinkedHashMap<>();
 
                     for (PlayerProfile profile : profiles) {
                         ViolationHistory violationHistory = profile.getViolationHistory(
@@ -509,18 +509,18 @@ public class ResearchEngine {
                         if (!violationHistory.isEmpty()) {
                             wave.put(
                                     profile,
-                                    new int[]{
-                                            violationHistory.getIncreaseSum(),
-                                            violationHistory.getTimeDifferenceSum()
+                                    new double[]{
+                                            violationHistory.getViolationIncrease(),
+                                            violationHistory.getTimeDifference()
                                     }
                             );
                         }
                     }
 
                     if (!wave.isEmpty()) {
-                        int sum = 0, squareSum = 0;
+                        double sum = 0, squareSum = 0;
 
-                        for (int[] value : wave.values()) {
+                        for (double[] value : wave.values()) {
                             sum += value[0];
                             squareSum += value[0] * value[0];
                         }
@@ -528,16 +528,20 @@ public class ResearchEngine {
                                 mean = sum / divisor,
                                 deviation = Math.sqrt(squareSum / divisor);
 
-                        for (Map.Entry<PlayerProfile, int[]> entryChild : wave.entrySet()) {
+                        for (Map.Entry<PlayerProfile, double[]> entryChild : wave.entrySet()) {
                             PlayerProfile profile = entryChild.getKey();
-                            double probability = StatisticsMath.getCumulativeProbability(
-                                    (entryChild.getValue()[0] - mean) / deviation
-                            );
+                            double self = entryChild.getValue()[0],
+                                    probability = StatisticsMath.getCumulativeProbability(
+                                            (self - mean) / deviation
+                                    );
 
-                            if (probability > profile.evidence.get(hackType)) {
+                            if (probability > profile.evidence.get(hackType).probability) {
                                 profile.evidence.add(
                                         hackType,
-                                        probability
+                                        probability,
+                                        mean,
+                                        self,
+                                        true
                                 );
                             }
                         }
@@ -550,26 +554,30 @@ public class ResearchEngine {
                             sum = 0;
                             squareSum = 0;
 
-                            for (int[] value : wave.values()) {
+                            for (double[] value : wave.values()) {
                                 sum += value[1];
                                 squareSum += value[1] * value[1];
                             }
                             mean = sum / divisor;
                             deviation = Math.sqrt(squareSum / divisor);
 
-                            for (Map.Entry<PlayerProfile, int[]> entryChild : wave.entrySet()) {
+                            for (Map.Entry<PlayerProfile, double[]> entryChild : wave.entrySet()) {
                                 PlayerProfile profile = entryChild.getKey();
-                                double probability = StatisticsMath.getCumulativeProbability(
-                                        (entryChild.getValue()[1] - mean) / deviation
-                                );
+                                double self = entryChild.getValue()[1],
+                                        probability = StatisticsMath.getCumulativeProbability(
+                                                (self - mean) / deviation
+                                        );
 
                                 if (probability < 0.0) {
                                     probability = 0.0 - probability;
 
-                                    if (probability > profile.evidence.get(hackType)) {
+                                    if (probability > profile.evidence.get(hackType).probability) {
                                         profile.evidence.add(
                                                 hackType,
-                                                probability
+                                                probability,
+                                                mean,
+                                                self,
+                                                false
                                         );
                                     }
                                 }
@@ -583,8 +591,8 @@ public class ResearchEngine {
         if (playerProfiles.size() < TPS.maximum) {
             String message = AwarenessNotifications.getOptionalNotification(
                     "The plugin has not yet collected enough data."
-                    + " This problem is normal and will be resolved as more players join your server."
-                    + " Due to the limited data, certain checks may not notify, prevent or punish players."
+                            + " This problem is normal and will be resolved as more players join your server."
+                            + " Due to the limited data, certain checks may not notify, prevent or punish players."
             );
 
             if (message != null) {

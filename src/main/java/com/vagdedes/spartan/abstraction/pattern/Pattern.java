@@ -418,7 +418,7 @@ public class Pattern {
 
             if (!found && notifications) {
                 String message = AwarenessNotifications.getOptionalNotification(
-                        "Parts of Spartan's Machine Learning algorithm have insufficient data to check you. "
+                        "Parts of Spartan's Machine Learning (ML) algorithm have insufficient data to check you. "
                                 + "Continue playing LEGITIMATELY to train the algorithm and get better results."
                 );
 

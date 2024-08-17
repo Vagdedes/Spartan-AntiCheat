@@ -35,6 +35,7 @@ public class SpartanEdition {
             limitNotificationMessage = "\n§cHey, just a heads up! You have more online players than the anti-cheat can check at once."
                     + "\nClick §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.";
     private static boolean
+            hasAccount = true,
             firstLoad = true,
             notifyCache = false,
             currentVersion = true,
@@ -60,6 +61,7 @@ public class SpartanEdition {
             )) {
                 alternativeVersion = true;
             }
+            hasAccount = CloudConnections.hasAccount();
         });
     }
 
@@ -114,11 +116,30 @@ public class SpartanEdition {
 
     // Notifications
 
-    public static void attemptNotification(SpartanPlayer player) {
+    public static void attemptNotifications(SpartanPlayer player) {
+        if (!attemptVersionNotification(player) && !hasAccount) {
+            String message = AwarenessNotifications.getNotification(
+                    "\n§cHey, just a heads up!"
+                            + " You do not seem to have an account paired with your Spartan AntiCheat license."
+                            + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this."
+            );
+
+            if (AwarenessNotifications.canSend(player.uuid, "has-account", notificationCooldown)) {
+                player.sendImportantMessage(message);
+            }
+        }
+    }
+
+    // Priority:
+    // 1. Verify (No Version)
+    // 2. Detection (No Slots)
+    // 3. Alternative (No Other Version)
+    private static boolean attemptVersionNotification(SpartanPlayer player) {
         Check.DataType[] missingDetections = getMissingDetections();
 
         if (missingDetections.length == ResearchEngine.usableDataTypes.length) {
             sendVersionNotification(player, null);
+            return true;
         } else {
             List<SpartanPlayer> players = SpartanBukkit.getPlayers();
             int detectionSlots = CloudBase.getDetectionSlots();
@@ -129,6 +150,7 @@ public class SpartanEdition {
                     || !sendLimitNotification(player))) {
                 if (notifyCache) {
                     sendVersionNotification(player, missingDetections[0]);
+                    return true;
                 } else {
                     long time = System.currentTimeMillis();
 
@@ -138,6 +160,7 @@ public class SpartanEdition {
                         if (missingDetections[0] == player.dataType) {
                             notifyCache = true;
                             sendVersionNotification(player, missingDetections[0]);
+                            return true;
                         } else {
                             players.remove(player);
                             int size = players.size();
@@ -150,7 +173,7 @@ public class SpartanEdition {
                                     if (missingDetections[0] == otherPlayer.dataType) {
                                         notifyCache = true;
                                         sendVersionNotification(player, missingDetections[0]);
-                                        return;
+                                        return true;
                                     } else {
                                         checkedProfiles.add(player.protocol.getProfile());
                                     }
@@ -172,7 +195,7 @@ public class SpartanEdition {
                                         if (profile.hasData(missingDetections[0])) {
                                             notifyCache = true;
                                             sendVersionNotification(player, missingDetections[0]);
-                                            return;
+                                            return true;
                                         }
                                     }
                                 }
@@ -182,6 +205,7 @@ public class SpartanEdition {
                 }
             }
         }
+        return false;
     }
 
     private static void sendVersionNotification(SpartanPlayer player, Check.DataType dataType) {
@@ -189,9 +213,11 @@ public class SpartanEdition {
             String message;
 
             if (dataType == null) {
-                message = "\n§cHey, just a heads up!"
-                        + " Your owned editions of Spartan could not be verified."
-                        + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this.";
+                message = AwarenessNotifications.getNotification(
+                        "\n§cHey, just a heads up!"
+                                + " Your owned editions of Spartan could not be verified."
+                                + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this."
+                );
             } else {
                 message = AwarenessNotifications.getNotification(
                         (versionNotificationMessage

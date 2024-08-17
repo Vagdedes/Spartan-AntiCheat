@@ -28,7 +28,7 @@ public class EventsHandler_1_9 implements Listener {
             if (p == null) {
                 return;
             }
-            Elytra.judge(p, true);
+            Elytra.judge(p);
         }
     }
 }

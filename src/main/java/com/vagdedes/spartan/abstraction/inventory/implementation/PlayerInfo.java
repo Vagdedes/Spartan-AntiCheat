@@ -60,7 +60,10 @@ public class PlayerInfo extends InventoryMenu {
             return false;
         } else {
             setTitle(player, menu + (isOnline ? target.spartanPlayer.name : profile.getName()));
-            Set<Map.Entry<HackType, Double>> evidenceDetails = profile.evidence.getKnowledgeEntries(0.0);
+            Set<Map.Entry<HackType, PlayerEvidence.EvidenceDetails>> evidenceDetails = profile.evidence.getKnowledgeEntries(
+                    0.0,
+                    0.0
+            );
             List<String> lore = new ArrayList<>();
             lore.add("");
 
@@ -68,13 +71,13 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§7Certainty of cheating§8:");
                 Map<Double, HackType> map = new TreeMap<>(Collections.reverseOrder());
 
-                for (Map.Entry<HackType, Double> entry : evidenceDetails) {
-                    map.put(entry.getValue(), entry.getKey());
+                for (Map.Entry<HackType, PlayerEvidence.EvidenceDetails> entry : evidenceDetails) {
+                    map.put(entry.getValue().probability, entry.getKey());
                 }
                 for (Map.Entry<Double, HackType> entry : map.entrySet()) {
                     double probability = entry.getKey();
 
-                    if (probability < PlayerEvidence.prevention) {
+                    if (probability < PlayerEvidence.preventionProbability) {
                         lore.add(
                                 "§2" + entry.getValue().getCheck().getName()
                                         + "§8: §a" + AlgebraUtils.integerRound(probability * 100.0) + "%"
@@ -125,7 +128,7 @@ public class PlayerInfo extends InventoryMenu {
         if (isOnline) {
             for (HackType hackType : hackTypes) {
                 if (hackType.category == checkType) {
-                    violations += player.getViolations(hackType).getLevel();
+                    violations += player.getExecutor(hackType).getLevel();
                 }
             }
         }
@@ -146,7 +149,7 @@ public class PlayerInfo extends InventoryMenu {
 
         for (HackType hackType : hackTypes) {
             if (hackType.category == checkType) {
-                violations = isOnline ? player.getViolations(hackType).getLevel() : 0;
+                violations = isOnline ? player.getExecutor(hackType).getLevel() : 0;
                 String state = getDetectionState(
                         player,
                         hackType,
@@ -183,7 +186,7 @@ public class PlayerInfo extends InventoryMenu {
         if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
             return "Disabled";
         }
-        CancelCause disabledCause = player.getViolations(hackType).getDisableCause();
+        CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
                 cancellableCompatibility != null ? cancellableCompatibility + " Compatibility" :
                         notChecked ? "Temporarily Not Checked" :
@@ -225,7 +228,7 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (t != null && clickType.isLeftClick()) {
                     for (HackType hackType : Enums.HackType.values()) {
-                        t.spartanPlayer.getViolations(hackType).reset();
+                        t.spartanPlayer.getExecutor(hackType).resetLevel();
                     }
                     String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.spartanPlayer.name);
                     player.sendMessage(message);

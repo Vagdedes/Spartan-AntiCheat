@@ -263,6 +263,23 @@ public class RayUtils {
         exempt = target.isInsideVehicle();
         return intersection || exempt;
     }
+    public static boolean inHitbox(SpartanPlayer player, Location locationIn, float size) {
+        SpartanLocation location = player.movement.getRawLocation();
+        Location targetLocation = locationIn;
+
+        boolean intersection = false;
+        double targetX = targetLocation.getX();
+        double targetY = targetLocation.getY();
+        double targetZ = targetLocation.getZ();
+
+        AxisAlignedBB boundingBox = new AxisAlignedBB(
+                        targetX - size, targetY - size, targetZ - size,
+                        targetX + size, targetY + size, targetZ + size
+        );
+        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+        intersection = isIntersection(player, location, intersection, boundingBox);;
+        return intersection;
+    }
 
     private static boolean isIntersection(SpartanPlayer player, SpartanLocation location, boolean intersection, AxisAlignedBB boundingBox) {
         for (final boolean rotation : BOOLEANS) {

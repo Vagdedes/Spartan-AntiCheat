@@ -28,6 +28,10 @@ public class Messages extends ConfigurationBuilder {
         // Config
         addOption("config_reload", "&8[&2" + prefix + "&8]&e Config successfully reloaded.");
 
+        // Panic
+        addOption("panic_mode_enable", "&aPanic mode enabled, all checks are set to silent and will not punish players.");
+        addOption("panic_mode_disable", "&cPanic mode disabled, all checks will now run per configuration standards.");
+
         // Kick
         addOption("kick_reason", "&c {reason}");
         addOption("kick_broadcast_message", "&8[&2" + prefix + "&8]&c {player}&7 was kicked for&4 {reason}");

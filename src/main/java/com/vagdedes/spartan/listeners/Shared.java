@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.listeners;
 
+import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.event.PlayerAttackEvent;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
@@ -13,7 +14,6 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.MovementProcessing;
-import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
@@ -120,8 +120,10 @@ public class Shared {
         }
         MovementProcessing.run(p, to, ver, box);
 
-        for (Enums.HackType hackType : Event_Movement.handledChecks) {
-            if (p.getViolations(hackType).prevent()) {
+        for (Enums.HackType hackType : Enums.HackType.values()) {
+            CheckExecutor executor = p.getExecutor(hackType);
+
+            if (executor.scheduledPrevention && executor.prevent()) {
                 break;
             }
         }

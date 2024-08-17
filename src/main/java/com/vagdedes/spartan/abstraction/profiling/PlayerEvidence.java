@@ -10,19 +10,48 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerEvidence {
 
-    public static double
-            notification = 0.25,
-            prevention = 2.0 / 3.0,
-            punishment = 0.9;
+    public static final class EvidenceDetails {
 
-    private final Map<Enums.HackType, Double> probability; // Live object is used for synchronization
+        public final double probability;
+        private final double mean, self;
+        private final boolean positive;
+
+        private EvidenceDetails(double probability, double mean, double self, boolean positive) {
+            this.probability = probability;
+            this.mean = mean;
+            this.self = self;
+            this.positive = positive;
+        }
+
+        public boolean surpassesMeanByRatio(double required) {
+            double ratio = this.self / this.mean;
+            return positive
+                    ? ratio >= required
+                    : ratio <= (1 / required);
+        }
+    }
+
+    public static double
+            notificationProbability = 0.5,
+            notificationRatio = 0.9,
+
+    preventionProbability = 0.75,
+            preventionRatio = 1.5,
+
+    punishmentProbability = 0.95,
+            punishmentRatio = 2.0;
+
+    private final Map<Enums.HackType, EvidenceDetails> probability; // Live object is used for synchronization
 
     PlayerEvidence() {
         this.probability = new ConcurrentHashMap<>(2, 1.0f);
     }
 
-    public double get(Enums.HackType hackType) {
-        return this.probability.getOrDefault(hackType, 0.0);
+    public EvidenceDetails get(Enums.HackType hackType) {
+        return this.probability.getOrDefault(
+                hackType,
+                new EvidenceDetails(0.0, 0.0, 0.0, false)
+        );
     }
 
     public void clear() {
@@ -33,18 +62,24 @@ public class PlayerEvidence {
         this.probability.remove(hackType);
     }
 
-    public void add(Enums.HackType hackType, double probability) {
-        this.probability.put(hackType, probability);
+    public void add(Enums.HackType hackType, double probability, double mean, double self, boolean positive) {
+        this.probability.put(hackType, new EvidenceDetails(
+                probability,
+                mean,
+                self,
+                positive
+        ));
     }
 
     // Separator
 
-    public boolean has(double threshold) {
-        if (threshold == 0.0) {
+    public boolean has(double threshold, double meanRatio) {
+        if (threshold == 0.0 && meanRatio == 0.0) {
             return !this.probability.keySet().isEmpty();
         } else {
-            for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
-                if (entry.getValue() >= threshold) {
+            for (Map.Entry<Enums.HackType, EvidenceDetails> entry : this.probability.entrySet()) {
+                if (entry.getValue().probability >= threshold
+                        && entry.getValue().surpassesMeanByRatio(meanRatio)) {
                     return true;
                 }
             }
@@ -52,14 +87,15 @@ public class PlayerEvidence {
         }
     }
 
-    public Collection<Enums.HackType> getKnowledgeList(double threshold) {
-        if (threshold == 0.0) {
+    public Collection<Enums.HackType> getKnowledgeList(double threshold, double meanRatio) {
+        if (threshold == 0.0 && meanRatio == 0.0) {
             return new HashSet<>(this.probability.keySet());
         } else {
             Collection<Enums.HackType> set = new HashSet<>();
 
-            for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
-                if (entry.getValue() >= threshold) {
+            for (Map.Entry<Enums.HackType, EvidenceDetails> entry : this.probability.entrySet()) {
+                if (entry.getValue().probability >= threshold
+                        && entry.getValue().surpassesMeanByRatio(meanRatio)) {
                     set.add(entry.getKey());
                 }
             }
@@ -67,14 +103,15 @@ public class PlayerEvidence {
         }
     }
 
-    public Set<Map.Entry<Enums.HackType, Double>> getKnowledgeEntries(double threshold) {
-        if (threshold == 0.0) {
+    public Set<Map.Entry<Enums.HackType, EvidenceDetails>> getKnowledgeEntries(double threshold, double meanRatio) {
+        if (threshold == 0.0 && meanRatio == 0.0) {
             return new HashSet<>(this.probability.entrySet());
         } else {
-            Set<Map.Entry<Enums.HackType, Double>> set = new HashSet<>();
+            Set<Map.Entry<Enums.HackType, EvidenceDetails>> set = new HashSet<>();
 
-            for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
-                if (entry.getValue() >= threshold) {
+            for (Map.Entry<Enums.HackType, EvidenceDetails> entry : this.probability.entrySet()) {
+                if (entry.getValue().probability >= threshold
+                        && entry.getValue().surpassesMeanByRatio(meanRatio)) {
                     set.add(entry);
                 }
             }

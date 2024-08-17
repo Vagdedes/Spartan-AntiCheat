@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.utils.minecraft.world;
+package com.vagdedes.spartan.utils.minecraft.inventory;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
@@ -6,7 +6,7 @@ import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
-import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -314,7 +314,7 @@ public class MaterialUtils {
         return -1L;
     }
 
-    private static Material findMaterial(String string) {
+    public static Material findMaterial(String string) {
         for (Material material : Material.values()) {
             if (material.toString().equalsIgnoreCase(string)) {
                 return material;

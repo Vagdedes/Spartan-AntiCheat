@@ -17,7 +17,7 @@ import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
-import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

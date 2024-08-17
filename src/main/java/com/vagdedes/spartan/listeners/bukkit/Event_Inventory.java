@@ -32,7 +32,7 @@ public class Event_Inventory implements Listener {
         // Detections
         p.getExecutor(Enums.HackType.ItemDrops).run(e.isCancelled());
 
-        if (p.getViolations(Enums.HackType.ItemDrops).prevent()) {
+        if (p.getExecutor(Enums.HackType.ItemDrops).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -62,8 +62,8 @@ public class Event_Inventory implements Listener {
             p.getExecutor(Enums.HackType.InventoryClicks).handle(cancelled, e);
 
             // GUIs
-            if (p.getViolations(Enums.HackType.ImpossibleInventory).prevent()
-                    | p.getViolations(Enums.HackType.InventoryClicks).prevent()) {
+            if (p.getExecutor(Enums.HackType.ImpossibleInventory).prevent()
+                    | p.getExecutor(Enums.HackType.InventoryClicks).prevent()) {
                 e.setCancelled(true);
             } else if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 for (InventoryMenu menu : InteractiveInventory.menus) {

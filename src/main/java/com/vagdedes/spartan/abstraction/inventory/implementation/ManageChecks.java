@@ -10,7 +10,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
-import com.vagdedes.spartan.utils.minecraft.world.MaterialUtils;
+import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;

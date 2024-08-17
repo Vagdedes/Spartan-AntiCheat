@@ -1,9 +1,9 @@
 name: Spartan
 authors: [Evangelos Dedes @Vagdedes, pawsashatoy]
 main: com.vagdedes.spartan.Register
-version: Phase 536.7
+version: Phase 536.8
 website: https://www.vagdedes.com
-description: In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning.
+description: In the mission to create & maintain the best Minecraft anti-cheat, powered by Machine Learning (ML)
 api-version: 1.13
 softdepend: [mcMMO, ProtocolSupport, VeinMiner, AcidRain, AcidIsland, EcoEnchants, CustomEnchantsPlus,
              aSkyBlock, AdvancedAbilities, CrackShot, CrackShotPlus, CraftBook, GrapplingHook, ProtocolLib,

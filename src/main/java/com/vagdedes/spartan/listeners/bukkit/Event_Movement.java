@@ -11,15 +11,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class Event_Movement implements Listener {
 
-    public static final Enums.HackType[] handledChecks = new Enums.HackType[]{
-            Enums.HackType.NoFall,
-            Enums.HackType.IrregularMovements,
-            Enums.HackType.Speed,
-            Enums.HackType.MorePackets,
-            Enums.HackType.ImpossibleInventory,
-            Enums.HackType.Exploits
-    };
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Teleport(PlayerTeleportEvent e) {
         Location nto = e.getTo();

@@ -5,10 +5,10 @@ import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 public class ViolationHistory {
 
     private PlayerViolation previous;
-    private int increaseSum, timeDifferenceSum;
+    private int violationIncrease, timeDifference;
+    private double count;
 
     ViolationHistory() {
-        this.previous = null;
     }
 
     public boolean isEmpty() {
@@ -16,22 +16,27 @@ public class ViolationHistory {
     }
 
     public void store(PlayerViolation playerViolation) {
-        this.increaseSum += playerViolation.increase;
+        this.count++;
 
+        if (playerViolation.level > this.violationIncrease) {
+            this.violationIncrease = playerViolation.level;
+        }
         if (this.previous != null) {
             int timeDifference = (int) (playerViolation.time - this.previous.time);
-            this.timeDifferenceSum += timeDifference;
+            this.timeDifference += timeDifference * timeDifference;
         }
         this.previous = playerViolation;
         ResearchEngine.queueToCache(playerViolation);
     }
 
-    public int getIncreaseSum() {
-        return this.increaseSum;
+    public double getViolationIncrease() {
+        return this.violationIncrease;
     }
 
-    public int getTimeDifferenceSum() {
-        return this.timeDifferenceSum;
+    public double getTimeDifference() {
+        return this.count > 1
+                ? Math.sqrt(this.timeDifference / (this.count - 1.0))
+                : 0.0;
     }
 
 }

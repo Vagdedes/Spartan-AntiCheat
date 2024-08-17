@@ -37,7 +37,7 @@ public class Event_Vehicle implements Listener {
 
                     if (p != null) {
                         for (Enums.HackType hackType : hackTypes) {
-                            p.getViolations(hackType).addDisableCause(
+                            p.getExecutor(hackType).addDisableCause(
                                     hackType.toString(),
                                     null,
                                     1
