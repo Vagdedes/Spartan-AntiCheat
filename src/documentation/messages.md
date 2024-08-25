@@ -1,24 +1,22 @@
-# <a href="#">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://www.vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
 
-## <a href="#">settings.yml</a> | <a href="#">checks.yml</a> | <a href="#">sql.yml</a> | <a href="#">compatibility.yml</a>
-
-### messages.yml Example
+## messages.yml Example
 ```
 config_reload: '&8[&2{prefix}&8]&e Config successfully reloaded.'
 no_permission: '&cYou don''t have permission to interact with this.'
 player_not_found_message: '&cPlayer not found.'
 ```
 
-### HEX Colors
+## HEX Colors
 ```
 Format: §x§1§2§3§4§5§6
 Example: §x§0§8§f§f§1§0 is equivalent to #08ff10
 Same applies for most plugins that don't use the standard &#123456 or #123456
 ```
 
-### Syntax / Placeholders
+## Syntax / Placeholders
 
-#### Server:
+### Server:
 ```{online} Amount of server players currently online
 {staff} Amount of staff players online defined by Spartan permissions
 {server:name} Server’s name gathered from Spartan’s configuration
@@ -40,7 +38,7 @@ Messages:
 {reported} Returns the name of the player who was reported
 %% Creates a space character in any text
 ```
-#### Time:
+### Time:
 ```
 {date:time} Time in hours:minutes:seconds form
 {date:d-m-y} Time in day-month-year form
@@ -49,7 +47,7 @@ Messages:
 {creation} Creation date in year-month-day form related to the execution of a functionality
 {expiration} Expiration date in year-month-day form related to the execution of a functionality
 ```
-#### Player:
+### Player:
 ```
 {player} Player’s original name
 {player:type} Player’s type (Example: java, bedrock)
