@@ -1,8 +1,6 @@
-# <a href="#">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://www.vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
 
-## <a href="#">checks.yml</a> | <a href="#">messages.yml</a> | <a href="#">sql.yml</a> | <a href="#">compatibility.yml</a>
-
-### settings.yml:
+## settings.yml:
 ```
 Punishments: 
   broadcast_on_punishment: true # Let everyone know when someone is punished via the chat
