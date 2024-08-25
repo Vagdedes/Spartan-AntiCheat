@@ -1,8 +1,6 @@
 # <a href="https://vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon
 
-## <a href="#">settings.yml</a> | <a href="#">checks.yml</a> | <a href="#">messages.yml</a> | <a href="#">compatibility.yml</a>
-
-### sql.yml Example
+## sql.yml Example
 ```
 host: 127.0.0.1
 user: db_247
