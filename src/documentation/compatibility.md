@@ -1,15 +1,13 @@
-# <a href="#">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://www.vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
  
-## <a href="#">settings.yml</a> | <a href="#">checks.yml</a> | <a href="#">messages.yml</a> | <a href="#">sql.yml</a>
-
-### messages.yml Example
+## messages.yml Example
 ```
 Compatibility: # The name of the compatibility
   enabled: true # Enabled judges whether a compatibility will become functional if detected to exist or forced
   force: false # Force will attempt to make a compatibility functional regardless if it exists (potential errors)
 ```
 
-### Compatibilities
+## Compatibilities
 Item Attributes: 1.9+ Minecraft built-in feature<br>
 AntiAltAccount: http://www.spigotmc.org/resources/73105/<br>
 FileGUI: http://www.spigotmc.org/resources/73893/<br>
@@ -66,7 +64,7 @@ Irregular amounts of clicks caused by special mouse features. (Ex. Butterfly Cli
 Screenshot functionality spam causing quick & temporary freezing. (Ex. Taking many screenshots at a similar time)<br>
 Using Minecraft’s control options in irregular ways. (Ex. Assigning movement control to mouse for faster movement)
 
-### Gameplay & Technologies
+## Gameplay & Technologies
 Here are gameplays, technologies or part of gameplays the Spartan AntiCheat is known to work with well:
 ```
 Pterodactyl
