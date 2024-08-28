@@ -1,3 +1,5 @@
+# <a href="https://vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
+
 ## 1. Questions
 Ask your question in the respective channel.
 
