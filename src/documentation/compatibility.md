@@ -9,7 +9,6 @@ Compatibility: # The name of the compatibility
 
 ## Compatibilities
 Item Attributes: 1.9+ Minecraft built-in feature<br>
-AntiAltAccount: http://www.spigotmc.org/resources/73105/<br>
 FileGUI: http://www.spigotmc.org/resources/73893/<br>
 CustomEnchantPlus: http://www.spigotmc.org/resources/72678/<br>
 CraftBook: http://www.spigotmc.org/resources/2083/<br>
