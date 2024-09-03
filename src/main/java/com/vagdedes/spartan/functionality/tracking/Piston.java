@@ -2,6 +2,7 @@ package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -19,20 +20,20 @@ public class Piston {
             verticalDistance = 2.0;
 
     public static void run(Block block, List<Block> blocks) {
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-        if (!players.isEmpty()) {
+        if (!protocols.isEmpty()) {
             boolean runBlocks = !blocks.isEmpty();
             World world = block.getWorld();
 
-            for (SpartanPlayer p : players) {
-                if (p.getWorld().equals(world)) {
-                    SpartanLocation location = p.movement.getLocation();
+            for (SpartanProtocol protocol : protocols) {
+                if (protocol.spartanPlayer.getWorld().equals(world)) {
+                    SpartanLocation location = protocol.spartanPlayer.movement.getLocation();
                     double preX = AlgebraUtils.getSquare(location.getX(), block.getX()),
                             diffY = location.getY() - block.getY(),
                             preZ = AlgebraUtils.getSquare(location.getZ(), block.getZ());
 
-                    if (!run(p, preX, diffY, preZ) // Check if the player is nearby to the piston
+                    if (!run(protocol.spartanPlayer, preX, diffY, preZ) // Check if the player is nearby to the piston
                             && runBlocks
                             && Math.sqrt(preX + (diffY * diffY) + preZ) <= PlayerUtils.chunk) { // Check if the player is nearby to the piston affected blocks
                         for (Block affected : blocks) {
@@ -40,7 +41,7 @@ public class Piston {
                             diffY = location.getY() - block.getY();
                             preZ = AlgebraUtils.getSquare(location.getZ(), affected.getZ());
 
-                            if (run(p, preX, diffY, preZ)) { // Check if the player is nearby to the piston affected block
+                            if (run(protocol.spartanPlayer, preX, diffY, preZ)) { // Check if the player is nearby to the piston affected block
                                 break;
                             }
                         }

@@ -1,44 +1,64 @@
-package com.vagdedes.spartan.listeners.protocol.move;
+package com.vagdedes.spartan.listeners.protocol;
 
 import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.vagdedes.spartan.abstraction.check.implementation.movement.simulation.modules.MCClient;
+import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.Shared;
-import com.vagdedes.spartan.listeners.protocol.Join;
 import com.vagdedes.spartan.listeners.protocol.async.LagCompensation;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-public class BackgroundMove {
+public class Move extends PacketAdapter {
 
-    static void run(PacketEvent event) {
+    public Move() {
+        super(
+                Register.plugin,
+                ListenerPriority.LOWEST,
+                PacketType.Play.Client.POSITION,
+                PacketType.Play.Client.POSITION_LOOK,
+                PacketType.Play.Client.LOOK,
+                PacketType.Play.Client.GROUND
+        );
+    }
+
+    @Override
+    public void onPacketReceiving(PacketEvent event) {
+        long time = System.currentTimeMillis();
         Player player = event.getPlayer();
-        MCClient client = Join.getContainer().get(player.getUniqueId());
 
         if (ProtocolLib.isTemporary(player)) {
             return;
         }
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
-        if (System.currentTimeMillis() - client.lastPacketTime > 4) client.verifiedPacket++;
-        movePacket(event, protocol);
-        client.lastPacketTime = System.currentTimeMillis();
+
+        if (System.currentTimeMillis() - protocol.mcClient.lastPacketTime > 4) {
+            protocol.mcClient.verifiedPacket++;
+        }
+        protocol.mcClient.lastPacketTime = time;
 
         if (!invalidTeleport(protocol.getLocation())
-                && protocol.isOnLoadStatus()) {
-            protocol.setOnLoadStatus(false);
+                && protocol.isLoading()) {
+            protocol.load();
+            return;
         } else if (!invalidTeleport(protocol.getLocation())
-                || (invalidTeleport(protocol.getLocation()) && !protocol.isOnLoadStatus())) {
+                || (invalidTeleport(protocol.getLocation()) && !protocol.isLoading())) {
             LagCompensation.add(player.getEntityId(), protocol.getLocation());
         }
+        if (protocol.isLoading()) {
+            return;
+        }
+        movePacket(event, protocol);
     }
 
     private static void movePacket(PacketEvent event, SpartanProtocol protocol) {
-        if (SpartanBukkit.packetsEnabled_Movement()) {
+        if (SpartanBukkit.packetsEnabled()) {
             PacketContainer packet = event.getPacket();
             protocol.setOnGround(onGroundPacketLevel(event));
             PacketType type = event.getPacket().getType();
@@ -70,7 +90,7 @@ public class BackgroundMove {
                 Shared.movement(new PlayerMoveEvent(
                         event.getPlayer(),
                         from,
-                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                        protocol.getLocation()
                 ));
             } else if (type.equals(PacketType.Play.Client.POSITION_LOOK)) {
                 Location from = protocol.getLocation().clone(),
@@ -83,7 +103,7 @@ public class BackgroundMove {
                 Shared.movement(new PlayerMoveEvent(
                         event.getPlayer(),
                         from,
-                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                        protocol.getLocation()
                 ));
             } else if (type.equals(PacketType.Play.Client.POSITION)) {
                 Location from = protocol.getLocation().clone(),
@@ -94,7 +114,7 @@ public class BackgroundMove {
                 Shared.movement(new PlayerMoveEvent(
                         event.getPlayer(),
                         from,
-                        protocol.spartanPlayer.movement.refreshLocation(protocol.getLocation())
+                        protocol.getLocation()
                 ));
             }
         }
@@ -118,4 +138,5 @@ public class BackgroundMove {
     private static boolean invalidTeleport(Location location) {
         return location.getX() + location.getZ() == 17;
     }
+
 }

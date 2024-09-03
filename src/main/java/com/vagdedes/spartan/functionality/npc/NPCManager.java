@@ -106,7 +106,7 @@ public class NPCManager implements Listener {
                             SpartanPlayer player = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
 
                             if (player != null) {
-                                InteractiveInventory.mainMenu.open(player, Permissions.has(player));
+                                InteractiveInventory.mainMenu.open(player, Permissions.has(player.getInstance()));
                             }
                             break;
                         }
@@ -135,7 +135,7 @@ public class NPCManager implements Listener {
                                 SpartanPlayer player = SpartanBukkit.getProtocol((Player) damager).spartanPlayer;
 
                                 if (player != null) {
-                                    InteractiveInventory.mainMenu.open(player, Permissions.has(player));
+                                    InteractiveInventory.mainMenu.open(player, Permissions.has(player.getInstance()));
                                 }
                             }
                             break;

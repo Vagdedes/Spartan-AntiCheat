@@ -51,8 +51,8 @@ public class PlayerProfile {
 
     public PlayerProfile(SpartanProtocol protocol) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        this.uuid = protocol.spartanPlayer.uuid;
-        this.name = protocol.spartanPlayer.name;
+        this.uuid = protocol.player.getUniqueId();
+        this.name = protocol.player.getName();
         this.offlinePlayer = protocol.player; // Attention
         this.evidence = new PlayerEvidence();
         this.skull = null;
@@ -71,7 +71,7 @@ public class PlayerProfile {
     }
 
     public void update(SpartanProtocol protocol) {
-        this.uuid = protocol.spartanPlayer.uuid;
+        this.uuid = protocol.player.getUniqueId();
     }
 
     // Separator
@@ -115,7 +115,7 @@ public class PlayerProfile {
                 SpartanPlayer player = getSpartanPlayer();
 
                 if (player != null) {
-                    this.uuid = player.uuid;
+                    this.uuid = player.getInstance().getUniqueId();
                     this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
                 } else {
                     this.offlinePlayer = Bukkit.getOfflinePlayer(name);
@@ -147,6 +147,15 @@ public class PlayerProfile {
 
     public MiningHistory getMiningHistory(MiningHistory.MiningOre ore) {
         return miningHistory[ore.ordinal()];
+    }
+
+    public boolean hasData(Enums.HackType hackType) {
+        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
+            if (!violationHistory[dataType.ordinal()][hackType.ordinal()].isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean hasData(Check.DataType dataType) {

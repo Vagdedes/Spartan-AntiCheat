@@ -57,7 +57,8 @@ public class InventoryUtils {
     }
 
     public static ItemStack getSkull(OfflinePlayer offlinePlayer, String backupName, boolean create) {
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+        if (BackgroundInventoryUtils.bukkitProfile
+                && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             return BackgroundInventoryUtils.getSkull_v1_13(offlinePlayer, backupName, create);
         } else {
             ItemStack skull = new ItemStack(

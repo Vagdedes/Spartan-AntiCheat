@@ -26,6 +26,8 @@ public class SpartanPlayerMovement {
             eventHorizontal,
             eventPreviousHorizontal,
             eventVertical,
+            eventXDiff,
+            eventZDiff,
             eventPreviousVertical,
             eventBox,
             eventPreviousBox;
@@ -40,7 +42,6 @@ public class SpartanPlayerMovement {
     private Material lastLiquidMaterial;
     private SpartanLocation
             location,
-            eventTo,
             eventFrom,
             detectionLocation;
     SpartanLocation schedulerFrom;
@@ -57,7 +58,6 @@ public class SpartanPlayerMovement {
         this.locations.put(TPS.tick(), list);
 
         this.location = location;
-        this.eventTo = location;
         this.eventFrom = location;
         this.schedulerFrom = location;
         this.detectionLocation = location;
@@ -85,6 +85,16 @@ public class SpartanPlayerMovement {
 
     public Double getPreviousEventHorizontal() {
         return eventPreviousHorizontal;
+    }
+
+    // Separator
+
+    public Double getEventXDiff() {
+        return eventXDiff;
+    }
+
+    public Double getEventZDiff() {
+        return eventZDiff;
     }
 
     // Separator
@@ -270,10 +280,6 @@ public class SpartanPlayerMovement {
         return schedulerFrom;
     }
 
-    public SpartanLocation getEventToLocation() {
-        return eventTo;
-    }
-
     public SpartanLocation getEventFromLocation() {
         return eventFrom;
     }
@@ -318,14 +324,14 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean positionChanged() {
-        return this.eventTo.getX() != this.eventFrom.getX()
-                || this.eventTo.getY() != this.eventFrom.getY()
-                || this.eventTo.getZ() != this.eventFrom.getZ();
+        return this.location.getX() != this.eventFrom.getX()
+                || this.location.getY() != this.eventFrom.getY()
+                || this.location.getZ() != this.eventFrom.getZ();
     }
 
     public boolean directionChanged() {
-        return this.eventTo.getYaw() != this.eventFrom.getYaw()
-                || this.eventTo.getPitch() != this.eventFrom.getPitch();
+        return this.location.getYaw() != this.eventFrom.getYaw()
+                || this.location.getPitch() != this.eventFrom.getPitch();
     }
 
     // Separator
@@ -345,9 +351,9 @@ public class SpartanPlayerMovement {
 
     public SpartanLocation getLocation() {
         SpartanLocation vehicleLocation = getVehicleLocation();
+        this.refreshLocation(this.parent.protocol.getLocation());
 
         if (vehicleLocation == null) {
-            this.refreshLocation(this.parent.protocol.getLocation());
             return this.location;
         } else {
             return vehicleLocation;
@@ -389,7 +395,9 @@ public class SpartanPlayerMovement {
 
     public boolean processLastMoveEvent(Location originalTo, SpartanLocation vehicle,
                                         SpartanLocation to, SpartanLocation from,
-                                        double distance, double horizontal, double vertical, double box) {
+                                        double distance, double horizontal,
+                                        double vertical, double xDiff, double zDiff,
+                                        double box) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
                     y = clampMin(to.getY(), -2.0E7D, 2.0E7D),
@@ -405,17 +413,20 @@ public class SpartanPlayerMovement {
         if (vehicle == null) {
             this.refreshLocation(originalTo);
         }
-        this.eventTo = to;
         this.eventFrom = from;
         this.eventDistance = distance;
         this.eventPreviousHorizontal = this.eventHorizontal;
         this.eventHorizontal = horizontal;
         this.eventPreviousVertical = this.eventVertical;
         this.eventVertical = vertical;
+        this.eventXDiff = xDiff;
+        this.eventZDiff = zDiff;
         this.eventPreviousBox = this.eventBox;
         this.eventBox = box;
         this.judgeGround(true);
-        return true;
+        return this.eventPreviousHorizontal != null
+                && this.eventPreviousVertical != null
+                && this.eventPreviousBox != null;
     }
 
     private double clampMin(double d, double d2, double d3) {

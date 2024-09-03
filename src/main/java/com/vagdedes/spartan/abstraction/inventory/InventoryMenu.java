@@ -77,7 +77,7 @@ public abstract class InventoryMenu {
             boolean check = false;
 
             for (Enums.Permission permission : permissions) {
-                if (Permissions.has(player, permission)) {
+                if (Permissions.has(player.getInstance(), permission)) {
                     check = true;
                     break;
                 }
@@ -116,7 +116,7 @@ public abstract class InventoryMenu {
                 boolean check = false;
 
                 for (Enums.Permission permission : permissions) {
-                    if (Permissions.has(player, permission)) {
+                    if (Permissions.has(player.getInstance(), permission)) {
                         check = true;
                         break;
                     }

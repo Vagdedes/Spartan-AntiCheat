@@ -84,8 +84,7 @@ public class PlayerStateLists {
 
             for (PlayerProfile playerProfile : playerProfiles) {
                 if (playerProfile.evidence.has(
-                        PlayerEvidence.preventionProbability,
-                        PlayerEvidence.preventionRatio
+                        PlayerEvidence.preventionProbability
                 )) {
                     list.add(playerProfile);
                 }
@@ -111,8 +110,7 @@ public class PlayerStateLists {
         if (listSize > 0) {
             for (PlayerProfile playerProfile : playerProfiles) {
                 Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(
-                        PlayerEvidence.preventionProbability,
-                        PlayerEvidence.preventionRatio
+                        PlayerEvidence.preventionProbability
                 );
 
                 if (!evidenceDetails.isEmpty()) {

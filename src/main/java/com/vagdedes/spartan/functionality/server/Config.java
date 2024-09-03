@@ -91,7 +91,7 @@ public class Config {
             if (sender instanceof CommandSender) {
                 ((CommandSender) sender).sendMessage(message);
             } else if (sender instanceof SpartanPlayer) {
-                ((SpartanPlayer) sender).sendMessage(message);
+                ((SpartanPlayer) sender).getInstance().sendMessage(message);
             }
         }
         create();
@@ -129,7 +129,7 @@ public class Config {
 
     public static boolean isEnabled(Check.DataType dataType) {
         for (HackType hackType : Enums.HackType.values()) {
-            if (hackType.getCheck().isEnabled(dataType, null, null)) {
+            if (hackType.getCheck().isEnabled(dataType, null)) {
                 return true;
             }
         }

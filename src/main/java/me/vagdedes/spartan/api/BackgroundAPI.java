@@ -2,6 +2,7 @@ package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.moderation.Wave;
@@ -50,7 +51,7 @@ public class BackgroundAPI {
 
     static boolean hasNotificationsEnabled(Player p) {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return player != null && DetectionNotifications.isEnabled(player);
+        return DetectionNotifications.isEnabled(player);
     }
 
     @Deprecated
@@ -65,18 +66,12 @@ public class BackgroundAPI {
     }
 
     static void setNotifications(Player p, boolean value) {
+        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
+
         if (value) {
-            SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                DetectionNotifications.set(player, DetectionNotifications.defaultFrequency);
-            }
+            DetectionNotifications.set(player, DetectionNotifications.defaultFrequency);
         } else {
-            SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                DetectionNotifications.remove(player);
-            }
+            DetectionNotifications.remove(player);
         }
     }
 
@@ -88,10 +83,7 @@ public class BackgroundAPI {
     static void setNotifications(Player p, int frequency) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                DetectionNotifications.set(player, Math.abs(frequency));
-            }
+            DetectionNotifications.set(player, Math.abs(frequency));
         }
     }
 
@@ -110,7 +102,7 @@ public class BackgroundAPI {
     }
 
     static boolean isEnabled(HackType HackType) {
-        return HackType.getCheck().isEnabled(null, null, null);
+        return HackType.getCheck().isEnabled(null, null);
     }
 
     static boolean isSilent(HackType HackType) {
@@ -119,12 +111,7 @@ public class BackgroundAPI {
 
     static int getVL(Player p, HackType hackType) {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-        if (player != null) {
-            return player.getExecutor(hackType).getLevel();
-        } else {
-            return 0;
-        }
+        return player.getExecutor(hackType).getLevel();
     }
 
     @Deprecated
@@ -135,17 +122,12 @@ public class BackgroundAPI {
 
     static int getVL(Player p) {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
+        int total = 0;
 
-        if (player != null) {
-            int total = 0;
-
-            for (HackType hackType : Enums.HackType.values()) {
-                total += player.getExecutor(hackType).getLevel();
-            }
-            return total;
-        } else {
-            return 0;
+        for (HackType hackType : Enums.HackType.values()) {
+            total += player.getExecutor(hackType).getLevel();
         }
+        return total;
     }
 
     @Deprecated
@@ -201,10 +183,7 @@ public class BackgroundAPI {
     static void cancelCheck(Player p, HackType hackType, int ticks) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                player.getExecutor(hackType).addDisableCause("Developer-API", null, ticks);
-            }
+            player.getExecutor(hackType).addDisableCause("Developer-API", null, ticks);
         }
     }
 
@@ -212,10 +191,8 @@ public class BackgroundAPI {
         if (Config.settings.getBoolean("Important.enable_developer_api")) { // Keep the null pointer protection to prevent the method from acting differently
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
-            if (player != null) {
-                for (HackType hackType : Enums.HackType.values()) {
-                    player.getExecutor(hackType).addDisableCause("Developer-API", string, ticks);
-                }
+            for (HackType hackType : Enums.HackType.values()) {
+                player.getExecutor(hackType).addDisableCause("Developer-API", string, ticks);
             }
         }
     }
@@ -235,40 +212,28 @@ public class BackgroundAPI {
     static void enableSilentChecking(Player p, HackType hackType) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
-            }
+            player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
         }
     }
 
     static void disableSilentChecking(Player p, HackType hackType) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                player.getExecutor(hackType).removeSilentCause();
-            }
+            player.getExecutor(hackType).removeSilentCause();
         }
     }
 
     static void startCheck(Player p, HackType hackType) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                player.getExecutor(hackType).removeDisableCause();
-            }
+            player.getExecutor(hackType).removeDisableCause();
         }
     }
 
     static void stopCheck(Player p, HackType hackType) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            if (player != null) {
-                player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
-            }
+            player.getExecutor(hackType).addSilentCause("Developer-API", null, 0);
         }
     }
 
@@ -276,9 +241,9 @@ public class BackgroundAPI {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             HackType[] hackTypes = Enums.HackType.values();
 
-            for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
+            for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
                 for (HackType hackType : hackTypes) {
-                    player.getExecutor(hackType).resetLevel();
+                    protocol.spartanPlayer.getExecutor(hackType).resetLevel();
                 }
             }
         }
@@ -288,22 +253,20 @@ public class BackgroundAPI {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
 
-            if (player != null) {
-                for (HackType hackType : Enums.HackType.values()) {
-                    player.getExecutor(hackType).resetLevel();
-                }
+            for (HackType hackType : Enums.HackType.values()) {
+                player.getExecutor(hackType).resetLevel();
             }
         }
     }
 
     static boolean isBypassing(Player p) {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return player != null && Permissions.isBypassing(player, null);
+        return Permissions.isBypassing(player, null);
     }
 
     static boolean isBypassing(Player p, HackType HackType) {
         SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return player != null && Permissions.isBypassing(player, HackType);
+        return Permissions.isBypassing(player, HackType);
     }
 
     @Deprecated

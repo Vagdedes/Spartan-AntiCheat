@@ -23,8 +23,7 @@ import java.util.*;
 public class SpartanLocation implements Cloneable {
 
     private static final boolean
-            v_1_13 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13),
-            v_1_17 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
+            v_1_13 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13);
 
     public static int getChunkPos(int pos) {
         return pos >> 4;
@@ -150,7 +149,7 @@ public class SpartanLocation implements Cloneable {
     }
 
     public int getLocalY() {
-        if (SpartanLocation.v_1_17) {
+        if (Event_Chunks.heightSupport) {
             return Math.max(this.world.getMinHeight(), Math.min(getBlockY(), this.world.getMaxHeight()));
         } else {
             return Math.max(0, Math.min(getBlockY(), PlayerUtils.height));
@@ -269,10 +268,10 @@ public class SpartanLocation implements Cloneable {
     public SpartanBlock getBlock() {
         int blockY = getBlockY();
 
-        if (SpartanLocation.v_1_17 ?
+        if (Event_Chunks.heightSupport ?
                 blockY >= this.world.getMinHeight() && blockY <= this.world.getMaxHeight() :
                 blockY >= 0 && blockY <= PlayerUtils.height) {
-            if (Event_Chunks.enabled()) {
+            if (SpartanBukkit.packetsEnabled()) {
                 if (SpartanBukkit.isSynchronised()) {
                     return setBlock();
                 } else {

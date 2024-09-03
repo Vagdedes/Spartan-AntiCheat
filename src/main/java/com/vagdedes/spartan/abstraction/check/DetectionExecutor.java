@@ -20,12 +20,16 @@ public abstract class DetectionExecutor {
 
     protected final void cancel(String information, double violations, SpartanLocation location,
                                 int cancelTicks, boolean groundTeleport, double damage) {
-        if (executor.canFunction()) { // Refer to 'canFunctionOrJustImplemented' in CheckExecutor
+        if (executor.canFunction()) {
             new HackPrevention(
-                    player, hackType,
-                    information, violations,
-                    location, cancelTicks,
-                    groundTeleport, damage
+                    player,
+                    hackType,
+                    information,
+                    violations,
+                    location,
+                    cancelTicks,
+                    groundTeleport,
+                    damage
             );
         }
     }

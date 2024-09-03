@@ -2,7 +2,6 @@ package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
@@ -20,17 +19,13 @@ public class Event_Chat implements Listener {
         if (ProtocolLib.isTemporary(n)) {
             return;
         }
-        if (PlayerLimitPerIP.isLimited(n)) {
-            e.setCancelled(true);
-        } else {
-            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
-            if (p == null) {
-                return;
-            }
-            // Detections
-            p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getMessage());
+        if (p == null) {
+            return;
         }
+        // Detections
+        p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getMessage());
     }
 
 }

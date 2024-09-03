@@ -25,7 +25,7 @@ public class BlockUtils {
             magma = MaterialUtils.get("magma"),
             beetroot_block = MaterialUtils.get("beetroot_block");
 
-    public static final Set<Material> air, solid, sensitive, editable, chest, plate, ice, glass, glass_pane, slabs,
+    public static final Set<Material> air, solid, sensitive, editable, chest, plate, ice, blue_ice, glass, glass_pane, slabs,
             climbable, climbableOriginal, door, entity_blocks, trap_door, liquid, banner, carpet, bed, shulker_box, stairs,
             fence, fence_gate, heads, leaves, egg, coral_fan, pot, anvil, cobble_walls, terracotta, concrete, candle,
             candleCake, dripleaf, ores, wood, wool, wire, semi_solid, changeable, walls, interactive_bushes, scaffolding,
@@ -178,12 +178,18 @@ public class BlockUtils {
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
             builder.add(Material.FROSTED_ICE);
-
-            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-                builder.add(Material.BLUE_ICE);
-            }
         }
         ice = new HashSet<>(builder);
+
+        // Separator
+
+        builder.clear();
+
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+            builder.add(Material.BLUE_ICE);
+        }
+        blue_ice = new HashSet<>(builder);
 
         // Separator
 
@@ -1362,7 +1368,15 @@ public class BlockUtils {
     }
 
     public static boolean areIceBlocks(Material m) {
+        return ice.contains(m) || blue_ice.contains(m);
+    }
+
+    public static boolean areRegularIceBlocks(Material m) {
         return ice.contains(m);
+    }
+
+    public static boolean areBlueIceBlocks(Material m) {
+        return blue_ice.contains(m);
     }
 
     public static boolean areWools(Material m) {
@@ -1475,6 +1489,10 @@ public class BlockUtils {
 
     public static String environmentToString(World.Environment e) {
         return toString(e);
+    }
+
+    public static String blockToString(Block b) {
+        return toString(new SpartanBlock(b).material.toString());
     }
 
     public static String blockToString(SpartanBlock b) {

@@ -13,7 +13,7 @@ public class Elytra {
         if (Enums.HackType.Exploits.getCheck().getBooleanOption("check_elytra", true)
                 && !Permissions.isBypassing(p, Enums.HackType.Exploits)) {
             if (p.getInstance().getVehicle() == null) {
-                PlayerInventory inventory = p.getInventory();
+                PlayerInventory inventory = p.getInstance().getInventory();
 
                 if (inventory != null) {
                     ItemStack i = inventory.getChestplate();

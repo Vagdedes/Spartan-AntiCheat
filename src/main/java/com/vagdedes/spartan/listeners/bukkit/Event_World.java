@@ -3,9 +3,9 @@ package com.vagdedes.spartan.listeners.bukkit;
 import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -14,7 +14,9 @@ import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,10 +28,58 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Event_World implements Listener {
 
     private static final boolean v1_21 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_21);
+    private static final Map<World, Map<Long, List<Entity>>> entities = new ConcurrentHashMap<>();
+
+    static {
+        SpartanBukkit.runRepeatingTask(() -> {
+            if (SpartanBukkit.hasPlayerCount()) {
+                if (MultiVersion.folia || SpartanBukkit.packetsEnabled()) {
+                    List<World> worlds = Bukkit.getWorlds();
+
+                    for (World world : worlds) {
+                        Map<Long, List<Entity>> perChunkEntities = new ConcurrentHashMap<>();
+
+                        for (Entity entity : world.getEntities()) {
+                            Location location = entity.getLocation();
+                            long hash = Event_Chunks.hashCoordinates(
+                                    SpartanLocation.getChunkPos(location.getBlockX()),
+                                    SpartanLocation.getChunkPos(location.getBlockZ())
+                            );
+                            perChunkEntities.computeIfAbsent(
+                                    hash,
+                                    k -> new CopyOnWriteArrayList<>()
+                            ).add(entity);
+                        }
+                        entities.put(world, perChunkEntities);
+                    }
+                    Iterator<World> iterator = entities.keySet().iterator();
+
+                    while (iterator.hasNext()) {
+                        if (!worlds.contains(iterator.next())) {
+                            iterator.remove();
+                        }
+                    }
+                } else {
+                    entities.clear();
+                }
+            }
+        }, 1L, 1L);
+    }
+
+    public static Map<Long, List<Entity>> getEntities(World world) {
+        return entities.get(world);
+    }
+
+    // Separator
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockBreak(BlockBreakEvent e) {
@@ -40,7 +90,7 @@ public class Event_World implements Listener {
         }
         SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
         Block nb = e.getBlock();
-        Event_Chunks.cache(nb.getChunk(), true);
+        Event_Chunks.cache(nb.getChunk(), false);
         SpartanBlock b = new SpartanBlock(nb);
         boolean cancelled = e.isCancelled();
         p.movement.judgeGround();
@@ -75,7 +125,7 @@ public class Event_World implements Listener {
         }
         SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
         Block nb = e.getBlock();
-        Event_Chunks.cache(nb.getChunk(), true);
+        Event_Chunks.cache(nb.getChunk(), false);
         p.movement.judgeGround();
 
         if (p.getWorld() != nb.getWorld()) {
@@ -121,53 +171,49 @@ public class Event_World implements Listener {
         if (ProtocolLib.isTemporary(n)) {
             return;
         }
-        if (PlayerLimitPerIP.isLimited(n)) {
-            e.setCancelled(true);
-        } else {
-            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
-            Block nb = e.getClickedBlock();
-            Action action = e.getAction();
-            boolean notNull = nb != null,
-                    customBlock = notNull && ItemsAdder.is(nb);
+        SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
+        Block nb = e.getClickedBlock();
+        Action action = e.getAction();
+        boolean notNull = nb != null,
+                customBlock = notNull && ItemsAdder.is(nb);
 
-            // Object
-            p.calculateClicks(
-                    action == Action.LEFT_CLICK_AIR
-                            && (p.getLastDamageDealt().timePassed() <= 1_000
-                            || p.getLastDamageReceived().timePassed() <= 1_000)
-                            && !p.getNearbyEntities(
-                            CombatUtils.maxHitDistance,
-                            CombatUtils.maxHitDistance,
-                            CombatUtils.maxHitDistance
-                    ).isEmpty()
-            );
+        // Object
+        p.calculateClicks(
+                action == Action.LEFT_CLICK_AIR
+                        && (p.getLastDamageDealt().timePassed() <= 1_000
+                        || p.getLastDamageReceived().timePassed() <= 1_000)
+                        && !p.getNearbyEntities(
+                        CombatUtils.maxHitDistance,
+                        CombatUtils.maxHitDistance,
+                        CombatUtils.maxHitDistance
+                ).isEmpty()
+        );
 
-            if (notNull) {
-                // Detections
-                if (!customBlock) {
-                    p.getExecutor(Enums.HackType.BlockReach).handle(false, e);
-                    p.getExecutor(Enums.HackType.FastBreak).handle(false, e);
-                    p.getExecutor(Enums.HackType.ImpossibleActions).handle(false, e);
-                }
-                p.getExecutor(Enums.HackType.FastEat).handle(false, e);
-
-                if (!customBlock) {
-                    p.getExecutor(Enums.HackType.GhostHand).handle(false, e);
-                }
-            } else {
-                // Detections
-                p.getExecutor(Enums.HackType.FastEat).handle(false, e);
-            }
+        if (notNull) {
             // Detections
             if (!customBlock) {
-                p.getExecutor(Enums.HackType.NoSwing).handle(false, e);
+                p.getExecutor(Enums.HackType.BlockReach).handle(false, e);
+                p.getExecutor(Enums.HackType.FastBreak).handle(false, e);
+                p.getExecutor(Enums.HackType.ImpossibleActions).handle(false, e);
             }
-            p.getExecutor(Enums.HackType.FastBow).handle(false, e);
+            p.getExecutor(Enums.HackType.FastEat).handle(false, e);
 
-            if (p.getExecutor(Enums.HackType.GhostHand).prevent()
-                    || p.getExecutor(Enums.HackType.FastClicks).prevent()) {
-                e.setCancelled(true);
+            if (!customBlock) {
+                p.getExecutor(Enums.HackType.GhostHand).handle(false, e);
             }
+        } else {
+            // Detections
+            p.getExecutor(Enums.HackType.FastEat).handle(false, e);
+        }
+        // Detections
+        if (!customBlock) {
+            p.getExecutor(Enums.HackType.NoSwing).handle(false, e);
+        }
+        p.getExecutor(Enums.HackType.FastBow).handle(false, e);
+
+        if (p.getExecutor(Enums.HackType.GhostHand).prevent()
+                || p.getExecutor(Enums.HackType.FastClicks).prevent()) {
+            e.setCancelled(true);
         }
     }
 

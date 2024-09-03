@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.player;
 
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -41,12 +42,12 @@ public class SpartanPunishments {
             if (Config.settings.getBoolean("Punishments.broadcast_on_punishment")) {
                 Bukkit.broadcastMessage(announcement);
             } else {
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-                if (!players.isEmpty()) {
-                    for (SpartanPlayer o : players) {
-                        if (DetectionNotifications.hasPermission(o)) {
-                            o.sendMessage(announcement);
+                if (!protocols.isEmpty()) {
+                    for (SpartanProtocol protocol : protocols) {
+                        if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                            protocol.player.sendMessage(announcement);
                         }
                     }
                 }

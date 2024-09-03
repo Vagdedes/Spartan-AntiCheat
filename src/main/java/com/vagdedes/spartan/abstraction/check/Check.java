@@ -1,16 +1,19 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
+import me.vagdedes.spartan.api.CheckPunishmentToggleEvent;
 import me.vagdedes.spartan.api.CheckSilentToggleEvent;
 import me.vagdedes.spartan.api.CheckToggleEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -51,6 +54,16 @@ public class Check {
             Register.plugin.getDataFolder() + "/checks.yml"
     );
 
+    private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
+
+    static {
+        defaultPunishments.add("spartan kick {player} {detections}");
+
+        for (int position = (defaultPunishments.size() + 1); position <= Check.maxCommands; position++) {
+            defaultPunishments.add("");
+        }
+    }
+
     // Object
 
     public final Enums.HackType hackType;
@@ -58,9 +71,10 @@ public class Check {
     private final Map<String, Object> options;
     public final boolean handleCancelledEvents;
     private final boolean[] enabled, silent, punish;
-    private final String[]
+    private final Set<String>
             disabledWorlds,
             silentWorlds;
+    private final Collection<String> punishments;
 
     // Object Methods
 
@@ -80,6 +94,7 @@ public class Check {
         this.enabled = new boolean[ResearchEngine.usableDataTypes.length];
         this.silent = new boolean[ResearchEngine.usableDataTypes.length];
         this.punish = new boolean[ResearchEngine.usableDataTypes.length];
+        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
 
         for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
             Object optionValue = getOption(
@@ -87,10 +102,19 @@ public class Check {
                     true,
                     false
             );
-            this.enabled[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
+            boolean enabled = optionValue instanceof Boolean ? (boolean) optionValue :
                     optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
                             optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
                                     Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            this.enabled[dataType.ordinal()] = enabled;
+
+            if (!enabled && !profiles.isEmpty()) {
+                for (PlayerProfile playerProfile : profiles) {
+                    if (playerProfile.hasData(dataType)) {
+                        playerProfile.evidence.remove(hackType);
+                    }
+                }
+            }
             optionValue = getOption(
                     "silent." + dataType.toString().toLowerCase(),
                     false,
@@ -101,7 +125,7 @@ public class Check {
                             optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
                                     Boolean.parseBoolean(optionValue.toString().toLowerCase());
             optionValue = getOption(
-                    "punish." + dataType.toString().toLowerCase(),
+                    "punishments.enabled." + dataType.toString().toLowerCase(),
                     true,
                     false
             );
@@ -152,15 +176,15 @@ public class Check {
                     }
                 }
                 if (!set.isEmpty()) {
-                    this.disabledWorlds = set.toArray(new String[0]);
+                    this.disabledWorlds = set;
                 } else {
-                    this.disabledWorlds = new String[]{};
+                    this.disabledWorlds = new HashSet<>(0);
                 }
             } else {
-                this.disabledWorlds = new String[]{};
+                this.disabledWorlds = new HashSet<>(0);
             }
         } else {
-            this.disabledWorlds = new String[]{};
+            this.disabledWorlds = new HashSet<>(0);
         }
 
         // Separator
@@ -180,21 +204,59 @@ public class Check {
                     }
                 }
                 if (!set.isEmpty()) {
-                    this.silentWorlds = set.toArray(new String[0]);
+                    this.silentWorlds = set;
                 } else {
-                    this.silentWorlds = new String[]{};
+                    this.silentWorlds = new HashSet<>(0);
                 }
             } else {
-                this.silentWorlds = new String[]{};
+                this.silentWorlds = new HashSet<>(0);
             }
         } else {
-            this.silentWorlds = new String[]{};
+            this.silentWorlds = new HashSet<>(0);
+        }
+
+        // Separator
+
+        String sectionString = hackType + ".punishments.commands";
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+
+        if (!configuration.contains(sectionString)) {
+            for (int position = 0; position < defaultPunishments.size(); position++) {
+                ConfigUtils.add(file, sectionString + "." + (position + 1), defaultPunishments.get(position));
+            }
+        }
+        ConfigurationSection section = configuration.getConfigurationSection(sectionString);
+
+        if (section != null) {
+            Collection<String> list = new ArrayList<>();
+            Set<String> keys = section.getKeys(true);
+
+            if (!keys.isEmpty()) {
+                sectionString += ".";
+
+                for (String key : keys) {
+                    if (AlgebraUtils.validInteger(key)) {
+                        int number = Integer.parseInt(key);
+
+                        if (number >= 1 && number <= Check.maxCommands) {
+                            String command = configuration.getString(sectionString + number);
+
+                            if (command != null && !command.isEmpty()) {
+                                list.add(command);
+                            }
+                        }
+                    }
+                }
+            }
+            this.punishments = list;
+        } else {
+            this.punishments = new ArrayList<>(0);
         }
     }
 
     // Separator
 
-    public boolean isEnabled(Check.DataType dataType, String world, SpartanPlayer player) {
+    public boolean isEnabled(Check.DataType dataType, String world) {
         if (dataType == null) {
             boolean enabled = false;
 
@@ -210,10 +272,8 @@ public class Check {
         } else if (!this.enabled[dataType.ordinal()]) {
             return false;
         }
-        return (world == null || isEnabledOnWorld(world))
-                && (player == null
-                || player.getExecutor(hackType).getDisableCause() == null
-                && !Permissions.isBypassing(player, hackType));
+        return world == null
+                || !disabledWorlds.contains(world.toLowerCase());
     }
 
     public void setEnabled(Check.DataType dataType, boolean b) {
@@ -235,52 +295,39 @@ public class Check {
                 return;
             }
         }
+        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
+
         for (Check.DataType type : dataTypes) {
-            int ordinal = type.ordinal();
+            CheckToggleEvent event;
 
-            if (this.enabled[ordinal] != b) {
-                CheckToggleEvent event;
+            if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                event = new CheckToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
+                Register.manager.callEvent(event);
+            } else {
+                event = null;
+            }
 
-                if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new CheckToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
-                    Register.manager.callEvent(event);
-                } else {
-                    event = null;
+            if (event == null || !event.isCancelled()) {
+                this.enabled[type.ordinal()] = b;
+                setOption("enabled." + type.toString().toLowerCase(), b);
+
+                synchronized (options) {
+                    options.clear();
                 }
-
-                if (event == null || !event.isCancelled()) {
-                    this.enabled[ordinal] = b;
-
-                    if (!b) {
-                        synchronized (options) {
-                            options.clear();
-                        }
-
-                        for (SpartanPlayer player : SpartanBukkit.getPlayers()) {
-                            player.getExecutor(hackType).resetLevel();
+                if (!b) {
+                    for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
+                        protocol.spartanPlayer.getExecutor(hackType).resetLevel();
+                    }
+                }
+                if (!profiles.isEmpty()) {
+                    for (PlayerProfile playerProfile : profiles) {
+                        if (playerProfile.hasData(type)) {
+                            playerProfile.evidence.remove(hackType);
                         }
                     }
-                    setOption("enabled." + type.toString().toLowerCase(), b);
                 }
             }
         }
-    }
-
-    public boolean isEnabledOnWorld(String world) {
-        if (disabledWorlds.length > 0) {
-            world = world.toLowerCase();
-
-            for (String disabledWorld : disabledWorlds) {
-                if (disabledWorld.equals(world)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public String[] getDisabledWorlds() {
-        return disabledWorlds;
     }
 
     // Separator
@@ -511,7 +558,8 @@ public class Check {
     // Separator
 
     public boolean isSilent(Check.DataType dataType, String world) {
-        if (panic) {
+        if (panic
+                || world != null && silentWorlds.contains(world.toLowerCase())) {
             return true;
         }
         if (dataType == null) {
@@ -529,24 +577,7 @@ public class Check {
         } else if (!this.silent[dataType.ordinal()]) {
             return false;
         }
-        return world == null || isSilentOnWorld(world);
-    }
-
-    public boolean isSilentOnWorld(String world) {
-        if (silentWorlds.length > 0) {
-            world = world.toLowerCase();
-
-            for (String silentWorld : silentWorlds) {
-                if (silentWorld.equals(world)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public String[] getSilentWorlds() {
-        return silentWorlds;
+        return true;
     }
 
     public void setSilent(Check.DataType dataType, boolean b) {
@@ -569,27 +600,65 @@ public class Check {
             }
         }
         for (Check.DataType type : dataTypes) {
-            int ordinal = type.ordinal();
+            CheckSilentToggleEvent event;
 
-            if (this.silent[ordinal] != b) {
-                CheckSilentToggleEvent event;
+            if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                event = new CheckSilentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
+                Register.manager.callEvent(event);
+            } else {
+                event = null;
+            }
 
-                if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new CheckSilentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
-                    Register.manager.callEvent(event);
-                } else {
-                    event = null;
+            if (event == null || !event.isCancelled()) {
+                this.silent[type.ordinal()] = b;
+                setOption("silent." + type.toString().toLowerCase(), b);
+
+                synchronized (options) {
+                    options.clear();
                 }
+            }
+        }
+    }
 
-                if (event == null || !event.isCancelled()) {
-                    this.silent[ordinal] = b;
+    public List<String> getPunishmentCommands() {
+        return new ArrayList<>(this.punishments);
+    }
 
-                    if (!b) {
-                        synchronized (options) {
-                            options.clear();
-                        }
-                    }
-                    setOption("silent." + type.toString().toLowerCase(), b);
+    public void setPunish(Check.DataType dataType, boolean b) {
+        Check.DataType[] dataTypes;
+
+        if (dataType == null) {
+            dataTypes = ResearchEngine.usableDataTypes;
+        } else {
+            dataTypes = null;
+
+            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+                if (type == dataType) {
+                    dataTypes = new Check.DataType[]{dataType};
+                    break;
+                }
+            }
+
+            if (dataTypes == null) {
+                return;
+            }
+        }
+        for (Check.DataType type : dataTypes) {
+            CheckPunishmentToggleEvent event;
+
+            if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                event = new CheckPunishmentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
+                Register.manager.callEvent(event);
+            } else {
+                event = null;
+            }
+
+            if (event == null || !event.isCancelled()) {
+                this.punish[type.ordinal()] = b;
+                setOption("punishments.enabled" + type.toString().toLowerCase(), b);
+
+                synchronized (options) {
+                    options.clear();
                 }
             }
         }

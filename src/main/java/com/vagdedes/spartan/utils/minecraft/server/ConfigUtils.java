@@ -54,13 +54,13 @@ public class ConfigUtils {
     }
 
     public static String replaceWithSyntax(SpartanPlayer p, String message, HackType hackType) {
-        UUID uuid = p.uuid;
+        UUID uuid = p.getInstance().getUniqueId();
         SpartanLocation loc = p.movement.getLocation();
         String worldName = p.getWorld().getName();
-        message = replace(message, "{player}", p.name);
+        message = replace(message, "{player}", p.getInstance().getName());
         message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", uuid.toString());
-        message = replace(message, "{ping}", String.valueOf(p.getPing()));
+        message = replace(message, "{ping}", String.valueOf(p.protocol.getPing()));
         message = replace(message, "{world}", worldName);
         message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
         message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());
@@ -95,7 +95,7 @@ public class ConfigUtils {
                 SpartanLocation loc = p.movement.getLocation();
                 String worldName = p.getWorld().getName();
                 message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
-                message = replace(message, "{ping}", String.valueOf(p.getPing()));
+                message = replace(message, "{ping}", String.valueOf(p.protocol.getPing()));
                 message = replace(message, "{world}", worldName);
                 message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
                 message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());

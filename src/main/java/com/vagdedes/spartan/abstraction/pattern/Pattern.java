@@ -324,7 +324,7 @@ public class Pattern {
                                     continue;
                                 }
                                 try {
-                                    PlayerProfile profile = ResearchEngine.getPlayerProfile(profileName);
+                                    PlayerProfile profile = ResearchEngine.getPlayerProfile(profileName, true);
 
                                     for (PatternGeneralization generalization : generalizations.values()) {
                                         generalization.learn(
@@ -423,8 +423,8 @@ public class Pattern {
                 );
 
                 if (message != null
-                        && AwarenessNotifications.canSend(player.uuid, "pattern-data", 60)) {
-                    player.sendMessage(message);
+                        && AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "pattern-data", 60)) {
+                    player.getInstance().sendMessage(message);
                 }
             }
         }

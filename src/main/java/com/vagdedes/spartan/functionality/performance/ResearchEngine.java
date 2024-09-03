@@ -7,9 +7,9 @@ import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
-import com.vagdedes.spartan.abstraction.profiling.ViolationHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -79,23 +79,27 @@ public class ResearchEngine {
         return new ArrayList<>(playerProfiles.values());
     }
 
-    public static PlayerProfile getPlayerProfile(String name) {
+    public static PlayerProfile getPlayerProfile(String name, boolean create) {
         name = name.toLowerCase();
         PlayerProfile playerProfile = playerProfiles.get(name);
 
         if (playerProfile != null) {
             return playerProfile;
         }
-        playerProfile = new PlayerProfile(name);
-        playerProfiles.put(name, playerProfile);
-        return playerProfile;
+        if (create) {
+            playerProfile = new PlayerProfile(name);
+            playerProfiles.put(name, playerProfile);
+            return playerProfile;
+        } else {
+            return null;
+        }
     }
 
     public static PlayerProfile getPlayerProfile(SpartanProtocol protocol, boolean force) {
         PlayerProfile playerProfile;
 
         if (!force) {
-            playerProfile = playerProfiles.get(protocol.spartanPlayer.name.toLowerCase());
+            playerProfile = playerProfiles.get(protocol.player.getName().toLowerCase());
 
             if (playerProfile != null) {
                 playerProfile.update(protocol);
@@ -103,7 +107,7 @@ public class ResearchEngine {
             }
         }
         playerProfile = new PlayerProfile(protocol);
-        playerProfiles.put(protocol.spartanPlayer.name.toLowerCase(), playerProfile);
+        playerProfiles.put(protocol.player.getName().toLowerCase(), playerProfile);
         return playerProfile;
     }
 
@@ -171,7 +175,7 @@ public class ResearchEngine {
                     p.spartanPlayer.getExecutor(hackType).resetLevel();
                 }
             } else {
-                profile = getPlayerProfile(playerName);
+                profile = getPlayerProfile(playerName, true);
             }
             Pattern.deleteFromFile(profile);
 
@@ -387,10 +391,9 @@ public class ResearchEngine {
             Config.sql.refreshDatabase();
 
             if (enabledPlugin) {
-                CloudBase.refresh(true);
                 buildCache();
                 Pattern.reload();
-                CloudBase.refresh(false);
+                CloudBase.refresh();
             } else {
                 CloudBase.clear(true);
                 Pattern.clear();
@@ -410,8 +413,8 @@ public class ResearchEngine {
             Map<String, String> logs = getLogs();
 
             if (!logs.isEmpty()) {
-                try {
-                    for (Map.Entry<String, String> entry : logs.entrySet()) {
+                for (Map.Entry<String, String> entry : logs.entrySet()) {
+                    try {
                         String fullDate = entry.getKey(),
                                 partialDate = fullDate.substring(0, 10),
                                 data = entry.getValue();
@@ -431,10 +434,10 @@ public class ResearchEngine {
 
                                             if (violation != null) {
                                                 SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
-                                                getPlayerProfile(split[0]).getViolationHistory(getDataType(data), hackType).store(
+                                                getPlayerProfile(split[0], true).getViolationHistory(getDataType(data), hackType).store(
+                                                        hackType,
                                                         new PlayerViolation(
                                                                 sdf.parse(fullDate).getTime(),
-                                                                hackType,
                                                                 violation[0],
                                                                 violation[1]
                                                         )
@@ -459,7 +462,7 @@ public class ResearchEngine {
                                     );
 
                                     if (ore != null) {
-                                        MiningHistory miningHistory = getPlayerProfile(name).getMiningHistory(ore);
+                                        MiningHistory miningHistory = getPlayerProfile(name, true).getMiningHistory(ore);
 
                                         if (miningHistory != null) {
                                             World.Environment environment = World.Environment.valueOf(
@@ -472,12 +475,12 @@ public class ResearchEngine {
                                 }
                             }
                         }
+                    } catch (Exception ignored) {
+
                     }
-                    updateCache(true);
-                    MainMenu.refresh();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
                 }
+                updateCache(true);
+                MainMenu.refresh();
             }
         }
     }
@@ -498,101 +501,84 @@ public class ResearchEngine {
                 for (Enums.HackType hackType : (force
                         ? Arrays.asList(Enums.HackType.values())
                         : violationFired.keySet())) {
-                    Map<PlayerProfile, double[]> wave = new LinkedHashMap<>();
+                    if (!hackType.getCheck().isEnabled(dataType, null)) {
+                        continue;
+                    }
+                    Map<PlayerProfile, Double> wave = new LinkedHashMap<>();
 
                     for (PlayerProfile profile : profiles) {
-                        ViolationHistory violationHistory = profile.getViolationHistory(
+                        Double timeDifference = profile.getViolationHistory(
                                 dataType,
                                 hackType
-                        );
+                        ).getTimeDifference(hackType);
 
-                        if (!violationHistory.isEmpty()) {
+                        if (timeDifference != null) {
                             wave.put(
                                     profile,
-                                    new double[]{
-                                            violationHistory.getViolationIncrease(),
-                                            violationHistory.getTimeDifference()
-                                    }
+                                    timeDifference
                             );
                         }
                     }
 
                     if (!wave.isEmpty()) {
-                        double sum = 0, squareSum = 0;
+                        double sum = 0,
+                                squareSum = 0,
+                                min = Double.MAX_VALUE,
+                                max = Double.MIN_VALUE;
 
-                        for (double[] value : wave.values()) {
-                            sum += value[0];
-                            squareSum += value[0] * value[0];
+                        for (double value : wave.values()) {
+                            sum += value;
+                            squareSum += value * value;
                         }
                         double divisor = wave.size(),
                                 mean = sum / divisor,
                                 deviation = Math.sqrt(squareSum / divisor);
 
-                        for (Map.Entry<PlayerProfile, double[]> entryChild : wave.entrySet()) {
-                            PlayerProfile profile = entryChild.getKey();
-                            double self = entryChild.getValue()[0],
-                                    probability = StatisticsMath.getCumulativeProbability(
-                                            (self - mean) / deviation
-                                    );
+                        for (Map.Entry<PlayerProfile, Double> entryChild : wave.entrySet()) {
+                            double probability = StatisticsMath.getCumulativeProbability(
+                                    (entryChild.getValue() - mean) / deviation
+                            );
+                            entryChild.setValue(probability);
 
-                            if (probability > profile.evidence.get(hackType).probability) {
-                                profile.evidence.add(
-                                        hackType,
-                                        probability,
-                                        mean,
-                                        self,
-                                        true
-                                );
+                            if (probability > max) {
+                                max = probability;
+                            }
+                            if (probability < min) {
+                                min = probability;
                             }
                         }
+                        max = 1.0 - max;
+                        double distributionDifference = Math.abs(max - min);
 
-                        // Separator
-
-                        divisor--; // Because of the previous violation required for comparison
-
-                        if (divisor > 0) {
-                            sum = 0;
-                            squareSum = 0;
-
-                            for (double[] value : wave.values()) {
-                                sum += value[1];
-                                squareSum += value[1] * value[1];
-                            }
-                            mean = sum / divisor;
-                            deviation = Math.sqrt(squareSum / divisor);
-
-                            for (Map.Entry<PlayerProfile, double[]> entryChild : wave.entrySet()) {
-                                PlayerProfile profile = entryChild.getKey();
-                                double self = entryChild.getValue()[1],
-                                        probability = StatisticsMath.getCumulativeProbability(
-                                                (self - mean) / deviation
-                                        );
-
-                                if (probability < 0.0) {
-                                    probability = 0.0 - probability;
-
-                                    if (probability > profile.evidence.get(hackType).probability) {
-                                        profile.evidence.add(
-                                                hackType,
-                                                probability,
-                                                mean,
-                                                self,
-                                                false
-                                        );
-                                    }
-                                }
-                            }
+                        for (Map.Entry<PlayerProfile, Double> entryChild : wave.entrySet()) {
+                            entryChild.getKey().evidence.add(
+                                    hackType,
+                                    PlayerEvidence.modifyProbability(
+                                            entryChild.getValue(),
+                                            Math.max(min - distributionDifference, 0.0),
+                                            Math.max(max - distributionDifference, 0.0)
+                                    )
+                            );
                         }
                     }
                 }
                 violationFired.clear();
             }
         }
-        if (playerProfiles.size() < TPS.maximum) {
+        int squareSum = 0, count = 0;
+
+        for (Enums.HackType hackType : Enums.HackType.values()) {
+            if (hackType.getCheck().isEnabled(null, null)) {
+                int result = PlayerEvidence.getRequiredPlayers(hackType, PlayerEvidence.punishmentProbability);
+                squareSum += result * result;
+                count += result;
+            }
+        }
+        if (squareSum > 0) {
+            squareSum = AlgebraUtils.integerCeil(Math.sqrt(squareSum / (double) count));
             String message = AwarenessNotifications.getOptionalNotification(
-                    "The plugin has not yet collected enough data."
-                            + " This problem is normal and will be resolved as more players join your server."
-                            + " Due to the limited data, certain checks may not notify, prevent or punish players."
+                    "The plugin needs data from " + squareSum + " more player/s to enable preventions & punishments for all checks."
+                            + " This is normal and will be resolved as more players join your server."
             );
 
             if (message != null) {
@@ -600,17 +586,42 @@ public class ResearchEngine {
 
                 if (!players.isEmpty()) {
                     for (SpartanPlayer p : players) {
-                        if (AwarenessNotifications.canSend(p.uuid, "limited-data", 60 * 60)) {
-                            p.sendMessage(message);
+                        if (AwarenessNotifications.canSend(p.getInstance().getUniqueId(), "limited-data", 60 * 60)) {
+                            p.getInstance().sendMessage(message);
                         }
                     }
+                }
+            }
+        } else if (SpartanBukkit.packetsEnabled()) {
+            for (Enums.HackType hackType : Enums.HackType.values()) {
+                Check check = hackType.getCheck();
+
+                if (check.isEnabled(null, null)
+                        && !check.isSilent(null, null)) {
+                    String message = AwarenessNotifications.getOptionalNotification(
+                            "Spartan does not support preventions when running on the packet level."
+                                    + " This is due to problems risen from trying to implement this functionality with packets."
+                    );
+
+                    if (message != null) {
+                        List<SpartanPlayer> players = Permissions.getStaff();
+
+                        if (!players.isEmpty()) {
+                            for (SpartanPlayer p : players) {
+                                if (AwarenessNotifications.canSend(p.getInstance().getUniqueId(), "packet-preventions", 60 * 60)) {
+                                    p.getInstance().sendMessage(message);
+                                }
+                            }
+                        }
+                    }
+                    break;
                 }
             }
         }
     }
 
-    public static void queueToCache(PlayerViolation violation) {
-        violationFired.put(violation.hackType, true);
+    public static void queueToCache(Enums.HackType hackType) {
+        violationFired.put(hackType, true);
     }
 
 }

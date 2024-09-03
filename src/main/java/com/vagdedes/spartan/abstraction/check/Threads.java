@@ -18,13 +18,14 @@ public class Threads {
 
     public static class ThreadPool {
 
+        private final Thread thread;
         private final List<Runnable> runnables;
         private boolean pause;
 
         public ThreadPool(long refreshRateInMilliseconds) {
             pause = false;
             runnables = Collections.synchronizedList(new LinkedList<>());
-            new Thread(() -> {
+            thread = new Thread(() -> {
                 while (enabled) {
                     if (pause) {
                         try {
@@ -49,7 +50,8 @@ public class Threads {
                     }
                 }
                 runnables.clear();
-            }).start();
+            });
+            thread.start();
         }
 
         public boolean executeIfFreeElseHere(Runnable runnable) {
@@ -110,6 +112,10 @@ public class Threads {
             boolean pause = this.pause;
             this.pause = false;
             return pause;
+        }
+
+        public long getID() {
+            return this.thread.getId();
         }
     }
 }

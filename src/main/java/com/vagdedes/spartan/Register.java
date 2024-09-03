@@ -2,7 +2,6 @@ package com.vagdedes.spartan;
 
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.command.CommandTab;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.JarVerification;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
@@ -46,7 +45,6 @@ public class Register extends JavaPlugin {
 
         // Base
         Config.settings.runOnLogin();
-        PlayerLimitPerIP.cache();
 
         // Listeners (More may be registered elsewhere)
         enable(new Event_Status(), Event_Status.class);

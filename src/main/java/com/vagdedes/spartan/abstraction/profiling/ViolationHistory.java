@@ -1,42 +1,51 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import me.vagdedes.spartan.system.Enums;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ViolationHistory {
 
-    private PlayerViolation previous;
-    private int violationIncrease, timeDifference;
-    private double count;
+    private final Map<Long, PlayerViolation> times;
 
     ViolationHistory() {
+        this.times = new TreeMap<>();
     }
 
     public boolean isEmpty() {
-        return this.previous == null;
+        return this.times.size() > 1;
     }
 
-    public void store(PlayerViolation playerViolation) {
-        this.count++;
+    public void store(Enums.HackType hackType, PlayerViolation playerViolation) {
+        this.times.put(playerViolation.time, playerViolation);
+        ResearchEngine.queueToCache(hackType);
+    }
 
-        if (playerViolation.level > this.violationIncrease) {
-            this.violationIncrease = playerViolation.level;
+    public Double getTimeDifference(Enums.HackType hackType) {
+        int size = this.times.size();
+
+        if (size > 1) {
+            Iterator<PlayerViolation> iterator = this.times.values().iterator();
+            long previous = iterator.next().time;
+            double squareSum = 0L;
+
+            while (iterator.hasNext()) {
+                PlayerViolation violation = iterator.next();
+                double difference = Math.min(
+                        violation.time - previous,
+                        60_000L
+                );
+                previous = violation.time;
+                difference /= violation.increase + (hackType.violationTimeWorth / difference);
+                squareSum += difference * difference;
+            }
+            return Math.sqrt(squareSum / (size - 1.0));
+        } else {
+            return null;
         }
-        if (this.previous != null) {
-            int timeDifference = (int) (playerViolation.time - this.previous.time);
-            this.timeDifference += timeDifference * timeDifference;
-        }
-        this.previous = playerViolation;
-        ResearchEngine.queueToCache(playerViolation);
-    }
-
-    public double getViolationIncrease() {
-        return this.violationIncrease;
-    }
-
-    public double getTimeDifference() {
-        return this.count > 1
-                ? Math.sqrt(this.timeDifference / (this.count - 1.0))
-                : 0.0;
     }
 
 }

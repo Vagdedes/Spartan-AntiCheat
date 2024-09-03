@@ -43,7 +43,6 @@ public class EntityAction extends PacketAdapter {
                 protocol.setSprinting(false);
             }
         }
-
     }
 
     private AbilitiesEnum getEnum(String s) {

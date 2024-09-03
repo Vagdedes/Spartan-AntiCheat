@@ -16,10 +16,6 @@ public class LagCompensation {
     private static final Map<Integer, List<Integer>> delays =
             new OverflowMap<>(new ConcurrentHashMap<>(), 1_024);
 
-    public static Map<Integer, LinkedList<Location>> getCache() {
-        return cache;
-    }
-
     public static void add(int id, Location location) {
         cache.computeIfAbsent(
                 id,

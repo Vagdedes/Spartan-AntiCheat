@@ -6,7 +6,6 @@ import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
-import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
 
@@ -31,9 +30,17 @@ public class SpartanEdition {
     private static final String
             type = "{type}",
             product = "{product}",
-            versionNotificationMessage = "\n§cHey, just a heads up! You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections.",
-            limitNotificationMessage = "\n§cHey, just a heads up! You have more online players than the anti-cheat can check at once."
-                    + "\nClick §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.";
+            versionNotificationMessage = "\n§cHey, just a heads up!"
+                    + " You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections.",
+            noVersionNotificationMessage = "\n§cHey, just a heads up!"
+                    + " Your owned editions of Spartan could not be verified."
+                    + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.",
+            limitNotificationMessage = "\n§cHey, just a heads up!"
+                    + " You have more online players than the anti-cheat can check at once."
+                    + " Click §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.",
+            hasAccountNotificationMessage = "\n§cHey, just a heads up!"
+                    + " You do not seem to have an account paired with your Spartan AntiCheat license."
+                    + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.";
     private static boolean
             hasAccount = true,
             firstLoad = true,
@@ -61,7 +68,7 @@ public class SpartanEdition {
             )) {
                 alternativeVersion = true;
             }
-            hasAccount = CloudConnections.hasAccount();
+            hasAccount = !JarVerification.isValid(false) || CloudConnections.hasAccount();
         });
     }
 
@@ -71,16 +78,6 @@ public class SpartanEdition {
         return SpartanEdition.currentType == dataType
                 ? currentVersion
                 : alternativeVersion;
-    }
-
-    private static Check.DataType[] getMissingDetections() {
-        return !currentVersion && !alternativeVersion
-                ? new Check.DataType[]{currentType, oppositeType}
-                : !currentVersion
-                ? new Check.DataType[]{currentType}
-                : !alternativeVersion
-                ? new Check.DataType[]{oppositeType}
-                : new Check.DataType[]{};
     }
 
     // Product
@@ -106,152 +103,147 @@ public class SpartanEdition {
 
     public static String getProductName() {
         if (currentVersion && alternativeVersion) {
-            return "Spartan AntiCheat: Java & Bedrock Edition";
-        } else if (currentVersion) {
-            return "Spartan AntiCheat: Java Edition";
+            return "Spartan AntiCheat: Java & Bedrock";
+        } else if (currentVersion || alternativeVersion) {
+            return "Spartan AntiCheat: " + currentType + " (" + oppositeType + " Missing)";
         } else {
-            return "Spartan AntiCheat: Bedrock Edition";
+            return "Spartan AntiCheat";
         }
     }
 
     // Notifications
 
-    public static void attemptNotifications(SpartanPlayer player) {
-        if (!attemptVersionNotification(player) && !hasAccount) {
-            String message = AwarenessNotifications.getNotification(
-                    "\n§cHey, just a heads up!"
-                            + " You do not seem to have an account paired with your Spartan AntiCheat license."
-                            + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this."
-            );
-
-            if (AwarenessNotifications.canSend(player.uuid, "has-account", notificationCooldown)) {
-                player.sendImportantMessage(message);
-            }
-        }
-    }
-
     // Priority:
     // 1. Verify (No Version)
     // 2. Detection (No Slots)
     // 3. Alternative (No Other Version)
-    private static boolean attemptVersionNotification(SpartanPlayer player) {
-        Check.DataType[] missingDetections = getMissingDetections();
+    // 4. Account (No Account)
+    public static void attemptNotifications(SpartanPlayer player) {
+        Check.DataType[] missingDetections =
+                !currentVersion && !alternativeVersion
+                        ? new Check.DataType[]{currentType, oppositeType}
+                        : !currentVersion
+                        ? new Check.DataType[]{currentType}
+                        : !alternativeVersion
+                        ? new Check.DataType[]{oppositeType}
+                        : new Check.DataType[]{};
 
         if (missingDetections.length == ResearchEngine.usableDataTypes.length) {
-            sendVersionNotification(player, null);
-            return true;
-        } else {
-            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-            int detectionSlots = CloudBase.getDetectionSlots();
+            attemptVersionNotification(player, null);
+            return;
+        }
+        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        int detectionSlots = CloudBase.getDetectionSlots();
 
-            if (missingDetections.length > 0
-                    && (detectionSlots <= 0
-                    || players.size() <= detectionSlots
-                    || !sendLimitNotification(player))) {
-                if (notifyCache) {
-                    sendVersionNotification(player, missingDetections[0]);
-                    return true;
-                } else {
-                    long time = System.currentTimeMillis();
+        if (detectionSlots > 0 && players.size() > detectionSlots) {
+            attemptLimitNotification(player);
+            return;
+        }
+        if (missingDetections.length > 0) {
+            if (notifyCache) {
+                attemptVersionNotification(player, missingDetections[0]);
+                return;
+            }
+            long time = System.currentTimeMillis();
 
-                    if ((time - checkTime) >= 60_000L) {
-                        checkTime = time;
+            if ((time - checkTime) >= 60_000L) {
+                checkTime = time;
 
-                        if (missingDetections[0] == player.dataType) {
+                if (missingDetections[0] == player.dataType) {
+                    notifyCache = true;
+                    attemptVersionNotification(player, missingDetections[0]);
+                    return;
+                }
+                players.remove(player);
+                int size = players.size();
+                List<PlayerProfile> checkedProfiles;
+
+                if (size > 0) {
+                    checkedProfiles = new ArrayList<>(size);
+
+                    for (SpartanPlayer otherPlayer : players) {
+                        if (missingDetections[0] == otherPlayer.dataType) {
                             notifyCache = true;
-                            sendVersionNotification(player, missingDetections[0]);
-                            return true;
+                            attemptVersionNotification(player, missingDetections[0]);
+                            return;
                         } else {
-                            players.remove(player);
-                            int size = players.size();
-                            List<PlayerProfile> checkedProfiles;
+                            checkedProfiles.add(player.protocol.getProfile());
+                        }
+                    }
+                } else {
+                    checkedProfiles = new ArrayList<>(0);
+                }
 
-                            if (size > 0) {
-                                checkedProfiles = new ArrayList<>(size);
+                // Separator
 
-                                for (SpartanPlayer otherPlayer : players) {
-                                    if (missingDetections[0] == otherPlayer.dataType) {
-                                        notifyCache = true;
-                                        sendVersionNotification(player, missingDetections[0]);
-                                        return true;
-                                    } else {
-                                        checkedProfiles.add(player.protocol.getProfile());
-                                    }
-                                }
-                            } else {
-                                checkedProfiles = new ArrayList<>(0);
-                            }
+                List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
-                            // Separator
+                if (!playerProfiles.isEmpty()) {
+                    playerProfiles.remove(player.protocol.getProfile());
+                    playerProfiles.removeAll(checkedProfiles);
 
-                            List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
-
-                            if (!playerProfiles.isEmpty()) {
-                                playerProfiles.remove(player.protocol.getProfile());
-                                playerProfiles.removeAll(checkedProfiles);
-
-                                if (!playerProfiles.isEmpty()) {
-                                    for (PlayerProfile profile : playerProfiles) {
-                                        if (profile.hasData(missingDetections[0])) {
-                                            notifyCache = true;
-                                            sendVersionNotification(player, missingDetections[0]);
-                                            return true;
-                                        }
-                                    }
-                                }
+                    if (!playerProfiles.isEmpty()) {
+                        for (PlayerProfile profile : playerProfiles) {
+                            if (profile.hasData(missingDetections[0])) {
+                                notifyCache = true;
+                                attemptVersionNotification(player, missingDetections[0]);
+                                return;
                             }
                         }
                     }
                 }
             }
         }
-        return false;
+        attemptNoAccountNotification(player);
     }
 
-    private static void sendVersionNotification(SpartanPlayer player, Check.DataType dataType) {
-        if (Permissions.isStaff(player)) {
-            String message;
+    private static void attemptVersionNotification(SpartanPlayer player, Check.DataType dataType) {
+        String message;
 
-            if (dataType == null) {
-                message = AwarenessNotifications.getNotification(
-                        "\n§cHey, just a heads up!"
-                                + " Your owned editions of Spartan could not be verified."
-                                + " Visit §n" + DiscordMemberCount.discordURL + "§r§c to fix this."
-                );
-            } else {
-                message = AwarenessNotifications.getNotification(
-                        (versionNotificationMessage
-                                + (IDs.canAdvertise() ? "\nClick §n" + product + "§r§c to §lfix this§r§c." : ""))
-                                .replace(type, dataType.toString())
-                                .replace(
-                                        product,
-                                        IDs.isBuiltByBit()
-                                                ? (dataType == Check.DataType.JAVA
-                                                ? "https://builtbybit.com/resources/12832"
-                                                : "https://builtbybit.com/resources/11196")
-                                                : (dataType == Check.DataType.JAVA
-                                                ? "https://polymart.org/resource/3600"
-                                                : "https://polymart.org/resource/350")
-                                )
-                );
-            }
+        if (dataType == null) {
+            message = AwarenessNotifications.getNotification(noVersionNotificationMessage);
+        } else {
+            message = AwarenessNotifications.getNotification(
+                    (versionNotificationMessage
+                            + (IDs.canAdvertise()
+                            ? " Click §n" + product + "§r§c to §lfix this§r§c."
+                            : " Visit §n" + DiscordMemberCount.discordURL + "§r§c to §lfix this§r§c."))
+                            .replace(type, dataType.toString())
+                            .replace(
+                                    product,
+                                    IDs.isBuiltByBit()
+                                            ? (dataType == Check.DataType.JAVA
+                                            ? "https://builtbybit.com/resources/12832"
+                                            : "https://builtbybit.com/resources/11196")
+                                            : (dataType == Check.DataType.JAVA
+                                            ? "https://polymart.org/resource/3600"
+                                            : "https://polymart.org/resource/350")
+                            )
+            );
+        }
 
-            if (AwarenessNotifications.canSend(player.uuid, "alternative-version", notificationCooldown)) {
-                player.sendImportantMessage(message);
-            }
+        if (AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "alternative-version", notificationCooldown)) {
+            player.sendImportantMessage(message);
         }
     }
 
-    private static boolean sendLimitNotification(SpartanPlayer player) {
-        if (Permissions.isStaff(player)) {
-            String message = AwarenessNotifications.getNotification(limitNotificationMessage);
+    private static void attemptLimitNotification(SpartanPlayer player) {
+        String message = AwarenessNotifications.getNotification(limitNotificationMessage);
 
-            if (AwarenessNotifications.canSend(player.uuid, "limit-notification", notificationCooldown)) {
+        if (AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "limit-notification", notificationCooldown)) {
+            player.sendImportantMessage(message);
+        }
+    }
+
+    private static void attemptNoAccountNotification(SpartanPlayer player) {
+        if (!hasAccount) {
+            String message = AwarenessNotifications.getOptionalNotification(hasAccountNotificationMessage);
+
+            if (message != null
+                    && AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "has-account", notificationCooldown)) {
                 player.sendImportantMessage(message);
-                return true;
             }
         }
-        return false;
     }
 
 }

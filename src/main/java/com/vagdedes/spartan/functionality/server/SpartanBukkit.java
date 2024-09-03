@@ -5,9 +5,9 @@ import com.vagdedes.spartan.abstraction.check.Threads;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
 import com.vagdedes.spartan.functionality.connection.cloud.AutoUpdater;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Bukkit;
@@ -19,12 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SpartanBukkit {
 
-    public static final boolean movementPacketsForcedState = false;
-
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
-            packetsThread = new Threads.ThreadPool(1L),
-            chunksThread = new Threads.ThreadPool(1L),
             dataThread = new Threads.ThreadPool(1L),
             analysisThread = new Threads.ThreadPool(1L);
 
@@ -48,6 +44,10 @@ public class SpartanBukkit {
         return playerProtocol.size();
     }
 
+    public static boolean hasPlayerCount() {
+        return !playerProtocol.isEmpty();
+    }
+
     public static Set<UUID> getUUIDs() {
         return new HashSet<>(playerProtocol.keySet());
     }
@@ -59,6 +59,10 @@ public class SpartanBukkit {
             list.add(protocol.spartanPlayer);
         }
         return list;
+    }
+
+    public static List<SpartanProtocol> getProtocols() {
+        return new ArrayList<>(playerProtocol.values());
     }
 
     public static Set<Map.Entry<UUID, SpartanProtocol>> getPlayerEntries() {
@@ -91,14 +95,10 @@ public class SpartanBukkit {
         return Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
     }
 
-    public static boolean packetsEnabled_Movement() {
-        return movementPacketsForcedState && packetsEnabled();
-    }
-
     public static SpartanProtocol getProtocol(Player player) {
-        return playerProtocol.computeIfAbsent(
+        return playerProtocol.getOrDefault(
                 player.getUniqueId(),
-                k -> new SpartanProtocol(player)
+                new SpartanProtocol(player)
         );
     }
 
@@ -107,7 +107,7 @@ public class SpartanBukkit {
             name = name.toLowerCase();
 
             for (SpartanProtocol protocol : playerProtocol.values()) {
-                if (protocol.spartanPlayer.name.toLowerCase().equals(name)) {
+                if (protocol.player.getName().toLowerCase().equals(name)) {
                     return protocol;
                 }
             }
@@ -141,15 +141,23 @@ public class SpartanBukkit {
         return protocol;
     }
 
-    public static void createProtocol(Player player) {
+    public static SpartanProtocol createProtocol(Player player) {
+        SpartanProtocol protocol = new SpartanProtocol(player);
         playerProtocol.put(
                 player.getUniqueId(),
-                new SpartanProtocol(player)
+                protocol
         );
+        PlayerDetectionSlots.add(protocol.spartanPlayer);
+        return protocol;
     }
 
     public static SpartanProtocol deleteProtocol(Player real) {
-        return playerProtocol.remove(real.getUniqueId());
+        SpartanProtocol protocol = playerProtocol.remove(real.getUniqueId());
+
+        if (protocol != null) {
+            PlayerDetectionSlots.remove(protocol.spartanPlayer);
+        }
+        return protocol;
     }
 
     // Separator
@@ -208,7 +216,6 @@ public class SpartanBukkit {
         AutoUpdater.complete();
         playerProtocol.clear();
         Threads.disable();
-        PlayerLimitPerIP.clear();
         NPCManager.clear();
         Config.create();
     }

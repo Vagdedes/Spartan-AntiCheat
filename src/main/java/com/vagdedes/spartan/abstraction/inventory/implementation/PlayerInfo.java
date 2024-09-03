@@ -8,8 +8,11 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.command.CommandExecution;
+import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
+import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -23,7 +26,6 @@ import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
@@ -53,15 +55,20 @@ public class PlayerInfo extends InventoryMenu {
         boolean isOnline = target != null;
         PlayerProfile profile = isOnline
                 ? target.getProfile()
-                : ResearchEngine.getPlayerProfile(object.toString());
+                : ResearchEngine.getPlayerProfile(object.toString(), false);
 
         if (profile == null) {
-            player.sendInventoryCloseMessage(Config.messages.getColorfulString("player_not_found_message"));
+            player.getInstance().closeInventory();
+            ClickableMessage.sendURL(
+                    player.getInstance(),
+                    Config.messages.getColorfulString("player_not_found_message"),
+                    CommandExecution.support,
+                    DiscordMemberCount.discordURL
+            );
             return false;
         } else {
-            setTitle(player, menu + (isOnline ? target.spartanPlayer.name : profile.getName()));
-            Set<Map.Entry<HackType, PlayerEvidence.EvidenceDetails>> evidenceDetails = profile.evidence.getKnowledgeEntries(
-                    0.0,
+            setTitle(player, menu + (isOnline ? target.player.getName() : profile.getName()));
+            Set<Map.Entry<HackType, Double>> evidenceDetails = profile.evidence.getKnowledgeEntries(
                     0.0
             );
             List<String> lore = new ArrayList<>();
@@ -69,23 +76,52 @@ public class PlayerInfo extends InventoryMenu {
 
             if (!evidenceDetails.isEmpty()) {
                 lore.add("§7Certainty of cheating§8:");
-                Map<Double, HackType> map = new TreeMap<>(Collections.reverseOrder());
+                Map<Double, HackType> map = PlayerEvidence.POSITIVE
+                        ? new TreeMap<>(Collections.reverseOrder())
+                        : new TreeMap<>();
 
-                for (Map.Entry<HackType, PlayerEvidence.EvidenceDetails> entry : evidenceDetails) {
-                    map.put(entry.getValue().probability, entry.getKey());
+                for (Map.Entry<HackType, Double> entry : evidenceDetails) {
+                    map.put(
+                            entry.getValue(),
+                            entry.getKey()
+                    );
                 }
                 for (Map.Entry<Double, HackType> entry : map.entrySet()) {
+                    HackType hackType = entry.getValue();
                     double probability = entry.getKey();
 
-                    if (probability < PlayerEvidence.preventionProbability) {
+                    if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.punishmentProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
                         lore.add(
-                                "§2" + entry.getValue().getCheck().getName()
+                                "§4" + hackType.getCheck().getName()
+                                        + "§8: §c" + AlgebraUtils.integerRound(probability * 100.0) + "%"
+                        );
+                    } else if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.preventionProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
+                        lore.add(
+                                "§6" + hackType.getCheck().getName()
+                                        + "§8: §e" + AlgebraUtils.integerRound(probability * 100.0) + "%"
+                        );
+                    } else if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.notificationProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
+                        lore.add(
+                                "§2" + hackType.getCheck().getName()
                                         + "§8: §a" + AlgebraUtils.integerRound(probability * 100.0) + "%"
                         );
                     } else {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
                         lore.add(
-                                "§4" + entry.getValue().getCheck().getName()
-                                        + "§8: §c" + AlgebraUtils.integerRound(probability * 100.0) + "%"
+                                "§3" + hackType.getCheck().getName()
+                                        + "§8: §b" + AlgebraUtils.integerRound(probability * 100.0) + "%"
                         );
                     }
                 }
@@ -183,7 +219,7 @@ public class PlayerInfo extends InventoryMenu {
         String worldName = player.getWorld().getName();
         Check check = hackType.getCheck();
 
-        if (!check.isEnabled(dataType, worldName, null)) { // Do not put player because we calculate it below
+        if (!check.isEnabled(dataType, worldName)) { // Do not put player because we calculate it below
             return "Disabled";
         }
         CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
@@ -195,20 +231,16 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     public void refresh(String targetName) {
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-        if (!players.isEmpty()) {
-            for (SpartanPlayer o : players) {
-                Player no = o.getInstance();
+        if (!protocols.isEmpty()) {
+            for (SpartanProtocol protocol : protocols) {
+                InventoryView inventoryView = protocol.player.getOpenInventory();
 
-                if (no != null) {
-                    InventoryView inventoryView = no.getOpenInventory();
-
-                    if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)
-                            && cooldowns.canDo("player-info=" + o.uuid)) {
-                        cooldowns.add("player-info=" + o.uuid, 1);
-                        InteractiveInventory.playerInfo.open(o, targetName);
-                    }
+                if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)
+                        && cooldowns.canDo("player-info=" + protocol.player.getUniqueId())) {
+                    cooldowns.add("player-info=" + protocol.player.getUniqueId(), 1);
+                    InteractiveInventory.playerInfo.open(protocol.spartanPlayer, targetName);
                 }
             }
         }
@@ -220,9 +252,15 @@ public class PlayerInfo extends InventoryMenu {
         item = item.startsWith("§") ? item.substring(2) : item;
         String playerName = title.substring(menu.length());
 
-        if (item.equals(playerName)) {
-            if (!Permissions.has(player, Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+        if (item.equalsIgnoreCase(playerName)) {
+            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
+                player.getInstance().closeInventory();
+                ClickableMessage.sendURL(
+                        player.getInstance(),
+                        Config.messages.getColorfulString("no_permission"),
+                        CommandExecution.support,
+                        DiscordMemberCount.discordURL
+                );
             } else {
                 SpartanProtocol t = SpartanBukkit.getProtocol(playerName);
 
@@ -230,16 +268,21 @@ public class PlayerInfo extends InventoryMenu {
                     for (HackType hackType : Enums.HackType.values()) {
                         t.spartanPlayer.getExecutor(hackType).resetLevel();
                     }
-                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.spartanPlayer.name);
-                    player.sendMessage(message);
+                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.player.getName());
+                    player.getInstance().sendMessage(message);
                 } else {
                     String name = Bukkit.getOfflinePlayer(playerName).getName();
 
                     if (name == null) {
-                        player.sendMessage(Config.messages.getColorfulString("player_not_found_message"));
+                        ClickableMessage.sendURL(
+                                player.getInstance(),
+                                Config.messages.getColorfulString("player_not_found_message"),
+                                CommandExecution.support,
+                                DiscordMemberCount.discordURL
+                        );
                     } else {
                         ResearchEngine.resetData(name);
-                        player.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
+                        player.getInstance().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                     }
                 }
                 player.sendInventoryCloseMessage(null);

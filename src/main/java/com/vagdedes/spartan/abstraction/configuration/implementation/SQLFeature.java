@@ -12,6 +12,7 @@ import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 
 import java.io.File;
@@ -311,6 +312,7 @@ public class SQLFeature extends ConfigurationBuilder {
                         String notification,
                         String information,
                         Material material,
+                        Enums.HackType hackType,
                         PlayerViolation playerViolation) {
         if (enabled) {
             String table = getTable();
@@ -333,13 +335,13 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                             + ", " + (notification != null ? syntaxForColumn(notification) : "NULL")
                             + ", " + syntaxForColumn(information)
-                            + ", " + (hasPlayer ? syntaxForColumn(p.uuid) : "NULL")
-                            + ", " + (hasPlayer ? syntaxForColumn(p.name) : "NULL")
-                            + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.getInstance().getUniqueId()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.getInstance().getName()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.protocol.getPing()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
-                            + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(playerViolation.hackType) : "NULL")
+                            + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(hackType) : "NULL")
                             + ", " + (hasCheck ? syntaxForColumn(playerViolation.level) : "NULL")
                             + ", " + (hasCheck ? syntaxForColumn(playerViolation.increase) : "NULL")
                             + ");"

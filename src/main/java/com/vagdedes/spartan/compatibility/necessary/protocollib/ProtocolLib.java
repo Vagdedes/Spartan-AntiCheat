@@ -39,8 +39,8 @@ public class ProtocolLib {
 
             if (!players.isEmpty()) {
                 for (SpartanPlayer p : players) {
-                    if (AwarenessNotifications.canSend(p.uuid, "protocol-lib", 0)) {
-                        p.sendMessage(message);
+                    if (AwarenessNotifications.canSend(p.getInstance().getUniqueId(), "protocol-lib", 0)) {
+                        p.getInstance().sendMessage(message);
                     }
                 }
             }

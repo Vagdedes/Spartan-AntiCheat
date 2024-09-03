@@ -56,9 +56,9 @@ public class Attack extends PacketAdapter {
         int entityId = packet.getIntegers().read(0);
 
         if ((!packet.getEntityUseActions().getValues().isEmpty()) ?
-                        packet.getEntityUseActions().read(0).equals(EnumWrappers.EntityUseAction.ATTACK)
-                        : packet.getEnumEntityUseActions().read(0).getAction().equals(
-                        EnumWrappers.EntityUseAction.ATTACK)) {
+                packet.getEntityUseActions().read(0).equals(EnumWrappers.EntityUseAction.ATTACK)
+                : packet.getEnumEntityUseActions().read(0).getAction().equals(
+                EnumWrappers.EntityUseAction.ATTACK)) {
             SpartanProtocol protocol = SpartanBukkit.getProtocol(entityId);
 
             if (protocol != null) {

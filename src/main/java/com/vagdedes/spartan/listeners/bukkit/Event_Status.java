@@ -1,34 +1,62 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
+import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.connection.PlayerLimitPerIP;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
+import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-import java.net.InetAddress;
-
 public class Event_Status implements Listener {
 
-    @EventHandler
-    private void PreLogin(AsyncPlayerPreLoginEvent e) {
-        if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
-            InetAddress address = e.getAddress();
-            String ipAddress = address != null ? PlayerLimitPerIP.get(address) : null;
-            CloudConnections.updatePunishedPlayer(e.getUniqueId(), ipAddress);
+    private static final boolean v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void Join(PlayerJoinEvent e) {
+        Player n = e.getPlayer();
+
+        if (ProtocolLib.isTemporary(n)) {
+            return;
         }
+        SpartanPlayer p = SpartanBukkit.createProtocol(n).spartanPlayer;
+
+        if (Config.settings.getBoolean("Important.enable_watermark")
+                && !Permissions.isStaff(p.getInstance())) {
+            p.getInstance().sendMessage("");
+            AwarenessNotifications.forcefullySend(
+                    p,
+                    "\nThis server is protected by the Spartan AntiCheat",
+                    false
+            );
+            p.getInstance().sendMessage("");
+        }
+
+        // Detections
+        p.getExecutor(Enums.HackType.Speed).handle(false, e);
+        p.getExecutor(Enums.HackType.NoFall).handle(false, null);
+
+        SpartanBukkit.runDelayedTask(p, () -> {
+            if (p != null) {
+                Config.settings.runOnLogin(p);
+                CloudBase.announce(p);
+            }
+        }, 10L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -40,16 +68,12 @@ public class Event_Status implements Listener {
         }
         SpartanProtocol protocol = SpartanBukkit.deleteProtocol(n);
 
-        // Features
-        PlayerLimitPerIP.remove(n);
-
         if (protocol == null) {
             return;
         }
         SpartanPlayer p = protocol.spartanPlayer;
 
         // Features
-        PlayerDetectionSlots.remove(p);
         DetectionNotifications.runOnLeave(p);
     }
 
@@ -63,7 +87,7 @@ public class Event_Status implements Listener {
         SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
         // Detections
-        p.getExecutor(Enums.HackType.AutoRespawn).run(false);
+        p.getExecutor(Enums.HackType.AutoRespawn).handle(false, null);
         p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, null);
         p.getExecutor(Enums.HackType.NoFall).handle(false, null);
 
@@ -87,6 +111,25 @@ public class Event_Status implements Listener {
 
         // Detections
         p.getExecutor(Enums.HackType.NoFall).handle(false, null);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    private void GameMode(PlayerGameModeChangeEvent e) {
+        if (v1_8) {
+            Player n = e.getPlayer();
+
+            if (ProtocolLib.isTemporary(n)) {
+                return;
+            }
+            SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
+
+            // Objects
+            if (e.getNewGameMode() == GameMode.SPECTATOR) {
+                p.trackers.add(Trackers.TrackerType.SPECTATOR, Integer.MAX_VALUE);
+            } else {
+                p.trackers.remove(Trackers.TrackerType.SPECTATOR);
+            }
+        }
     }
 
 }

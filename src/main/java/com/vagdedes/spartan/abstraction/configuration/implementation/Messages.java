@@ -21,34 +21,36 @@ public class Messages extends ConfigurationBuilder {
 
         clear();
         addOption("console_name", "Console");
-        addOption("no_permission", "&cYou don't have permission to interact with this.");
-        addOption("player_not_found_message", "&cPlayer not found.");
-        addOption("not_enough_saved_logs", "&8[&2" + prefix + "&8]&c Not enough saved logs. Must be at least {amount} rows.");
+        addOption("no_permission", "&8[&2" + prefix + "&8]&c You don't have permission to interact with this.");
+        addOption("player_not_found_message", "&8[&2" + prefix + "&8]&c Player not found.");
 
         // Config
         addOption("config_reload", "&8[&2" + prefix + "&8]&e Config successfully reloaded.");
 
         // Panic
-        addOption("panic_mode_enable", "&aPanic mode enabled, all checks are set to silent and will not punish players.");
-        addOption("panic_mode_disable", "&cPanic mode disabled, all checks will now run per configuration standards.");
+        addOption("panic_mode_enable", "&8[&2" + prefix + "&8]&a Panic mode enabled, all checks are set to silent and will not punish players.");
+        addOption("panic_mode_disable", "&8[&2" + prefix + "&8]&c Panic mode disabled, all checks will now run per configuration standards.");
 
         // Kick
         addOption("kick_reason", "&c {reason}");
         addOption("kick_broadcast_message", "&8[&2" + prefix + "&8]&c {player}&7 was kicked for&4 {reason}");
-        addOption("reconnect_kick_message", "&8[&2" + prefix + "&8]&c Please wait a few seconds before logging back in.");
         addOption("player_ip_limit_kick_message", "&8[&2" + prefix + "&8]&c The player limit of your IP has been reached.");
 
         // Violations
         addOption("player_violation_reset_message", "&8[&2" + prefix + "&8]&a Violations successfully reset for player&8: &2{player}");
         addOption("player_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for player&8: &2{player}");
         addOption("detection_notification", "&8[&2" + prefix + "&8] "
-                + "&4{player} &cis using &4{detection} x{vls:detection} "
+                + "&4{player} &cis §4{vls:percentage}% §cusing &4{detection} x{vls:detection} "
                 + "&8&b| &r&f{ping}ms &8&b| &r&fsilent: {silent:detection}, {info}");
 
         // Checks
         addOption("check_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for check&8: &2{check}");
         addOption("check_enable_message", "&8[&2" + prefix + "&8] &aYou enabled the check&8:&7 {detection}");
         addOption("check_disable_message", "&8[&2" + prefix + "&8] &cYou disabled the check&8:&7 {detection}");
+        addOption("check_silent_disable_message", "&8[&2" + prefix + "&8] &aYou enabled preventions for the check&8:&7 {detection}");
+        addOption("check_silent_enable_message", "&8[&2" + prefix + "&8] &cYou disabled preventions for the check&8:&7 {detection}");
+        addOption("check_punishment_enable_message", "&8[&2" + prefix + "&8] &aYou enabled punishments for the check&8:&7 {detection}");
+        addOption("check_punishment_disable_message", "&8[&2" + prefix + "&8] &cYou disabled punishments for the check&8:&7 {detection}");
         addOption("non_existing_check", "&8[&2" + prefix + "&8] &cThis check doesn't exist.");
         addOption("bypass_message", "&8[&2" + prefix + "&8] &c{player} &7is now bypassing the &4{detection} &7check for &e{time} &7seconds.");
 

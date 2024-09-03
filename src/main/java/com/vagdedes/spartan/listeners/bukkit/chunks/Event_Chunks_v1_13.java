@@ -19,9 +19,14 @@ public class Event_Chunks_v1_13 {
         if (subMap == null) {
             return null;
         }
-        Event_Chunks.ChunkData data = subMap.get(Event_Chunks.hashChunk(SpartanLocation.getChunkPos(x), SpartanLocation.getChunkPos(z)));
+        Event_Chunks.ChunkData data = subMap.get(
+                Event_Chunks.hashCoordinates(
+                        SpartanLocation.getChunkPos(x),
+                        SpartanLocation.getChunkPos(z)
+                )
+        );
 
-        if (data == null) {
+        if (data == null || data.snapshot == null) {
             return null;
         }
         return data.snapshot.getBlockData(x & 0xF, y, z & 0xF);

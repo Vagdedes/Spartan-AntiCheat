@@ -33,12 +33,12 @@ public class AureliumSkills implements Listener {
             if (p == null) {
                 return;
             }
-            cooldowns.add(p.uuid + "=aureliumskills=compatibility", 20);
+            cooldowns.add(p.getInstance().getUniqueId() + "=aureliumskills=compatibility", 20);
         }
     }
 
     public static boolean isUsing(SpartanPlayer p) {
         return Compatibility.CompatibilityType.AURELIUM_SKILLS.isFunctional()
-                && !cooldowns.canDo(p.uuid + "=aureliumskills=compatibility");
+                && !cooldowns.canDo(p.getInstance().getUniqueId() + "=aureliumskills=compatibility");
     }
 }

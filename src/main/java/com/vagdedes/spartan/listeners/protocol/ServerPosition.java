@@ -10,7 +10,6 @@ import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.protocol.modules.TeleportData;
-import com.vagdedes.spartan.listeners.protocol.move.BackgroundMove;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -32,13 +31,16 @@ public class ServerPosition extends PacketAdapter {
         if (ProtocolLib.isTemporary(player)) {
             return;
         }
-        PacketContainer packetContainer = event.getPacket();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-        if (protocol.isOnLoadStatus()) return;
+        if (protocol.isLoading()) {
+            return;
+        }
+        PacketContainer packetContainer = event.getPacket();
 
         if (packetContainer.getType().equals(PacketType.Play.Server.POSITION)) {
-            Location teleportLocation = BackgroundMove.readLocation(event);
+            Location teleportLocation = add(protocol.getLocation().clone(), Move.readLocation(event));
+            protocol.setLocation(teleportLocation);
             if (protocol.isMutateTeleport()) {
                 protocol.teleportEngine.add(new TeleportData(teleportLocation, true));
                 protocol.setMutateTeleport(false);
@@ -48,9 +50,15 @@ public class ServerPosition extends PacketAdapter {
 
         }
         if (packetContainer.getType().equals(PacketType.Play.Server.RESPAWN)
-                        || packetContainer.getType().equals(PacketType.Play.Server.MOUNT)) {
+                || packetContainer.getType().equals(PacketType.Play.Server.MOUNT)) {
+            protocol.setLocation(new Location(protocol.getLocation().getWorld(), 0, 0, 0));
             protocol.setMutateTeleport(true);
         }
+
+    }
+    public static Location add(Location f, Location t) {
+        return new Location(t.getWorld(), f.getX() + t.getX(),
+                        f.getY() + t.getY(), f.getZ() + t.getZ());
     }
 
 }

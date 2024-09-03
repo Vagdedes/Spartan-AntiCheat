@@ -40,40 +40,40 @@ public class DetectionNotifications {
     }
 
     public static boolean isEnabled(SpartanPlayer p) {
-        return notifications.containsKey(p.uuid);
+        return notifications.containsKey(p.getInstance().getUniqueId());
     }
 
     public static boolean hasPermission(SpartanPlayer p) {
-        return Permissions.has(p, Enums.Permission.NOTIFICATIONS);
+        return Permissions.has(p.getInstance(), Enums.Permission.NOTIFICATIONS);
     }
 
     public static Integer getFrequency(SpartanPlayer p) {
-        return notifications.get(p.uuid);
+        return notifications.get(p.getInstance().getUniqueId());
     }
 
     public static void remove(SpartanPlayer p) {
-        notifications.remove(p.uuid);
+        notifications.remove(p.getInstance().getUniqueId());
     }
 
     public static void set(SpartanPlayer p, int i) {
-        Integer frequency = notifications.put(p.uuid, i);
+        Integer frequency = notifications.put(p.getInstance().getUniqueId(), i);
 
         if (frequency == null) {
-            p.sendMessage(Config.messages.getColorfulString("notifications_enable"));
+            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
-            p.sendMessage(Config.messages.getColorfulString("notifications_modified"));
+            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
-            notifications.remove(p.uuid);
-            p.sendMessage(Config.messages.getColorfulString("notifications_disable"));
+            notifications.remove(p.getInstance().getUniqueId());
+            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }
 
     // Separator
 
     public static void runOnLeave(SpartanPlayer p) {
-        if (notifications.containsKey(p.uuid)
+        if (notifications.containsKey(p.getInstance().getUniqueId())
                 && !DetectionNotifications.hasPermission(p)) {
-            notifications.remove(p.uuid);
+            notifications.remove(p.getInstance().getUniqueId());
         }
     }
 

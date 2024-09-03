@@ -5,12 +5,15 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
+import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -37,20 +40,16 @@ public class MainMenu extends InventoryMenu {
     }
 
     public static void refresh() {
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-        if (!players.isEmpty()) {
-            for (SpartanPlayer p : players) {
-                SpartanBukkit.transferTask(p, () -> {
-                    Player n = p.getInstance();
+        if (!protocols.isEmpty()) {
+            for (SpartanProtocol protocol : protocols) {
+                SpartanBukkit.transferTask(protocol.spartanPlayer, () -> {
+                    String title = protocol.player.getOpenInventory().getTitle();
 
-                    if (n != null) {
-                        String title = n.getOpenInventory().getTitle();
-
-                        if (title.startsWith(name)) {
-                            DiscordMemberCount.ignore();
-                            InteractiveInventory.mainMenu.open(p);
-                        }
+                    if (title.startsWith(name)) {
+                        DiscordMemberCount.ignore();
+                        InteractiveInventory.mainMenu.open(protocol.spartanPlayer);
                     }
                 });
             }
@@ -60,7 +59,7 @@ public class MainMenu extends InventoryMenu {
     @Override
     public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
-        UUID uuid = player.uuid;
+        UUID uuid = player.getInstance().getUniqueId();
         int page = PlayerStateLists.getPage(uuid), previousPageSlot = 18, nextPageSlot = 26;
         setTitle(player, name + page + ")");
 
@@ -94,10 +93,9 @@ public class MainMenu extends InventoryMenu {
         add("§aManagement", lore, new ItemStack(MaterialUtils.get("crafting_table")), 47);
 
         // Live Customer Support
-        InventoryUtils.prepareDescription(lore, "Available via Discord Server");
-        lore.add("§7Download your favorite plugins");
-        lore.add("§7from our Discord server and save");
-        lore.add("§7time with our Auto Updater.");
+        InventoryUtils.prepareDescription(lore, "Discord Community");
+        lore.add("§7Get support for your plugins");
+        lore.add("§7in our welcoming community.");
         int discordMemberCount = DiscordMemberCount.get();
 
         if (discordMemberCount > 0) {
@@ -105,7 +103,7 @@ public class MainMenu extends InventoryMenu {
             lore.add((dividedBy2 ? "§2" : "§6") + discordMemberCount + " online Discord " + (discordMemberCount == 1 ? "member" : "members"));
         }
         add(
-                "§aAuto Updater",
+                "§aGet Help",
                 lore,
                 new ItemStack(dividedBy2 ? Material.EMERALD_BLOCK : Material.GOLD_BLOCK, random),
                 49
@@ -160,19 +158,31 @@ public class MainMenu extends InventoryMenu {
 
         if (item.equals("Auto Updater")) {
             player.sendInventoryCloseMessage("");
-            player.sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
-            player.sendMessage("");
+            player.getInstance().sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
+            player.getInstance().sendMessage("");
 
         } else if (item.equals("Compatibilities")) {
-            if (!Permissions.has(player, Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
+                player.getInstance().closeInventory();
+                ClickableMessage.sendURL(
+                        player.getInstance(),
+                        Config.messages.getColorfulString("no_permission"),
+                        CommandExecution.support,
+                        DiscordMemberCount.discordURL
+                );
             } else if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
                 Player n = player.getInstance();
 
                 if (n != null && n.hasPermission("filegui.modify")) {
                     FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                 } else {
-                    player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+                    player.getInstance().closeInventory();
+                    ClickableMessage.sendURL(
+                            player.getInstance(),
+                            Config.messages.getColorfulString("no_permission"),
+                            CommandExecution.support,
+                            DiscordMemberCount.discordURL
+                    );
                 }
             } else {
                 player.sendInventoryCloseMessage(
@@ -184,15 +194,21 @@ public class MainMenu extends InventoryMenu {
             }
 
         } else if (item.equals("Management")) {
-            if (!Permissions.has(player, Permission.MANAGE)) {
-                player.sendInventoryCloseMessage(Config.messages.getColorfulString("no_permission"));
+            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
+                player.getInstance().closeInventory();
+                ClickableMessage.sendURL(
+                        player.getInstance(),
+                        Config.messages.getColorfulString("no_permission"),
+                        CommandExecution.support,
+                        DiscordMemberCount.discordURL
+                );
             } else {
                 if (clickType == ClickType.LEFT) {
                     InteractiveInventory.manageChecks.open(player);
                 } else if (clickType == ClickType.RIGHT) {
                     player.sendInventoryCloseMessage("");
-                    player.sendMessage("§6Learn more about Detection Slots§8: §e§n" + SpartanEdition.patreonURL);
-                    player.sendMessage("");
+                    player.getInstance().sendMessage("§6Learn more about Detection Slots§8: §e§n" + SpartanEdition.patreonURL);
+                    player.getInstance().sendMessage("");
                 }
             }
 
@@ -203,7 +219,7 @@ public class MainMenu extends InventoryMenu {
                 String number = split[1];
 
                 if (AlgebraUtils.validInteger(number)) {
-                    UUID uuid = player.uuid;
+                    UUID uuid = player.getInstance().getUniqueId();
                     int itemPage = Integer.parseInt(number), currentPage = PlayerStateLists.getPage(uuid);
 
                     if (itemPage < currentPage) {

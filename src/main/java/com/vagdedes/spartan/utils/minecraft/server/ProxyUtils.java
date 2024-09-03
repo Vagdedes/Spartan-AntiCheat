@@ -51,12 +51,13 @@ public class ProxyUtils {
                 }
                 if (!entries.isEmpty()) { // 1 because we already know we have one player
                     for (Map.Entry<UUID, SpartanProtocol> entry : entries) {
-                        SpartanPlayer loopPlayer = entry.getValue().spartanPlayer;
+                        SpartanProtocol protocol = entry.getValue();
+                        SpartanPlayer loopPlayer = protocol.spartanPlayer;
 
                         if (loopPlayer.getInstance().isOp()) {
                             player = loopPlayer.getInstance();
                             break;
-                        } else if (Permissions.isStaff(loopPlayer)) {
+                        } else if (Permissions.isStaff(protocol.player)) {
                             player = loopPlayer.getInstance();
                         }
                     }

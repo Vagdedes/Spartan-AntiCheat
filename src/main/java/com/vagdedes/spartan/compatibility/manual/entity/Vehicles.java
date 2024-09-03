@@ -65,11 +65,11 @@ public class Vehicles implements Listener {
     }
 
     private static void add(SpartanPlayer p, String type) {
-        cooldowns.add(p.uuid + "=" + key + type, 20);
+        cooldowns.add(p.getInstance().getUniqueId() + "=" + key + type, 20);
     }
 
     public static boolean has(SpartanPlayer p, String type) {
-        return !cooldowns.canDo(p.uuid + "=" + key + type);
+        return !cooldowns.canDo(p.getInstance().getUniqueId() + "=" + key + type);
     }
 
     public static boolean has(SpartanPlayer p, String[] types) {

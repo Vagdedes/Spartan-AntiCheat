@@ -42,7 +42,7 @@ public class Attributes {
             Attribute attribute = Attribute.valueOf(attributeString);
 
             if (attribute != null) {
-                PlayerInventory inventory = p.getInventory();
+                PlayerInventory inventory = p.getInstance().getInventory();
                 int modifiersCount = 0;
                 double amount = 0.0;
 

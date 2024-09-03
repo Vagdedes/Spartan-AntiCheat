@@ -280,6 +280,23 @@ public class RayUtils {
         intersection = isIntersection(player, location, intersection, boundingBox);;
         return intersection;
     }
+    public static boolean inHitbox(SpartanPlayer player, Location locationIn, float size, double dist) {
+        SpartanLocation location = player.movement.getRawLocation();
+        Location targetLocation = locationIn;
+
+        boolean intersection = false;
+        double targetX = targetLocation.getX();
+        double targetY = targetLocation.getY();
+        double targetZ = targetLocation.getZ();
+
+        AxisAlignedBB boundingBox = new AxisAlignedBB(
+                        targetX - size, targetY - size, targetZ - size,
+                        targetX + size, targetY + size, targetZ + size
+        );
+        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+        intersection = isIntersection(player, location, intersection, boundingBox, dist);
+        return intersection;
+    }
 
     private static boolean isIntersection(SpartanPlayer player, SpartanLocation location, boolean intersection, AxisAlignedBB boundingBox) {
         for (final boolean rotation : BOOLEANS) {
@@ -287,6 +304,17 @@ public class RayUtils {
                 final float yaw = location.getYaw();
                 final float pitch = location.getPitch();
                 final MovingObjectPosition result = rayCast(yaw, pitch, sneak, boundingBox, player);
+                intersection |= result != null && result.hitVec != null;
+            }
+        }
+        return intersection;
+    }
+    private static boolean isIntersection(SpartanPlayer player, SpartanLocation location, boolean intersection, AxisAlignedBB boundingBox, double dist) {
+        for (final boolean rotation : BOOLEANS) {
+            for (final boolean sneak : BOOLEANS) {
+                final float yaw = location.getYaw();
+                final float pitch = location.getPitch();
+                final MovingObjectPosition result = rayCast(yaw, pitch, sneak, boundingBox, player, dist);
                 intersection |= result != null && result.hitVec != null;
             }
         }
@@ -303,6 +331,18 @@ public class RayUtils {
                 vec32 = vec3.add(new Vec3(vec31.xCoord * 3D, vec31.yCoord * 3D, vec31.zCoord * 3D));
         return bb.calculateIntercept(vec3, vec32);
     }
+
+    private static MovingObjectPosition rayCast(final float yaw, final float pitch, final boolean sneak, final AxisAlignedBB bb, SpartanPlayer player, double dist) {
+        SpartanLocation position = player.movement.getRawLocation();
+        double lastX = position.getX(),
+                        lastY = position.getY(),
+                        lastZ = position.getZ();
+        Vec3 vec3 = new Vec3(lastX, lastY + getEyeHeight(sneak, player), lastZ),
+                        vec31 = getVectorForRotation(pitch, yaw),
+                        vec32 = vec3.add(new Vec3(vec31.xCoord * dist, vec31.yCoord * dist, vec31.zCoord * dist));
+        return bb.calculateIntercept(vec3, vec32);
+    }
+
 
     private static Vec3 getVectorForRotation(final float pitch, final float yaw) {
         float f = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI),

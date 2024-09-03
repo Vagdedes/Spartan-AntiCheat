@@ -271,7 +271,7 @@ public class MaterialUtils {
                 if (itemStack.getEnchantmentLevel(EnchantmentUtils.WATER_WORKER) > 0) {
                     aquaInfinity = true;
                 } else {
-                    PlayerInventory inventory = player.getInventory();
+                    PlayerInventory inventory = player.getInstance().getInventory();
                     List<ItemStack> items = new ArrayList<>(4 + 1);
                     items.addAll(Arrays.asList(inventory.getArmorContents()));
                     items.add(inventory.getItemInHand());

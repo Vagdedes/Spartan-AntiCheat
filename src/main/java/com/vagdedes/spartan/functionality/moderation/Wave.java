@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -133,14 +133,14 @@ public class Wave {
                 if (broadcast) {
                     Bukkit.broadcastMessage(Config.messages.getColorfulString("wave_start_message"));
                 } else {
-                    List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                    List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-                    if (!players.isEmpty()) {
+                    if (!protocols.isEmpty()) {
                         String message = Config.messages.getColorfulString("wave_start_message");
 
-                        for (SpartanPlayer o : players) {
-                            if (DetectionNotifications.hasPermission(o)) {
-                                o.sendMessage(message);
+                        for (SpartanProtocol protocol : protocols) {
+                            if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                                protocol.player.sendMessage(message);
                             }
                         }
                     }
@@ -171,14 +171,14 @@ public class Wave {
                     Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total))
             );
         } else {
-            List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+            List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-            if (!players.isEmpty()) {
+            if (!protocols.isEmpty()) {
                 String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
 
-                for (SpartanPlayer p : players) {
-                    if (DetectionNotifications.hasPermission(p)) {
-                        p.sendMessage(message);
+                for (SpartanProtocol protocol : protocols) {
+                    if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                        protocol.player.sendMessage(message);
                     }
                 }
             }

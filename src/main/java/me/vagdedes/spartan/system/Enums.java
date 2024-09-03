@@ -289,7 +289,7 @@ public class Enums {
 
     // API Use
     public enum Permission {
-        CONDITION, STAFF_CHAT, WAVE, RECONNECT, ADMIN, RELOAD,
+        CONDITION, WAVE, RECONNECT, ADMIN, RELOAD,
         KICK, BYPASS, MANAGE, INFO, CHAT_PROTECTION, WARN, USE_BYPASS,
         NOTIFICATIONS, BEDROCK;
 
