@@ -6,13 +6,13 @@
 ## Click any of the images to be redirected:
 <a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/banner.png"></a>
 
-<a href="https://builtbybit.com/resources/bundle/730/"><img src="https://vagdedes.com/.images/spartan/simple_alternative.png"></a>
-
-<a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><a href="https://www.vagdedes.com/discord"><img src="https://vagdedes.com/.images/spartan/support.png"></a>
-
 <a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><img src="https://vagdedes.com/.images/spartan/long_1.png"></a>
 <a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><img src="https://vagdedes.com/.images/spartan/long_2.png"></a>
 <a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><img src="https://vagdedes.com/.images/spartan/long_3.png"></a>
+
+<a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><img src="https://vagdedes.com/.images/spartan/simple_alternative.png"></a>
+
+<a href="https://www.vagdedes.com/discord"><img src="https://vagdedes.com/.images/spartan/support.png"></a>
 
 <a href="https://github.com/Vagdedes/Spartan-AntiCheat/tree/main/src/documentation"><img src="https://vagdedes.com/.images/spartan/blocked_hacks_alternative.png"></a>
 
