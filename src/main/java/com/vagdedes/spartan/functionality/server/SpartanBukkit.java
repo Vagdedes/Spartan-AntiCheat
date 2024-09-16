@@ -5,9 +5,9 @@ import com.vagdedes.spartan.abstraction.check.Threads;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.cloud.AutoUpdater;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Bukkit;
@@ -36,20 +36,12 @@ public class SpartanBukkit {
                     + "org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().substring(23) + ".entity.CraftPlayer" // Version
     );
 
-    public static boolean isPlayer(UUID uuid) {
-        return playerProtocol.containsKey(uuid);
-    }
-
     public static int getPlayerCount() {
         return playerProtocol.size();
     }
 
     public static boolean hasPlayerCount() {
         return !playerProtocol.isEmpty();
-    }
-
-    public static Set<UUID> getUUIDs() {
-        return new HashSet<>(playerProtocol.keySet());
     }
 
     public static List<SpartanPlayer> getPlayers() {
@@ -96,10 +88,14 @@ public class SpartanBukkit {
     }
 
     public static SpartanProtocol getProtocol(Player player) {
-        return playerProtocol.getOrDefault(
-                player.getUniqueId(),
-                new SpartanProtocol(player)
-        );
+        if (ProtocolLib.isTemporary(player)) {
+            return new SpartanProtocol(player);
+        } else {
+            return playerProtocol.getOrDefault(
+                    player.getUniqueId(),
+                    new SpartanProtocol(player)
+            );
+        }
     }
 
     public static SpartanProtocol getProtocol(String name) {
@@ -143,21 +139,22 @@ public class SpartanBukkit {
 
     public static SpartanProtocol createProtocol(Player player) {
         SpartanProtocol protocol = new SpartanProtocol(player);
-        playerProtocol.put(
-                player.getUniqueId(),
-                protocol
-        );
-        PlayerDetectionSlots.add(protocol.spartanPlayer);
+
+        if (!ProtocolLib.isTemporary(player)) {
+            playerProtocol.put(
+                    player.getUniqueId(),
+                    protocol
+            );
+        }
         return protocol;
     }
 
-    public static SpartanProtocol deleteProtocol(Player real) {
-        SpartanProtocol protocol = playerProtocol.remove(real.getUniqueId());
-
-        if (protocol != null) {
-            PlayerDetectionSlots.remove(protocol.spartanPlayer);
+    public static SpartanProtocol deleteProtocol(Player player) {
+        if (ProtocolLib.isTemporary(player)) {
+            return null;
+        } else {
+            return playerProtocol.remove(player.getUniqueId());
         }
-        return protocol;
     }
 
     // Separator

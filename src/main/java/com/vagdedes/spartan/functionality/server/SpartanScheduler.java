@@ -3,6 +3,7 @@ package com.vagdedes.spartan.functionality.server;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,7 +33,8 @@ class SpartanScheduler {
             }
         } else {
             if (player != null) {
-                if (Register.isPluginEnabled()) {
+                if (Register.isPluginEnabled()
+                        && !ProtocolLib.isTemporary(player)) {
                     Location location = player.getLocation();
                     Bukkit.getRegionScheduler()
                             .execute(Register.plugin,

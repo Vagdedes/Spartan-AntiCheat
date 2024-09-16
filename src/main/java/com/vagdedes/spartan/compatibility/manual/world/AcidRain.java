@@ -2,7 +2,6 @@ package com.vagdedes.spartan.compatibility.manual.world;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.wasteofplastic.acidisland.events.AcidEvent;
 import com.wasteofplastic.acidisland.events.AcidRainEvent;
@@ -18,16 +17,8 @@ public class AcidRain implements Listener {
     private void AcidRainEvent(AcidRainEvent e) {
         if (Compatibility.CompatibilityType.ACID_RAIN.isFunctional()) {
             Player n = e.getPlayer();
-
-            if (ProtocolLib.isTemporary(n)) {
-                return;
-            }
             SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
-
-            if (p == null) {
-                return;
-            }
-            p.addReceivedDamage(new EntityDamageEvent(
+            p.handleReceivedDamage(new EntityDamageEvent(
                     n,
                     EntityDamageEvent.DamageCause.FALL,
                     Math.max(
@@ -42,16 +33,9 @@ public class AcidRain implements Listener {
     private void AcidEvent(AcidEvent e) {
         if (Compatibility.CompatibilityType.ACID_RAIN.isFunctional()) {
             Player n = e.getPlayer();
-
-            if (ProtocolLib.isTemporary(n)) {
-                return;
-            }
             SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
 
-            if (p == null) {
-                return;
-            }
-            p.addReceivedDamage(new EntityDamageEvent(
+            p.handleReceivedDamage(new EntityDamageEvent(
                     n,
                     EntityDamageEvent.DamageCause.FALL,
                     Math.max(

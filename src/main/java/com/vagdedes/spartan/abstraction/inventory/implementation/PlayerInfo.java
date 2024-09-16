@@ -129,6 +129,7 @@ public class PlayerInfo extends InventoryMenu {
             }
 
             if (isOnline) {
+                lore.add("§7Version§8:§c " + MultiVersion.versionString(target.version));
                 lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartanPlayer.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
                 lore.add("§7Edition§8:§c " + target.spartanPlayer.dataType);
@@ -181,7 +182,6 @@ public class PlayerInfo extends InventoryMenu {
         boolean notChecked = isOnline
                 && !PlayerDetectionSlots.isChecked(player)
                 && Config.isEnabled(player.dataType);
-        String cancellableCompatibility = isOnline ? player.getCancellableCompatibility() : null;
 
         for (HackType hackType : hackTypes) {
             if (hackType.category == checkType) {
@@ -190,7 +190,6 @@ public class PlayerInfo extends InventoryMenu {
                         player,
                         hackType,
                         dataType,
-                        cancellableCompatibility,
                         isOnline,
                         notChecked
                 );
@@ -207,7 +206,6 @@ public class PlayerInfo extends InventoryMenu {
     private String getDetectionState(SpartanPlayer player,
                                      HackType hackType,
                                      Check.DataType dataType,
-                                     String cancellableCompatibility,
                                      boolean hasPlayer,
                                      boolean notChecked) {
         if (!hasPlayer) {
@@ -224,10 +222,9 @@ public class PlayerInfo extends InventoryMenu {
         }
         CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
-                cancellableCompatibility != null ? cancellableCompatibility + " Compatibility" :
-                        notChecked ? "Temporarily Not Checked" :
-                                disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
-                                        (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
+                notChecked ? "Temporarily Not Checked" :
+                        disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
+                                (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
     }
 
     public void refresh(String targetName) {
@@ -238,8 +235,8 @@ public class PlayerInfo extends InventoryMenu {
                 InventoryView inventoryView = protocol.player.getOpenInventory();
 
                 if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)
-                        && cooldowns.canDo("player-info=" + protocol.player.getUniqueId())) {
-                    cooldowns.add("player-info=" + protocol.player.getUniqueId(), 1);
+                        && cooldowns.canDo("player-info=" + protocol.getUUID())) {
+                    cooldowns.add("player-info=" + protocol.getUUID(), 1);
                     InteractiveInventory.playerInfo.open(protocol.spartanPlayer, targetName);
                 }
             }
@@ -285,10 +282,10 @@ public class PlayerInfo extends InventoryMenu {
                         player.getInstance().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                     }
                 }
-                player.sendInventoryCloseMessage(null);
+                player.getInstance().closeInventory();
             }
         } else if (item.equals("Close")) {
-            player.sendInventoryCloseMessage(null);
+            player.getInstance().closeInventory();
         } else if (item.equals("Back")) {
             InteractiveInventory.mainMenu.open(player);
         } else {

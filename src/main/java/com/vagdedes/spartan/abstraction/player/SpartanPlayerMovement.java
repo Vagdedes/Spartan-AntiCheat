@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -51,7 +52,9 @@ public class SpartanPlayerMovement {
         this.parent = parent;
         this.lastLiquidMaterial = Material.AIR;
 
-        SpartanLocation location = new SpartanLocation(this.parent.protocol.getLocation());
+        SpartanLocation location = new SpartanLocation(
+                ProtocolLib.getLocation(parent.getInstance())
+        );
         this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
         List<SpartanLocation> list = new ArrayList<>();
         list.add(location);
@@ -342,7 +345,7 @@ public class SpartanPlayerMovement {
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
             Location playerLocation = this.parent.protocol.getLocation();
             return new SpartanLocation(
-                    vehicle.getLocation(),
+                    ProtocolLib.getLocation(vehicle),
                     playerLocation.getYaw(),
                     playerLocation.getPitch());
         }
@@ -381,9 +384,6 @@ public class SpartanPlayerMovement {
                     iterator.remove();
                 }
                 this.locations.computeIfAbsent(TPS.tick(), k -> new ArrayList<>()).add(spartanLocation);
-            }
-            if (!this.location.world.equals(location.getWorld())) {
-                this.parent.resetTrackers();
             }
             this.location = spartanLocation;
             this.setDetectionLocation(spartanLocation, false);

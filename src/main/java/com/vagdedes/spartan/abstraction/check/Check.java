@@ -353,25 +353,18 @@ public class Check {
 
     private boolean setOption(String option, Object value) {
         try {
-            if (file.exists() || file.createNewFile()) {
-                String key = this.hackType + "." + option;
-                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            String key = this.hackType + "." + option;
+            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            configuration.set(key, value);
 
-                if (configuration != null) {
-                    configuration.set(key, value);
-
-                    try {
-                        configuration.save(file);
-                        options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
-                    } catch (Exception ex) {
-                        AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
-                        ex.printStackTrace();
-                    }
-                } else {
-                    AwarenessNotifications.forcefullySend("Failed to load checks configuration (1).");
-                }
-                return true;
+            try {
+                configuration.save(file);
+                options.remove(key); // Remove instead of modifying to be on demand and have the chance to catch changes by the user
+            } catch (Exception ex) {
+                AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
+                ex.printStackTrace();
             }
+            return true;
         } catch (Exception ex) {
             AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
             ex.printStackTrace();
@@ -399,23 +392,20 @@ public class Check {
     }
 
     public Set<String[]> getStoredOptions() {
-        if (file.exists()) {
-            Set<String[]> set = new LinkedHashSet<>(30);
-            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-            String hackTypeString = this.hackType.toString();
+        Set<String[]> set = new LinkedHashSet<>(30);
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        String hackTypeString = this.hackType.toString();
 
-            for (String key : configuration.getKeys(true)) {
-                if (key.split("\\.", 2)[0].equalsIgnoreCase(hackTypeString)) {
-                    Object option = configuration.get(key, null);
+        for (String key : configuration.getKeys(true)) {
+            if (key.split("\\.", 2)[0].equalsIgnoreCase(hackTypeString)) {
+                Object option = configuration.get(key, null);
 
-                    if (option != null) {
-                        set.add(new String[]{key, option.toString()});
-                    }
+                if (option != null) {
+                    set.add(new String[]{key, option.toString()});
                 }
             }
-            return set;
         }
-        return new HashSet<>(0);
+        return set;
     }
 
     public Object getOption(String option, Object def, boolean cache) {
@@ -429,41 +419,26 @@ public class Check {
             }
         }
         try {
-            if (file.exists() || file.createNewFile()) {
-                String key = this.hackType + "." + option;
-                boolean isDefaultNull = def == null;
-                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+            String key = this.hackType + "." + option;
+            boolean isDefaultNull = def == null;
+            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-                if (cache) {
-                    synchronized (options) {
-                        if (configuration.contains(key)) {
-                            Object value = configuration.get(key, def);
-
-                            if (!isDefaultNull) {
-                                options.put(option, value);
-                            }
-                            return value;
-                        }
-                        if (!isDefaultNull) {
-                            configuration.set(key, def);
-
-                            try {
-                                configuration.save(file);
-                                options.put(option, def);
-                            } catch (Exception ex) {
-                                AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
-                } else {
+            if (cache) {
+                synchronized (options) {
                     if (configuration.contains(key)) {
-                        return configuration.get(key, def);
-                    } else if (!isDefaultNull) {
+                        Object value = configuration.get(key, def);
+
+                        if (!isDefaultNull) {
+                            options.put(option, value);
+                        }
+                        return value;
+                    }
+                    if (!isDefaultNull) {
                         configuration.set(key, def);
 
                         try {
                             configuration.save(file);
+                            options.put(option, def);
                         } catch (Exception ex) {
                             AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                             ex.printStackTrace();
@@ -471,7 +446,18 @@ public class Check {
                     }
                 }
             } else {
-                AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
+                if (configuration.contains(key)) {
+                    return configuration.get(key, def);
+                } else if (!isDefaultNull) {
+                    configuration.set(key, def);
+
+                    try {
+                        configuration.save(file);
+                    } catch (Exception ex) {
+                        AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
+                        ex.printStackTrace();
+                    }
+                }
             }
         } catch (Exception ex) {
             AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");

@@ -28,10 +28,10 @@ public class DetectionNotifications {
             List<SpartanPlayer> list = new ArrayList<>(notifications.size());
 
             for (UUID uuid : notifications.keySet()) {
-                SpartanProtocol p = SpartanBukkit.getProtocol(uuid);
+                SpartanProtocol protocol = SpartanBukkit.getProtocol(uuid);
 
-                if (p != null) {
-                    list.add(p.spartanPlayer);
+                if (protocol != null) {
+                    list.add(protocol.spartanPlayer);
                 }
             }
             return list;
@@ -40,7 +40,7 @@ public class DetectionNotifications {
     }
 
     public static boolean isEnabled(SpartanPlayer p) {
-        return notifications.containsKey(p.getInstance().getUniqueId());
+        return notifications.containsKey(p.protocol.getUUID());
     }
 
     public static boolean hasPermission(SpartanPlayer p) {
@@ -48,22 +48,22 @@ public class DetectionNotifications {
     }
 
     public static Integer getFrequency(SpartanPlayer p) {
-        return notifications.get(p.getInstance().getUniqueId());
+        return notifications.get(p.protocol.getUUID());
     }
 
     public static void remove(SpartanPlayer p) {
-        notifications.remove(p.getInstance().getUniqueId());
+        notifications.remove(p.protocol.getUUID());
     }
 
     public static void set(SpartanPlayer p, int i) {
-        Integer frequency = notifications.put(p.getInstance().getUniqueId(), i);
+        Integer frequency = notifications.put(p.protocol.getUUID(), i);
 
         if (frequency == null) {
             p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
             p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
-            notifications.remove(p.getInstance().getUniqueId());
+            notifications.remove(p.protocol.getUUID());
             p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }
@@ -71,9 +71,9 @@ public class DetectionNotifications {
     // Separator
 
     public static void runOnLeave(SpartanPlayer p) {
-        if (notifications.containsKey(p.getInstance().getUniqueId())
+        if (notifications.containsKey(p.protocol.getUUID())
                 && !DetectionNotifications.hasPermission(p)) {
-            notifications.remove(p.getInstance().getUniqueId());
+            notifications.remove(p.protocol.getUUID());
         }
     }
 

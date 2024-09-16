@@ -133,7 +133,7 @@ public class Enums {
         FastClicks(
                 HackCategoryType.COMBAT,
                 2_000L,
-                com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks.class,
+                com.vagdedes.spartan.abstraction.check.implementation.combat.FastClicks.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to click abnormally fast",
@@ -184,7 +184,7 @@ public class Enums {
         Speed(
                 HackCategoryType.MOVEMENT,
                 2_000L,
-                com.vagdedes.spartan.abstraction.check.implementation.movement.speed.Speed.class,
+                com.vagdedes.spartan.abstraction.check.implementation.movement.Speed.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to travel faster",
@@ -204,21 +204,11 @@ public class Enums {
         MorePackets(
                 HackCategoryType.MOVEMENT,
                 2_000L,
-                com.vagdedes.spartan.abstraction.check.implementation.movement.MorePackets.class,
+                com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.MorePackets.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to send abnormally",
                         "high amounts of movement packets."
-                }
-        ),
-        NoFall(
-                HackCategoryType.MOVEMENT,
-                2_000L,
-                com.vagdedes.spartan.abstraction.check.implementation.movement.NoFall.class,
-                new String[]{
-                        "This check will prevent client modules",
-                        "that allow a player to decrease or",
-                        "eliminate falling damage."
                 }
         ),
         Simulation(

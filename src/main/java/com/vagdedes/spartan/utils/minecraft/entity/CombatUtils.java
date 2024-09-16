@@ -3,6 +3,7 @@ package com.vagdedes.spartan.utils.minecraft.entity;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.TrigonometryUtils;
@@ -176,7 +177,7 @@ public class CombatUtils {
         SpartanLocation
                 playerFeetLocation = player.movement.getLocation(),
                 playerEyeLocation = playerFeetLocation.clone().add(0, player.getInstance().getEyeHeight(), 0);
-        Location entityFeetLocation = entity.getLocation();
+        Location entityFeetLocation = ProtocolLib.getLocation(entity);
         double directionalDistance = playerEyeLocation.distance(entityFeetLocation);
         Vector vector = playerFeetLocation.getDirection();
         SpartanLocation vectorLocation = playerEyeLocation.clone().add(
@@ -234,7 +235,9 @@ public class CombatUtils {
     public static boolean hasBlockBehind(SpartanPlayer p, LivingEntity entity) {
         SpartanLocation location = p.movement.getLocation().clone();
         location.setPitch(0.0f);
-        SpartanLocation multipliedLocation = new SpartanLocation(entity.getLocation().clone().add(location.getDirection().multiply(1.0)));
+        SpartanLocation multipliedLocation = new SpartanLocation(
+                ProtocolLib.getLocation(entity).clone().add(location.getDirection().multiply(1.0))
+        );
 
         if (BlockUtils.isSolid(multipliedLocation.getBlock().material)) {
             return true;

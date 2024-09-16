@@ -1,19 +1,26 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerEvidence {
 
     public static final boolean POSITIVE = false;
     public static final double
-            notificationProbability = createProbability(0.5),
-            preventionProbability = createProbability(1.0 / 3.0),
+            notificationProbability = createProbability(0.45),
+            preventionProbability = createProbability(0.3),
             punishmentProbability = createProbability(0.1);
+    public static final double[] probabilities = new double[]{
+            notificationProbability,
+            preventionProbability,
+            punishmentProbability
+    };
 
     private static double createProbability(double probability) {
         return POSITIVE ? 1.0 - probability : probability;
@@ -33,30 +40,8 @@ public class PlayerEvidence {
                 : probability - min;
     }
 
-    private static int probabilityToPlayers(double probability) {
+    public static int probabilityToFactors(double probability) {
         return AlgebraUtils.integerCeil(1.0 / createProbability(probability));
-    }
-
-    public static int getRequiredPlayers(Enums.HackType hackType, double probability) {
-        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
-        int requirement = probabilityToPlayers(probability);
-
-        if (profiles.size() >= requirement) {
-            int count = 0;
-
-            for (PlayerProfile profile : profiles) {
-                if (profile.hasData(hackType)) {
-                    count++;
-
-                    if (count >= requirement) {
-                        return 0;
-                    }
-                }
-            }
-            return requirement - count;
-        } else {
-            return requirement - profiles.size();
-        }
     }
 
     // Separator

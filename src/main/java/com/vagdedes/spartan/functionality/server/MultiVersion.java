@@ -1,11 +1,19 @@
 package com.vagdedes.spartan.functionality.server;
 
+import com.comphenix.protocol.ProtocolLibrary;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
+import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
+import com.viaversion.viaversion.api.Via;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class MultiVersion {
 
+    private static final boolean paperClass = ReflectionUtils.classExists(
+            "com.destroystokyo.paper.network.NetworkClient"
+    );
     private static MCVersion detectedVersion;
     public static final boolean other, folia;
 
@@ -16,9 +24,28 @@ public class MultiVersion {
     }
 
     public enum MCVersion {
-        V1_7, V1_8, V1_9, V1_10, V1_11, V1_12, V1_13, V1_14, V1_15, V1_16,
-        V1_17, V1_18, V1_19, V1_20, V1_21,
-        OTHER // Always last
+        V1_7(5),
+        V1_8(47),
+        V1_9(110),
+        V1_10(210),
+        V1_11(316),
+        V1_12(340),
+        V1_13(404),
+        V1_14(498),
+        V1_15(578),
+        V1_16(754),
+        V1_17(756),
+        V1_18(758),
+        V1_19(762),
+        V1_20(766),
+        V1_21(Integer.MAX_VALUE),
+        OTHER(-1); // Always last
+
+        public final int maxProtocol;
+
+        MCVersion(int maxProtocol) {
+            this.maxProtocol = maxProtocol;
+        }
     }
 
     public static boolean isOrGreater(MCVersion trialVersion) {
@@ -26,9 +53,34 @@ public class MultiVersion {
     }
 
     public static String versionString() {
-        return other
-                ? "Unknown"
-                : detectedVersion.toString().substring(1).replace("_", ".");
+        return other ? "Unknown" : versionString(detectedVersion);
+    }
+
+    public static String versionString(MCVersion version) {
+        return version.toString().substring(1).replace("_", ".");
+    }
+
+    public static MCVersion get(Player player) {
+        int protocol;
+
+        if (PluginUtils.exists("viaversion")) {
+            protocol = Via.getAPI().getPlayerVersion(player);
+        } else if (paperClass) {
+            protocol = player.getProtocolVersion();
+        } else if (SpartanBukkit.packetsEnabled()) {
+            protocol = ProtocolLibrary.getProtocolManager().getProtocolVersion(player);
+        } else {
+            protocol = -1;
+        }
+
+        if (protocol >= 0) {
+            for (MCVersion version : MCVersion.values()) {
+                if (protocol <= version.maxProtocol) {
+                    return version;
+                }
+            }
+        }
+        return MultiVersion.MCVersion.OTHER;
     }
 
     public static MCVersion version() {

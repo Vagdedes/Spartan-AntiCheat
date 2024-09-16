@@ -1,98 +1,147 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.TimerBalancer;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.listeners.protocol.modules.TeleportData;
+import com.vagdedes.spartan.listeners.protocol.Packet_Teleport;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
+import org.bukkit.event.player.PlayerVelocityEvent;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 public class SpartanProtocol {
 
-    private final long time;
     public final Player player;
     public final SpartanPlayer spartanPlayer;
-    private boolean isOnGround, isOnGroundFrom, isSprinting, isSneaking;
-    private int loaded;
+    public final TimerBalancer timerBalancer;
+    private boolean onGround, onGroundFrom;
+    private int hashPosBuffer;
+    public boolean mutateTeleport, sprinting, sneaking, vehicleStatus;
+    public boolean loaded, simulationFlag, teleported;
     private Location location;
-    private Vector velocity;
+    public Location simulationStartPoint;
     private PlayerProfile profile;
-    public List<TeleportData> teleportEngine;
-    private boolean mutateTeleport;
+    public List<Packet_Teleport.TeleportData> teleportEngine;
     public final MCClient mcClient;
+    public byte simulationDelayPerTP, keepEntity;
+    private LinkedList<Location> positionHistory;
+    public PlayerVelocityEvent claimedVelocity;
+    public long tickTime;
+    public final MultiVersion.MCVersion version;
 
     public SpartanProtocol(Player player) {
-        this.time = System.currentTimeMillis();
-        this.mcClient = new MCClient(player);
         this.player = player;
-        this.isOnGround = false;
-        this.isOnGroundFrom = false;
-        this.location = player.getLocation();
-        this.isSprinting = false;
-        this.isSneaking = false;
-        this.loaded = SpartanBukkit.packetsEnabled() ? 0 : (int) TPS.maximum;
-        this.velocity = new Vector(0, 0, 0);
-        this.spartanPlayer = new SpartanPlayer(this);
-        this.teleportEngine = new LinkedList<>();
+        this.version = MultiVersion.get(player);
+
+        this.onGround = false;
+        this.onGroundFrom = false;
+        this.sprinting = false;
+        this.sneaking = false;
         this.mutateTeleport = false;
+        this.loaded = false;
+        this.location = ProtocolLib.getLocation(player);
+        this.teleportEngine = new LinkedList<>();
+        this.simulationFlag = false;
+
+        this.spartanPlayer = new SpartanPlayer(this);
+        this.timerBalancer = new TimerBalancer();
+        this.mcClient = new MCClient(player);
+        this.simulationStartPoint = this.location.clone();
+        this.simulationDelayPerTP = 1;
+        this.teleported = false;
+        this.vehicleStatus = true;
+        this.keepEntity = 0;
+        this.tickTime = System.currentTimeMillis();
+
+        this.positionHistory = new LinkedList<>();
+        this.hashPosBuffer = 0;
+        this.claimedVelocity = null;
+
         this.setProfile(ResearchEngine.getPlayerProfile(this, false));
     }
 
-    public long timePassed() {
-        return System.currentTimeMillis() - this.time;
+    public boolean isUsingVersion(MultiVersion.MCVersion trialVersion) {
+        return version.ordinal() == trialVersion.ordinal();
+    }
+
+    public boolean isUsingVersionOrGreater(MultiVersion.MCVersion trialVersion) {
+        return version.ordinal() >= trialVersion.ordinal();
+    }
+
+    public void pushHashPosition(Location location) {
+        this.hashPosBuffer = Objects.hashCode((location.getX() + location.getY() + location.getZ()));
+    }
+
+    public boolean isSameWithHash(Location location) {
+        return this.hashPosBuffer == Objects.hashCode((location.getX() + location.getY() + location.getZ()));
+    }
+
+    public LinkedList<Location> getLocations() {
+        return this.positionHistory;
     }
 
     public boolean isOnGround() {
-        return SpartanBukkit.packetsEnabled()
-                ? this.isOnGround
+        return packetsEnabled()
+                ? this.onGround
                 : this.player.isOnGround();
     }
 
     public boolean isOnGroundFrom() {
-        return SpartanBukkit.packetsEnabled()
-                ? this.isOnGroundFrom
+        return packetsEnabled()
+                ? this.onGroundFrom
                 : this.player.isOnGround();
     }
 
     public boolean isSprinting() {
-        return SpartanBukkit.packetsEnabled()
-                ? this.isSprinting
+        return packetsEnabled()
+                ? this.sprinting
                 : this.player.isSprinting();
     }
 
     public boolean isSneaking() {
-        return SpartanBukkit.packetsEnabled()
-                ? this.isSneaking
+        return packetsEnabled()
+                ? this.sneaking
                 : this.player.isSneaking();
     }
 
     public boolean isLoading() {
-        return this.loaded < TPS.maximum;
+        return packetsEnabled() && !this.loaded;
     }
 
     public Location getLocation() {
-        return SpartanBukkit.packetsEnabled()
+        return packetsEnabled()
                 ? this.location
-                : this.player.getLocation();
-    }
-
-    public Vector getVelocity() {
-        return this.velocity;
+                : ProtocolLib.getLocation(this.player);
     }
 
     public int getPing() {
         return Latency.ping(this.player);
     }
 
-    public boolean isMutateTeleport() {
-        return this.mutateTeleport;
+    public UUID getUUID() {
+        return ProtocolLib.isTemporary(this.player)
+                ? UUID.randomUUID()
+                : this.player.getUniqueId();
+    }
+
+    public void startSimulationFlag() {
+        this.spartanPlayer.teleport(this.spartanPlayer.movement.getEventFromLocation());
+        this.simulationStartPoint = this.spartanPlayer.movement.getEventFromLocation().getBukkitLocation().clone();
+        this.simulationFlag = true;
+        this.simulationDelayPerTP = 1;
+    }
+
+    public void endSimulationFlag() {
+        this.simulationFlag = false;
     }
 
     public PlayerProfile getProfile() {
@@ -102,40 +151,31 @@ public class SpartanProtocol {
     // Separator
 
     public void setOnGround(boolean isOnGround) {
-        this.isOnGroundFrom = this.isOnGround;
-        this.isOnGround = isOnGround;
+        this.onGroundFrom = this.onGround;
+        this.onGround = isOnGround;
 
-        if (this.isOnGround) {
+        if (this.onGround) {
             this.spartanPlayer.movement.resetAirTicks();
         }
-    }
-
-    public void setSprinting(boolean isSprinting) {
-        this.isSprinting = isSprinting;
-    }
-
-    public void setSneaking(boolean isSneaking) {
-        this.isSneaking = isSneaking;
-    }
-
-    public void load() {
-        this.loaded++;
-    }
-
-    public void setVelocity(Vector velocity) {
-        this.velocity = velocity;
     }
 
     public void setLocation(Location location) {
         this.location = location;
     }
 
-    public void setMutateTeleport(boolean b) {
-        this.mutateTeleport = b;
+    public void addRawLocation(Location location) {
+        this.positionHistory.addLast(location.clone());
+        if (this.positionHistory.size() > 8) {
+            this.positionHistory.removeFirst();
+        }
     }
 
     public void setProfile(PlayerProfile profile) {
         this.profile = profile;
+    }
+
+    public boolean packetsEnabled() {
+        return SpartanBukkit.packetsEnabled() && !this.spartanPlayer.bedrockPlayer;
     }
 
 }

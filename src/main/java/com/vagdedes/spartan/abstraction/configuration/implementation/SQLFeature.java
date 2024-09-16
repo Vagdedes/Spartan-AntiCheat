@@ -335,7 +335,7 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                             + ", " + (notification != null ? syntaxForColumn(notification) : "NULL")
                             + ", " + syntaxForColumn(information)
-                            + ", " + (hasPlayer ? syntaxForColumn(p.getInstance().getUniqueId()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.protocol.getUUID()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(p.getInstance().getName()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(p.protocol.getPing()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")

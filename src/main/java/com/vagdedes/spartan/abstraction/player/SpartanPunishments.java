@@ -67,24 +67,21 @@ public class SpartanPunishments {
         if (warnCooldown < System.currentTimeMillis()) {
             warnCooldown = System.currentTimeMillis() + 1_000L;
             Player target = this.parent.getInstance();
-
-            if (target != null) {
-                String punisherName = punisher instanceof ConsoleCommandSender
-                        ? Config.messages.getColorfulString("console_name")
-                        : punisher.getName(),
-                        warning = ConfigUtils.replaceWithSyntax(target,
-                                Config.messages.getColorfulString("warning_message")
-                                        .replace("{reason}", reason)
-                                        .replace("{punisher}", punisherName),
-                                null),
-                        feedback = ConfigUtils.replaceWithSyntax(target,
-                                Config.messages.getColorfulString("warning_feedback_message")
-                                        .replace("{reason}", reason)
-                                        .replace("{punisher}", punisherName),
-                                null);
-                target.sendMessage(warning);
-                punisher.sendMessage(feedback);
-            }
+            String punisherName = punisher instanceof ConsoleCommandSender
+                    ? Config.messages.getColorfulString("console_name")
+                    : punisher.getName(),
+                    warning = ConfigUtils.replaceWithSyntax(target,
+                            Config.messages.getColorfulString("warning_message")
+                                    .replace("{reason}", reason)
+                                    .replace("{punisher}", punisherName),
+                            null),
+                    feedback = ConfigUtils.replaceWithSyntax(target,
+                            Config.messages.getColorfulString("warning_feedback_message")
+                                    .replace("{reason}", reason)
+                                    .replace("{punisher}", punisherName),
+                            null);
+            target.sendMessage(warning);
+            punisher.sendMessage(feedback);
             return true;
         } else {
             return false;

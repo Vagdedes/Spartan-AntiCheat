@@ -50,18 +50,6 @@ public class AntiCheatLogs {
         }
     }
 
-    private static void storeInFile(String information) {
-        if (fileConfiguration != null) {
-            SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
-                fileConfiguration.set(
-                        DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()),
-                        information
-                );
-                save();
-            });
-        }
-    }
-
     // Separator
 
     public static void logInfo(SpartanPlayer p,
@@ -84,8 +72,14 @@ public class AntiCheatLogs {
                 time = now;
                 savedFile = createFile(time);
                 fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
-            } else {
-                storeInFile(information);
+            } else if (fileConfiguration != null) {
+                SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
+                    fileConfiguration.set(
+                            DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()),
+                            information
+                    );
+                    save();
+                });
             }
         }
         Config.sql.logInfo(p, notification, information, material, hackType, playerViolation);

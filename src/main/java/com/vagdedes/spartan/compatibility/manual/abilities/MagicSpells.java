@@ -4,7 +4,6 @@ import com.nisovin.magicspells.events.SpellCastEvent;
 import com.nisovin.magicspells.events.SpellCastedEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -22,24 +21,17 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                Player n = (Player) caster;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
 
-                if (ProtocolLib.isTemporary(n)) {
-                    return;
-                }
-                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
-
-                if (p != null) {
-                    Config.compatibility.evadeFalsePositives(
-                            p,
-                            Compatibility.CompatibilityType.MAGIC_SPELLS,
-                            new Enums.HackCategoryType[]{
-                                    Enums.HackCategoryType.MOVEMENT,
-                                    Enums.HackCategoryType.COMBAT
-                            },
-                            40
-                    );
-                }
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.MAGIC_SPELLS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        40
+                );
             }
         }
     }
@@ -50,24 +42,17 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                Player n = (Player) caster;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
 
-                if (ProtocolLib.isTemporary(n)) {
-                    return;
-                }
-                SpartanPlayer p = SpartanBukkit.getProtocol(n).spartanPlayer;
-
-                if (p != null) {
-                    Config.compatibility.evadeFalsePositives(
-                            p,
-                            Compatibility.CompatibilityType.MAGIC_SPELLS,
-                            new Enums.HackCategoryType[]{
-                                    Enums.HackCategoryType.MOVEMENT,
-                                    Enums.HackCategoryType.COMBAT
-                            },
-                            40
-                    );
-                }
+                Config.compatibility.evadeFalsePositives(
+                        p,
+                        Compatibility.CompatibilityType.MAGIC_SPELLS,
+                        new Enums.HackCategoryType[]{
+                                Enums.HackCategoryType.MOVEMENT,
+                                Enums.HackCategoryType.COMBAT
+                        },
+                        40
+                );
             }
         }
     }

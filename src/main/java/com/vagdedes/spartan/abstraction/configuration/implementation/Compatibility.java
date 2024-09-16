@@ -230,11 +230,11 @@ public class Compatibility {
         );
         CompatibilityType.CRAFT_BOOK.setFunctional(CraftBook::resetBoatLimit, null);
         CompatibilityType.CRACK_SHOT.setFunctional(
-                () -> Register.enable(new CrackShot(), CrackShot.class),
+                () -> Register.enable(new CrackShot()),
                 null
         );
         CompatibilityType.CRACK_SHOT_PLUS.setFunctional(
-                () -> Register.enable(new CrackShotPlus(), CrackShotPlus.class),
+                () -> Register.enable(new CrackShotPlus()),
                 null
         );
         CompatibilityType.CUSTOM_KNOCKBACK.setFunctional(
@@ -254,11 +254,11 @@ public class Compatibility {
                 null
         );
         CompatibilityType.REAL_DUAL_WIELD.setFunctional(
-                () -> Register.enable(new RealDualWield(), RealDualWield.class),
+                () -> Register.enable(new RealDualWield()),
                 null
         );
         CompatibilityType.MAGIC_SPELLS.setFunctional(
-                () -> Register.enable(new MagicSpells(), MagicSpells.class),
+                () -> Register.enable(new MagicSpells()),
                 null
         );
         CompatibilityType.ACID_RAIN.setFunctional(
@@ -268,11 +268,11 @@ public class Compatibility {
                         "askyblock"
                 },
                 null,
-                () -> Register.enable(new AcidRain(), AcidRain.class),
+                () -> Register.enable(new AcidRain()),
                 null
         );
         CompatibilityType.ADVANCED_ABILITIES.setFunctional(
-                () -> Register.enable(new AdvancedAbilities(), AdvancedAbilities.class),
+                () -> Register.enable(new AdvancedAbilities()),
                 null
         );
         CompatibilityType.OLD_COMBAT_MECHANICS.setFunctional();
@@ -281,11 +281,11 @@ public class Compatibility {
                 null
         );
         CompatibilityType.PROJECT_KORRA.setFunctional(
-                () -> Register.enable(new ProjectKorra(), ProjectKorra.class),
+                () -> Register.enable(new ProjectKorra()),
                 null
         );
         CompatibilityType.GRAPPLING_HOOK.setFunctional(
-                () -> Register.enable(new GrapplingHook(), GrapplingHook.class),
+                () -> Register.enable(new GrapplingHook()),
                 null
         );
         CompatibilityType.MYTHIC_MOBS.setFunctional(
@@ -297,11 +297,11 @@ public class Compatibility {
                 ReflectionUtils.classExists("com.willfp.ecoenchants.enchants.EcoEnchant")
         );
         CompatibilityType.VEHICLES.setFunctional(
-                () -> Register.enable(new Vehicles(), Vehicles.class),
+                () -> Register.enable(new Vehicles()),
                 null
         );
         CompatibilityType.MINE_TINKER.setFunctional(
-                () -> Register.enable(new MineTinker(), MineTinker.class),
+                () -> Register.enable(new MineTinker()),
                 null
         );
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
@@ -323,7 +323,7 @@ public class Compatibility {
             );
         }
         CompatibilityType.WILD_TOOLS.setFunctional(
-                () -> Register.enable(new WildTools(), WildTools.class),
+                () -> Register.enable(new WildTools()),
                 null
         );
         CompatibilityType.FLOODGATE.setFunctional(
@@ -351,7 +351,7 @@ public class Compatibility {
         );
         CompatibilityType.MY_PET.setFunctional();
         CompatibilityType.RAMPEN_DRILLS.setFunctional(
-                () -> Register.enable(new RampenDrills(), RampenDrills.class),
+                () -> Register.enable(new RampenDrills()),
                 null
         );
         CompatibilityType.MINE_BOMB.setFunctional(
@@ -369,7 +369,7 @@ public class Compatibility {
                 null
         );
         CompatibilityType.AURELIUM_SKILLS.setFunctional(
-                () -> Register.enable(new AureliumSkills(), AureliumSkills.class),
+                () -> Register.enable(new AureliumSkills()),
                 null
         );
         CompatibilityType.ITEMS_ADDER.setFunctional();

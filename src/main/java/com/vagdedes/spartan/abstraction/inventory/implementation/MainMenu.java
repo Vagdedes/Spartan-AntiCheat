@@ -59,7 +59,7 @@ public class MainMenu extends InventoryMenu {
     @Override
     public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
-        UUID uuid = player.getInstance().getUniqueId();
+        UUID uuid = player.protocol.getUUID();
         int page = PlayerStateLists.getPage(uuid), previousPageSlot = 18, nextPageSlot = 26;
         setTitle(player, name + page + ")");
 
@@ -157,9 +157,7 @@ public class MainMenu extends InventoryMenu {
                 item = (name.startsWith("§") ? name.substring(2) : name);
 
         if (item.equals("Auto Updater")) {
-            player.sendInventoryCloseMessage("");
-            player.getInstance().sendMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
-            player.getInstance().sendMessage("");
+            player.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
 
         } else if (item.equals("Compatibilities")) {
             if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
@@ -206,9 +204,7 @@ public class MainMenu extends InventoryMenu {
                 if (clickType == ClickType.LEFT) {
                     InteractiveInventory.manageChecks.open(player);
                 } else if (clickType == ClickType.RIGHT) {
-                    player.sendInventoryCloseMessage("");
-                    player.getInstance().sendMessage("§6Learn more about Detection Slots§8: §e§n" + SpartanEdition.patreonURL);
-                    player.getInstance().sendMessage("");
+                    player.sendImportantMessage("§6Learn more about Detection Slots§8: §e§n" + SpartanEdition.patreonURL);
                 }
             }
 
@@ -219,7 +215,7 @@ public class MainMenu extends InventoryMenu {
                 String number = split[1];
 
                 if (AlgebraUtils.validInteger(number)) {
-                    UUID uuid = player.getInstance().getUniqueId();
+                    UUID uuid = player.protocol.getUUID();
                     int itemPage = Integer.parseInt(number), currentPage = PlayerStateLists.getPage(uuid);
 
                     if (itemPage < currentPage) {

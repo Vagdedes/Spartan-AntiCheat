@@ -222,7 +222,7 @@ public class SpartanEdition {
             );
         }
 
-        if (AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "alternative-version", notificationCooldown)) {
+        if (AwarenessNotifications.canSend(player.protocol.getUUID(), "alternative-version", notificationCooldown)) {
             player.sendImportantMessage(message);
         }
     }
@@ -230,7 +230,7 @@ public class SpartanEdition {
     private static void attemptLimitNotification(SpartanPlayer player) {
         String message = AwarenessNotifications.getNotification(limitNotificationMessage);
 
-        if (AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "limit-notification", notificationCooldown)) {
+        if (AwarenessNotifications.canSend(player.protocol.getUUID(), "limit-notification", notificationCooldown)) {
             player.sendImportantMessage(message);
         }
     }
@@ -240,7 +240,7 @@ public class SpartanEdition {
             String message = AwarenessNotifications.getOptionalNotification(hasAccountNotificationMessage);
 
             if (message != null
-                    && AwarenessNotifications.canSend(player.getInstance().getUniqueId(), "has-account", notificationCooldown)) {
+                    && AwarenessNotifications.canSend(player.protocol.getUUID(), "has-account", notificationCooldown)) {
                 player.sendImportantMessage(message);
             }
         }

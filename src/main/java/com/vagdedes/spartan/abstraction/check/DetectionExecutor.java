@@ -2,6 +2,8 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import me.vagdedes.spartan.system.Enums;
 
 public abstract class DetectionExecutor {
@@ -20,16 +22,21 @@ public abstract class DetectionExecutor {
 
     protected final void cancel(String information, double violations, SpartanLocation location,
                                 int cancelTicks, boolean groundTeleport, double damage) {
-        if (executor.canFunction()) {
-            new HackPrevention(
-                    player,
-                    hackType,
+        long time = System.currentTimeMillis();
+
+        if (PlayerDetectionSlots.isChecked(player)
+                && executor.canFunction()
+                && !CloudBase.isInformationCancelled(hackType, information)) {
+            executor.violate(
+                    new HackPrevention(
+                            location,
+                            cancelTicks,
+                            groundTeleport,
+                            damage
+                    ),
                     information,
                     violations,
-                    location,
-                    cancelTicks,
-                    groundTeleport,
-                    damage
+                    time
             );
         }
     }

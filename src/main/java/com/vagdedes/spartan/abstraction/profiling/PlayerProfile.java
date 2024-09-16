@@ -51,7 +51,7 @@ public class PlayerProfile {
 
     public PlayerProfile(SpartanProtocol protocol) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        this.uuid = protocol.player.getUniqueId();
+        this.uuid = protocol.getUUID();
         this.name = protocol.player.getName();
         this.offlinePlayer = protocol.player; // Attention
         this.evidence = new PlayerEvidence();
@@ -71,7 +71,7 @@ public class PlayerProfile {
     }
 
     public void update(SpartanProtocol protocol) {
-        this.uuid = protocol.player.getUniqueId();
+        this.uuid = protocol.getUUID();
     }
 
     // Separator
@@ -115,7 +115,7 @@ public class PlayerProfile {
                 SpartanPlayer player = getSpartanPlayer();
 
                 if (player != null) {
-                    this.uuid = player.getInstance().getUniqueId();
+                    this.uuid = player.protocol.getUUID();
                     this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
                 } else {
                     this.offlinePlayer = Bukkit.getOfflinePlayer(name);

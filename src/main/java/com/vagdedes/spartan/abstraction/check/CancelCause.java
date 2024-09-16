@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
+import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 public class CancelCause {
@@ -7,10 +8,18 @@ public class CancelCause {
     private String reason, pointer;
     private long expiration;
 
+    CancelCause(Compatibility.CompatibilityType compatibilityType) {
+        this.reason = compatibilityType.toString();
+        this.pointer = " ";
+        this.expiration = 0L;
+    }
+
     CancelCause(String reason, String pointer, int ticks) {
         this.reason = reason;
         this.pointer = pointer;
-        this.expiration = ticks == 0 ? 0L : System.currentTimeMillis() + (ticks * TPS.tickTime);
+        this.expiration = ticks == 0
+                ? Long.MAX_VALUE
+                : System.currentTimeMillis() + (ticks * TPS.tickTime);
     }
 
     void merge(CancelCause other) {
@@ -19,12 +28,8 @@ public class CancelCause {
         this.expiration = other.expiration;
     }
 
-    private boolean hasExpiration() {
-        return expiration != 0L;
-    }
-
     boolean hasExpired() {
-        return hasExpiration() && expiration < System.currentTimeMillis();
+        return expiration < System.currentTimeMillis();
     }
 
     public String getReason() {

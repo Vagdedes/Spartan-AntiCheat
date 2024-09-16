@@ -124,7 +124,7 @@ public abstract class InventoryMenu {
                 access = check;
 
                 if (!access) {
-                    player.sendInventoryCloseMessage(null);
+                    player.getInstance().closeInventory();
                 }
             }
 

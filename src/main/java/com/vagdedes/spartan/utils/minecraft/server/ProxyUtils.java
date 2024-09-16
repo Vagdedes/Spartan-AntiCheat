@@ -3,6 +3,7 @@ package com.vagdedes.spartan.utils.minecraft.server;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -31,7 +32,7 @@ public class ProxyUtils {
     }
 
     public static boolean executeCommand(Player player, String command) {
-        if (!Bukkit.getOnlineMode()) {
+        if (!Bukkit.getOnlineMode() && !ProtocolLib.isTemporary(player)) {
             boolean isNull = player == null;
 
             if (isNull || !player.isOp()) {

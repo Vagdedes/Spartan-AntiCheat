@@ -15,19 +15,11 @@ import java.util.*;
 
 public class MaterialUtils {
 
-    private static final Map<String, Material> alternative = new LinkedHashMap<>(60);
-    private static final Map<Material, Double> baseMultiplier = new LinkedHashMap<>((7 * 5) + 1);
+    private static final Map<String, Material> alternative = new LinkedHashMap<>(2);
+    private static final Map<Material, Double> baseMultiplier = new LinkedHashMap<>(2);
     private static final double specialMultiplier = 1.5;
-    public static final Material GRASS_BLOCK;
 
     static {
-        Material grassBlock = findMaterial("GRASS");
-
-        if (grassBlock == null) {
-            grassBlock = Material.GRASS_BLOCK;
-        }
-        GRASS_BLOCK = grassBlock;
-
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             alternative.put("water", Material.WATER);
             alternative.put("lava", Material.LAVA);
@@ -316,7 +308,7 @@ public class MaterialUtils {
 
     public static Material findMaterial(String string) {
         for (Material material : Material.values()) {
-            if (material.toString().equalsIgnoreCase(string)) {
+            if (material.toString().equals(string)) {
                 return material;
             }
         }

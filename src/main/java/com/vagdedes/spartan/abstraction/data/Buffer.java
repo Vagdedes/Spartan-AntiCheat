@@ -2,9 +2,7 @@ package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.functionality.server.TPS;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Buffer {
 
@@ -56,8 +54,8 @@ public class Buffer {
 
     }
 
-    public Buffer() {
-        this.storage = new ConcurrentHashMap<>();
+    public Buffer(Map<String, IndividualBuffer> map) {
+        this.storage = map;
     }
 
     public int get(String name) {
@@ -131,18 +129,6 @@ public class Buffer {
     public void remove(String[] names) {
         for (String name : names) {
             storage.remove(name);
-        }
-    }
-
-    public void clear(String s) {
-        if (!storage.isEmpty()) {
-            Iterator<String> iterator = storage.keySet().iterator();
-
-            while (iterator.hasNext()) {
-                if (iterator.next().contains(s)) {
-                    iterator.remove();
-                }
-            }
         }
     }
 

@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ResearchEngine {
 
+    private static final Map<Integer, Integer> requiredPlayers = new ConcurrentHashMap<>();
     private static boolean firstLoad = false;
     public static Map<Enums.HackType, Boolean> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
@@ -123,6 +124,12 @@ public class ResearchEngine {
                 if (!playerProfiles.isEmpty()) {
                     for (PlayerProfile playerProfile : playerProfiles.values()) {
                         playerProfile.evidence.remove(hackType);
+                    }
+                    for (double probability : PlayerEvidence.probabilities) {
+                        requiredPlayers.remove(
+                                hackType.hashCode() * SpartanBukkit.hashCodeMultiplier
+                                        + PlayerEvidence.probabilityToFactors(probability)
+                        );
                     }
                     updateCache(true);
                 }
@@ -439,7 +446,8 @@ public class ResearchEngine {
                                                         new PlayerViolation(
                                                                 sdf.parse(fullDate).getTime(),
                                                                 violation[0],
-                                                                violation[1]
+                                                                violation[1],
+                                                                detection
                                                         )
                                                 );
                                             }
@@ -490,8 +498,6 @@ public class ResearchEngine {
             Collection<PlayerProfile> profiles = playerProfiles.values();
 
             if (force) {
-                violationFired.clear();
-
                 for (PlayerProfile profile : profiles) {
                     profile.evidence.clear();
                 }
@@ -562,14 +568,21 @@ public class ResearchEngine {
                         }
                     }
                 }
-                violationFired.clear();
+            }
+            violationFired.clear();
+            Iterator<Integer> iterator = requiredPlayers.values().iterator();
+
+            while (iterator.hasNext()) {
+                if (iterator.next() != 0) {
+                    iterator.remove();
+                }
             }
         }
         int squareSum = 0, count = 0;
 
         for (Enums.HackType hackType : Enums.HackType.values()) {
             if (hackType.getCheck().isEnabled(null, null)) {
-                int result = PlayerEvidence.getRequiredPlayers(hackType, PlayerEvidence.punishmentProbability);
+                int result = getRequiredPlayers(hackType, PlayerEvidence.punishmentProbability);
                 squareSum += result * result;
                 count += result;
             }
@@ -586,7 +599,7 @@ public class ResearchEngine {
 
                 if (!players.isEmpty()) {
                     for (SpartanPlayer p : players) {
-                        if (AwarenessNotifications.canSend(p.getInstance().getUniqueId(), "limited-data", 60 * 60)) {
+                        if (AwarenessNotifications.canSend(p.protocol.getUUID(), "limited-data", 60 * 60)) {
                             p.getInstance().sendMessage(message);
                         }
                     }
@@ -599,7 +612,7 @@ public class ResearchEngine {
                 if (check.isEnabled(null, null)
                         && !check.isSilent(null, null)) {
                     String message = AwarenessNotifications.getOptionalNotification(
-                            "Spartan does not support preventions when running on the packet level."
+                            "Spartan does not support Java player preventions when running on the packet level."
                                     + " This is due to problems risen from trying to implement this functionality with packets."
                     );
 
@@ -608,7 +621,7 @@ public class ResearchEngine {
 
                         if (!players.isEmpty()) {
                             for (SpartanPlayer p : players) {
-                                if (AwarenessNotifications.canSend(p.getInstance().getUniqueId(), "packet-preventions", 60 * 60)) {
+                                if (AwarenessNotifications.canSend(p.protocol.getUUID(), "packet-preventions", 60 * 60)) {
                                     p.getInstance().sendMessage(message);
                                 }
                             }
@@ -622,6 +635,33 @@ public class ResearchEngine {
 
     public static void queueToCache(Enums.HackType hackType) {
         violationFired.put(hackType, true);
+    }
+
+    public static int getRequiredPlayers(Enums.HackType hackType, double probability) {
+        int requirement = PlayerEvidence.probabilityToFactors(probability),
+                hash = hackType.hashCode() * SpartanBukkit.hashCodeMultiplier + requirement,
+                count = requiredPlayers.getOrDefault(hash, -1);
+
+        if (count == -1) {
+            count = 0;
+
+            if (playerProfiles.size() >= requirement) {
+                for (PlayerProfile profile : playerProfiles.values()) {
+                    if (profile.hasData(hackType)) {
+                        count++;
+
+                        if (count == requirement) {
+                            return 0;
+                        }
+                    }
+                }
+                count = requirement - count;
+            } else {
+                count = requirement - playerProfiles.size();
+            }
+            requiredPlayers.put(hash, count);
+        }
+        return count;
     }
 
 }

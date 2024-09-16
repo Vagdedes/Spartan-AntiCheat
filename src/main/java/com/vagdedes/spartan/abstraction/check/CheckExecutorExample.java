@@ -6,7 +6,7 @@ import me.vagdedes.spartan.system.Enums;
 public class CheckExecutorExample extends CheckExecutor {
 
     public CheckExecutorExample(Enums.HackType hackType, SpartanPlayer player) {
-        super(hackType, player, 0, false);
+        super(hackType, player, 0);
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can
@@ -28,14 +28,6 @@ public class CheckExecutorExample extends CheckExecutor {
     }
 
     @Override
-    protected void cannotHandle(boolean cancelled, Object object) {
-        // This method will be called when the 'handleInternal' method cannot run.
-        // Reasons for the method being unable to run can vary, such as the check
-        // being disabled, the player being in a certain game mode, a compatibility
-        // blocking the check, etc.
-    }
-
-    @Override
     protected void runInternal(boolean cancelled) {
         // This method should be used to run a check/detection when no information
         // needs to be inserted via the method being called and is all available in
@@ -43,14 +35,6 @@ public class CheckExecutorExample extends CheckExecutor {
         //
         // The boolean 'cancelled' works the same as in the 'handleInternal' method
         // which is where you can find its documentation.
-    }
-
-    @Override
-    protected void cannotRun(boolean cancelled) {
-        // This method will be called when the 'runInternal' method cannot run.
-        // Reasons for the method being unable to run can vary, such as the check
-        // being disabled, the player being in a certain game mode, a compatibility
-        // blocking the check, etc.
     }
 
     @Override

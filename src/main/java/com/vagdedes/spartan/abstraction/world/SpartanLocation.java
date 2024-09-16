@@ -2,8 +2,8 @@ package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
-import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks_v1_13;
+import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks_v1_13;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;

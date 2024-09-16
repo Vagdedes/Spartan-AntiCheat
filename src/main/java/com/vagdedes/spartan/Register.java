@@ -9,7 +9,9 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.*;
-import com.vagdedes.spartan.listeners.bukkit.chunks.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.standalone.*;
+import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ProxyUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
@@ -47,26 +49,32 @@ public class Register extends JavaPlugin {
         Config.settings.runOnLogin();
 
         // Listeners (More may be registered elsewhere)
-        enable(new Event_Status(), Event_Status.class);
-        enable(new Event_Vehicle(), Event_Vehicle.class);
-        enable(new Event_Chat(), Event_Chat.class);
-        enable(new Event_Plugin(), Event_Plugin.class);
-        enable(new Event_World(), Event_World.class);
-        enable(new Event_Inventory(), Event_Inventory.class);
-        enable(new Event_Combat(), Event_Combat.class);
-        enable(new Events_Player(), Events_Player.class);
-        enable(new Event_Movement(), Event_Movement.class);
-        enable(new Event_Shared(), Event_Shared.class);
-        enable(new Event_Chunks(), Event_Chunks.class);
+        enable(new Event_Join());
+        enable(new Event_Leave());
+        enable(new Event_Chat());
+        enable(new Event_Plugin());
+        enable(new Event_Inventory());
+        enable(new Event_Bow());
+        enable(new Event_Chunks());
+        enable(new Event_VehicleDeath());
+        enable(new Event_Health());
+        enable(new Event_Combat());
+        enable(new Event_Movement());
+        enable(new Event_Teleport());
+        enable(new Event_Death());
+        enable(new Event_Vehicle());
+        enable(new Event_Velocity());
+        enable(new Event_World());
+        enable(new Event_Damaged());
 
         if (NPCManager.supported) {
-            enable(new NPCManager(), NPCManager.class);
+            enable(new NPCManager());
         }
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
-            enable(new EventsHandler_1_9(), EventsHandler_1_9.class);
+        if (PlayerUtils.elytra) {
+            enable(new Event_Elytra());
 
-            if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-                enable(new EventsHandler_1_13(), EventsHandler_1_13.class);
+            if (PlayerUtils.trident) {
+                enable(new Event_Trident());
             }
         }
         ProxyUtils.register();
@@ -89,8 +97,8 @@ public class Register extends JavaPlugin {
 
     // Utilities
 
-    public static void enable(Listener l, Class<?> c) {
-        if (isPluginEnabled() && listeners.add(c)) {
+    public static void enable(Listener l) {
+        if (isPluginEnabled() && listeners.add(l.getClass())) {
             manager.registerEvents(l, plugin);
         }
     }

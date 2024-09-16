@@ -895,6 +895,7 @@ public class BlockUtils {
 
         builder.clear();
         helper.clear();
+
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)) {
             helper.add(Material.SCAFFOLDING);
             helper.add(Material.WITHER_ROSE);
@@ -934,6 +935,7 @@ public class BlockUtils {
                 helper.add(Material.CRIMSON_FUNGUS);
                 helper.add(Material.NETHER_SPROUTS);
             }
+            helper.add(Material.SHORT_GRASS);
             helper.add(Material.REDSTONE_TORCH);
             helper.add(Material.REDSTONE_WALL_TORCH);
             helper.add(Material.WALL_TORCH);
@@ -961,7 +963,6 @@ public class BlockUtils {
             helper.add(Material.KELP);
             helper.add(Material.KELP_PLANT);
             helper.add(Material.BEETROOTS);
-            helper.add(MaterialUtils.GRASS_BLOCK);
             helper.add(Material.FERN);
             helper.add(Material.LARGE_FERN);
             helper.add(Material.SUNFLOWER);
@@ -1006,6 +1007,7 @@ public class BlockUtils {
             helper.add(Material.getMaterial("DOUBLE_PLANT"));
             helper.add(Material.getMaterial("NETHER_WARTS"));
             helper.add(Material.getMaterial("WOOD_BUTTON"));
+            helper.add(Material.getMaterial("GRASS"));
             helper.add(Material.STONE_BUTTON);
         }
         for (Material m : materials) {
@@ -1451,6 +1453,10 @@ public class BlockUtils {
 
     public static boolean canClimb(Material m, boolean original) {
         return original ? climbableOriginal.contains(m) : climbable.contains(m);
+    }
+
+    public static boolean isSensitive(Material m) {
+        return sensitive.contains(m);
     }
 
     private static boolean isSensitive(Material m, long time) {

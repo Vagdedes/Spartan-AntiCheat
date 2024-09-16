@@ -63,7 +63,7 @@ public class SuspicionNotifications {
                     SpartanLocation location = player.movement.getLocation();
                     CloudConnections.executeDiscordWebhook(
                             "checks",
-                            player.getInstance().getUniqueId(), player.getInstance().getName(),
+                            player.protocol.getUUID(), player.getInstance().getName(),
                             location.getBlockX(), location.getBlockY(), location.getBlockZ(),
                             "Suspected for", evidence.substring(0, evidence.length() - commaLength)
                     );

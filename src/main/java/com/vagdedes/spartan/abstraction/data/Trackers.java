@@ -17,7 +17,7 @@ public class Trackers {
         PISTON(TrackerFamily.VELOCITY), BUBBLE_WATER(TrackerFamily.VELOCITY),
         TRIDENT(TrackerFamily.VELOCITY), DAMAGE(TrackerFamily.VELOCITY),
 
-        VEHICLE(TrackerFamily.MOTION), SPECTATOR(TrackerFamily.MOTION);
+        VEHICLE(TrackerFamily.MOTION);
 
         public final TrackerFamily family;
 
