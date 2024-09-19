@@ -32,7 +32,7 @@ public class Packet_Trident extends PacketAdapter {
             Player player = event.getPlayer();
             SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-            if (protocol.spartanPlayer.bedrockPlayer) {
+            if (protocol.spartanPlayer.isBedrockPlayer()) {
                 return;
             }
             EnumWrappers.Hand hand = event.getPacket().getHands().read(0);

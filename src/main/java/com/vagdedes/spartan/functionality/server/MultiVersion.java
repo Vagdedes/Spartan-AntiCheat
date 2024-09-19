@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.server;
 
 import com.comphenix.protocol.ProtocolLibrary;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
@@ -63,7 +64,9 @@ public class MultiVersion {
     public static MCVersion get(Player player) {
         int protocol;
 
-        if (PluginUtils.exists("viaversion")) {
+        if (ProtocolLib.isTemporary(player)) {
+            protocol = -1;
+        } else if (PluginUtils.exists("viaversion")) {
             protocol = Via.getAPI().getPlayerVersion(player);
         } else if (paperClass) {
             protocol = player.getProtocolVersion();

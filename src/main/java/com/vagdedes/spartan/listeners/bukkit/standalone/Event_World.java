@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
@@ -225,7 +225,7 @@ public class Event_World implements Listener {
                 for (Entity entity : entities) {
                     if (entity instanceof Player) {
                         SpartanBukkit.getProtocol((Player) entity).spartanPlayer.trackers.add(
-                                Trackers.TrackerType.ABSTRACT_VELOCITY,
+                                PlayerTrackers.TrackerType.ABSTRACT_VELOCITY,
                                 AlgebraUtils.integerCeil(
                                         CombatUtils.maxHitDistance
                                                 - ProtocolLib.getLocation((Player) entity).distance(location)

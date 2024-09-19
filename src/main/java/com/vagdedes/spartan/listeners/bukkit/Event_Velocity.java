@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.event.CPlayerVelocityEvent;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -29,7 +29,7 @@ public class Event_Velocity implements Listener {
             // Object
             if (!e.isCancelled()) {
                 p.trackers.add(
-                        Trackers.TrackerType.ABSTRACT_VELOCITY,
+                        PlayerTrackers.TrackerType.ABSTRACT_VELOCITY,
                         (int) (Math.ceil(e.getVelocity().length()) * TPS.maximum)
                 );
             }

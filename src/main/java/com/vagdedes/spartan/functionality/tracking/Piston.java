@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -54,7 +54,7 @@ public class Piston {
     private static boolean run(SpartanPlayer player, double preX, double diffY, double preZ) {
         if (Math.sqrt(preX + preZ) <= horizontalDistance
                 && Math.abs(diffY) <= verticalDistance) {
-            player.trackers.add(Trackers.TrackerType.PISTON, (int) TPS.maximum);
+            player.trackers.add(PlayerTrackers.TrackerType.PISTON, (int) TPS.maximum);
             return true;
         }
         return false;

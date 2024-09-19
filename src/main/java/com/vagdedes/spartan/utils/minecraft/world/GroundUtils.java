@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.utils.minecraft.world;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -189,7 +189,7 @@ public class GroundUtils {
                                      boolean defaultOnGround,
                                      boolean checkEntities) {
         if (checkEntities
-                && (p.trackers.has(Trackers.TrackerType.PISTON)
+                && (p.trackers.has(PlayerTrackers.TrackerType.PISTON)
                 || stepsOnBoats(p)
                 || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p)))) {
             return true;

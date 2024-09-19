@@ -175,7 +175,7 @@ public class SpartanProtocol {
     }
 
     public boolean packetsEnabled() {
-        return SpartanBukkit.packetsEnabled() && !this.spartanPlayer.bedrockPlayer;
+        return SpartanBukkit.packetsEnabled() && !this.spartanPlayer.isBedrockPlayer();
     }
 
 }

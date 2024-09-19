@@ -5,15 +5,16 @@ import com.vagdedes.spartan.utils.java.OverflowMap;
 import org.bukkit.Location;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Packet_LagCompensation {
 
     private static final Map<Integer, LinkedList<Location>> cache =
-            new OverflowMap<>(new LinkedHashMap<>(), 1_024);
+            new OverflowMap<>(new ConcurrentHashMap<>(), 1_024);
     private static final Map<Integer, Long> lastPacket =
-            new OverflowMap<>(new LinkedHashMap<>(), 1_024);
+            new OverflowMap<>(new ConcurrentHashMap<>(), 1_024);
     private static final Map<Integer, List<Integer>> delays =
-            new OverflowMap<>(new LinkedHashMap<>(), 1_024);
+            new OverflowMap<>(new ConcurrentHashMap<>(), 1_024);
 
     public static void add(int id, Location location) {
         cache.computeIfAbsent(

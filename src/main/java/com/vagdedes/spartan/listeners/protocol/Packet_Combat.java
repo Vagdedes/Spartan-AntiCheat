@@ -16,14 +16,14 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Packet_Combat extends PacketAdapter {
 
     private final Map<UUID, Integer> pendingAttacks = new OverflowMap<>(
-                    new LinkedHashMap<>(),
+                    new ConcurrentHashMap<>(),
                     1_024
     );
 
@@ -41,7 +41,7 @@ public class Packet_Combat extends PacketAdapter {
         if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
             SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-            if (protocol.spartanPlayer.bedrockPlayer) {
+            if (protocol.spartanPlayer.isBedrockPlayer()) {
                 return;
             }
             PacketContainer packet = event.getPacket();
@@ -61,7 +61,7 @@ public class Packet_Combat extends PacketAdapter {
         if (event.getPacketType() == PacketType.Play.Server.DAMAGE_EVENT) {
             SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-            if (protocol.spartanPlayer.bedrockPlayer) {
+            if (protocol.spartanPlayer.isBedrockPlayer()) {
                 return;
             }
             int entityId = event.getPacket().getIntegers().read(0);

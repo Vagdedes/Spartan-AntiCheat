@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.inventory;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.SkullType;
@@ -13,6 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InventoryUtils {
+
+    private static final boolean bukkitProfile = ReflectionUtils.classExists(
+            "org.bukkit.profile.PlayerProfile"
+    );
 
     public static void prepareDescription(List<String> array, String title) {
         array.clear();
@@ -57,8 +62,7 @@ public class InventoryUtils {
     }
 
     public static ItemStack getSkull(OfflinePlayer offlinePlayer, String backupName, boolean create) {
-        if (BackgroundInventoryUtils.bukkitProfile
-                && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+        if (bukkitProfile && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             return BackgroundInventoryUtils.getSkull_v1_13(offlinePlayer, backupName, create);
         } else {
             ItemStack skull = new ItemStack(

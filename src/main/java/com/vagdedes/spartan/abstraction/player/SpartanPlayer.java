@@ -4,8 +4,6 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Clicks;
-import com.vagdedes.spartan.abstraction.data.Trackers;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -58,13 +56,12 @@ public class SpartanPlayer {
     }
 
     public final SpartanProtocol protocol;
-    public final boolean bedrockPlayer;
     private final Map<PotionEffectType, SpartanPotionEffect> potionEffects;
     public final Check.DataType dataType;
     public final SpartanPlayerMovement movement;
     public final SpartanPunishments punishments;
-    public final Trackers trackers;
-    public final Clicks clicks;
+    public final PlayerTrackers trackers;
+    public final PlayerClicks clicks;
     private final CheckExecutor[] executors;
 
     static {
@@ -89,20 +86,23 @@ public class SpartanPlayer {
 
     public SpartanPlayer(SpartanProtocol protocol) {
         this.protocol = protocol;
-        this.bedrockPlayer = BedrockCompatibility.isPlayer(protocol.player);
-        this.dataType = bedrockPlayer ? Check.DataType.BEDROCK : Check.DataType.JAVA;
-        this.trackers = new Trackers();
+        this.dataType = BedrockCompatibility.isPlayer(protocol.player)
+                ? Check.DataType.BEDROCK
+                : Check.DataType.JAVA;
+        this.trackers = new PlayerTrackers();
 
-        Collection<PotionEffect> collection = protocol.player.getActivePotionEffects();
-        this.potionEffects = SpartanPotionEffect.mapFromBukkit(
-                new ConcurrentHashMap<>(collection.size() + 1, 1.0f),
-                collection
-        );
-        this.clicks = new Clicks();
+        this.potionEffects = new ConcurrentHashMap<>(2);
+        this.setStoredPotionEffects();
+
+        this.clicks = new PlayerClicks();
         this.movement = new SpartanPlayerMovement(this);
         this.punishments = new SpartanPunishments(this);
         this.executors = new CheckExecutor[Enums.HackType.values().length];
         this.registerExecutors(null);
+    }
+
+    public boolean isBedrockPlayer() {
+        return this.dataType == Check.DataType.BEDROCK;
     }
 
     private void registerExecutors(Set<Enums.HackType> registry) {
@@ -185,7 +185,7 @@ public class SpartanPlayer {
     public void resetData(boolean checks) {
         this.protocol.loaded = false;
 
-        for (Trackers.TrackerType handlerType : Trackers.TrackerType.values()) {
+        for (PlayerTrackers.TrackerType handlerType : PlayerTrackers.TrackerType.values()) {
             this.trackers.remove(handlerType);
         }
         if (checks) {
@@ -206,7 +206,7 @@ public class SpartanPlayer {
     // Separator
 
     public int getMaxChatLength() {
-        return bedrockPlayer ? 512 :
+        return this.isBedrockPlayer() ? 512 :
                 MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11)
                         || PluginUtils.exists("viaversion")
                         || Compatibility.CompatibilityType.PROTOCOL_SUPPORT.isFunctional() ? 256 :
@@ -301,7 +301,7 @@ public class SpartanPlayer {
 
     public void handleReceivedDamage(EntityDamageEvent event) {
         boolean abstractVelocity = false;
-        this.trackers.add(Trackers.TrackerType.DAMAGE, (int) TPS.maximum);
+        this.trackers.add(PlayerTrackers.TrackerType.DAMAGE, (int) TPS.maximum);
         ItemStack activeItem;
 
         if (event instanceof EntityDamageByEntityEvent) {
@@ -326,7 +326,7 @@ public class SpartanPlayer {
 
                         if (level > 2) {
                             this.trackers.add(
-                                    Trackers.TrackerType.ABSTRACT_VELOCITY,
+                                    PlayerTrackers.TrackerType.ABSTRACT_VELOCITY,
                                     AlgebraUtils.integerRound(Math.log(level) * TPS.maximum)
                             );
                             abstractVelocity = true;
@@ -349,7 +349,7 @@ public class SpartanPlayer {
 
             if (level > 2) {
                 this.trackers.add(
-                        Trackers.TrackerType.ABSTRACT_VELOCITY,
+                        PlayerTrackers.TrackerType.ABSTRACT_VELOCITY,
                         AlgebraUtils.integerRound(Math.log(level) * TPS.maximum)
                 );
                 abstractVelocity = true;
@@ -357,15 +357,11 @@ public class SpartanPlayer {
         }
 
         if (!abstractVelocity && !event.isCancelled()) {
-            this.trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 2);
+            this.trackers.disable(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY, 2);
         }
     }
 
     // Separator
-
-    public boolean hasAttackCooldown() {
-        return getAttackCooldown() != 1.0f;
-    }
 
     public float getAttackCooldown() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
@@ -378,7 +374,7 @@ public class SpartanPlayer {
     // Separator
 
     private void setStoredPotionEffects() {
-        SpartanBukkit.runTask(
+        SpartanBukkit.transferTask(
                 protocol.spartanPlayer,
                 () -> {
                     for (PotionEffect effect : this.getInstance().getActivePotionEffects()) {
@@ -539,7 +535,7 @@ public class SpartanPlayer {
                 p.leaveVehicle();
             }
             this.movement.removeLastLiquidTime();
-            this.trackers.removeMany(Trackers.TrackerFamily.VELOCITY);
+            this.trackers.removeMany(PlayerTrackers.TrackerFamily.VELOCITY);
 
             if (MultiVersion.folia) {
                 p.teleportAsync(location.getBukkitLocation());
@@ -555,7 +551,7 @@ public class SpartanPlayer {
     // Separator
 
     public void damage(double amount) {
-        trackers.disable(Trackers.TrackerType.ABSTRACT_VELOCITY, 3);
+        trackers.disable(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY, 3);
         this.getInstance().damage(amount);
     }
 

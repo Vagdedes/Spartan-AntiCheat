@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -17,8 +17,8 @@ public class ServerFlying {
                 && p.getInstance().getVehicle() == null
                 && !p.getInstance().isSleeping()
                 && !p.getInstance().isDead()
-                && !p.trackers.has(Trackers.TrackerFamily.VELOCITY)
-                && !p.trackers.has(Trackers.TrackerFamily.MOTION)
+                && !p.trackers.has(PlayerTrackers.TrackerFamily.VELOCITY)
+                && !p.trackers.has(PlayerTrackers.TrackerFamily.MOTION)
                 && Attributes.getAmount(p, Attributes.GENERIC_FLYING_SPEED) == 0.0) {
             double limit = (p.getInstance().getFlySpeed() * 10.0) + 1.0;
             Double nmsDistance = p.movement.getEventDistance();

@@ -5,6 +5,7 @@ import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.java.OverflowMap;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.bukkit.potion.PotionEffectType.*;
 
@@ -64,7 +66,10 @@ public class PlayerUtils {
             fallDamageAboveBlocks = 3;
 
     private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
-    private static final Map<Integer, Integer> fallTicks = new LinkedHashMap<>();
+    private static final Map<Integer, Integer> fallTicks = new OverflowMap<>(
+            new ConcurrentHashMap<>(),
+            1024
+    );
     private static final Map<PotionEffectType, Long> handledPotionEffects = new LinkedHashMap<>();
 
     static {
@@ -200,12 +205,7 @@ public class PlayerUtils {
                     ticks++;
 
                     if (ticks > maxTicks) {
-                        if (fallTicks.put(key, -1) == null
-                                && fallTicks.size() > 1_000) {
-                            Iterator<Integer> iterator = fallTicks.keySet().iterator();
-                            iterator.next();
-                            iterator.remove();
-                        }
+                        fallTicks.put(key, -1);
                         return -1;
                     }
                 }
@@ -245,12 +245,7 @@ public class PlayerUtils {
                 } else {
                     ticks = -1;
                 }
-                if (fallTicks.put(key, ticks) == null
-                        && fallTicks.size() > 1_000) {
-                    Iterator<Integer> iterator = fallTicks.keySet().iterator();
-                    iterator.next();
-                    iterator.remove();
-                }
+                fallTicks.put(key, ticks);
             }
             return ticks;
         }

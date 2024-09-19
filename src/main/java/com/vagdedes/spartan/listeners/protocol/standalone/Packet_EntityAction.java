@@ -29,7 +29,7 @@ public class Packet_EntityAction extends PacketAdapter {
     public void onPacketReceiving(PacketEvent event) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-        if (protocol.spartanPlayer.bedrockPlayer) {
+        if (protocol.spartanPlayer.isBedrockPlayer()) {
             return;
         }
         String typeString = event.getPacket().getModifier().getValues().get(1).toString();

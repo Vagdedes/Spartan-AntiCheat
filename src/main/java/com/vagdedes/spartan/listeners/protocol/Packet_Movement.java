@@ -41,7 +41,7 @@ public class Packet_Movement extends PacketAdapter {
         long time = System.currentTimeMillis();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-        if (protocol.spartanPlayer.bedrockPlayer) {
+        if (protocol.spartanPlayer.isBedrockPlayer()) {
             return;
         }
         PacketContainer p = event.getPacket();

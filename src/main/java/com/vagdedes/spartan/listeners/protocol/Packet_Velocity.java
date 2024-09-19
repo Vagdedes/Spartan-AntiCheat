@@ -29,7 +29,7 @@ public class Packet_Velocity extends PacketAdapter {
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-        if (protocol.spartanPlayer.bedrockPlayer) {
+        if (protocol.spartanPlayer.isBedrockPlayer()) {
             return;
         }
         PacketContainer packet = event.getPacket();

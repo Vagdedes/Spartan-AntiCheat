@@ -1,12 +1,12 @@
-package com.vagdedes.spartan.abstraction.data;
+package com.vagdedes.spartan.abstraction.player;
 
 import java.util.*;
 
-public class Clicks {
+public class PlayerClicks {
 
     private final Collection<Long> clicks;
 
-    public Clicks() {
+    public PlayerClicks() {
         this.clicks = Collections.synchronizedList(new LinkedList<>());
     }
 

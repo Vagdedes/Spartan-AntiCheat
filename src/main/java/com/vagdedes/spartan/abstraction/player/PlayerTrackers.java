@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.abstraction.data;
+package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.functionality.server.TPS;
 
@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Trackers {
+public class PlayerTrackers {
 
     public enum TrackerFamily {
         VELOCITY, MOTION
@@ -29,7 +29,7 @@ public class Trackers {
     private final Map<TrackerType, Long> enable, disable;
     private final Map<TrackerType, Map<String, Long>> child;
 
-    public Trackers() {
+    public PlayerTrackers() {
         int length = TrackerType.values().length;
         this.enable = new ConcurrentHashMap<>(length);
         this.disable = new ConcurrentHashMap<>(length);

@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import org.bukkit.entity.Entity;
@@ -20,7 +20,7 @@ public class Event_Vehicle implements Listener {
 
             if (entity instanceof Player) {
                 SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
-                p.trackers.add(Trackers.TrackerType.VEHICLE, "enter", 5);
+                p.trackers.add(PlayerTrackers.TrackerType.VEHICLE, "enter", 5);
             }
         }
     }
@@ -37,7 +37,7 @@ public class Event_Vehicle implements Listener {
     }
 
     public static void exit(SpartanPlayer player) {
-        player.trackers.add(Trackers.TrackerType.VEHICLE, "exit", 5);
+        player.trackers.add(PlayerTrackers.TrackerType.VEHICLE, "exit", 5);
     }
 
 }

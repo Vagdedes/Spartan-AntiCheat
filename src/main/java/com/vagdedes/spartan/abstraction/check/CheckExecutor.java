@@ -394,7 +394,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 + "(Certainty: " + AlgebraUtils.cut(certainty, 2) + "), "
                 + "(Plugin-Version: " + API.getVersion() + "), "
                 + "(Silent: " + hackType.getCheck().isSilent(player.dataType, player.getWorld().getName()) + "), "
-                + "(" + javaPlayerIdentifier + " " + (!player.bedrockPlayer) + ")" + ", "
+                + "(" + javaPlayerIdentifier + " " + (!player.isBedrockPlayer()) + ")" + ", "
                 + "(Packets: " + player.protocol.packetsEnabled() + "), "
                 + "(Ping: " + player.protocol.getPing() + "ms), "
                 + "(W-XYZ: " + location.world.getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ() + "), "

@@ -14,9 +14,6 @@ public class BackgroundInventoryUtils {
     private static final boolean paperProfile = ReflectionUtils.classExists(
             "com.destroystokyo.paper.profile.PlayerProfile"
     );
-    static final boolean bukkitProfile = ReflectionUtils.classExists(
-            "org.bukkit.profile.PlayerProfile"
-    );
 
     static ItemStack getSkull_v1_13(OfflinePlayer offlinePlayer, String backupName, boolean create) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);

@@ -262,7 +262,7 @@ public class CombatUtils {
 
     public static boolean isNewPvPMechanic(SpartanPlayer p, Entity entity) {
         if (newPvPMechanicsEnabled()
-                && !p.hasAttackCooldown()
+                && p.getAttackCooldown() == 1.0f
                 && PlayerUtils.isSwordItem(p.getItemInHand().getType())) {
             double distance = 4.0;
             List<Entity> nearbyEntities = entity.getNearbyEntities(distance, distance, distance);

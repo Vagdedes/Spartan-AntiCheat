@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -27,10 +27,10 @@ public class TridentUse {
                         int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
 
                         if (level > riptideMaxSafeLevel) {
-                            p.trackers.add(Trackers.TrackerType.ABSTRACT_VELOCITY, ticks);
+                            p.trackers.add(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY, ticks);
                             p.getExecutor(Enums.HackType.Speed).handle(false, Material.TRIDENT);
                         } else {
-                            p.trackers.add(Trackers.TrackerType.TRIDENT, ticks);
+                            p.trackers.add(PlayerTrackers.TrackerType.TRIDENT, ticks);
                             p.getExecutor(Enums.HackType.Speed).handle(false, Enchantment.RIPTIDE);
                         }
                     }

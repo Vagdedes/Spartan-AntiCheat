@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.data.Trackers;
+import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -55,8 +55,8 @@ public class MovementProcessing {
                 && player.getInstance().getVehicle() == null
                 && vertical == 0.0
                 && GroundUtils.collisionHeightExists(box)) {
-            player.trackers.removeMany(Trackers.TrackerFamily.MOTION);
-            player.trackers.removeMany(Trackers.TrackerFamily.VELOCITY);
+            player.trackers.removeMany(PlayerTrackers.TrackerFamily.MOTION);
+            player.trackers.removeMany(PlayerTrackers.TrackerFamily.VELOCITY);
             player.movement.removeLastLiquidTime();
             return true;
         } else {
@@ -69,12 +69,12 @@ public class MovementProcessing {
         if (v1_8 && vertical != 0.0) {
             if (BlockUtils.isSlime(player, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
-                player.trackers.add(Trackers.TrackerType.BOUNCING_BLOCKS, time);
-                player.trackers.add(Trackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
+                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
+                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
             } else if (BlockUtils.isBed(player, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
-                player.trackers.add(Trackers.TrackerType.BOUNCING_BLOCKS, time);
-                player.trackers.add(Trackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
+                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
+                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
             }
         }
     }
@@ -132,12 +132,12 @@ public class MovementProcessing {
                         Material type = block.material;
 
                         if (type == Material.SOUL_SAND) {
-                            player.trackers.add(Trackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
-                            player.trackers.add(Trackers.TrackerType.BUBBLE_WATER, "soul-sand", (int) TPS.maximum);
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "soul-sand", (int) TPS.maximum);
                             break;
                         } else if (type == MAGMA_BLOCK) {
-                            player.trackers.add(Trackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
-                            player.trackers.add(Trackers.TrackerType.BUBBLE_WATER, "magma-block", (int) TPS.maximum);
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", (int) TPS.maximum);
                             break;
                         } else if (BlockUtils.isSolid(type) && !block.waterLogged) {
                             nonLiquid++;
@@ -159,7 +159,7 @@ public class MovementProcessing {
                                    boolean flight, boolean attributes) {
         if ((elytra || !player.movement.isGliding())
                 && (flight || !player.movement.wasFlying())
-                && (velocity || !player.trackers.has(Trackers.TrackerType.ABSTRACT_VELOCITY))
+                && (velocity || !player.trackers.has(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY))
                 && (attributes || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()
                     || Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
