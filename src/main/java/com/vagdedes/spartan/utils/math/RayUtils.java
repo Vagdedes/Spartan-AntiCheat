@@ -28,8 +28,8 @@ public class RayUtils {
     }
 
     public static boolean validRayLines(RayLine a, RayLine b, double radi) {
-        double angleA = Math.atan2(a.z(), a.x());
-        double angleB = Math.atan2(b.z(), b.x());
+        double angleA = Math.atan2(a.z, a.x);
+        double angleB = Math.atan2(b.z, b.x);
 
         double angleDiff = Math.abs(angleA - angleB);
 
@@ -41,8 +41,8 @@ public class RayUtils {
     }
 
     public static double calculateRayLines(RayLine a, RayLine b) {
-        double angleA = Math.atan2(a.z(), a.x());
-        double angleB = Math.atan2(b.z(), b.x());
+        double angleA = Math.atan2(a.z, a.x);
+        double angleB = Math.atan2(b.z, b.x);
 
         double angleDiff = Math.abs(angleA - angleB);
 
@@ -54,7 +54,7 @@ public class RayUtils {
     }
 
     public static double calculateRayLine(RayLine a) {
-        return Math.atan2(a.z(), a.x());
+        return Math.atan2(a.z, a.x);
     }
 
     public static float masterCast(float num) {
@@ -97,7 +97,7 @@ public class RayUtils {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
                     for (Set<Material> set : sets) {
-                        if (set.contains(block.material)) {
+                        if (set.contains(block.getType())) {
                             return true;
                         }
                     }
@@ -118,7 +118,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (set.contains(block.material)) {
+                    if (set.contains(block.getType())) {
                         return true;
                     }
                 }
@@ -138,7 +138,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.material == material) {
+                    if (block.getType() == material) {
                         return true;
                     }
                 }
@@ -158,7 +158,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.material.isSolid()) {
+                    if (block.getType().isSolid()) {
                         return true;
                     }
                 }
@@ -178,7 +178,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.material.isSolid()) {
+                    if (block.getType().isSolid()) {
                         return true;
                     }
                 }
@@ -198,7 +198,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (BlockUtils.isSolid(block.material)) {
+                    if (BlockUtils.isSolid(block.getType())) {
                         return true;
                     }
                 }
@@ -431,9 +431,9 @@ public class RayUtils {
         double eyeHeight = getEyeHeight(sneak, instance);
 
         for (int i = 0; i < maxSteps; i++) {
-            double newX = player.getX() + ray.x() * d;
+            double newX = player.getX() + ray.x * d;
             double newY = player.getY() + eyeHeight - 1;
-            double newZ = player.getZ() + ray.z() * d;
+            double newZ = player.getZ() + ray.z * d;
             Location newLocation = new Location(instance.getWorld(), newX, newY, newZ);
             if (onBound(newLocation, target, size, 2, size)) {
                 return d;

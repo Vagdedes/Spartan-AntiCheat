@@ -202,7 +202,7 @@ public class GroundUtils {
                 SpartanBlock block = loc.getBlock();
 
                 if (block.isLiquidOrWaterLogged(true)
-                        || BlockUtils.canClimb(block.material, false)) {
+                        || BlockUtils.canClimb(block.getType(), false)) {
                     return true;
                 }
             }
@@ -223,7 +223,7 @@ public class GroundUtils {
                         position,
                         distribution
                 )) {
-                    Material type = loopLocation.getBlock().material;
+                    Material type = loopLocation.getBlock().getType();
 
                     if (BlockUtils.isSolid(type)) {
                         boolean abstractOnly = position == -maxPlayerStep;

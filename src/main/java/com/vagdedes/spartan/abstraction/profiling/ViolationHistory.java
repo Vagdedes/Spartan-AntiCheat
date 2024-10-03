@@ -22,12 +22,17 @@ public class ViolationHistory {
 
     public void store(Enums.HackType hackType, PlayerViolation playerViolation) {
         synchronized (this.data) {
+            if (this.data.size() == 1_000) {
+                Iterator<Long> iterator = this.data.keySet().iterator();
+                iterator.next();
+                iterator.remove();
+            }
             this.data.put(playerViolation.time, playerViolation);
         }
         ResearchEngine.queueToCache(hackType);
     }
 
-    public Double getTimeDifference(Enums.HackType hackType) {
+    public Double getTimeDifference() {
         if (!this.isEmpty()) {
             Map<Integer, double[]> squareSum = new LinkedHashMap<>();
 
@@ -38,11 +43,10 @@ public class ViolationHistory {
                 while (iterator.hasNext()) {
                     PlayerViolation violation = iterator.next();
                     double difference = Math.min(
-                            violation.time - previous,
+                            (violation.time - previous) / violation.increase,
                             60_000L
                     );
                     previous = violation.time;
-                    difference /= violation.increase * (hackType.violationTimeWorth / difference);
                     double[] data = squareSum.getOrDefault(violation.hash, new double[]{0.0, 0.0});
                     data[0] += difference * difference;
                     data[1] += 1.0;

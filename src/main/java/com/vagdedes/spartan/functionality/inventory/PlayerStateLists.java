@@ -30,7 +30,7 @@ public class PlayerStateLists {
                              List<String> description, int slot) {
         ItemStack item = InventoryUtils.getHead();
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§c" + profile.getName());
+        meta.setDisplayName("§c" + profile.name);
 
         List<String> lore = new ArrayList<>(description.size() + 4);
         lore.add("");
@@ -43,7 +43,7 @@ public class PlayerStateLists {
         inventory.setItem(slot, item);
 
         SpartanBukkit.dataThread.executeWithPriority(() -> {
-            ItemStack itemNew = profile.getSkull(true);
+            ItemStack itemNew = profile.getSkull();
             ItemMeta metaNew = itemNew.getItemMeta();
             metaNew.setDisplayName(meta.getDisplayName());
             metaNew.setLore(lore);

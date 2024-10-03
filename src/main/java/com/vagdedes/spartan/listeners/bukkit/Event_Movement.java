@@ -90,7 +90,7 @@ public class Event_Movement implements Listener {
     }
 
     public static void tick(PlayerTickEvent tickEvent) {
-        SpartanProtocol protocol = tickEvent.getProtocol();
+        SpartanProtocol protocol = tickEvent.protocol;
         SpartanPlayer p = protocol.spartanPlayer;
         p.getExecutor(Enums.HackType.MorePackets).handle(false, tickEvent);
     }

@@ -129,7 +129,7 @@ public class MovementProcessing {
 
                     for (SpartanLocation loc : locations) {
                         SpartanBlock block = loc.getBlock();
-                        Material type = block.material;
+                        Material type = block.getType();
 
                         if (type == Material.SOUL_SAND) {
                             player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
@@ -139,7 +139,7 @@ public class MovementProcessing {
                             player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
                             player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", (int) TPS.maximum);
                             break;
-                        } else if (BlockUtils.isSolid(type) && !block.waterLogged) {
+                        } else if (BlockUtils.isSolid(type) && !block.isWaterLogged()) {
                             nonLiquid++;
 
                             if (nonLiquid == locations.size()) {

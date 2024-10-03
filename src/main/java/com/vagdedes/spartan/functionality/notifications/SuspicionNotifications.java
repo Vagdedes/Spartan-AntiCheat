@@ -4,6 +4,7 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
+import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -52,7 +53,7 @@ public class SuspicionNotifications {
                 StringBuilder evidence = new StringBuilder();
 
                 for (Enums.HackType hackType : list) {
-                    if (player.getExecutor(hackType).hasLevel()) {
+                    if (ResearchEngine.getRequiredPlayers(hackType, PlayerEvidence.notificationProbability) == 0) {
                         evidence.append(hackType.getCheck().getName()).append(comma);
                     }
                 }

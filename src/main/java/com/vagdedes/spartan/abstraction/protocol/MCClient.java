@@ -134,7 +134,7 @@ public class MCClient {
                 for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
                     SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.material.isSolid() || ignore(block.material)) {
+                    if (block.getType().isSolid() || ignore(block.getType())) {
                         return true;
                     }
                 }
@@ -151,7 +151,7 @@ public class MCClient {
                 for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
                     SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (ignore(block.material)) {
+                    if (ignore(block.getType())) {
                         return true;
                     }
                 }
@@ -176,7 +176,7 @@ public class MCClient {
                 for (double z = startZ; z <= endZ; z += increment) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.material.isSolid() || ignore(block.material)) {
+                    if (block.getType().isSolid() || ignore(block.getType())) {
                         return true;
                     }
                 }
@@ -387,20 +387,20 @@ public class MCClient {
     }
 
     private boolean canClimb(SpartanLocation location) {
-        Material material = location.getBlock().material;
+        Material material = location.getBlock().getType();
         return com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(material, false)
                 || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.areTrapdoors(material)
-                && (com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, 1, 0).getBlock().material, false)
-                || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, -1, 0).getBlock().material, false));
+                && (com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, 1, 0).getBlock().getType(), false)
+                || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, -1, 0).getBlock().getType(), false));
     }
 
     private boolean canClimb(SpartanProtocol protocol) {
         SpartanLocation location = new SpartanLocation(protocol.getLocation());
-        Material material = location.getBlock().material;
+        Material material = location.getBlock().getType();
         return com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(material, false)
                 || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.areTrapdoors(material)
-                && (com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, 1, 0).getBlock().material, false)
-                || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, -1, 0).getBlock().material, false));
+                && (com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, 1, 0).getBlock().getType(), false)
+                || com.vagdedes.spartan.utils.minecraft.world.BlockUtils.canClimb(location.clone().add(0, -1, 0).getBlock().getType(), false));
     }
 
     public float getRelevantMoveFactor() {

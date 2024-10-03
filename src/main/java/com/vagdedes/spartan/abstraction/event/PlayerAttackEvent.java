@@ -5,9 +5,9 @@ import org.bukkit.entity.Player;
 
 public class PlayerAttackEvent {
 
-    private final Player player;
-    private final LivingEntity target;
-    private final boolean cancelled;
+    public final Player player;
+    public final LivingEntity target;
+    public final boolean cancelled;
 
     public PlayerAttackEvent(Player player, LivingEntity target, boolean cancelled) {
         this.player = player;
@@ -15,15 +15,4 @@ public class PlayerAttackEvent {
         this.cancelled = cancelled;
     }
 
-    public LivingEntity getTarget() {
-        return target;
-    }
-
-    public boolean isCancelled() {
-        return cancelled;
-    }
-
-    public Player getPlayer() {
-        return player;
-    }
 }

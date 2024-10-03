@@ -3,11 +3,15 @@ package com.vagdedes.spartan.utils.minecraft.entity;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
+import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
+import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
+import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.math.TrigonometryUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -53,22 +57,6 @@ public class CombatUtils {
         return location.clone().add(
                 getDirection(location.getYaw(), pitch ? location.getPitch() : 0.0f).multiply(distance)
         ).distance(targetLocation) / distance;
-    }
-
-    public static boolean isEntityWide(double width) {
-        return width >= (playerWidthAndHeight[0] * 1.5);
-    }
-
-    public static boolean isEntityTall(double height) {
-        return height > playerWidthAndHeight[1];
-    }
-
-    public static double getWidthAccuracyPercentage(double hitWidth, double entityWidth) {
-        // We make hitWidth absolute because we don't care about the left/right.
-        // We divide entityWidth by 2 because we want the distance from the center.
-        // We multiply by 100 to translate the ratio to a percentage.
-        // We make 100 the maximum minimum because you cannot logically surpass the percentage.
-        return 100.0 - Math.min((Math.abs(hitWidth) / (entityWidth / 2.0)) * 100.0, 100.0);
     }
 
     public static double[] getWidthAndHeight(Entity entity) {
@@ -173,65 +161,6 @@ public class CombatUtils {
         return e.getType().toString().toLowerCase().replace("_", "-");
     }
 
-    public static double[] get_X_Y_Distance(SpartanPlayer player, LivingEntity entity) {
-        SpartanLocation
-                playerFeetLocation = player.movement.getLocation(),
-                playerEyeLocation = playerFeetLocation.clone().add(0, player.getInstance().getEyeHeight(), 0);
-        Location entityFeetLocation = ProtocolLib.getLocation(entity);
-        double directionalDistance = playerEyeLocation.distance(entityFeetLocation);
-        Vector vector = playerFeetLocation.getDirection();
-        SpartanLocation vectorLocation = playerEyeLocation.clone().add(
-                new Vector(vector.getX(), vector.getY(), vector.getZ()).multiply(directionalDistance)
-        );
-        TrigonometryUtils.Triangle triangle = new TrigonometryUtils.Triangle(
-                playerEyeLocation.distance(vectorLocation),
-                AlgebraUtils.getHorizontalDistance(vectorLocation, playerFeetLocation),
-                Math.abs(playerEyeLocation.getY() - vectorLocation.getY())
-        );
-        double[] radians = triangle.angleRadians();
-
-        if (triangle.isEuclidean(radians)) {
-            double[] entityWidthAndHeight = getWidthAndHeight(entity);
-            double entityWidth = entityWidthAndHeight[0],
-                    entityFeetY = entityFeetLocation.getY(),
-                    vectorY = vectorLocation.getY(),
-                    vectorExtraHypotenuseDistance = TrigonometryUtils.sineSide(
-                            AlgebraUtils.getHorizontalDistance(vectorLocation, entityFeetLocation), // Adjacent
-                            radians[1], // Hypotenuse
-                            radians[2] // Opposite (90 degree)
-                    ); // Opposite angle
-            directionalDistance -= vectorExtraHypotenuseDistance;
-            vectorLocation = playerEyeLocation.clone().add(vector.multiply(directionalDistance));
-
-            // Separator
-
-            if (vectorY < entityFeetY) {
-                vectorY = 0.0;
-            } else {
-                double entityHeight = entityWidthAndHeight[1],
-                        entityHeightY = entityFeetY + entityHeight;
-
-                if (vectorY > entityHeightY) {
-                    vectorY = entityHeight;
-                } else {
-                    vectorY = entityHeight - (entityHeightY - vectorY);
-                }
-            }
-
-            // Separator
-
-            Location right = entityFeetLocation.clone().add(
-                    getDirection(playerFeetLocation.getYaw() - 90.0f, 0.0f).multiply(entityWidth)
-            );
-            return new double[]{
-                    AlgebraUtils.getHorizontalDistance(vectorLocation, right) - entityWidth,
-                    vectorY,
-                    directionalDistance
-            };
-        }
-        return null;
-    }
-
     public static boolean hasBlockBehind(SpartanPlayer p, LivingEntity entity) {
         SpartanLocation location = p.movement.getLocation().clone();
         location.setPitch(0.0f);
@@ -239,7 +168,7 @@ public class CombatUtils {
                 ProtocolLib.getLocation(entity).clone().add(location.getDirection().multiply(1.0))
         );
 
-        if (BlockUtils.isSolid(multipliedLocation.getBlock().material)) {
+        if (BlockUtils.isSolid(multipliedLocation.getBlock().getType())) {
             return true;
         }
         double height = getWidthAndHeight(entity)[1];
@@ -247,7 +176,7 @@ public class CombatUtils {
         if (height > 1.0) {
             for (int position = 1; position < AlgebraUtils.integerCeil(height); position++) {
                 // We add one instead of the position because we no longer clone the location
-                if (BlockUtils.isSolid(multipliedLocation.add(0, 1, 0).getBlock().material)) {
+                if (BlockUtils.isSolid(multipliedLocation.add(0, 1, 0).getBlock().getType())) {
                     return true;
                 }
             }
@@ -277,6 +206,27 @@ public class CombatUtils {
             return i > 0;
         }
         return false;
+    }
+
+    public static boolean canCheck(SpartanPlayer player) {
+        if (!player.movement.isLowEyeHeight() // Covers swimming & gliding
+                && !player.movement.wasFlying()
+                && player.getInstance().getVehicle() == null
+                && !mcMMO.hasGeneralAbility(player)
+                && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0) {
+            GameMode gameMode = player.getInstance().getGameMode();
+            return gameMode == GameMode.SURVIVAL
+                    || gameMode == GameMode.ADVENTURE
+                    || gameMode == GameMode.CREATIVE;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean canCheck(SpartanPlayer player, LivingEntity entity) {
+        return !player.getInstance().getName().equals(entity.getName())
+                && !MythicMobs.is(entity)
+                && !ItemsAdder.is(entity);
     }
 
 }

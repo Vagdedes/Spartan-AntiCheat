@@ -256,7 +256,8 @@ public class CloudBase {
             SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
                 try {
                     String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
-                            + "&action=get&data=disabledDetections&version=" + version + "&value=" + MultiVersion.versionString());
+                            + "&action=get&data=disabledDetections&version=" + version + "&value="
+                            + MultiVersion.serverVersion.toString());
 
                     if (results.length > 0) {
                         for (String data : results) {

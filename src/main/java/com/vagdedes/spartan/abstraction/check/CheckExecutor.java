@@ -41,7 +41,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
 
     private final long creation;
     protected final DetectionExecutor[] detections;
-    private long level, notifications;
+    private long notifications;
     private CancelCause disableCause, silentCause;
     private HackPrevention prevention;
     private boolean cancelled;
@@ -97,35 +97,6 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName())
                 && canRun()
                 && !Permissions.isBypassing(player, hackType);
-    }
-
-    // Level
-
-    public final int getLevel() {
-        long level = this.level - System.currentTimeMillis();
-        return level > 0L
-                ? AlgebraUtils.integerCeil(level / (double) hackType.violationTimeWorth)
-                : 0;
-    }
-
-    public final boolean hasLevel() {
-        return this.level - System.currentTimeMillis() > 0L;
-    }
-
-    private void increaseLevel(int amount) {
-        long current = System.currentTimeMillis();
-
-        if (this.level < current) {
-            this.level = current + (hackType.violationTimeWorth * amount);
-        } else {
-            this.level += (hackType.violationTimeWorth * amount);
-        }
-        InteractiveInventory.playerInfo.refresh(player.getInstance().getName());
-    }
-
-    public final void resetLevel() {
-        this.level = 0L;
-        InteractiveInventory.playerInfo.refresh(player.getInstance().getName());
     }
 
     // Causes
@@ -186,11 +157,12 @@ public abstract class CheckExecutor extends DetectionExecutor {
         if (disableCause == null
                 || disableCause.hasExpired()
                 || !disableCause.pointerMatches(information)) {
-            int increaseInt = Math.max(AlgebraUtils.integerRound(increase), 1);
+            if (increase < 1.0) {
+                increase = 1.0;
+            }
             PlayerViolation playerViolation = new PlayerViolation(
                     time,
-                    this.getLevel(),
-                    increaseInt,
+                    increase,
                     information
             );
             boolean event = Config.settings.getBoolean("Important.enable_developer_api");
@@ -200,7 +172,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
                     PlayerViolationEvent playerViolationEvent = new PlayerViolationEvent(
                             player.getInstance(),
                             hackType,
-                            playerViolation.sum(),
+                            playerViolation.increase,
                             information
                     );
                     Register.manager.callEvent(playerViolationEvent);
@@ -213,7 +185,6 @@ public abstract class CheckExecutor extends DetectionExecutor {
                         hackType,
                         playerViolation
                 );
-                this.increaseLevel(increaseInt);
                 this.notify(playerViolation, information);
                 this.punish();
                 this.prevention = newPrevention;
@@ -378,7 +349,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 player,
                 Config.messages.getColorfulString("detection_notification")
                         .replace("{info}", information)
-                        .replace("{vls:detection}", Integer.toString(playerViolation.sum()))
+                        .replace("{vls:detection}", String.valueOf(AlgebraUtils.cut(playerViolation.increase, 2)))
                         .replace("{vls:percentage}",
                                 hasSufficientData
                                         ? (AlgebraUtils.integerRound(certainty) + "%%")
@@ -389,8 +360,8 @@ public abstract class CheckExecutor extends DetectionExecutor {
 
         SpartanLocation location = player.movement.getLocation();
         information = player.getInstance().getName() + " failed " + hackType
-                + " (" + violationLevelIdentifier + " " + playerViolation.level + "+" + playerViolation.increase + "), "
-                + "(Server-Version: " + MultiVersion.versionString() + "), "
+                + " (" + violationLevelIdentifier + " " + playerViolation.increase + "), "
+                + "(Server-Version: " + MultiVersion.serverVersion.toString() + "), "
                 + "(Certainty: " + AlgebraUtils.cut(certainty, 2) + "), "
                 + "(Plugin-Version: " + API.getVersion() + "), "
                 + "(Silent: " + hackType.getCheck().isSilent(player.dataType, player.getWorld().getName()) + "), "

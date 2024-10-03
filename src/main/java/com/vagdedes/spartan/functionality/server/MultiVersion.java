@@ -2,9 +2,7 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
-import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import com.viaversion.viaversion.api.Via;
 import org.bukkit.Bukkit;
@@ -15,12 +13,11 @@ public class MultiVersion {
     private static final boolean paperClass = ReflectionUtils.classExists(
             "com.destroystokyo.paper.network.NetworkClient"
     );
-    private static MCVersion detectedVersion;
-    public static final boolean other, folia;
+    public static final MCVersion serverVersion;
+    public static final boolean folia;
 
     static {
-        detectedVersion = judge();
-        other = detectedVersion == MCVersion.OTHER;
+        serverVersion = judge();
         folia = Bukkit.getVersion().toLowerCase().contains("folia");
     }
 
@@ -47,18 +44,21 @@ public class MultiVersion {
         MCVersion(int maxProtocol) {
             this.maxProtocol = maxProtocol;
         }
+
+        @Override
+        public String toString() {
+            return this.maxProtocol == -1
+                    ? "Unknown"
+                    : this.defaultString().substring(1).replace("_", ".");
+        }
+
+        private String defaultString() {
+            return super.toString();
+        }
     }
 
     public static boolean isOrGreater(MCVersion trialVersion) {
-        return detectedVersion.ordinal() >= trialVersion.ordinal();
-    }
-
-    public static String versionString() {
-        return other ? "Unknown" : versionString(detectedVersion);
-    }
-
-    public static String versionString(MCVersion version) {
-        return version.toString().substring(1).replace("_", ".");
+        return serverVersion.ordinal() >= trialVersion.ordinal();
     }
 
     public static MCVersion get(Player player) {
@@ -86,10 +86,6 @@ public class MultiVersion {
         return MultiVersion.MCVersion.OTHER;
     }
 
-    public static MCVersion version() {
-        return detectedVersion;
-    }
-
     private static MCVersion judge() {
         String version = Bukkit.getVersion();
         version = version.substring(0, version.length() - 1);
@@ -101,8 +97,8 @@ public class MultiVersion {
 
                     for (int x = 0; x <= version.length(); x++) {
                         for (MCVersion mcversion : MCVersion.values()) {
-                            if (mcversion.toString().equalsIgnoreCase("V" + version.substring(0, version.length() - x).replace(".", "_"))) {
-                                return MultiVersion.detectedVersion = mcversion;
+                            if (mcversion.defaultString().equalsIgnoreCase("V" + version.substring(0, version.length() - x).replace(".", "_"))) {
+                                return mcversion;
                             }
                         }
                     }
@@ -111,21 +107,6 @@ public class MultiVersion {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        ConfigUtils.add(Config.settings.getFile(), "Important.server_version", "Configure this if the plugin is unable to detect your server's version.");
-        String option = "Important.server_version";
-        String custom = Config.settings.getString(option);
-
-        if (custom != null) {
-            String[] split = custom.split("\\.");
-
-            if (split.length >= 2) {
-                try {
-                    return MultiVersion.detectedVersion = MCVersion.valueOf("V" + split[0] + "_" + split[1]);
-                } catch (Exception ex) {
-                    AwarenessNotifications.forcefullySend("Invalid Config.settings.yml " + option + " configured value.");
-                }
-            }
-        }
-        return MultiVersion.detectedVersion = MCVersion.OTHER;
+        return MCVersion.OTHER;
     }
 }

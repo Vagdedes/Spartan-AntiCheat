@@ -29,14 +29,14 @@ public class AlgebraUtils {
 
     // Separator
 
-    public static double cut(double value, int cut) {
+    public static double cut(double value, double cut) {
         cut = (int) Math.pow(10, cut);
-        return Math.floor(value * cut) / (double) cut;
+        return Math.floor(value * cut) / cut;
     }
 
-    public static float cut(float value, int cut) {
+    public static float cut(float value, double cut) {
         cut = (int) Math.pow(10, cut);
-        return (float) (Math.floor(value * cut) / (double) cut);
+        return (float) (Math.floor(value * cut) / cut);
     }
 
     // Separator

@@ -67,7 +67,7 @@ public class PlayerInfo extends InventoryMenu {
             );
             return false;
         } else {
-            setTitle(player, menu + (isOnline ? target.player.getName() : profile.getName()));
+            setTitle(player, menu + (isOnline ? target.player.getName() : profile.name));
             Set<Map.Entry<HackType, Double>> evidenceDetails = profile.evidence.getKnowledgeEntries(
                     0.0
             );
@@ -129,24 +129,23 @@ public class PlayerInfo extends InventoryMenu {
             }
 
             if (isOnline) {
-                lore.add("§7Version§8:§c " + MultiVersion.versionString(target.version));
+                lore.add("§7Version§8:§c " + target.version.toString());
                 lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartanPlayer.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
                 lore.add("§7Edition§8:§c " + target.spartanPlayer.dataType);
                 lore.add("");
-                lore.add("§eLeft click to reset the player's live violations.");
             }
-            lore.add("§cRight click to delete the player's stored data.");
+            lore.add("§cClick to delete the player's stored data.");
             add(
-                    "§c" + profile.getName(),
+                    "§c" + profile.name,
                     lore,
-                    profile.getSkull(true),
+                    profile.getSkull(),
                     4
             );
             SpartanPlayer sp = isOnline ? target.spartanPlayer : null;
 
             for (Enums.HackCategoryType checkType : Enums.HackCategoryType.values()) {
-                addChecks(slots[checkType.ordinal()], isOnline, sp, profile, lore, checkType);
+                addChecks(slots[checkType.ordinal()], isOnline, sp, lore, checkType);
             }
 
             add("§c" + (back ? "Back" : "Close"), null, new ItemStack(Material.ARROW), 40);
@@ -155,26 +154,14 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     private void addChecks(int slot, boolean isOnline,
-                           SpartanPlayer player, PlayerProfile playerProfile,
+                           SpartanPlayer player,
                            List<String> lore, Enums.HackCategoryType checkType) {
         lore.clear();
         lore.add("");
-        int violations = 0;
-        HackType[] hackTypes = Enums.HackType.values();
-
-        if (isOnline) {
-            for (HackType hackType : hackTypes) {
-                if (hackType.category == checkType) {
-                    violations += player.getExecutor(hackType).getLevel();
-                }
-            }
-        }
 
         // Separator
 
-        ItemStack item = isOnline && violations > 0 ?
-                new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? Material.RED_TERRACOTTA : Material.getMaterial("STAINED_CLAY"), Math.min(violations, 64), (short) 14) :
-                new ItemStack(Material.QUARTZ_BLOCK);
+        ItemStack item = new ItemStack(checkType.material);
 
         // Separator
 
@@ -183,9 +170,8 @@ public class PlayerInfo extends InventoryMenu {
                 && !PlayerDetectionSlots.isChecked(player)
                 && Config.isEnabled(player.dataType);
 
-        for (HackType hackType : hackTypes) {
+        for (HackType hackType : Enums.HackType.values()) {
             if (hackType.category == checkType) {
-                violations = isOnline ? player.getExecutor(hackType).getLevel() : 0;
                 String state = getDetectionState(
                         player,
                         hackType,
@@ -194,13 +180,11 @@ public class PlayerInfo extends InventoryMenu {
                         notChecked
                 );
                 lore.add(
-                        "§6" + hackType.getCheck().getName()
-                                + "§8[§e" + state + "§8]§c "
-                                + violations + " violations"
+                        "§7" + hackType.getCheck().getName() + "§8:§e " + state
                 );
             }
         }
-        add("§2" + checkType.toString() + " Checks", lore, item, slot);
+        add("§2" + checkType + " Checks", lore, item, slot);
     }
 
     private String getDetectionState(SpartanPlayer player,
@@ -259,28 +243,18 @@ public class PlayerInfo extends InventoryMenu {
                         DiscordMemberCount.discordURL
                 );
             } else {
-                SpartanProtocol t = SpartanBukkit.getProtocol(playerName);
+                String name = Bukkit.getOfflinePlayer(playerName).getName();
 
-                if (t != null && clickType.isLeftClick()) {
-                    for (HackType hackType : Enums.HackType.values()) {
-                        t.spartanPlayer.getExecutor(hackType).resetLevel();
-                    }
-                    String message = Config.messages.getColorfulString("player_violation_reset_message").replace("{player}", t.player.getName());
-                    player.getInstance().sendMessage(message);
+                if (name == null) {
+                    ClickableMessage.sendURL(
+                            player.getInstance(),
+                            Config.messages.getColorfulString("player_not_found_message"),
+                            CommandExecution.support,
+                            DiscordMemberCount.discordURL
+                    );
                 } else {
-                    String name = Bukkit.getOfflinePlayer(playerName).getName();
-
-                    if (name == null) {
-                        ClickableMessage.sendURL(
-                                player.getInstance(),
-                                Config.messages.getColorfulString("player_not_found_message"),
-                                CommandExecution.support,
-                                DiscordMemberCount.discordURL
-                        );
-                    } else {
-                        ResearchEngine.resetData(name);
-                        player.getInstance().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
-                    }
+                    ResearchEngine.resetData(name);
+                    player.getInstance().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                 }
                 player.getInstance().closeInventory();
             }

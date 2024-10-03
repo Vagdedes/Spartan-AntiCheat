@@ -121,4 +121,8 @@ public class PlayerDetectionSlots {
         }
     }
 
+    public static int getRemaining() {
+        return Math.max(CloudBase.getDetectionSlots() - list.size(), 0);
+    }
+
 }

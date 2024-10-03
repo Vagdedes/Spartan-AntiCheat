@@ -36,7 +36,7 @@ public class ConfigUtils {
         message = replace(message, "{motd}", Bukkit.getMotd());
         message = replace(message, "{server:name}", CrossServerNotifications.getServerName());
         message = replace(message, "{plugin:version}", API.getVersion());
-        message = replace(message, "{server:version}", MultiVersion.versionString());
+        message = replace(message, "{server:version}", MultiVersion.serverVersion.toString());
         message = replace(message, "{line}", "\n");
 
         LocalDateTime now = LocalDateTime.now();

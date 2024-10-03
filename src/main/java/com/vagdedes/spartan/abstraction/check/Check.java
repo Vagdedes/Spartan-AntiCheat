@@ -1,12 +1,8 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import me.vagdedes.spartan.api.CheckPunishmentToggleEvent;
@@ -24,7 +20,7 @@ public class Check {
     // Static
 
     public enum DataType {
-        JAVA, BEDROCK, UNIVERSAL;
+        JAVA, BEDROCK;
 
         private final String string;
 
@@ -91,12 +87,11 @@ public class Check {
                 silents_config = getOption("silent_worlds", "exampleSilentWorld1, exampleSilentWorld2", false).toString();
 
         // Separator
-        this.enabled = new boolean[ResearchEngine.usableDataTypes.length];
-        this.silent = new boolean[ResearchEngine.usableDataTypes.length];
-        this.punish = new boolean[ResearchEngine.usableDataTypes.length];
-        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
+        this.enabled = new boolean[DataType.values().length];
+        this.silent = new boolean[DataType.values().length];
+        this.punish = new boolean[DataType.values().length];
 
-        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : DataType.values()) {
             Object optionValue = getOption(
                     "enabled." + dataType.toString().toLowerCase(),
                     true,
@@ -108,13 +103,6 @@ public class Check {
                                     Boolean.parseBoolean(optionValue.toString().toLowerCase());
             this.enabled[dataType.ordinal()] = enabled;
 
-            if (!enabled && !profiles.isEmpty()) {
-                for (PlayerProfile playerProfile : profiles) {
-                    if (playerProfile.hasData(dataType)) {
-                        playerProfile.evidence.remove(hackType);
-                    }
-                }
-            }
             optionValue = getOption(
                     "silent." + dataType.toString().toLowerCase(),
                     false,
@@ -260,7 +248,7 @@ public class Check {
         if (dataType == null) {
             boolean enabled = false;
 
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (this.enabled[type.ordinal()]) {
                     enabled = true;
                     break;
@@ -280,11 +268,11 @@ public class Check {
         Check.DataType[] dataTypes;
 
         if (dataType == null) {
-            dataTypes = ResearchEngine.usableDataTypes;
+            dataTypes = DataType.values();
         } else {
             dataTypes = null;
 
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (type == dataType) {
                     dataTypes = new Check.DataType[]{dataType};
                     break;
@@ -295,8 +283,6 @@ public class Check {
                 return;
             }
         }
-        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
-
         for (Check.DataType type : dataTypes) {
             CheckToggleEvent event;
 
@@ -313,18 +299,6 @@ public class Check {
 
                 synchronized (options) {
                     options.clear();
-                }
-                if (!b) {
-                    for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
-                        protocol.spartanPlayer.getExecutor(hackType).resetLevel();
-                    }
-                }
-                if (!profiles.isEmpty()) {
-                    for (PlayerProfile playerProfile : profiles) {
-                        if (playerProfile.hasData(type)) {
-                            playerProfile.evidence.remove(hackType);
-                        }
-                    }
                 }
             }
         }
@@ -530,7 +504,7 @@ public class Check {
             return false;
         }
         if (dataType == null) {
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (this.punish[type.ordinal()]) {
                     return true;
                 }
@@ -551,7 +525,7 @@ public class Check {
         if (dataType == null) {
             boolean enabled = false;
 
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (this.silent[type.ordinal()]) {
                     enabled = true;
                     break;
@@ -570,11 +544,11 @@ public class Check {
         Check.DataType[] dataTypes;
 
         if (dataType == null) {
-            dataTypes = ResearchEngine.usableDataTypes;
+            dataTypes = DataType.values();
         } else {
             dataTypes = null;
 
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (type == dataType) {
                     dataTypes = new Check.DataType[]{dataType};
                     break;
@@ -614,11 +588,11 @@ public class Check {
         Check.DataType[] dataTypes;
 
         if (dataType == null) {
-            dataTypes = ResearchEngine.usableDataTypes;
+            dataTypes = DataType.values();
         } else {
             dataTypes = null;
 
-            for (Check.DataType type : ResearchEngine.usableDataTypes) {
+            for (Check.DataType type : DataType.values()) {
                 if (type == dataType) {
                     dataTypes = new Check.DataType[]{dataType};
                     break;

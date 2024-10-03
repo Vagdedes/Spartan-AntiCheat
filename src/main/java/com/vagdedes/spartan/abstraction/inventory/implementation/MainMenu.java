@@ -14,6 +14,7 @@ import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -75,8 +76,7 @@ public class MainMenu extends InventoryMenu {
         if (slots <= 0) {
             lore.add("§7Detection Slots§8: §aUnlimited");
         } else {
-            int players = SpartanBukkit.getPlayerCount();
-            lore.add("§7Detection Slots§8: §a" + slots + " (" + Math.max(slots - players, 0) + " remaining)");
+            lore.add("§7Detection Slots§8: §a" + slots + " (" + PlayerDetectionSlots.getRemaining() + " remaining)");
         }
         lore.add("§7Detections Available§8: "
                 + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
@@ -84,7 +84,7 @@ public class MainMenu extends InventoryMenu {
                 + (SpartanEdition.hasDetectionsPurchased(Check.DataType.BEDROCK) ? "§a" : "§c") + Check.DataType.BEDROCK);
         Runtime runtime = Runtime.getRuntime();
 
-        lore.add("§7Server Version§8: §a" + MultiVersion.versionString());
+        lore.add("§7Server Version§8: §a" + MultiVersion.serverVersion.toString());
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
         lore.add("");
@@ -182,13 +182,6 @@ public class MainMenu extends InventoryMenu {
                             DiscordMemberCount.discordURL
                     );
                 }
-            } else {
-                player.sendInventoryCloseMessage(
-                        "§7You need §aFileGUI §7to access this feature§8:\n§2"
-                                + (IDs.isBuiltByBit() ? "https://builtbybit.com/resources/13185"
-                                : IDs.isPolymart() ? "https://polymart.org/resource/984"
-                                : "https://www.spigotmc.org/resources/73893")
-                );
             }
 
         } else if (item.equals("Management")) {

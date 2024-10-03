@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
+import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
@@ -46,9 +47,11 @@ public class PlayerEvidence {
 
     // Separator
 
+    private final PlayerProfile parent;
     private final Map<Enums.HackType, Double> probability; // Live object is used for synchronization
 
-    PlayerEvidence() {
+    PlayerEvidence(PlayerProfile profile) {
+        this.parent = profile;
         this.probability = new ConcurrentHashMap<>(2, 1.0f);
     }
 
@@ -72,64 +75,59 @@ public class PlayerEvidence {
     }
 
     public double getProbability(Enums.HackType hackType) {
-        return this.probability.getOrDefault(
-                hackType,
-                POSITIVE ? 0.0 : 1.0
-        );
+        if (isCheckEnabled(hackType)) {
+            return this.probability.getOrDefault(
+                    hackType,
+                    POSITIVE ? 0.0 : 1.0
+            );
+        } else {
+            this.probability.remove(hackType);
+            return POSITIVE ? 0.0 : 1.0;
+        }
     }
 
     // Separator
 
     public boolean has(double threshold) {
-        if (threshold == 0.0) {
-            return !this.probability.keySet().isEmpty();
-        } else {
-            for (double probability : this.probability.values()) {
-                if (surpassedProbability(
-                        probability,
-                        threshold
-                )) {
-                    return true;
-                }
+        for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
+            if (isCheckEnabled(entry.getKey())
+                    && surpassedProbability(entry.getValue(), threshold)) {
+                return true;
             }
-            return false;
         }
+        return false;
     }
 
     public Collection<Enums.HackType> getKnowledgeList(double threshold) {
-        if (threshold == 0.0) {
-            return new HashSet<>(this.probability.keySet());
-        } else {
-            Collection<Enums.HackType> set = new HashSet<>();
+        Collection<Enums.HackType> set = new HashSet<>();
 
-            for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
-                if (surpassedProbability(
-                        entry.getValue(),
-                        threshold
-                )) {
-                    set.add(entry.getKey());
-                }
+        for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
+            if (isCheckEnabled(entry.getKey())
+                    && surpassedProbability(entry.getValue(), threshold)) {
+                set.add(entry.getKey());
             }
-            return set;
         }
+        return set;
     }
 
     public Set<Map.Entry<Enums.HackType, Double>> getKnowledgeEntries(double threshold) {
-        if (threshold == 0.0) {
-            return new HashSet<>(this.probability.entrySet());
-        } else {
-            Set<Map.Entry<Enums.HackType, Double>> set = new HashSet<>();
+        Set<Map.Entry<Enums.HackType, Double>> set = new HashSet<>();
 
-            for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
-                if (surpassedProbability(
-                        entry.getValue(),
-                        threshold
-                )) {
-                    set.add(entry);
-                }
+        for (Map.Entry<Enums.HackType, Double> entry : this.probability.entrySet()) {
+            if (isCheckEnabled(entry.getKey())
+                    && surpassedProbability(entry.getValue(), threshold)) {
+                set.add(entry);
             }
-            return set;
         }
+        return set;
+    }
+
+    private boolean isCheckEnabled(Enums.HackType hackType) {
+        SpartanPlayer player = this.parent.getSpartanPlayer();
+        return hackType.getCheck().isEnabled(
+                player != null ? player.dataType : null,
+                player != null ? player.getWorld().getName() : null
+        );
     }
 
 }

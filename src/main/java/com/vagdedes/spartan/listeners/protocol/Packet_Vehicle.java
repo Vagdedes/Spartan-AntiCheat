@@ -8,6 +8,7 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.Event_Vehicle;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -20,10 +21,10 @@ public class Packet_Vehicle extends PacketAdapter {
                 Register.plugin,
                 ListenerPriority.HIGHEST,
                 PacketType.Play.Client.STEER_VEHICLE,
-                        PacketType.Play.Client.POSITION,
-                        PacketType.Play.Client.POSITION_LOOK,
-                        PacketType.Play.Client.LOOK,
-                        PacketType.Play.Server.MOUNT
+                PacketType.Play.Client.POSITION,
+                PacketType.Play.Client.POSITION_LOOK,
+                PacketType.Play.Client.LOOK,
+                PacketType.Play.Server.MOUNT
         );
     }
 
@@ -44,20 +45,25 @@ public class Packet_Vehicle extends PacketAdapter {
             if (protocol.keepEntity < 10) protocol.keepEntity++;
         }
     }
+
     @Override
     public void onPacketSending(PacketEvent event) {
         if (event.getPacketType().equals(PacketType.Play.Server.MOUNT)) {
             Player player = event.getPlayer();
             SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
             protocol.timerBalancer.addBalance(50);
-            if (protocol.vehicleStatus && protocol.keepEntity != 0) {
-                VehicleEnterEvent bukkitEvent = new VehicleEnterEvent((Vehicle) player.getVehicle(), player);
-                bukkitEvent.setCancelled(event.isCancelled());
-                Event_Vehicle.enter(bukkitEvent);
-            } else {
-                VehicleExitEvent bukkitEvent = new VehicleExitEvent((Vehicle) player.getVehicle(), player);
-                bukkitEvent.setCancelled(event.isCancelled());
-                Event_Vehicle.exit(bukkitEvent);
+            Entity entity = player.getVehicle();
+
+            if (entity instanceof Vehicle) {
+                if (protocol.vehicleStatus && protocol.keepEntity != 0) {
+                    VehicleEnterEvent bukkitEvent = new VehicleEnterEvent((Vehicle) entity, player);
+                    bukkitEvent.setCancelled(event.isCancelled());
+                    Event_Vehicle.enter(bukkitEvent);
+                } else {
+                    VehicleExitEvent bukkitEvent = new VehicleExitEvent((Vehicle) entity, player);
+                    bukkitEvent.setCancelled(event.isCancelled());
+                    Event_Vehicle.exit(bukkitEvent);
+                }
             }
         }
     }

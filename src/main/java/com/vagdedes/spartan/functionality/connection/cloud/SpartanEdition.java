@@ -5,6 +5,7 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -83,21 +84,16 @@ public class SpartanEdition {
     // Product
 
     private static String getProductID(Check.DataType dataType) {
-        switch (dataType) {
-            case JAVA:
-                return "1";
-            case BEDROCK:
-                return "16";
-            default:
-                return "27";
-        }
+        return dataType == null || dataType == Check.DataType.JAVA
+                ? "1"
+                : "16";
     }
 
     public static String getProductID() {
         return getProductID(
                 currentVersion
                         ? currentType
-                        : (alternativeVersion ? oppositeType : Check.DataType.UNIVERSAL)
+                        : (alternativeVersion ? oppositeType : null)
         );
     }
 
@@ -128,14 +124,14 @@ public class SpartanEdition {
                         ? new Check.DataType[]{oppositeType}
                         : new Check.DataType[]{};
 
-        if (missingDetections.length == ResearchEngine.usableDataTypes.length) {
+        if (missingDetections.length == Check.DataType.values().length) {
             attemptVersionNotification(player, null);
             return;
         }
         List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-        int detectionSlots = CloudBase.getDetectionSlots();
 
-        if (detectionSlots > 0 && players.size() > detectionSlots) {
+        if (CloudBase.getDetectionSlots() > 0
+                && PlayerDetectionSlots.getRemaining() == 0) {
             attemptLimitNotification(player);
             return;
         }

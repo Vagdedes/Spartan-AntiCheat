@@ -3,20 +3,14 @@ package com.vagdedes.spartan.abstraction.profiling;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.UUID;
 
 public class PlayerProfile {
 
-    private UUID uuid;
     public final String name;
     private final ViolationHistory[][] violationHistory;
     private final MiningHistory[] miningHistory;
@@ -31,15 +25,15 @@ public class PlayerProfile {
 
         // Separator
         this.name = name;
-        this.evidence = new PlayerEvidence();
+        this.evidence = new PlayerEvidence(this);
         this.skull = null;
         this.offlinePlayer = null;
 
         // Separator
-        this.violationHistory = new ViolationHistory[ResearchEngine.usableDataTypes.length][hackTypes.length];
+        this.violationHistory = new ViolationHistory[Check.DataType.values().length][hackTypes.length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
-        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : Check.DataType.values()) {
             for (Enums.HackType hackType : hackTypes) {
                 this.violationHistory[dataType.ordinal()][hackType.ordinal()] = new ViolationHistory();
             }
@@ -51,16 +45,15 @@ public class PlayerProfile {
 
     public PlayerProfile(SpartanProtocol protocol) {
         Enums.HackType[] hackTypes = Enums.HackType.values();
-        this.uuid = protocol.getUUID();
         this.name = protocol.player.getName();
         this.offlinePlayer = protocol.player; // Attention
-        this.evidence = new PlayerEvidence();
+        this.evidence = new PlayerEvidence(this);
         this.skull = null;
 
-        this.violationHistory = new ViolationHistory[ResearchEngine.usableDataTypes.length][hackTypes.length];
+        this.violationHistory = new ViolationHistory[Check.DataType.values().length][hackTypes.length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
 
-        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : Check.DataType.values()) {
             for (Enums.HackType hackType : hackTypes) {
                 this.violationHistory[dataType.ordinal()][hackType.ordinal()] = new ViolationHistory();
             }
@@ -71,72 +64,45 @@ public class PlayerProfile {
     }
 
     public void update(SpartanProtocol protocol) {
-        this.uuid = protocol.getUUID();
+        this.offlinePlayer = protocol.player;
     }
 
     // Separator
 
-    public String getName() {
-        return name;
-    }
+    public ItemStack getSkull() {
+        if (this.skull == null) {
+            if (this.offlinePlayer == null) {
+                SpartanProtocol protocol = SpartanBukkit.getProtocol(name);
 
-    public ItemStack getSkull(boolean force) {
-        if (skull == null) {
-            if (force) {
-                OfflinePlayer player = getOfflinePlayer();
-
-                if (player == null) {
-                    return InventoryUtils.getHead();
-                } else {
-                    this.skull = InventoryUtils.getSkull(player, name, false);
-                }
-            } else {
-                SpartanPlayer spartanPlayer = getSpartanPlayer();
-
-                if (spartanPlayer == null) {
+                if (protocol == null) {
                     return InventoryUtils.getSkull(null, name, false);
                 } else {
-                    Player player = spartanPlayer.getInstance();
-
-                    if (player == null) {
-                        return InventoryUtils.getSkull(null, name, false);
-                    } else {
-                        this.skull = InventoryUtils.getSkull(player, name, false);
-                    }
-                }
-            }
-        }
-        return skull;
-    }
-
-    public OfflinePlayer getOfflinePlayer() {
-        if (offlinePlayer == null) {
-            if (this.uuid == null) {
-                SpartanPlayer player = getSpartanPlayer();
-
-                if (player != null) {
-                    this.uuid = player.protocol.getUUID();
-                    this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                } else {
-                    this.offlinePlayer = Bukkit.getOfflinePlayer(name);
-                    this.uuid = offlinePlayer.getUniqueId();
+                    this.update(SpartanBukkit.getProtocol(protocol.player));
+                    this.skull = InventoryUtils.getSkull(protocol.player, name, false);
                 }
             } else {
-                this.offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+                this.skull = InventoryUtils.getSkull(offlinePlayer, name, false);
             }
         }
-        return offlinePlayer;
+        return this.skull;
     }
 
-    public SpartanPlayer getSpartanPlayer() {
+    SpartanPlayer getSpartanPlayer() {
         SpartanProtocol protocol;
 
-        if (uuid != null) {
-            protocol = SpartanBukkit.getProtocol(uuid);
-        } else {
+        if (this.offlinePlayer == null) {
             protocol = SpartanBukkit.getProtocol(name);
+
+            if (protocol != null) {
+                this.update(protocol);
+                return protocol.spartanPlayer;
+            } else {
+                return null;
+            }
+        } else {
+            protocol = SpartanBukkit.getProtocol(this.offlinePlayer.getUniqueId());
+            return protocol != null ? protocol.spartanPlayer : null;
         }
-        return protocol != null ? protocol.spartanPlayer : null;
     }
 
     // Separator
@@ -150,7 +116,7 @@ public class PlayerProfile {
     }
 
     public boolean hasData(Enums.HackType hackType) {
-        for (Check.DataType dataType : ResearchEngine.usableDataTypes) {
+        for (Check.DataType dataType : Check.DataType.values()) {
             if (!violationHistory[dataType.ordinal()][hackType.ordinal()].isEmpty()) {
                 return true;
             }

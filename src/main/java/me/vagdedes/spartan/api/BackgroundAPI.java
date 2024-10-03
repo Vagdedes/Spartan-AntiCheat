@@ -2,6 +2,7 @@ package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
@@ -109,9 +110,16 @@ public class BackgroundAPI {
         return HackType.getCheck().isSilent(null, null);
     }
 
+    @Deprecated
     static int getVL(Player p, HackType hackType) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return player.getExecutor(hackType).getLevel();
+        AwarenessNotifications.forcefullySend("The API method 'getVL' has been removed.");
+        return 0;
+    }
+
+    static double getCertainty(Player p, HackType hackType) {
+        return PlayerEvidence.probabilityToCertainty(
+                SpartanBukkit.getProtocol(p).getProfile().evidence.getProbability(hackType)
+        );
     }
 
     @Deprecated
@@ -120,14 +128,10 @@ public class BackgroundAPI {
         return 0.0;
     }
 
+    @Deprecated
     static int getVL(Player p) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        int total = 0;
-
-        for (HackType hackType : Enums.HackType.values()) {
-            total += player.getExecutor(hackType).getLevel();
-        }
-        return total;
+        AwarenessNotifications.forcefullySend("The API method 'getVL' has been removed.");
+        return 0;
     }
 
     @Deprecated
@@ -237,26 +241,14 @@ public class BackgroundAPI {
         }
     }
 
+    @Deprecated
     static void resetVL() {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            HackType[] hackTypes = Enums.HackType.values();
-
-            for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
-                for (HackType hackType : hackTypes) {
-                    protocol.spartanPlayer.getExecutor(hackType).resetLevel();
-                }
-            }
-        }
+        AwarenessNotifications.forcefullySend("The API method 'resetVL' has been removed.");
     }
 
+    @Deprecated
     static void resetVL(Player p) {
-        if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-
-            for (HackType hackType : Enums.HackType.values()) {
-                player.getExecutor(hackType).resetLevel();
-            }
-        }
+        AwarenessNotifications.forcefullySend("The API method 'resetVL' has been removed.");
     }
 
     static boolean isBypassing(Player p) {

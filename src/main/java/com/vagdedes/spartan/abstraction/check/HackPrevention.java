@@ -9,14 +9,12 @@ import com.vagdedes.spartan.functionality.server.TPS;
 public class HackPrevention {
 
     boolean canPrevent;
-    private final long threadID;
     private final SpartanLocation location;
     private final boolean groundTeleport;
     private final double damage;
     private final long expiration;
 
     HackPrevention() {
-        this.threadID = 0L;
         this.canPrevent = false;
         this.location = null;
         this.groundTeleport = false;
@@ -25,7 +23,6 @@ public class HackPrevention {
     }
 
     HackPrevention(SpartanLocation location, int cancelTicks, boolean groundTeleport, double damage) {
-        this.threadID = Thread.currentThread().getId();
         this.canPrevent = false;
         this.location = location;
         this.groundTeleport = groundTeleport;

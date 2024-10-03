@@ -255,7 +255,7 @@ public class MaterialUtils {
                 water = true;
             } else {
                 SpartanBlock block = player.movement.getLocation().clone().add(0, player.getInstance().getEyeHeight(), 0).getBlock();
-                water = block.waterLogged || block.material == MaterialUtils.get("water");
+                water = block.isWaterLogged() || block.getType() == MaterialUtils.get("water");
             }
             if (water) {
                 boolean aquaInfinity = false;

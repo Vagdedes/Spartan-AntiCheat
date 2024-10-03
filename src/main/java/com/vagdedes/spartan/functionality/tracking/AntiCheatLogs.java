@@ -4,7 +4,6 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
-import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -17,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -85,10 +85,10 @@ public class AntiCheatLogs {
         Config.sql.logInfo(p, notification, information, material, hackType, playerViolation);
     }
 
-    public static void logMining(SpartanPlayer player, SpartanBlock block, boolean cancelled) {
+    public static void logMining(SpartanPlayer player, Block block, boolean cancelled) {
         if (player.getInstance().getGameMode() == GameMode.SURVIVAL
                 && PlayerUtils.isPickaxeItem(player.getItemInHand().getType())) {
-            MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.material);
+            MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
 
             if (ore != null) {
                 SpartanLocation location = player.movement.getLocation();
@@ -102,19 +102,20 @@ public class AntiCheatLogs {
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(player.getInstance(), log, location.getBukkitLocation(), block.material);
+                    event = new PlayerFoundOreEvent(player.getInstance(), log, location.getBukkitLocation(), block.getType());
                     Register.manager.callEvent(event);
                 } else {
                     event = null;
                 }
 
-                if (event == null || !event.isCancelled()) {
+                if ((event == null || !event.isCancelled())
+                        && Enums.HackType.XRay.getCheck().isEnabled(player.dataType, player.getWorld().getName())) {
                     AntiCheatLogs.logInfo(
                             player,
                             null,
                             log,
                             false,
-                            block.material,
+                            block.getType(),
                             null,
                             null
                     );

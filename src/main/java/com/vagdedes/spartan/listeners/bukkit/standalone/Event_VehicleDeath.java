@@ -12,19 +12,17 @@ import org.bukkit.event.entity.EntityDeathEvent;
 
 public class Event_VehicleDeath implements Listener {
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Event(EntityDeathEvent e) {
-        if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) || !e.isCancelled()) {
-            Entity entity = e.getEntity();
-            Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                    ? entity.getPassengers().toArray(new Entity[0])
-                    : new Entity[]{entity.getPassenger()};
+        Entity entity = e.getEntity();
+        Entity[] passengers = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                ? entity.getPassengers().toArray(new Entity[0])
+                : new Entity[]{entity.getPassenger()};
 
-            if (passengers.length > 0) {
-                for (Entity passenger : passengers) {
-                    if (passenger instanceof Player) {
-                        Event_Vehicle.exit(SpartanBukkit.getProtocol((Player) passenger).spartanPlayer);
-                    }
+        if (passengers.length > 0) {
+            for (Entity passenger : passengers) {
+                if (passenger instanceof Player) {
+                    Event_Vehicle.exit(SpartanBukkit.getProtocol((Player) passenger).spartanPlayer);
                 }
             }
         }

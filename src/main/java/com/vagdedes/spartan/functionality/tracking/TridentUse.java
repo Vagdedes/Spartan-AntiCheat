@@ -22,17 +22,16 @@ public class TridentUse {
             for (ItemStack item : new ItemStack[]{inventory.getItemInHand(), inventory.getItemInOffHand()}) {
                 if (item.getType() == Material.TRIDENT) {
                     int level = item.getEnchantmentLevel(Enchantment.RIPTIDE);
-
                     if (level > 0) {
                         int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
 
                         if (level > riptideMaxSafeLevel) {
                             p.trackers.add(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY, ticks);
-                            p.getExecutor(Enums.HackType.Speed).handle(false, Material.TRIDENT);
                         } else {
                             p.trackers.add(PlayerTrackers.TrackerType.TRIDENT, ticks);
-                            p.getExecutor(Enums.HackType.Speed).handle(false, Enchantment.RIPTIDE);
                         }
+
+                        p.getExecutor(Enums.HackType.Speed).handle(false, level);
                     }
                     break;
                 }

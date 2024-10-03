@@ -4,9 +4,9 @@ import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 
 public class PlayerTickEvent {
 
-    private final SpartanProtocol protocol;
-    private final long time;
-    private final boolean legacy;
+    public final SpartanProtocol protocol;
+    public final long time;
+    public final boolean legacy;
     private long delay;
 
     public PlayerTickEvent(SpartanProtocol protocol, boolean legacy) {
@@ -29,14 +29,6 @@ public class PlayerTickEvent {
         }
         this.protocol.tickTime = this.time;
         return this;
-    }
-
-    public SpartanProtocol getProtocol() {
-        return protocol;
-    }
-
-    public long getTime() {
-        return this.time;
     }
 
     public long getDelay() {

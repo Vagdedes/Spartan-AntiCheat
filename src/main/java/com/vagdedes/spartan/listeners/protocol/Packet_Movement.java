@@ -9,7 +9,7 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.simulation.modules.engine.motion.MotionVector;
 import com.vagdedes.spartan.abstraction.event.CPlayerVelocityEvent;
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.event.SuperPositionPacketEvent;
 import com.vagdedes.spartan.abstraction.protocol.MCClient;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -18,7 +18,6 @@ import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
 import com.vagdedes.spartan.listeners.bukkit.Event_Velocity;
 import com.vagdedes.spartan.utils.math.RayUtils;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
-import com.vagdedes.spartan.utils.minecraft.protocol.SuperPositionPacket;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -189,14 +188,13 @@ public class Packet_Movement extends PacketAdapter {
                 Event_Movement.event(bukkitEvent, true);
             }
         } else {
-            superPosition(new SuperPositionPacket(protocol, event));
+            superPosition(new SuperPositionPacketEvent(protocol, event));
         }
     }
 
-    private static void superPosition(SuperPositionPacket packet) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(packet.getProtocol().player).spartanPlayer;
-        boolean cancelled = packet.getEvent().isCancelled();
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, packet);
+    private static void superPosition(SuperPositionPacketEvent packet) {
+        boolean cancelled = packet.packetEvent.isCancelled();
+        packet.protocol.spartanPlayer.getExecutor(Enums.HackType.Exploits).handle(cancelled, packet);
     }
 
 }

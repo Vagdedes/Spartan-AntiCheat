@@ -4,20 +4,11 @@ import java.util.Objects;
 
 public class RayLine {
 
-    private final double x;
-    private final double z;
+    public final double x, z;
 
     public RayLine(double x, double z) {
         this.x = x;
         this.z = z;
-    }
-
-    public double x() {
-        return x;
-    }
-
-    public double z() {
-        return z;
     }
 
     @Override

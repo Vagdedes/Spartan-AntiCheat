@@ -32,7 +32,7 @@ public class Pattern {
     private static final Collection<Pattern> instances = Collections.synchronizedList(new ArrayList<>(individualDataBase));
 
     static int hashProfile(PlayerProfile playerProfile) {
-        return playerProfile.getName().hashCode();
+        return playerProfile.name.hashCode();
     }
 
     public static int[] hashSituation(int[] situation) {
@@ -92,7 +92,7 @@ public class Pattern {
                                             continue;
                                         }
                                         try {
-                                            if (profileObject.toString().equals(profile.getName())) {
+                                            if (profileObject.toString().equals(profile.name)) {
                                                 double pattern = (double) patternObject;
 
                                                 synchronized (instance.generalizations) {
@@ -240,7 +240,7 @@ public class Pattern {
     private void setToFile(PlayerProfile profile, long time, int[] situation, double pattern) {
         SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
             this.count++;
-            this.configuration.set(time + "." + profileOption, profile.getName());
+            this.configuration.set(time + "." + profileOption, profile.name);
             this.configuration.set(time + "." + situationOption, situation[0]);
             this.configuration.set(time + "." + patternOption, pattern);
         });

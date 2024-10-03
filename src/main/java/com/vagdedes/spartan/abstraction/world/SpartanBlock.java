@@ -1,74 +1,62 @@
 package com.vagdedes.spartan.abstraction.world;
 
-import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Waterlogged;
+import org.bukkit.block.data.BlockData;
 
 public class SpartanBlock {
 
-    public final Material material;
-    public final boolean liquid, waterLogged;
-    public final SpartanLocation location;
+    public final Object block;
 
-    SpartanBlock(SpartanLocation location, Material material, boolean liquid, boolean waterLogged) {
-        this.material = material;
-        this.liquid = liquid;
-        this.waterLogged = waterLogged;
-        this.location = location;
+    SpartanBlock(Object block) {
+        this.block = block == null ? Material.AIR : block;
     }
 
-    public SpartanBlock(Block block) {
-        Location location = block.getLocation();
-        this.location = new SpartanLocation(block.getWorld(), location.getX(), location.getY(), location.getZ(), 0.0f, 0.0f);
-        this.material = block.getType();
-
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            Object blockData = block.getBlockData();
-
-            if (blockData instanceof Waterlogged && ((Waterlogged) blockData).isWaterlogged()) {
-                this.liquid = true;
-                this.waterLogged = true;
-            } else {
-                this.liquid = BlockUtils.isLiquid(block);
-                this.waterLogged = false;
-            }
+    public Material getType() {
+        if (this.block instanceof Block) {
+            return ((Block) this.block).getType();
+        } else if (this.block instanceof Material) {
+            return (Material) this.block;
+        } else if (BlockUtils.blockDataExists) {
+            return ((BlockData) this.block).getMaterial();
         } else {
-            this.liquid = BlockUtils.isLiquid(block);
-            this.waterLogged = false;
+            return Material.AIR;
         }
     }
 
-    public World getWorld() {
-        return this.location.world;
-    }
-
-    public int getX() {
-        return this.location.getBlockX();
-    }
-
-    public int getY() {
-        return this.location.getBlockY();
-    }
-
-    public int getZ() {
-        return this.location.getBlockZ();
+    public boolean isWaterLogged() {
+        return this.block instanceof Block
+                ? BlockUtils.isWaterLogged((Block) this.block)
+                : BlockUtils.blockDataExists
+                && this.block instanceof BlockData
+                && BlockUtils.isWaterLogged((BlockData) this.block);
     }
 
     public boolean isLiquidOrWaterLogged(boolean lava) {
-        return this.liquid && (lava || this.material != MaterialUtils.get("lava")) || this.waterLogged;
+        return this.block instanceof Block
+                ? BlockUtils.isLiquidOrWaterLogged((Block) this.block, lava)
+                : BlockUtils.blockDataExists
+                && this.block instanceof BlockData
+                && BlockUtils.isLiquidOrWaterLogged((BlockData) this.block, lava);
     }
 
-    public boolean isNonWaterLoggedLiquid(boolean lava) {
-        return this.liquid && !this.waterLogged && (lava || this.material != MaterialUtils.get("lava"));
-    }
+    public boolean isLiquid(Material target) {
+        if (this.block instanceof Block) {
+            Block block = (Block) this.block;
+            return BlockUtils.isLiquid(block) && block.getType() == target;
+        } else {
+            Material material;
 
-    public boolean isLiquid(Material material) {
-        return this.liquid && this.material == material;
+            if (this.block instanceof Material) {
+                material = (Material) this.block;
+            } else if (BlockUtils.blockDataExists) {
+                material = ((BlockData) this.block).getMaterial();
+            } else {
+                return false;
+            }
+            return BlockUtils.isLiquid(material) && material == target;
+        }
     }
 
 }
