@@ -158,7 +158,7 @@ public class RayUtils {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                     SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
 
-                    if (block.getType().isSolid()) {
+                    if (block.getType().isSolid() || BlockUtils.isSemiSolid(block.getType())) {
                         return true;
                     }
                 }
@@ -489,5 +489,22 @@ public class RayUtils {
         } else {
             return null;
         }
+    }
+    public static boolean ifRayBound(SpartanPlayer player, AxisAlignedBB boundingBox, double dist) {
+
+        boolean intersection = false;
+        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+        intersection = isIntersection(player, new SpartanLocation(player.protocol.getLocation()), intersection, boundingBox, dist);
+        return intersection;
+    }
+
+    public static boolean ifRayBoundClient(SpartanPlayer player, AxisAlignedBB boundingBox, double dist) {
+
+        boolean intersection = false;
+        boolean intersection2 = false;
+        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+        intersection = isIntersection(player, new SpartanLocation(player.protocol.getLocation()), intersection, boundingBox, dist);
+        intersection2 = isIntersection(player, player.movement.getEventFromLocation(), intersection, boundingBox, dist);
+        return intersection || intersection2;
     }
 }

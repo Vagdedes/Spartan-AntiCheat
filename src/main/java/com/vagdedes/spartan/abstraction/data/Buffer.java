@@ -1,12 +1,23 @@
 package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 import java.util.Map;
 
 public class Buffer {
 
     private final Map<String, IndividualBuffer> storage;
+
+    public static class IndividualSimpleBuffer {
+
+        public int count;
+
+        public IndividualSimpleBuffer() {
+
+        }
+
+    }
 
     public static class IndividualBuffer {
 
@@ -18,7 +29,7 @@ public class Buffer {
         }
 
         public long ticksPassed() {
-            return TPS.tick() - this.start;
+            return AlgebraUtils.integerCeil((System.currentTimeMillis() - this.start) / (double) TPS.tickTime);
         }
 
         public int set(int amount) {
@@ -42,7 +53,7 @@ public class Buffer {
 
         public void reset() {
             this.count = 0;
-            this.start = TPS.tick();
+            this.start = System.currentTimeMillis();
         }
 
         public int count(int amount, int maxTicks) {

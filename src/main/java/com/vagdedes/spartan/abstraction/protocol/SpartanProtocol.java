@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
 import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.TimerBalancer;
+import com.vagdedes.spartan.abstraction.data.CheckBoundData;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
@@ -9,14 +10,13 @@ import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.protocol.Packet_Teleport;
+import com.vagdedes.spartan.utils.minecraft.entity.AxisAlignedBB;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class SpartanProtocol {
 
@@ -25,6 +25,7 @@ public class SpartanProtocol {
     public final TimerBalancer timerBalancer;
     private boolean onGround, onGroundFrom;
     private int hashPosBuffer;
+    public int rightClickCounter;
     public boolean mutateTeleport, sprinting, sneaking, vehicleStatus;
     public boolean loaded, simulationFlag, teleported;
     private Location location;
@@ -38,10 +39,18 @@ public class SpartanProtocol {
     public long tickTime;
     public final MultiVersion.MCVersion version;
 
+    private Set<AxisAlignedBB> axisMatrixCache;
+    private CheckBoundData checkBoundData;
+    public long placeTime, placeHash;
+    public BlockPlaceEvent oldBlockEvent;
+
+
     public SpartanProtocol(Player player) {
         this.player = player;
         this.version = MultiVersion.get(player);
 
+        this.placeTime = System.currentTimeMillis();
+        this.placeHash = 0;
         this.onGround = false;
         this.onGroundFrom = false;
         this.sprinting = false;
@@ -62,9 +71,15 @@ public class SpartanProtocol {
         this.keepEntity = 0;
         this.tickTime = System.currentTimeMillis();
 
+        this.rightClickCounter = 0;
         this.positionHistory = new LinkedList<>();
         this.hashPosBuffer = 0;
         this.claimedVelocity = null;
+
+        this.axisMatrixCache = new HashSet<>();
+        this.checkBoundData = null;
+        this.oldBlockEvent = null;
+
 
         this.setProfile(ResearchEngine.getPlayerProfile(this, false));
     }
@@ -178,4 +193,15 @@ public class SpartanProtocol {
         return SpartanBukkit.packetsEnabled() && !this.spartanPlayer.isBedrockPlayer();
     }
 
+    public Set<AxisAlignedBB> getAxisMatrixCache() {
+        return this.axisMatrixCache;
+    }
+
+    public CheckBoundData getCheckBoundData() {
+        return this.checkBoundData;
+    }
+
+    public void setCheckBoundData(CheckBoundData checkBoundData) {
+        this.checkBoundData = checkBoundData;
+    }
 }

@@ -10,6 +10,7 @@ import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
@@ -18,7 +19,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MovementProcessing {
 
@@ -95,7 +98,7 @@ public class MovementProcessing {
             player.movement.setLastLiquid(LAVA);
             return true;
         } else {
-            for (double i = 0.0; i < player.getInstance().getEyeHeight(); i++) {
+            for (double i = 0.0; i < Math.ceil(player.getInstance().getEyeHeight()); i++) {
                 for (SpartanLocation locationModified : location.getSurroundingLocations(GroundUtils.boundingBox, i, GroundUtils.boundingBox)) {
                     if (locationModified.getBlock().isLiquidOrWaterLogged(false)) {
                         player.movement.setLastLiquid(WATER);
@@ -122,9 +125,12 @@ public class MovementProcessing {
 
             if (blockY > minY) {
                 SpartanLocation locationModified = location.clone();
+                int max = (blockY - minY),
+                        playerHeight = AlgebraUtils.integerCeil(player.getInstance().getEyeHeight());
+                Set<Integer> emptyNonLiquid = new HashSet<>(max),
+                        fullNonLiquid = new HashSet<>(max);
 
-                for (int i = 0; i <= (blockY - minY); i++) {
-                    int nonLiquid = 0;
+                for (int i = 0; i <= max; i++) {
                     Collection<SpartanLocation> locations = locationModified.clone().add(0, -i, 0).getSurroundingLocations(GroundUtils.boundingBox, 0, GroundUtils.boundingBox);
 
                     for (SpartanLocation loc : locations) {
@@ -132,18 +138,26 @@ public class MovementProcessing {
                         Material type = block.getType();
 
                         if (type == Material.SOUL_SAND) {
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "soul-sand", (int) TPS.maximum);
-                            break;
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "soul-sand", AlgebraUtils.integerCeil(TPS.maximum));
+                            return;
                         } else if (type == MAGMA_BLOCK) {
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, (int) TPS.maximum);
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", (int) TPS.maximum);
-                            break;
-                        } else if (BlockUtils.isSolid(type) && !block.isWaterLogged()) {
-                            nonLiquid++;
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
+                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", AlgebraUtils.integerCeil(TPS.maximum));
+                            return;
+                        } else if (BlockUtils.isSolid(type)) {
+                            if (!block.isWaterLogged()) {
+                                fullNonLiquid.add(i);
 
-                            if (nonLiquid == locations.size()) {
-                                break;
+                                if (fullNonLiquid.size() == playerHeight) {
+                                    return;
+                                }
+                            }
+                        } else if (!block.isWaterLogged()) {
+                            emptyNonLiquid.add(i);
+
+                            if (emptyNonLiquid.size() == 8) {
+                                return;
                             }
                         }
                     }
@@ -156,11 +170,21 @@ public class MovementProcessing {
 
     public static boolean canCheck(SpartanPlayer player,
                                    boolean elytra, boolean velocity,
-                                   boolean flight, boolean attributes) {
+                                   boolean flight,
+                                   boolean playerAttributes,
+                                   boolean environmentalAttributes) {
         if ((elytra || !player.movement.isGliding())
                 && (flight || !player.movement.wasFlying())
                 && (velocity || !player.trackers.has(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY))
-                && (attributes || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0)) {
+
+                && (playerAttributes
+                || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0
+                && Attributes.getAmount(player, Attributes.GENERIC_JUMP_STRENGTH) == 0.0)
+
+                && (environmentalAttributes
+                || Attributes.getAmount(player, Attributes.GENERIC_STEP_HEIGHT) == 0.0
+                && Attributes.getAmount(player, Attributes.GENERIC_GRAVITY) == 0.0
+                && Attributes.getAmount(player, Attributes.GENERIC_STEP_HEIGHT) == 0.0)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()
                     || Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
                 List<Entity> entities = player.getNearbyEntities(

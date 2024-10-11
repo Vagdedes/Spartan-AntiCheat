@@ -826,7 +826,7 @@ public class CommandExecution implements CommandExecutor {
                                                 sender.sendMessage(ChatColor.RED + "Seconds must be between 1 and 3600.");
                                                 return true;
                                             }
-                                            t.spartanPlayer.getExecutor(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * ((int) TPS.maximum));
+                                            t.spartanPlayer.getExecutor(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * (AlgebraUtils.integerCeil(TPS.maximum)));
                                         }
                                         String message = ConfigUtils.replaceWithSyntax(t.spartanPlayer, Config.messages.getColorfulString("bypass_message"), hackType)
                                                 .replace("{time}", noSeconds ? "infinite" : String.valueOf(seconds));

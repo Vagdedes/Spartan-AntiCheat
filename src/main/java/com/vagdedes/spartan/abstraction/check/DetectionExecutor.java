@@ -1,65 +1,82 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
-import me.vagdedes.spartan.system.Enums;
 
-public abstract class DetectionExecutor {
+public abstract class DetectionExecutor extends CheckDetection {
 
-    public final CheckExecutor executor;
-    public final Enums.HackType hackType;
-    public final SpartanPlayer player;
+    private final String name;
+    private final boolean def;
 
-    public DetectionExecutor(CheckExecutor executor, Enums.HackType hackType, SpartanPlayer player) {
-        this.executor = this instanceof CheckExecutor ? (CheckExecutor) this : executor;
-        this.hackType = hackType;
-        this.player = player;
+    public DetectionExecutor(CheckExecutor executor, String name, boolean def) {
+        super(executor);
+        this.name = name;
+        this.def = def;
+        this.isEnabled();
+    }
+
+    public DetectionExecutor(DetectionExecutor executor, String name, boolean def) {
+        super(executor.executor);
+        this.name = name;
+        this.def = def;
+        this.isEnabled();
     }
 
     // Separator
 
-    protected final void cancel(String information, double violations, SpartanLocation location,
-                                int cancelTicks, boolean groundTeleport, double damage) {
-        long time = System.currentTimeMillis();
+    public boolean isEnabled() {
+        return this.name == null
+                || this.hackType.getCheck().getBooleanOption(
+                "check_" + this.name,
+                this.def
+        );
+    }
 
-        if (PlayerDetectionSlots.isChecked(player)
-                && executor.canFunction()
-                && !CloudBase.isInformationCancelled(hackType, information)) {
-            executor.violate(
-                    new HackPrevention(
-                            location,
-                            cancelTicks,
-                            groundTeleport,
-                            damage
-                    ),
-                    information,
-                    violations,
-                    time
-            );
+    // Separator
+
+    public final void cancel(String information, double violations, SpartanLocation location,
+                             int cancelTicks, boolean groundTeleport, double damage) {
+        if (this.isEnabled()) {
+            long time = System.currentTimeMillis();
+
+            if (PlayerDetectionSlots.isChecked(this.player)
+                    && this.executor.canFunction()
+                    && !CloudBase.isInformationCancelled(this.hackType, information)) {
+                this.executor.violate(
+                        new HackPrevention(
+                                location,
+                                cancelTicks,
+                                groundTeleport,
+                                damage
+                        ),
+                        information,
+                        violations,
+                        time
+                );
+            }
         }
     }
 
-    protected final void cancel(String information, double violations, SpartanLocation location,
-                                int cancelTicks, boolean groundTeleport) {
+    public final void cancel(String information, double violations, SpartanLocation location,
+                             int cancelTicks, boolean groundTeleport) {
         cancel(information, violations, location, cancelTicks, groundTeleport, 0.0);
     }
 
-    protected final void cancel(String information, double violations, SpartanLocation location,
-                                int cancelTicks) {
+    public final void cancel(String information, double violations, SpartanLocation location,
+                             int cancelTicks) {
         cancel(information, violations, location, cancelTicks, false, 0.0);
     }
 
-    protected final void cancel(String information, double violations, SpartanLocation location) {
+    public final void cancel(String information, double violations, SpartanLocation location) {
         cancel(information, violations, location, 0, false, 0.0);
     }
 
-    protected final void cancel(String information, double violations) {
+    public final void cancel(String information, double violations) {
         cancel(information, violations, null, 0, false, 0.0);
     }
 
-    protected final void cancel(String information) {
+    public final void cancel(String information) {
         cancel(information, 1.0, null, 0, false, 0.0);
     }
 

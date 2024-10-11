@@ -1,2 +1,0 @@
-[#] Fixed the java/bedrock edition message not showing properly.
-[#] Fixed an internal code issue that caused a few checks such as Exploits & MorePackets to partly break.

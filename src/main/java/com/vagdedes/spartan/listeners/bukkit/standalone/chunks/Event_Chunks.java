@@ -2,6 +2,7 @@ package com.vagdedes.spartan.listeners.bukkit.standalone.chunks;
 
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.standalone.Event_World;
@@ -213,6 +214,7 @@ public class Event_Chunks implements Listener {
     private void WorldUnload(WorldUnloadEvent e) {
         World world = e.getWorld();
         Map<Long, ChunkData> subMap = map.remove(world);
+        NPCManager.clear(world);
 
         if (subMap != null) {
             for (ChunkData data : subMap.values()) {

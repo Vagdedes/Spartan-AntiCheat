@@ -2,10 +2,8 @@ package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
@@ -32,7 +30,7 @@ public class SpartanPlayerMovement {
             eventPreviousVertical,
             eventBox,
             eventPreviousBox;
-    private final Map<Long, List<SpartanLocation>> locations;
+    private final Map<Long, SpartanLocation> locations;
     private int
             airTicks;
     private long
@@ -56,9 +54,7 @@ public class SpartanPlayerMovement {
                 ProtocolLib.getLocation(parent.getInstance())
         );
         this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
-        List<SpartanLocation> list = new ArrayList<>();
-        list.add(location);
-        this.locations.put(TPS.tick(), list);
+        this.locations.put(System.currentTimeMillis(), location);
 
         this.location = location;
         this.eventFrom = location;
@@ -124,8 +120,10 @@ public class SpartanPlayerMovement {
 
     public boolean isInLiquids() {
         return this.isSwimming()
-                || TPS.tick() - this.lastLiquidTicks <=
-                Math.max(AlgebraUtils.integerCeil(Latency.getDelay(this.parent)), 5L);
+                || System.currentTimeMillis() - this.lastLiquidTicks <= Math.max(
+                this.parent.protocol.getPing(),
+                5L * TPS.tickTime
+        );
     }
 
     public Material getLastLiquidMaterial() {
@@ -133,7 +131,7 @@ public class SpartanPlayerMovement {
     }
 
     public void setLastLiquid(Material material) {
-        lastLiquidTicks = TPS.tick();
+        lastLiquidTicks = System.currentTimeMillis();
         lastLiquidMaterial = material;
     }
 
@@ -144,7 +142,7 @@ public class SpartanPlayerMovement {
     // Separator
 
     public boolean isSwimming() {
-        if (artificialSwimming >= TPS.tick()) {
+        if (artificialSwimming >= System.currentTimeMillis()) {
             return true;
         } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             return this.parent.getInstance().isSwimming();
@@ -154,7 +152,7 @@ public class SpartanPlayerMovement {
     }
 
     public void setArtificialSwimming() {
-        this.artificialSwimming = TPS.tick() + 1;
+        this.artificialSwimming = System.currentTimeMillis() + TPS.tickTime;
     }
 
     // Separator
@@ -290,17 +288,10 @@ public class SpartanPlayerMovement {
     // Separator
 
     public List<SpartanLocation> getLocations() {
-        List<SpartanLocation> toReturn = new ArrayList<>(this.locations.size());
-
-        synchronized (this.locations) {
-            for (List<SpartanLocation> list : locations.values()) {
-                toReturn.addAll(list);
-            }
-        }
-        return toReturn;
+        return new ArrayList<>(this.locations.values());
     }
 
-    public Set<Map.Entry<Long, List<SpartanLocation>>> getLocationEntries() {
+    public Set<Map.Entry<Long, SpartanLocation>> getLocationEntries() {
         synchronized (this.locations) {
             return new HashSet<>(locations.entrySet());
         }
@@ -383,7 +374,7 @@ public class SpartanPlayerMovement {
                     iterator.next();
                     iterator.remove();
                 }
-                this.locations.computeIfAbsent(TPS.tick(), k -> new ArrayList<>()).add(spartanLocation);
+                this.locations.put(System.currentTimeMillis(), spartanLocation);
             }
             this.location = spartanLocation;
             this.setDetectionLocation(spartanLocation, false);

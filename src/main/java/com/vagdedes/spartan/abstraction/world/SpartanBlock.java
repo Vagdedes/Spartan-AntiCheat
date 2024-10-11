@@ -36,9 +36,9 @@ public class SpartanBlock {
     public boolean isLiquidOrWaterLogged(boolean lava) {
         return this.block instanceof Block
                 ? BlockUtils.isLiquidOrWaterLogged((Block) this.block, lava)
-                : BlockUtils.blockDataExists
-                && this.block instanceof BlockData
-                && BlockUtils.isLiquidOrWaterLogged((BlockData) this.block, lava);
+                : this.block instanceof Material
+                ? BlockUtils.isLiquid((Material) this.block)
+                : BlockUtils.blockDataExists && BlockUtils.isLiquidOrWaterLogged((BlockData) this.block, lava);
     }
 
     public boolean isLiquid(Material target) {

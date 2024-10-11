@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
+import com.vagdedes.spartan.abstraction.check.implementation.world.exploits.Exploits;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import me.vagdedes.spartan.system.Enums;
@@ -10,7 +11,7 @@ import org.bukkit.inventory.PlayerInventory;
 public class Elytra {
 
     public static void judge(SpartanPlayer p) {
-        if (Enums.HackType.Exploits.getCheck().getBooleanOption("check_elytra", true)
+        if (((Exploits) p.getExecutor(Enums.HackType.Exploits)).elytra.isEnabled()
                 && !Permissions.isBypassing(p, Enums.HackType.Exploits)) {
             if (p.getInstance().getVehicle() == null) {
                 PlayerInventory inventory = p.getInstance().getInventory();

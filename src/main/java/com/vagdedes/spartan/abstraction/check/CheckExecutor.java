@@ -10,6 +10,7 @@ import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.enchants.CustomEnchantsPlus;
 import com.vagdedes.spartan.compatibility.manual.enchants.EcoEnchants;
+import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
@@ -32,7 +33,7 @@ import org.bukkit.GameMode;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class CheckExecutor extends DetectionExecutor {
+public abstract class CheckExecutor extends CheckDetection {
 
     private static final boolean v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
     public static final String
@@ -40,23 +41,15 @@ public abstract class CheckExecutor extends DetectionExecutor {
             javaPlayerIdentifier = "Java:";
 
     private final long creation;
-    protected final DetectionExecutor[] detections;
     private long notifications;
     private CancelCause disableCause, silentCause;
     private HackPrevention prevention;
     private boolean cancelled;
 
-    public CheckExecutor(Enums.HackType hackType, SpartanPlayer player, int detections) {
-        super(null, hackType, player);
+    public CheckExecutor(Enums.HackType hackType, SpartanPlayer player) {
+        super(hackType, player);
         this.creation = System.currentTimeMillis();
-        this.detections = new DetectionExecutor[detections];
         this.prevention = new HackPrevention();
-    }
-
-    protected final void addDetections(DetectionExecutor[] detections) {
-        for (int i = 0; i < detections.length; i++) {
-            this.detections[i] = detections[i];
-        }
     }
 
     // Run
@@ -95,6 +88,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 && !player.protocol.isLoading()
                 && (!v1_8 || player.getInstance().getGameMode() != GameMode.SPECTATOR)
                 && hackType.getCheck().isEnabled(player.dataType, player.getWorld().getName())
+                && Attributes.getAmount(player, Attributes.GENERIC_SCALE) == 0.0
                 && canRun()
                 && !Permissions.isBypassing(player, hackType);
     }
@@ -122,6 +116,9 @@ public abstract class CheckExecutor extends DetectionExecutor {
     }
 
     public final void addDisableCause(String reason, String pointer, int ticks) {
+        if (reason == null) {
+            reason = this.hackType.getCheck().getName();
+        }
         if (disableCause != null) {
             disableCause.merge(new CancelCause(reason, pointer, ticks));
         } else {
@@ -422,14 +419,14 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 && detected.movement.getLocation().distance(this.player.movement.getLocation()) <= PlayerUtils.chunk)) {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {
-            return (int) TPS.maximum;
+            return AlgebraUtils.integerCeil(TPS.maximum);
         }
     }
 
     public final boolean canSendNotification(Object detected) {
-        long tick = TPS.tick();
+        long time = System.currentTimeMillis();
 
-        if (this.notifications <= tick) {
+        if (this.notifications <= time) {
             boolean player = detected instanceof SpartanPlayer;
             int ticks = this.getNotificationTicksCooldown(
                     player ? (SpartanPlayer) detected : null
@@ -439,7 +436,7 @@ public abstract class CheckExecutor extends DetectionExecutor {
                 if (player
                         ? ((SpartanPlayer) detected).protocol.getProfile().evidence.surpassed(this.hackType, PlayerEvidence.notificationProbability)
                         : ResearchEngine.getPlayerProfile(detected.toString(), true).evidence.surpassed(this.hackType, PlayerEvidence.notificationProbability)) {
-                    this.notifications = tick + ticks;
+                    this.notifications = time + (ticks * TPS.tickTime);
                     return true;
                 }
             } else {

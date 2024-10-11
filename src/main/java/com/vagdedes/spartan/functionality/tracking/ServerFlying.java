@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.IrregularMovements;
 import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
@@ -9,7 +10,7 @@ import me.vagdedes.spartan.system.Enums;
 public class ServerFlying {
 
     static void run(SpartanPlayer p) {
-        if (Enums.HackType.IrregularMovements.getCheck().getBooleanOption("limit_server_flying", false)
+        if (((IrregularMovements) p.getExecutor(Enums.HackType.IrregularMovements)).limitServerFlying.isEnabled()
                 && !Permissions.isBypassing(p, Enums.HackType.IrregularMovements)
                 && p.movement.isFlying()
                 && !p.movement.isGliding()

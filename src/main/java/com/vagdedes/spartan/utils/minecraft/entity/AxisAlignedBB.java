@@ -355,4 +355,16 @@ public class AxisAlignedBB {
     public double getMaxZ() {
         return this.maxZ;
     }
+
+    public boolean isEqual(AxisAlignedBB bb) {
+        if (this == bb) return true;
+        if (bb == null) return false;
+
+        return this.minX == bb.minX &&
+                        this.minY == bb.minY &&
+                        this.minZ == bb.minZ &&
+                        this.maxX == bb.maxX &&
+                        this.maxY == bb.maxY &&
+                        this.maxZ == bb.maxZ;
+    }
 }

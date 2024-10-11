@@ -1,8 +1,10 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.MorePackets;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,9 +24,13 @@ public class Event_Teleport implements Listener {
 
         if (protocol.packetsEnabled() == packets) {
             SpartanPlayer p = protocol.spartanPlayer;
+
             // Object
             p.resetData(false);
-            p.movement.judgeGround();
+
+            // Detections
+            p.getExecutor(Enums.HackType.MorePackets).handle(false, MorePackets.TELEPORT);
+            p.getExecutor(Enums.HackType.IrregularMovements).handle(false, null);
         }
     }
 

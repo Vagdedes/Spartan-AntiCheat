@@ -7,6 +7,7 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -62,6 +63,19 @@ public class NPCManager implements Listener {
             synchronized (list) {
                 for (SpartanNPC npc : list) {
                     npc.remove();
+                }
+                list.clear();
+            }
+        }
+    }
+
+    public static void clear(World world) {
+        if (!list.isEmpty()) {
+            synchronized (list) {
+                for (SpartanNPC npc : list) {
+                    if (world.equals(npc.armorStand.getWorld())) {
+                        npc.remove();
+                    }
                 }
                 list.clear();
             }

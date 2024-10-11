@@ -28,7 +28,7 @@ public class SpartanNPC {
     );
     private static final String backupName = "IdealisticAI";
 
-    private final ArmorStand armorStand;
+    final ArmorStand armorStand;
     final SpartanLocation location;
     private double handPose, headPose;
 

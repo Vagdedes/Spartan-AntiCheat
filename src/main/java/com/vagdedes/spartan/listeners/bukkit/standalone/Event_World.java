@@ -14,7 +14,6 @@ import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -43,8 +42,11 @@ public class Event_World implements Listener {
         SpartanBukkit.runRepeatingTask(() -> {
             if (SpartanBukkit.hasPlayerCount()) {
                 if (MultiVersion.folia || SpartanBukkit.packetsEnabled()) {
-                    List<World> worlds = Bukkit.getWorlds();
+                    Set<World> worlds = new HashSet<>();
 
+                    for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
+                        worlds.add(protocol.spartanPlayer.getWorld());
+                    }
                     for (World world : worlds) {
                         Map<Long, List<Entity>> perChunkEntities = new LinkedHashMap<>();
 

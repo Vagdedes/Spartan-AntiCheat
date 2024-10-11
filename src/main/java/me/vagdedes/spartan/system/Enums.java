@@ -49,7 +49,7 @@ public class Enums {
         ),
         ImpossibleActions(
                 HackCategoryType.WORLD,
-                com.vagdedes.spartan.abstraction.check.implementation.world.ImpossibleActions.class,
+                com.vagdedes.spartan.abstraction.check.implementation.world.impossibleactions.ImpossibleActions.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to execute actions",

@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 import java.util.Map;
 
@@ -18,8 +19,8 @@ public class Cooldowns {
         if (object == null) {
             return 0;
         } else {
-            object -= TPS.tick();
-            return object < 0L ? 0 : object.intValue();
+            object -= System.currentTimeMillis();
+            return object < 0L ? 0 : AlgebraUtils.integerCeil(object / (double) TPS.tickTime);
         }
     }
 
@@ -28,12 +29,12 @@ public class Cooldowns {
     }
 
     public void add(String name, int ticks) {
-        storage.put(name, TPS.tick() + ticks);
+        storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
     }
 
     public void add(String[] names, int ticks) {
         for (String name : names) {
-            storage.put(name, TPS.tick() + ticks);
+            storage.put(name, System.currentTimeMillis() + (ticks * TPS.tickTime));
         }
     }
 

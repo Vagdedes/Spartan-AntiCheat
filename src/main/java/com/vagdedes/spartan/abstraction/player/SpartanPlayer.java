@@ -187,6 +187,8 @@ public class SpartanPlayer {
         for (PlayerTrackers.TrackerType handlerType : PlayerTrackers.TrackerType.values()) {
             this.trackers.remove(handlerType);
         }
+        this.movement.resetAirTicks();
+
         if (checks) {
             this.registerExecutors(resetChecks);
         }
@@ -300,7 +302,7 @@ public class SpartanPlayer {
 
     public void handleReceivedDamage(EntityDamageEvent event) {
         boolean abstractVelocity = false;
-        this.trackers.add(PlayerTrackers.TrackerType.DAMAGE, (int) TPS.maximum);
+        this.trackers.add(PlayerTrackers.TrackerType.DAMAGE, AlgebraUtils.integerCeil(TPS.maximum));
         ItemStack activeItem;
 
         if (event instanceof EntityDamageByEntityEvent) {
@@ -565,7 +567,7 @@ public class SpartanPlayer {
     // Separator
 
     public World getWorld() {
-        return movement.getLocation().world;
+        return movement.getRawLocation().world;
     }
 
     public boolean isOutsideOfTheBorder(double deviation) {

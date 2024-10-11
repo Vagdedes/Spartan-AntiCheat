@@ -1297,20 +1297,12 @@ public class BlockUtils {
     }
 
     public static boolean isWaterLogged(BlockData blockData) {
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            return blockData instanceof Waterlogged
-                    && ((Waterlogged) blockData).isWaterlogged();
-        }
-        return false;
+        return blockData instanceof Waterlogged
+                && ((Waterlogged) blockData).isWaterlogged();
     }
 
     public static boolean isWaterLogged(Block block) {
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            BlockData blockData = block.getBlockData();
-            return blockData instanceof Waterlogged
-                    && ((Waterlogged) blockData).isWaterlogged();
-        }
-        return false;
+        return blockDataExists && isWaterLogged(block.getBlockData());
     }
 
     public static boolean isLiquidOrWaterLogged(Block block, boolean lava) {
@@ -1319,12 +1311,10 @@ public class BlockUtils {
     }
 
     public static boolean isLiquidOrWaterLogged(BlockData blockData, boolean lava) {
-        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            return blockData instanceof Waterlogged
-                    && ((Waterlogged) blockData).isWaterlogged()
-                    && (lava || blockData.getMaterial() != MaterialUtils.get("lava"));
-        }
-        return isLiquid(blockData.getMaterial())
+        return (blockDataExists
+                && blockData instanceof Waterlogged
+                && ((Waterlogged) blockData).isWaterlogged()
+                || isLiquid(blockData.getMaterial()))
                 && (lava || blockData.getMaterial() != MaterialUtils.get("lava"));
     }
 

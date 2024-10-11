@@ -213,7 +213,10 @@ public class CombatUtils {
                 && !player.movement.wasFlying()
                 && player.getInstance().getVehicle() == null
                 && !mcMMO.hasGeneralAbility(player)
-                && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0) {
+                && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0
+                && Attributes.getAmount(player, Attributes.GENERIC_ATTACK_SPEED) == 0.0
+                && Attributes.getAmount(player, Attributes.GENERIC_KNOCKBACK_RESISTANCE) == 0.0
+                && Attributes.getAmount(player, Attributes.PLAYER_ENTITY_INTERACTION_RANGE) == 0.0) {
             GameMode gameMode = player.getInstance().getGameMode();
             return gameMode == GameMode.SURVIVAL
                     || gameMode == GameMode.ADVENTURE

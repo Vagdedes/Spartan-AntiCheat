@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.player;
 
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class PlayerTrackers {
                     trackerType,
                     Math.max(
                             enable.getOrDefault(trackerType, 0L),
-                            TPS.tick() + ticks
+                            System.currentTimeMillis() + (ticks * TPS.tickTime)
                     )
             );
         }
@@ -67,7 +68,7 @@ public class PlayerTrackers {
                     key,
                     Math.max(
                             map.getOrDefault(key, 0L),
-                            TPS.tick() + ticks
+                            System.currentTimeMillis() + (ticks * TPS.tickTime)
                     )
             );
         }
@@ -77,7 +78,7 @@ public class PlayerTrackers {
         disable.put(trackerType,
                 Math.max(
                         disable.getOrDefault(trackerType, 0L),
-                        TPS.tick() + ticks
+                        System.currentTimeMillis() + (ticks * TPS.tickTime)
                 )
         );
     }
@@ -105,22 +106,22 @@ public class PlayerTrackers {
         }
     }
 
-    private boolean has(long ticks) {
-        return ticks == -1L || ticks > TPS.tick();
+    private boolean has(long time) {
+        return time == -1L || time > System.currentTimeMillis();
     }
 
     public boolean has() {
         if (!enable.isEmpty()) {
-            for (long ticks : enable.values()) {
-                if (has(ticks)) {
+            for (long time : enable.values()) {
+                if (has(time)) {
                     return true;
                 }
             }
         }
         if (!child.isEmpty()) {
             for (Map<String, Long> sub : child.values()) {
-                for (long ticks : sub.values()) {
-                    if (has(ticks)) {
+                for (long time : sub.values()) {
+                    if (has(time)) {
                         return true;
                     }
                 }
@@ -139,8 +140,9 @@ public class PlayerTrackers {
     }
 
     public boolean has(TrackerType trackerType) {
-        Long ticks = enable.get(trackerType);
-        if (ticks != null && has(ticks)) {
+        Long time = enable.get(trackerType);
+
+        if (time != null && has(time)) {
             return true;
         } else {
             Map<String, Long> map = child.get(trackerType);
@@ -152,16 +154,17 @@ public class PlayerTrackers {
         Map<String, Long> map = child.get(trackerType);
 
         if (map != null) {
-            Long ticks = map.get(key);
-            return ticks != null && has(ticks);
+            Long time = map.get(key);
+
+            return time != null && has(time);
         } else {
             return false;
         }
     }
 
     public boolean isDisabled(TrackerType trackerType) {
-        Long ticks = disable.get(trackerType);
-        return ticks != null && ticks >= TPS.tick();
+        Long time = disable.get(trackerType);
+        return time != null && time >= System.currentTimeMillis();
     }
 
     public int getRemainingTicks(TrackerType trackerType, String key) {
@@ -173,12 +176,12 @@ public class PlayerTrackers {
         return getRemainingTicks(enable.get(trackerType));
     }
 
-    private int getRemainingTicks(Long ticks) {
-        if (ticks == null) {
+    private int getRemainingTicks(Long time) {
+        if (time == null) {
             return 0;
         } else {
-            ticks -= TPS.tick();
-            return ticks < 0 ? 0 : ticks.intValue();
+            time -= System.currentTimeMillis();
+            return time < 0L ? 0 : AlgebraUtils.integerCeil(time / (double) TPS.tickTime);
         }
     }
 
