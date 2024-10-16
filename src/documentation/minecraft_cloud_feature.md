@@ -1,4 +1,4 @@
-# <a href="https://www.vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
 
 ## Please visit the URL:
 https://github.com/IdealisticAI/Products-And-Services/blob/main/minecraft_cloud_feature.md
