@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon
+# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
 
 ## sql.yml Example
 ```
