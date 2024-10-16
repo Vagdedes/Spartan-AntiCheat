@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
 
 ## 1. Questions
 Ask your question in the respective channel.
