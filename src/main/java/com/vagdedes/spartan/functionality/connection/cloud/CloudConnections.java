@@ -7,7 +7,6 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.net.URLEncoder;
@@ -108,21 +107,6 @@ public class CloudConnections {
             CloudBase.throwError(e, "hasAccount:GET");
         }
         return true;
-    }
-
-    static int getDetectionSlots() { // Once
-        try {
-            String[] results = RequestUtils.get(StringUtils.decodeBase64(CloudBase.website) + "?" + CloudBase.identification
-                    + "&action=get&data=detectionSlots&version=" + CloudBase.version
-                    + "&value=" + URLEncoder.encode(Bukkit.getPort() + CloudBase.separator + SpartanBukkit.getPlayerCount(), "UTF-8"));
-
-            if (results.length == 1 && AlgebraUtils.validInteger(results[0])) {
-                return Integer.parseInt(results[0]);
-            }
-        } catch (Exception e) {
-            CloudBase.throwError(e, "detectionSlots:GET");
-        }
-        return 5;
     }
 
     static String[][] getStaffAnnouncements() { // Once

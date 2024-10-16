@@ -8,12 +8,10 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -24,7 +22,6 @@ import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import me.vagdedes.spartan.system.Enums.Permission;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -69,14 +66,8 @@ public class MainMenu extends InventoryMenu {
 
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
-        int slots = CloudBase.getDetectionSlots();
 
         lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled() ? "Enabled" : "Disabled"));
-        if (slots <= 0) {
-            lore.add("§7Detection Slots§8: §aUnlimited");
-        } else {
-            lore.add("§7Detection Slots§8: §a" + slots + " (" + PlayerDetectionSlots.getRemaining() + " remaining)");
-        }
         lore.add("§7Detections Available§8: "
                 + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
                 + " §8/ "
@@ -87,8 +78,7 @@ public class MainMenu extends InventoryMenu {
         long maxMemory = runtime.maxMemory();
         lore.add("§7Server Memory Usage§8: §a" + AlgebraUtils.cut(((maxMemory - runtime.freeMemory()) / ((double) maxMemory)) * 100.0, 2) + "%");
         lore.add("");
-        lore.add("§7Left click to §amanage checks§7.");
-        lore.add("§7Right click to §clearn about Detection Slots§7.");
+        lore.add("§7Click to §amanage checks§7.");
         add("§aManagement", lore, new ItemStack(MaterialUtils.get("crafting_table")), 47);
 
         // Live Customer Support
@@ -193,11 +183,7 @@ public class MainMenu extends InventoryMenu {
                         DiscordMemberCount.discordURL
                 );
             } else {
-                if (clickType == ClickType.LEFT) {
-                    InteractiveInventory.manageChecks.open(player);
-                } else if (clickType == ClickType.RIGHT) {
-                    player.sendImportantMessage("§6Learn more about Detection Slots§8: §e§n" + SpartanEdition.patreonURL);
-                }
+                InteractiveInventory.manageChecks.open(player);
             }
 
         } else if (item.startsWith("Page")) {

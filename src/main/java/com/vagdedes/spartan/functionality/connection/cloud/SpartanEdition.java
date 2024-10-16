@@ -5,7 +5,6 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -128,13 +127,7 @@ public class SpartanEdition {
             attemptVersionNotification(player, null);
             return;
         }
-        List<SpartanPlayer> players = SpartanBukkit.getPlayers();
 
-        if (CloudBase.getDetectionSlots() > 0
-                && PlayerDetectionSlots.getRemaining() == 0) {
-            attemptLimitNotification(player);
-            return;
-        }
         if (missingDetections.length > 0) {
             if (notifyCache) {
                 attemptVersionNotification(player, missingDetections[0]);
@@ -150,6 +143,7 @@ public class SpartanEdition {
                     attemptVersionNotification(player, missingDetections[0]);
                     return;
                 }
+                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
                 players.remove(player);
                 int size = players.size();
                 List<PlayerProfile> checkedProfiles;
@@ -219,14 +213,6 @@ public class SpartanEdition {
         }
 
         if (AwarenessNotifications.canSend(player.protocol.getUUID(), "alternative-version", notificationCooldown)) {
-            player.sendImportantMessage(message);
-        }
-    }
-
-    private static void attemptLimitNotification(SpartanPlayer player) {
-        String message = AwarenessNotifications.getNotification(limitNotificationMessage);
-
-        if (AwarenessNotifications.canSend(player.protocol.getUUID(), "limit-notification", notificationCooldown)) {
             player.sendImportantMessage(message);
         }
     }

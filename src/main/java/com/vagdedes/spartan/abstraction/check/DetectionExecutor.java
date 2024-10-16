@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 
 public abstract class DetectionExecutor extends CheckDetection {
 
@@ -40,8 +39,7 @@ public abstract class DetectionExecutor extends CheckDetection {
         if (this.isEnabled()) {
             long time = System.currentTimeMillis();
 
-            if (PlayerDetectionSlots.isChecked(this.player)
-                    && this.executor.canFunction()
+            if (this.executor.canFunction()
                     && !CloudBase.isInformationCancelled(this.hackType, information)) {
                 this.executor.violate(
                         new HackPrevention(

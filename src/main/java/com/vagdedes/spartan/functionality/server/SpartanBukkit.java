@@ -113,7 +113,7 @@ public class SpartanBukkit {
 
     public static SpartanProtocol getProtocol(int entityID) {
         for (SpartanProtocol value : playerProtocol.values()) {
-            if (value.player.getEntityId() == entityID) {
+            if (value.spartanPlayer.getEntityId() == entityID) {
                 return value;
             }
         }

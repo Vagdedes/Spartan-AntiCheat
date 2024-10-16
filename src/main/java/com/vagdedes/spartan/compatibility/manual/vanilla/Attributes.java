@@ -59,39 +59,40 @@ public class Attributes {
 
     public static double getAmount(SpartanPlayer p, String attributeString) {
         if (classExists && Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
-            Attribute attribute = Attribute.valueOf(attributeString);
+            for (Attribute attribute : Attribute.values()) {
+                if (attribute.name().equals(attributeString)) {
+                    PlayerInventory inventory = p.getInstance().getInventory();
+                    int modifiersCount = 0;
+                    double amount = 0.0;
 
-            if (attribute != null) {
-                PlayerInventory inventory = p.getInstance().getInventory();
-                int modifiersCount = 0;
-                double amount = 0.0;
+                    for (ItemStack itemStack : new ItemStack[]{
+                            inventory.getHelmet(),
+                            inventory.getChestplate(),
+                            inventory.getLeggings(),
+                            inventory.getBoots(),
+                            inventory.getItemInHand(),
+                            MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? inventory.getItemInOffHand() : null
+                    }) {
+                        if (itemStack != null && itemStack.hasItemMeta()) {
+                            ItemMeta meta = itemStack.getItemMeta();
 
-                for (ItemStack itemStack : new ItemStack[]{
-                        inventory.getHelmet(),
-                        inventory.getChestplate(),
-                        inventory.getLeggings(),
-                        inventory.getBoots(),
-                        inventory.getItemInHand(),
-                        MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9) ? inventory.getItemInOffHand() : null
-                }) {
-                    if (itemStack != null && itemStack.hasItemMeta()) {
-                        ItemMeta meta = itemStack.getItemMeta();
+                            if (meta != null && meta.hasAttributeModifiers()) {
+                                Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(attribute);
 
-                        if (meta != null && meta.hasAttributeModifiers()) {
-                            Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(attribute);
-
-                            if (modifiers != null && !modifiers.isEmpty()) {
-                                for (AttributeModifier modifier : modifiers) {
-                                    modifiersCount++;
-                                    amount = Math.max(amount, modifier.getAmount());
+                                if (modifiers != null && !modifiers.isEmpty()) {
+                                    for (AttributeModifier modifier : modifiers) {
+                                        modifiersCount++;
+                                        amount = Math.max(amount, modifier.getAmount());
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                if (modifiersCount > 0) {
-                    return amount;
+                    if (modifiersCount > 0) {
+                        return amount;
+                    }
+                    break;
                 }
             }
         }

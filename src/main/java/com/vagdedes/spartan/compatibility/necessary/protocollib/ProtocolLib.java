@@ -12,6 +12,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 public class ProtocolLib {
@@ -70,6 +71,18 @@ public class ProtocolLib {
             }
         } else {
             return entity.getUniqueId();
+        }
+    }
+
+    public static int getEntityID(Entity entity) {
+        if (entity instanceof Player) {
+            if (ProtocolLib.isTemporary((Player) entity)) {
+                return new Random().nextInt();
+            } else {
+                return entity.getEntityId();
+            }
+        } else {
+            return entity.getEntityId();
         }
     }
 

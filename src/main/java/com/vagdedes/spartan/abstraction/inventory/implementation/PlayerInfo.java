@@ -13,7 +13,6 @@ import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -167,7 +166,6 @@ public class PlayerInfo extends InventoryMenu {
 
         Check.DataType dataType = isOnline ? player.dataType : null;
         boolean notChecked = isOnline
-                && !PlayerDetectionSlots.isChecked(player)
                 && Config.isEnabled(player.dataType);
 
         for (HackType hackType : Enums.HackType.values()) {

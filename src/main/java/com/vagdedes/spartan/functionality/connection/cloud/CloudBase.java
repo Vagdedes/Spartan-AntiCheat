@@ -32,8 +32,7 @@ public class CloudBase {
             connectionRefreshCooldown = 0L,
             connectionFailedCooldown = 0L;
     private static final long refreshTime = 60_000L;
-    private static int outdatedVersion = AutoUpdater.NOT_CHECKED,
-            detectionSlots;
+    private static int outdatedVersion = AutoUpdater.NOT_CHECKED;
 
     // Parameters
     static String identification = "", token = null;
@@ -69,12 +68,6 @@ public class CloudBase {
 
     public static String getRawToken() {
         return token;
-    }
-
-    // Separator
-
-    public static int getDetectionSlots() {
-        return detectionSlots;
     }
 
     // Separator
@@ -322,10 +315,6 @@ public class CloudBase {
                 }
             });
 
-            // Separator
-            SpartanBukkit.connectionThread.executeIfSyncElseHere(
-                    () -> detectionSlots = CloudConnections.getDetectionSlots()
-            );
         }
     }
 

@@ -27,7 +27,7 @@ public class Packet_Join extends PacketAdapter {
         if (protocol.spartanPlayer.isBedrockPlayer()) {
             return;
         }
-        Packet_LagCompensation.newPacket(player.getEntityId());
+        Packet_LagCompensation.newPacket(protocol.spartanPlayer.getEntityId());
     }
 
 }

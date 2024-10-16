@@ -3,6 +3,7 @@ package com.vagdedes.spartan.abstraction.inventory.implementation;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
@@ -143,7 +144,7 @@ public class ManageChecks extends InventoryMenu {
         List<String> lore = new ArrayList<>(30);
 
         for (String s : hackType.description) {
-            lore.add("§e" + s);
+            lore.add("§7" + s);
         }
 
         // Separator
@@ -165,10 +166,12 @@ public class ManageChecks extends InventoryMenu {
         }
 
         // Separator
+        boolean preventionsOff = ResearchEngine.getRequiredPlayers(hackType, PlayerEvidence.preventionProbability) == 0,
+                punishmentsOff = ResearchEngine.getRequiredPlayers(hackType, PlayerEvidence.punishmentProbability) == 0;
         lore.add("");
         lore.add((enabled ? "§a" : "§c") + "Enabled §8/ "
-                + (silent ? "§a" : "§c") + "Silent §8/ "
-                + (punish ? "§a" : "§c") + "Punishments §8/ "
+                + (silent ? (preventionsOff ? "§e" : "§a") : "§c") + "Silent §8/ "
+                + (punish ? (punishmentsOff ? "§e" : "§a") : "§c") + "Punishments §8/ "
                 + (bypassing ? "§a" : "§c") + "Bypassing");
         int counter = 0;
 
@@ -194,6 +197,13 @@ public class ManageChecks extends InventoryMenu {
 
         // Separator
 
+        if (silent && preventionsOff
+                || punish && punishmentsOff) {
+            lore.add("");
+            lore.add("§eYellow text in preventions & punishments");
+            lore.add("§7indicate the check is still collecting");
+            lore.add("§7data and will fully enable in the future.");
+        }
         if (enabled && silent) {
             item.addUnsafeEnchantment(EnchantmentUtils.DURABILITY, 1);
         }

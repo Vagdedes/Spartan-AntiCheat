@@ -61,7 +61,7 @@ public class ConfigUtils {
         message = replace(message, "{uuid}", p.protocol.getUUID().toString());
         message = replace(message, "{ping}", String.valueOf(p.protocol.getPing()));
         message = replace(message, "{world}", worldName);
-        message = replace(message, "{health}", String.valueOf(p.getInstance().getHealth()));
+        message = replace(message, "{health}", String.valueOf(p.getHealth()));
         message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());
         message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
         message = replace(message, "{y}", String.valueOf(loc.getBlockY()));

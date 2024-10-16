@@ -426,16 +426,20 @@ public class SpartanPlayerMovement {
 
     // Separator
 
-    private void judgeGround(boolean increase) {
+    private boolean judgeGround(boolean increase) {
         if (this.parent.isOnGround(false)) {
             this.resetAirTicks();
-        } else if (increase) {
-            this.airTicks++;
+            return true;
+        } else {
+            if (increase) {
+                this.airTicks++;
+            }
+            return false;
         }
     }
 
-    public void judgeGround() {
-        this.judgeGround(false);
+    public boolean judgeGround() {
+        return this.judgeGround(false);
     }
 
     public void resetAirTicks() {

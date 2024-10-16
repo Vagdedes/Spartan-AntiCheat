@@ -187,7 +187,9 @@ public class SpartanPlayer {
         for (PlayerTrackers.TrackerType handlerType : PlayerTrackers.TrackerType.values()) {
             this.trackers.remove(handlerType);
         }
-        this.movement.resetAirTicks();
+        if (!this.movement.judgeGround()) {
+            this.movement.resetAirTicks();
+        }
 
         if (checks) {
             this.registerExecutors(resetChecks);
@@ -370,6 +372,20 @@ public class SpartanPlayer {
         } else {
             return 1.0f;
         }
+    }
+
+    // Separator
+
+    public double getHealth() {
+        return ProtocolLib.isTemporary(this.getInstance())
+                ? 0.0
+                : this.getInstance().getHealth();
+    }
+
+    public int getEntityId() {
+        return ProtocolLib.isTemporary(this.getInstance())
+                ? new Random().nextInt()
+                : this.getInstance().getEntityId();
     }
 
     // Separator

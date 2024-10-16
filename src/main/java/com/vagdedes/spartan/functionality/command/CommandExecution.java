@@ -5,14 +5,12 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
-import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
-import com.vagdedes.spartan.functionality.performance.PlayerDetectionSlots;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -49,7 +47,6 @@ public class CommandExecution implements CommandExecutor {
                                          boolean documentation) {
         if (!isPlayer || Permissions.has((Player) sender)) {
             sender.sendMessage("");
-            int slots = CloudBase.getDetectionSlots();
             String command = "§2Spartan AntiCheat";
             command += "\n§8[ §7Detections Available§8: "
                     + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
@@ -57,12 +54,6 @@ public class CommandExecution implements CommandExecutor {
                     + (SpartanEdition.hasDetectionsPurchased(Check.DataType.BEDROCK) ? "§a" : "§c") + Check.DataType.BEDROCK
                     + " §8]";
 
-            if (slots <= 0) {
-                command += "\n§8[ §eDetection Slots§7: §6Unlimited §8]";
-            } else {
-                command += "\n§8[ §4Detection Slots§7: §c" + slots
-                        + " (" + PlayerDetectionSlots.getRemaining() + " remaining) §8]";
-            }
             ClickableMessage.sendURL(
                     sender,
                     command,
