@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Unlimited Detection Slots on Patreon</a>
+# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
 ## Below is a list of reasons you will see when checking a player using the “Player Info” inventory menu. To use this inventory menu, execute the command “/spartan info” to check yourself and “/spartan info playerName” to check someone else.
 
 ### Permission Bypass:
