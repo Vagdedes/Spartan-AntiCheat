@@ -29,8 +29,8 @@ NoFall
 Spider/WallClimb
 Jesus/WaterWalk
 FastLadder/FastClimb
-Timer
-Blink
+Timer (Only Java Edition)
+Blink (Only Java Edition)
 Step
 Derp/NoHead
 FastEat
@@ -77,5 +77,5 @@ Elytra-less Gliding
 Chat Length Bypass
 Dead Player Chat
 Fast Server Flying
-Ground Spoof
+Ground Spoof (Only Java Edition)
 ```
