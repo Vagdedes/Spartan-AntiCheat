@@ -10,9 +10,6 @@ Some detections are not included in the jar file and require a different jar fil
 ### XXXXX Compatibility:
 A plugin/functionality the anti-cheat is aware of is deemed too complex to be supported in a meaningful way, so all checks are disabled to protect your server from instabilities. Click to learn more about compatibilities
 
-### Temporarily Not Checked:
-The Maximum Checked Players has temporarily instructed all checks to not check a player in order to save performance or the Detection Slots feature has run out of available slots.
-
 ### Cancelled:
 Another plugin using Spartan’s Developer API or the anti-cheat itself has instructed a check to stop checking for a certain amount of time. This is likely to be introduced by a first-party or third-party compatibility to prevent instabilities and does not require fixing unless implemented improperly.
 
