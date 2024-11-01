@@ -30,3 +30,6 @@ Notifications which are frequent and contain a lot of useful information. These 
 
 ### Explanation:
 When notification frequency is less than 100 ticks, which is worth 5 seconds, Spartan will pick Detection Notifications. If it is 100 ticks or greater, it will pick Detection Notifications along with Suspicion Notifications. To change the frequency, run the command /spartan notifications X, with X being the ticks-frequency of the Detection Notifications. For example, if you pick 10 you will be notified every 0.5 seconds because the server runs 20 times per second, thus “10 / 20 = 0.5”.
+
+## Giving time for the checks to collect data
+Spartan's collects data per every detection of every check to measure probabilities and figure out who is using hack modules. As more data is collected, Spartan will enable preventions and then punishments for specific detections of checks until eventually all detections of all checks are fully functional. This process may take minutes, hours or even weeks depending on how many players are online in your server at once and how active each player is when they are online. Fortunately, data stored is part of profiles stored in storage and memory, meaning players who help Spartan collect data do not need to be online all the time for their data to be used, as Spartan will use the stored data of offline players just fine.
