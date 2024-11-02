@@ -1,9 +1,11 @@
 package com.vagdedes.spartan.functionality.inventory;
 
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
+import com.vagdedes.spartan.abstraction.check.CheckExecutor;
+import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.inventory.Inventory;
@@ -83,10 +85,20 @@ public class PlayerStateLists {
             List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
 
             for (PlayerProfile playerProfile : playerProfiles) {
-                if (playerProfile.evidence.has(
-                        PlayerEvidence.preventionProbability
-                )) {
-                    list.add(playerProfile);
+                for (CheckExecutor checkExecutor : playerProfile.getExecutors()) {
+                    boolean breakLoop = false;
+
+                    for (DetectionExecutor detectionExecutor : checkExecutor.getDetections()) {
+                        if (detectionExecutor.surpassedProbability(PlayerEvidence.preventionProbability)) {
+                            list.add(playerProfile);
+                            breakLoop = true;
+                            break;
+                        }
+                    }
+
+                    if (breakLoop) {
+                        break;
+                    }
                 }
             }
             return list;
@@ -109,7 +121,7 @@ public class PlayerStateLists {
 
         if (listSize > 0) {
             for (PlayerProfile playerProfile : playerProfiles) {
-                Collection<Enums.HackType> evidenceDetails = playerProfile.evidence.getKnowledgeList(
+                Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidenceList(
                         PlayerEvidence.preventionProbability
                 );
 
@@ -172,7 +184,8 @@ public class PlayerStateLists {
 
     private static <E> List<E> subList(List<E> list, int startIndex, int toIndex) {
         int size = list.size();
-        return startIndex > size ? new ArrayList<>(0) :
-                list.subList(startIndex, Math.min(toIndex, size));
+        return startIndex > size
+                ? new ArrayList<>(0)
+                : list.subList(startIndex, Math.min(toIndex, size));
     }
 }

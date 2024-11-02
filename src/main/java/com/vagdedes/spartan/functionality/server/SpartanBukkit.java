@@ -21,6 +21,7 @@ public class SpartanBukkit {
 
     public static final Threads.ThreadPool
             connectionThread = new Threads.ThreadPool(TPS.tickTime),
+            sqlThread = new Threads.ThreadPool(TPS.tickTime),
             dataThread = new Threads.ThreadPool(1L),
             analysisThread = new Threads.ThreadPool(1L);
 
@@ -91,10 +92,13 @@ public class SpartanBukkit {
         if (ProtocolLib.isTemporary(player)) {
             return new SpartanProtocol(player);
         } else {
-            return playerProtocol.getOrDefault(
-                    player.getUniqueId(),
-                    new SpartanProtocol(player)
-            );
+            SpartanProtocol protocol = playerProtocol.get(player.getUniqueId());
+
+            if (protocol == null) {
+                return new SpartanProtocol(player);
+            } else {
+                return protocol;
+            }
         }
     }
 
@@ -153,7 +157,12 @@ public class SpartanBukkit {
         if (ProtocolLib.isTemporary(player)) {
             return null;
         } else {
-            return playerProtocol.remove(player.getUniqueId());
+            SpartanProtocol protocol = playerProtocol.remove(player.getUniqueId());
+
+            if (protocol != null) {
+                protocol.getProfile().updateOnlinePlayer(null);
+            }
+            return protocol;
         }
     }
 

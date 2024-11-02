@@ -2,7 +2,8 @@ package me.vagdedes.spartan.api;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.moderation.Wave;
@@ -50,8 +51,8 @@ public class BackgroundAPI {
     }
 
     static boolean hasNotificationsEnabled(Player p) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return DetectionNotifications.isEnabled(player);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
+        return DetectionNotifications.isEnabled(protocol);
     }
 
     @Deprecated
@@ -66,12 +67,12 @@ public class BackgroundAPI {
     }
 
     static void setNotifications(Player p, boolean value) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
 
         if (value) {
-            DetectionNotifications.set(player, DetectionNotifications.defaultFrequency);
+            DetectionNotifications.set(protocol, DetectionNotifications.defaultFrequency);
         } else {
-            DetectionNotifications.remove(player);
+            DetectionNotifications.remove(protocol);
         }
     }
 
@@ -82,8 +83,8 @@ public class BackgroundAPI {
 
     static void setNotifications(Player p, int frequency) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
-            SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-            DetectionNotifications.set(player, Math.abs(frequency));
+            SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
+            DetectionNotifications.set(protocol, Math.abs(frequency));
         }
     }
 
@@ -117,7 +118,7 @@ public class BackgroundAPI {
 
     static double getCertainty(Player p, HackType hackType) {
         return PlayerEvidence.probabilityToCertainty(
-                SpartanBukkit.getProtocol(p).getProfile().evidence.getProbability(hackType)
+                SpartanBukkit.getProtocol(p).getProfile().getExecutor(hackType).getExtremeProbability()
         );
     }
 

@@ -8,12 +8,17 @@ public class ProtocolTools {
 
     public static Location readLocation(PacketEvent event) {
         PacketContainer packet = event.getPacket();
-        return new Location(
-                event.getPlayer().getWorld(),
-                packet.getDoubles().read(0),
-                packet.getDoubles().read(1),
-                packet.getDoubles().read(2)
-        );
+
+        if (packet.getDoubles().size() >= 3) {
+            return new Location(
+                    event.getPlayer().getWorld(),
+                    packet.getDoubles().read(0),
+                    packet.getDoubles().read(1),
+                    packet.getDoubles().read(2)
+            );
+        } else {
+            return null;
+        }
     }
 
     public static boolean onGroundPacketLevel(PacketEvent event) {
@@ -22,7 +27,8 @@ public class ProtocolTools {
     }
 
     public static boolean invalidTeleport(Location location) {
-        return location.getX() == 8.5
+        return location == null
+                || location.getX() == 8.5
                 || location.getZ() == 8.5;
     }
 }

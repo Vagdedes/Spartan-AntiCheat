@@ -39,41 +39,41 @@ public class DetectionNotifications {
         return new ArrayList<>(0);
     }
 
-    public static boolean isEnabled(SpartanPlayer p) {
-        return notifications.containsKey(p.protocol.getUUID());
+    public static boolean isEnabled(SpartanProtocol p) {
+        return notifications.containsKey(p.getUUID());
     }
 
-    public static boolean hasPermission(SpartanPlayer p) {
-        return Permissions.has(p.getInstance(), Enums.Permission.NOTIFICATIONS);
+    public static boolean hasPermission(SpartanProtocol p) {
+        return Permissions.has(p.player, Enums.Permission.NOTIFICATIONS);
     }
 
     public static Integer getFrequency(SpartanPlayer p) {
         return notifications.get(p.protocol.getUUID());
     }
 
-    public static void remove(SpartanPlayer p) {
-        notifications.remove(p.protocol.getUUID());
+    public static void remove(SpartanProtocol p) {
+        notifications.remove(p.getUUID());
     }
 
-    public static void set(SpartanPlayer p, int i) {
-        Integer frequency = notifications.put(p.protocol.getUUID(), i);
+    public static void set(SpartanProtocol p, int i) {
+        Integer frequency = notifications.put(p.getUUID(), i);
 
         if (frequency == null) {
-            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_enable"));
+            p.player.sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
-            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_modified"));
+            p.player.sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
-            notifications.remove(p.protocol.getUUID());
-            p.getInstance().sendMessage(Config.messages.getColorfulString("notifications_disable"));
+            notifications.remove(p.getUUID());
+            p.player.sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }
 
     // Separator
 
-    public static void runOnLeave(SpartanPlayer p) {
-        if (notifications.containsKey(p.protocol.getUUID())
+    public static void runOnLeave(SpartanProtocol p) {
+        if (notifications.containsKey(p.getUUID())
                 && !DetectionNotifications.hasPermission(p)) {
-            notifications.remove(p.protocol.getUUID());
+            notifications.remove(p.getUUID());
         }
     }
 

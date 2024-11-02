@@ -5,8 +5,8 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.java.StringUtils;
 
 import java.util.ArrayList;
@@ -35,9 +35,6 @@ public class SpartanEdition {
             noVersionNotificationMessage = "\n§cHey, just a heads up!"
                     + " Your owned editions of Spartan could not be verified."
                     + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.",
-            limitNotificationMessage = "\n§cHey, just a heads up!"
-                    + " You have more online players than the anti-cheat can check at once."
-                    + " Click §n" + patreonURL + "§r§c to learn how §lDetection Slots §r§cwork.",
             hasAccountNotificationMessage = "\n§cHey, just a heads up!"
                     + " You do not seem to have an account paired with your Spartan AntiCheat license."
                     + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.";
@@ -67,6 +64,11 @@ public class SpartanEdition {
                     getProductID(oppositeType)
             )) {
                 alternativeVersion = true;
+            }
+            if (currentVersion
+                    && alternativeVersion
+                    && !CloudConnections.ownsProduct("26")) {
+                alternativeVersion = false;
             }
             hasAccount = !JarVerification.isValid(false) || CloudConnections.hasAccount();
         });

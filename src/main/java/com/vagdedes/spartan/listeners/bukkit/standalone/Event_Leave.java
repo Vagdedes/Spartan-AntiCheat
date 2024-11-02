@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -18,10 +17,9 @@ public class Event_Leave implements Listener {
         if (protocol == null) {
             return;
         }
-        SpartanPlayer p = protocol.spartanPlayer;
 
         // Features
-        DetectionNotifications.runOnLeave(p);
+        DetectionNotifications.runOnLeave(protocol);
     }
 
 }

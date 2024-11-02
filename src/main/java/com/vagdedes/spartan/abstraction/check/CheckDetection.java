@@ -7,7 +7,7 @@ public abstract class CheckDetection {
 
     public final CheckExecutor executor;
     public final Enums.HackType hackType;
-    public final SpartanPlayer player;
+    public SpartanPlayer player;
 
     // Check
     protected CheckDetection(Enums.HackType hackType, SpartanPlayer player) {

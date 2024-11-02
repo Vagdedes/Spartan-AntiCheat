@@ -9,7 +9,7 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;

@@ -29,7 +29,6 @@ public class ConfigUtils {
     }
 
     public static String replaceWithSyntax(String message, HackType hackType) {
-        message = replace(message, "%%", " ");
         message = replace(message, "{space}", " ");
         message = replace(message, "{online}", String.valueOf(SpartanBukkit.getPlayerCount()));
         message = replace(message, "{staff}", String.valueOf(Permissions.getStaff().size()));

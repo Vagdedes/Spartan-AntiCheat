@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -15,7 +16,8 @@ public class Event_Join implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(PlayerJoinEvent e) {
-        SpartanPlayer p = SpartanBukkit.createProtocol(e.getPlayer()).spartanPlayer;
+        SpartanProtocol protocol = SpartanBukkit.createProtocol(e.getPlayer());
+        SpartanPlayer p = protocol.spartanPlayer;
 
         if (Config.settings.getBoolean("Important.enable_watermark")
                 && !Permissions.isStaff(p.getInstance())) {
@@ -29,7 +31,7 @@ public class Event_Join implements Listener {
         }
 
         SpartanBukkit.runDelayedTask(p, () -> {
-            Config.settings.runOnLogin(p);
+            Config.settings.runOnLogin(protocol);
             CloudBase.announce(p);
         }, 10L);
     }

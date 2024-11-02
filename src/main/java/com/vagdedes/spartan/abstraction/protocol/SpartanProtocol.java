@@ -6,9 +6,9 @@ import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.Latency;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.listeners.protocol.Packet_Teleport;
 import com.vagdedes.spartan.utils.minecraft.entity.AxisAlignedBB;
 import org.bukkit.Location;
@@ -79,7 +79,6 @@ public class SpartanProtocol {
         this.axisMatrixCache = new HashSet<>();
         this.checkBoundData = null;
         this.oldBlockEvent = null;
-
 
         this.setProfile(ResearchEngine.getPlayerProfile(this, false));
     }
@@ -187,6 +186,7 @@ public class SpartanProtocol {
 
     public void setProfile(PlayerProfile profile) {
         this.profile = profile;
+        this.profile.updateOnlinePlayer(this);
     }
 
     public boolean packetsEnabled() {

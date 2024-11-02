@@ -48,7 +48,7 @@ public class CrossServerNotifications {
                                             notification = "§l[" + serverName + "]§r " + notification;
 
                                             for (SpartanPlayer player : players) {
-                                                if (player.getExecutor(hackType).canSendNotification(playerName)) {
+                                                if (player.getExecutor(hackType).getDetection().canSendNotification(playerName)) {
                                                     player.getInstance().sendMessage(notification);
                                                     processed.put(id, true);
                                                 }

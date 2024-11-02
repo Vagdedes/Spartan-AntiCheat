@@ -139,7 +139,7 @@ public class Wave {
                         String message = Config.messages.getColorfulString("wave_start_message");
 
                         for (SpartanProtocol protocol : protocols) {
-                            if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                            if (DetectionNotifications.hasPermission(protocol)) {
                                 protocol.player.sendMessage(message);
                             }
                         }
@@ -177,7 +177,7 @@ public class Wave {
                 String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
 
                 for (SpartanProtocol protocol : protocols) {
-                    if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                    if (DetectionNotifications.hasPermission(protocol)) {
                         protocol.player.sendMessage(message);
                     }
                 }

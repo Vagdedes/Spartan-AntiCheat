@@ -48,6 +48,7 @@ public class CommandExecution implements CommandExecutor {
         if (!isPlayer || Permissions.has((Player) sender)) {
             sender.sendMessage("");
             String command = "§2Spartan AntiCheat";
+            String placeholder = "Click to view our Patreon offer/s.";
             command += "\n§8[ §7Detections Available§8: "
                     + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
                     + " §8/ "
@@ -57,20 +58,20 @@ public class CommandExecution implements CommandExecutor {
             ClickableMessage.sendURL(
                     sender,
                     command,
-                    "Click to learn how Detection Slots work!",
+                    placeholder,
                     SpartanEdition.patreonURL
             );
             if (documentation) {
                 ClickableMessage.sendURL(
                         sender,
                         "§8§l<> §7Required command argument",
-                        "Click to learn how Detection Slots work!",
+                        placeholder,
                         SpartanEdition.patreonURL
                 );
                 ClickableMessage.sendURL(
                         sender,
                         "§8§l[] §7Optional command argument",
-                        "Click to learn how Detection Slots work!",
+                        placeholder,
                         SpartanEdition.patreonURL
                 );
             }
@@ -202,7 +203,7 @@ public class CommandExecution implements CommandExecutor {
                 if (spartanMessage(sender, isPlayer, true)) {
                     boolean permission = false;
 
-                    if (isPlayer && DetectionNotifications.hasPermission(player)) {
+                    if (isPlayer && DetectionNotifications.hasPermission(player.protocol)) {
                         ClickableMessage.sendCommand(
                                 sender,
                                 ChatColor.RED + "/" + command + " notifications [ticks-frequency]",
@@ -386,7 +387,7 @@ public class CommandExecution implements CommandExecutor {
                     InteractiveInventory.playerInfo.open(player, sender.getName());
 
                 } else if (isPlayer && args[0].equalsIgnoreCase("Notifications")) {
-                    if (!DetectionNotifications.hasPermission(player)) {
+                    if (!DetectionNotifications.hasPermission(player.protocol)) {
                         ClickableMessage.sendURL(
                                 sender,
                                 Config.messages.getColorfulString("no_permission"),
@@ -395,7 +396,7 @@ public class CommandExecution implements CommandExecutor {
                         );
                         return true;
                     }
-                    DetectionNotifications.set(player, DetectionNotifications.defaultFrequency);
+                    DetectionNotifications.set(player.protocol, DetectionNotifications.defaultFrequency);
 
                 } else {
                     completeMessage(sender, "default");
@@ -646,7 +647,7 @@ public class CommandExecution implements CommandExecutor {
                             }
 
                         } else if (isPlayer && args[0].equalsIgnoreCase("Notifications")) {
-                            if (!DetectionNotifications.hasPermission(player)) {
+                            if (!DetectionNotifications.hasPermission(player.protocol)) {
                                 ClickableMessage.sendURL(
                                         sender,
                                         Config.messages.getColorfulString("no_permission"),
@@ -661,7 +662,7 @@ public class CommandExecution implements CommandExecutor {
                                 int frequency = Integer.parseInt(divisorString);
 
                                 if (frequency >= 0) {
-                                    DetectionNotifications.set(player, frequency);
+                                    DetectionNotifications.set(player.protocol, frequency);
                                 } else {
                                     ClickableMessage.sendURL(
                                             sender,

@@ -45,6 +45,7 @@ public class SpartanPlayerMovement {
             detectionLocation;
     SpartanLocation schedulerFrom;
     private Vector clampVector;
+    public double motionY;
 
     SpartanPlayerMovement(SpartanPlayer parent) {
         this.parent = parent;
@@ -62,6 +63,7 @@ public class SpartanPlayerMovement {
         this.detectionLocation = location;
 
         this.clampVector = new Vector();
+        this.motionY = 0;
     }
 
     // Separator

@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -55,7 +54,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Discord.punishments_webhook_url", "");
     }
 
-    public void runOnLogin(SpartanPlayer p) {
+    public void runOnLogin(SpartanProtocol p) {
         if (getBoolean("Notifications.enable_notifications_on_login")
                 && DetectionNotifications.hasPermission(p)
                 && !DetectionNotifications.isEnabled(p)) {
@@ -68,7 +67,7 @@ public class Settings extends ConfigurationBuilder {
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
-                runOnLogin(protocol.spartanPlayer);
+                runOnLogin(protocol);
             }
         }
     }

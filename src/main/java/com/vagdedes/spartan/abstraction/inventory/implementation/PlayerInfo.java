@@ -5,7 +5,6 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
@@ -13,11 +12,12 @@ import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -67,8 +67,8 @@ public class PlayerInfo extends InventoryMenu {
             return false;
         } else {
             setTitle(player, menu + (isOnline ? target.player.getName() : profile.name));
-            Set<Map.Entry<HackType, Double>> evidenceDetails = profile.evidence.getKnowledgeEntries(
-                    0.0
+            Set<Map.Entry<HackType, Double>> evidenceDetails = profile.getEvidenceEntries(
+                    PlayerEvidence.emptyProbability
             );
             List<String> lore = new ArrayList<>();
             lore.add("");
@@ -118,10 +118,13 @@ public class PlayerInfo extends InventoryMenu {
                         );
                     } else {
                         probability = PlayerEvidence.probabilityToCertainty(probability);
-                        lore.add(
-                                "§3" + hackType.getCheck().getName()
-                                        + "§8: §b" + AlgebraUtils.integerRound(probability * 100.0) + "%"
-                        );
+                        int showProbability = AlgebraUtils.integerRound(probability * 100.0);
+
+                        if (showProbability > 0) {
+                            lore.add(
+                                    "§3" + hackType.getCheck().getName() + "§8: §b" + showProbability + "%"
+                            );
+                        }
                     }
                 }
                 lore.add("");
@@ -165,8 +168,6 @@ public class PlayerInfo extends InventoryMenu {
         // Separator
 
         Check.DataType dataType = isOnline ? player.dataType : null;
-        boolean notChecked = isOnline
-                && Config.isEnabled(player.dataType);
 
         for (HackType hackType : Enums.HackType.values()) {
             if (hackType.category == checkType) {
@@ -174,8 +175,7 @@ public class PlayerInfo extends InventoryMenu {
                         player,
                         hackType,
                         dataType,
-                        isOnline,
-                        notChecked
+                        isOnline
                 );
                 lore.add(
                         "§7" + hackType.getCheck().getName() + "§8:§e " + state
@@ -188,8 +188,7 @@ public class PlayerInfo extends InventoryMenu {
     private String getDetectionState(SpartanPlayer player,
                                      HackType hackType,
                                      Check.DataType dataType,
-                                     boolean hasPlayer,
-                                     boolean notChecked) {
+                                     boolean hasPlayer) {
         if (!hasPlayer) {
             return "Offline";
         }
@@ -204,9 +203,8 @@ public class PlayerInfo extends InventoryMenu {
         }
         CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
         return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
-                notChecked ? "Temporarily Not Checked" :
-                        disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
-                                (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
+                disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
+                        (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
     }
 
     public void refresh(String targetName) {

@@ -1,12 +1,29 @@
-package com.vagdedes.spartan.abstraction.check;
+package com.vagdedes.spartan.abstraction.check.example;
 
+import com.vagdedes.spartan.abstraction.check.CheckExecutor;
+import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
+import com.vagdedes.spartan.abstraction.check.ImplementedDetectionExecutor;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import me.vagdedes.spartan.system.Enums;
 
 public class CheckExecutorExample extends CheckExecutor {
 
+    private final DetectionExecutorExample detectionExecutorWithItsOwnClass;
+    private final DetectionExecutor detectionExecutorInTheBaseClass;
+
     public CheckExecutorExample(Enums.HackType hackType, SpartanPlayer player) {
         super(hackType, player);
+
+        this.detectionExecutorWithItsOwnClass = new DetectionExecutorExample(
+                this
+        );
+
+        this.detectionExecutorInTheBaseClass = new ImplementedDetectionExecutor(
+                this,
+                "detection_option_name_in_checks_yml",
+                true // Enabled By Default Or Not
+        );
+
         // This is the constructor you will call to initiate this abstract class
         // implementation. If your check/detection has higher complexity, it will
         // likely need to be produced in multiple classes. In that case, you can
@@ -29,6 +46,7 @@ public class CheckExecutorExample extends CheckExecutor {
 
     @Override
     protected void runInternal(boolean cancelled) {
+        this.detectionExecutorWithItsOwnClass.customMethod1();
         // This method should be used to run a check/detection when no information
         // needs to be inserted via the method being called and is all available in
         // the class or via methods of other classes.
@@ -39,6 +57,7 @@ public class CheckExecutorExample extends CheckExecutor {
 
     @Override
     protected boolean canRun() {
+        this.detectionExecutorWithItsOwnClass.customMethod2();
         // This method should be used to judge whether a check should run or not.
         // However, each check/detection may have different requirements, so use
         // this method for the requirements all checks/detections have in common.

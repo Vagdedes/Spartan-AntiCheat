@@ -61,7 +61,6 @@ public class SpartanPlayer {
     public final SpartanPunishments punishments;
     public final PlayerTrackers trackers;
     public final PlayerClicks clicks;
-    private final CheckExecutor[] executors;
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
@@ -96,28 +95,10 @@ public class SpartanPlayer {
         this.clicks = new PlayerClicks();
         this.movement = new SpartanPlayerMovement(this);
         this.punishments = new SpartanPunishments(this);
-        this.executors = new CheckExecutor[Enums.HackType.values().length];
-        this.registerExecutors(null);
     }
 
     public boolean isBedrockPlayer() {
         return this.dataType == Check.DataType.BEDROCK;
-    }
-
-    private void registerExecutors(Set<Enums.HackType> registry) {
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            try {
-                CheckExecutor executor = (CheckExecutor) hackType.executor
-                        .getConstructor(hackType.getClass(), this.getClass())
-                        .newInstance(hackType, this);
-
-                if (registry == null || registry.contains(hackType)) {
-                    this.executors[hackType.ordinal()] = executor;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -178,7 +159,7 @@ public class SpartanPlayer {
     // Separator
 
     public CheckExecutor getExecutor(Enums.HackType hackType) {
-        return executors[hackType.ordinal()];
+        return this.protocol.getProfile().getExecutor(hackType);
     }
 
     public void resetData(boolean checks) {
@@ -192,7 +173,7 @@ public class SpartanPlayer {
         }
 
         if (checks) {
-            this.registerExecutors(resetChecks);
+            this.protocol.getProfile().registerExecutors(resetChecks); // todo
         }
     }
 
@@ -537,7 +518,9 @@ public class SpartanPlayer {
                 } else {
                     loopLocation.setY(Math.floor(progressiveY) + Math.max(blockBox, box));
                 }
-                teleport(loopLocation);
+                if (this.protocol.packetsEnabled()) {
+                    teleport(loopLocation);
+                }
                 break;
             }
         }

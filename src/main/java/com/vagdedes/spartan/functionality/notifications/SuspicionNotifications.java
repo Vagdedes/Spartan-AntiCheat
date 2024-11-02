@@ -1,12 +1,12 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class SuspicionNotifications {
         int size = 0, commaLength = comma.length();
 
         for (SpartanPlayer player : online) {
-            Collection<Enums.HackType> list = player.protocol.getProfile().evidence.getKnowledgeList(
+            Collection<Enums.HackType> list = player.protocol.getProfile().getEvidenceList(
                     PlayerEvidence.notificationProbability
             );
 

@@ -1,15 +1,15 @@
-package com.vagdedes.spartan.functionality.performance;
+package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
+import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
+import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -18,7 +18,6 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.statistics.StatisticsMath;
@@ -35,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ResearchEngine {
 
-    private static final Map<Integer, Integer> requiredPlayers = new ConcurrentHashMap<>();
     private static boolean firstLoad = false;
     public static Map<Enums.HackType, Boolean> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
@@ -99,7 +97,7 @@ public class ResearchEngine {
             playerProfile = playerProfiles.get(protocol.player.getName().toLowerCase());
 
             if (playerProfile != null) {
-                playerProfile.update(protocol);
+                playerProfile.updateOfflinePlayer(protocol);
                 return playerProfile;
             }
         }
@@ -119,13 +117,9 @@ public class ResearchEngine {
 
                 if (!playerProfiles.isEmpty()) {
                     for (PlayerProfile playerProfile : playerProfiles.values()) {
-                        playerProfile.evidence.remove(hackType);
-                    }
-                    for (double probability : PlayerEvidence.probabilities) {
-                        requiredPlayers.remove(
-                                hackType.hashCode() * SpartanBukkit.hashCodeMultiplier
-                                        + PlayerEvidence.probabilityToFactors(probability)
-                        );
+                        for (DetectionExecutor detectionExecutor : playerProfile.getExecutor(hackType).getDetections()) {
+                            detectionExecutor.clearProbability();
+                        }
                     }
                     updateCache(true);
                 }
@@ -224,10 +218,15 @@ public class ResearchEngine {
     // Separator
 
     private static String getDetectionInformation(String s) {
-        int index = s.indexOf("[");
-        return index > -1
-                ? s.substring(index + 1, s.length() - 1)
-                : null;
+        String find = "(" + CheckExecutor.detectionIdentifier + " ";
+        int index = s.indexOf(find);
+
+        if (index > -1) {
+            s = s.substring(index + find.length());
+            index = s.indexOf(")");
+            return s.substring(0, index);
+        }
+        return null;
     }
 
     private static Double getDetectionViolationLevel(String s) {
@@ -426,18 +425,21 @@ public class ResearchEngine {
                                             Double violationIncrease = getDetectionViolationLevel(data);
 
                                             if (violationIncrease != null) {
-                                                SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
-                                                getPlayerProfile(split[0], true).getViolationHistory(getDataType(data), hackType).store(
-                                                        hackType,
-                                                        new PlayerViolation(
-                                                                sdf.parse(fullDate).getTime(),
-                                                                violationIncrease,
-                                                                detection
-                                                        )
-                                                );
+                                                PlayerProfile profile = getPlayerProfile(split[0], true);
+                                                DetectionExecutor detectionExecutor = profile.getExecutor(hackType).getDetection(detection);
+
+                                                if (detectionExecutor != null) {
+                                                    SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+                                                    detectionExecutor.store(
+                                                            new PlayerViolation(
+                                                                    sdf.parse(fullDate).getTime(),
+                                                                    violationIncrease
+                                                            )
+                                                    );
+                                                }
                                             }
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                             }
@@ -484,40 +486,46 @@ public class ResearchEngine {
 
             if (force) {
                 for (PlayerProfile profile : profiles) {
-                    profile.evidence.clear();
+                    for (CheckExecutor executor : profile.getExecutors()) {
+                        for (DetectionExecutor detectionExecutor : executor.getDetections()) {
+                            detectionExecutor.clearProbability();
+                        }
+                    }
                 }
             }
 
-            for (Check.DataType dataType : Check.DataType.values()) {
-                for (Enums.HackType hackType : (force
-                        ? Arrays.asList(Enums.HackType.values())
-                        : violationFired.keySet())) {
-                    if (!hackType.getCheck().isEnabled(dataType, null)) {
-                        continue;
-                    }
-                    Map<PlayerProfile, Double> wave = new LinkedHashMap<>();
+            for (Enums.HackType hackType : (force
+                    ? Arrays.asList(Enums.HackType.values())
+                    : violationFired.keySet())) {
+                if (!hackType.getCheck().isEnabled(null, null)) {
+                    continue;
+                }
+                Map<String, Map<DetectionExecutor, Double>> wave = new LinkedHashMap<>();
 
-                    for (PlayerProfile profile : profiles) {
-                        Double timeDifference = profile.getViolationHistory(
-                                dataType,
-                                hackType
-                        ).getTimeDifference();
+                for (PlayerProfile profile : profiles) {
+                    for (DetectionExecutor detectionExecutor : profile.getExecutor(hackType).getDetections()) {
+                        Double timeDifference = detectionExecutor.getTimeDifference();
 
                         if (timeDifference != null) {
-                            wave.put(
-                                    profile,
+                            wave.computeIfAbsent(
+                                    detectionExecutor.name,
+                                    k -> new LinkedHashMap<>()
+                            ).put(
+                                    detectionExecutor,
                                     timeDifference
                             );
                         }
                     }
+                }
 
-                    if (!wave.isEmpty()) {
+                if (!wave.isEmpty()) {
+                    for (Map<DetectionExecutor, Double> map : wave.values()) {
                         double sum = 0,
                                 squareSum = 0,
                                 min = Double.MAX_VALUE,
                                 max = Double.MIN_VALUE;
 
-                        for (double value : wave.values()) {
+                        for (double value : map.values()) {
                             sum += value;
                             squareSum += value * value;
                         }
@@ -525,11 +533,11 @@ public class ResearchEngine {
                                 mean = sum / divisor,
                                 deviation = Math.sqrt(squareSum / divisor);
 
-                        for (Map.Entry<PlayerProfile, Double> entryChild : wave.entrySet()) {
+                        for (Map.Entry<DetectionExecutor, Double> entry : map.entrySet()) {
                             double probability = StatisticsMath.getCumulativeProbability(
-                                    (entryChild.getValue() - mean) / deviation
+                                    (entry.getValue() - mean) / deviation
                             );
-                            entryChild.setValue(probability);
+                            entry.setValue(probability);
 
                             if (probability > max) {
                                 max = probability;
@@ -541,11 +549,10 @@ public class ResearchEngine {
                         max = 1.0 - max;
                         double distributionDifference = Math.abs(max - min);
 
-                        for (Map.Entry<PlayerProfile, Double> entryChild : wave.entrySet()) {
-                            entryChild.getKey().evidence.add(
-                                    hackType,
+                        for (Map.Entry<DetectionExecutor, Double> entry : map.entrySet()) {
+                            entry.getKey().setProbability(
                                     PlayerEvidence.modifyProbability(
-                                            entryChild.getValue(),
+                                            entry.getValue(),
                                             Math.max(min - distributionDifference, 0.0),
                                             Math.max(max - distributionDifference, 0.0)
                                     )
@@ -555,49 +562,15 @@ public class ResearchEngine {
                 }
             }
             violationFired.clear();
-            Iterator<Integer> iterator = requiredPlayers.values().iterator();
-
-            while (iterator.hasNext()) {
-                if (iterator.next() != 0) {
-                    iterator.remove();
-                }
-            }
         }
-        int squareSum = 0, count = 0;
-
-        for (Enums.HackType hackType : Enums.HackType.values()) {
-            if (hackType.getCheck().isEnabled(null, null)) {
-                int result = getRequiredPlayers(hackType, PlayerEvidence.punishmentProbability);
-                squareSum += result * result;
-                count += result;
-            }
-        }
-        if (squareSum > 0) {
-            squareSum = AlgebraUtils.integerCeil(Math.sqrt(squareSum / (double) count));
-            String message = AwarenessNotifications.getOptionalNotification(
-                    "The plugin needs data from " + squareSum + " more player/s to enable preventions & punishments for all checks."
-                            + " This is normal and will be resolved as more players join your server."
-            );
-
-            if (message != null) {
-                List<SpartanPlayer> players = Permissions.getStaff();
-
-                if (!players.isEmpty()) {
-                    for (SpartanPlayer p : players) {
-                        if (AwarenessNotifications.canSend(p.protocol.getUUID(), "limited-data", 60 * 60)) {
-                            p.getInstance().sendMessage(message);
-                        }
-                    }
-                }
-            }
-        } else if (SpartanBukkit.packetsEnabled()) {
+        if (SpartanBukkit.packetsEnabled()) {
             for (Enums.HackType hackType : Enums.HackType.values()) {
                 Check check = hackType.getCheck();
 
                 if (check.isEnabled(null, null)
                         && !check.isSilent(null, null)) {
                     String message = AwarenessNotifications.getOptionalNotification(
-                            "Spartan does not support Java player preventions when running on the packet level."
+                            "Spartan does not support Java full player preventions when running on the packet level."
                                     + " This is due to problems risen from trying to implement this functionality with packets."
                     );
 
@@ -624,27 +597,42 @@ public class ResearchEngine {
 
     public static int getRequiredPlayers(Enums.HackType hackType, double probability) {
         int requirement = PlayerEvidence.probabilityToFactors(probability),
-                hash = hackType.hashCode() * SpartanBukkit.hashCodeMultiplier + requirement,
-                count = requiredPlayers.getOrDefault(hash, -1);
+                count = 0;
 
-        if (count == -1) {
-            count = 0;
+        if (playerProfiles.size() >= requirement) {
+            for (PlayerProfile profile : playerProfiles.values()) {
+                if (profile.hasData(hackType)) {
+                    count++;
 
-            if (playerProfiles.size() >= requirement) {
-                for (PlayerProfile profile : playerProfiles.values()) {
-                    if (profile.hasData(hackType)) {
-                        count++;
-
-                        if (count == requirement) {
-                            return 0;
-                        }
+                    if (count == requirement) {
+                        return 0;
                     }
                 }
-                count = requirement - count;
-            } else {
-                count = requirement - playerProfiles.size();
             }
-            requiredPlayers.put(hash, count);
+            count = requirement - count;
+        } else {
+            count = requirement - playerProfiles.size();
+        }
+        return count;
+    }
+
+    public static int getRequiredPlayers(Enums.HackType hackType, String detection, double probability) {
+        int requirement = PlayerEvidence.probabilityToFactors(probability),
+                count = 0;
+
+        if (playerProfiles.size() >= requirement) {
+            for (PlayerProfile profile : playerProfiles.values()) {
+                if (profile.getExecutor(hackType).getDetection(detection).hasDataToCompare()) {
+                    count++;
+
+                    if (count == requirement) {
+                        return 0;
+                    }
+                }
+            }
+            count = requirement - count;
+        } else {
+            count = requirement - playerProfiles.size();
         }
         return count;
     }

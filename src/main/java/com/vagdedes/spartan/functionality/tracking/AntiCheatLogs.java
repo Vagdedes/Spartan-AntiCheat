@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
-import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -58,7 +58,8 @@ public class AntiCheatLogs {
                                boolean console,
                                Material material,
                                Enums.HackType hackType,
-                               PlayerViolation playerViolation) {
+                               PlayerViolation playerViolation,
+                               boolean unlikely) {
         if (console && Config.settings.getBoolean("Logs.log_console")) {
             Bukkit.getConsoleSender().sendMessage(information);
         }
@@ -72,7 +73,7 @@ public class AntiCheatLogs {
                 time = now;
                 savedFile = createFile(time);
                 fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
-            } else if (fileConfiguration != null) {
+            } else if (fileConfiguration != null && !unlikely) {
                 SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
                     fileConfiguration.set(
                             DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()),
@@ -117,7 +118,8 @@ public class AntiCheatLogs {
                             false,
                             block.getType(),
                             null,
-                            null
+                            null,
+                            false
                     );
                     MiningHistory miningHistory = player.protocol.getProfile().getMiningHistory(ore);
 

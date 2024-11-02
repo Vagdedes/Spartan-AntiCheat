@@ -38,7 +38,8 @@ public class HackPrevention {
 
     void handle(SpartanPlayer player) {
         Runnable runnable = () -> {
-            if (this.location != null) {
+            if (this.location != null
+                    && player.protocol.packetsEnabled()) {
                 player.teleport(this.location);
             }
             if (this.groundTeleport) {

@@ -46,7 +46,7 @@ public class SpartanPunishments {
 
                 if (!protocols.isEmpty()) {
                     for (SpartanProtocol protocol : protocols) {
-                        if (DetectionNotifications.hasPermission(protocol.spartanPlayer)) {
+                        if (DetectionNotifications.hasPermission(protocol)) {
                             protocol.player.sendMessage(announcement);
                         }
                     }

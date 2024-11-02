@@ -88,7 +88,7 @@ public class PlayerUtils {
 
         // Separator
 
-        for (int jumpEffect = 0; jumpEffect < 255; jumpEffect++) {
+        for (int jumpEffect = 0; jumpEffect < 256; jumpEffect++) {
             List<Double> jumps = new ArrayList<>();
             double jump = jumpAcceleration + (jumpEffect * 0.1);
 

@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
+import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerViolation;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
@@ -164,7 +164,7 @@ public class SQLFeature extends ConfigurationBuilder {
         addOption("escape_special_characters", false);
         refreshConfiguration();
 
-        SpartanBukkit.connectionThread.executeWithPriority(this::connect);
+        SpartanBukkit.sqlThread.executeWithPriority(this::connect);
     }
 
     // Separator
@@ -242,36 +242,54 @@ public class SQLFeature extends ConfigurationBuilder {
     // Separator
 
     public void update(String command) {
-        connect();
+        SpartanBukkit.sqlThread.execute(() -> {
+            connect();
 
-        try {
-            if (con != null) {
-                Statement st = con.createStatement();
-                st.executeUpdate(command);
-                st.close();
+            try {
+                if (con != null) {
+                    Statement st = con.createStatement();
+                    st.executeUpdate(command);
+                    st.close();
+                }
+            } catch (Exception e) {
+                AwarenessNotifications.forcefullySend("SQL Update Error:\n"
+                        + "Command: " + command + "\n"
+                        + "Exception: " + e.getMessage());
             }
-        } catch (Exception e) {
-            AwarenessNotifications.forcefullySend("SQL Update Error:\n"
-                    + "Command: " + command + "\n"
-                    + "Exception: " + e.getMessage());
-        }
+        });
     }
 
     public ResultSet query(final String command) {
-        connect();
-        ResultSet rs = null;
+        ResultSet[] rs = new ResultSet[1];
+        Thread thread = Thread.currentThread();
 
-        try {
-            if (con != null) {
-                final Statement st = con.createStatement();
-                rs = st.executeQuery(command);
+        SpartanBukkit.sqlThread.execute(() -> {
+            connect();
+
+            try {
+                if (con != null) {
+                    final Statement st = con.createStatement();
+                    rs[0] = st.executeQuery(command);
+
+                    synchronized (thread) {
+                        thread.notifyAll();
+                    }
+                }
+            } catch (Exception e) {
+                AwarenessNotifications.forcefullySend("SQL Query Error:\n"
+                        + "Command: " + command + "\n"
+                        + "Exception: " + e.getMessage());
             }
-        } catch (Exception e) {
-            AwarenessNotifications.forcefullySend("SQL Query Error:\n"
-                    + "Command: " + command + "\n"
-                    + "Exception: " + e.getMessage());
+        });
+        synchronized (thread) {
+            if (rs[0] == null) {
+                try {
+                    thread.wait();
+                } catch (Exception ignored) {
+                }
+            }
         }
-        return rs;
+        return rs[0];
     }
 
     // Separator
@@ -319,7 +337,7 @@ public class SQLFeature extends ConfigurationBuilder {
                     hasCheck = playerViolation != null,
                     hasMaterial = material != null;
             SpartanLocation location = hasPlayer ? p.movement.getLocation() : null;
-            SpartanBukkit.connectionThread.execute(() -> update(
+            update(
                     "INSERT INTO " + table
                             + " (creation_date"
                             + ", server_name, plugin_version, server_version, online_players"
@@ -343,7 +361,7 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(hackType) : "NULL")
                             + ", " + (hasCheck ? syntaxForColumn(playerViolation.increase) : "NULL")
                             + ");"
-            ));
+            );
         }
     }
 

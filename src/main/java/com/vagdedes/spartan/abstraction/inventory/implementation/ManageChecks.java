@@ -3,16 +3,16 @@ package com.vagdedes.spartan.abstraction.inventory.implementation;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.profiling.PlayerEvidence;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
-import com.vagdedes.spartan.functionality.performance.ResearchEngine;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -201,8 +201,8 @@ public class ManageChecks extends InventoryMenu {
                 || punish && punishmentsOff) {
             lore.add("");
             lore.add("§eYellow text in preventions & punishments");
-            lore.add("§7indicate the check is still collecting");
-            lore.add("§7data and will fully enable in the future.");
+            lore.add("§eindicate the check is still collecting");
+            lore.add("§edata and will fully enable in the future.");
         }
         if (enabled && silent) {
             item.addUnsafeEnchantment(EnchantmentUtils.DURABILITY, 1);
