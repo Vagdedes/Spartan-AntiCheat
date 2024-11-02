@@ -36,7 +36,6 @@ Messages:
 {space} Creates a space character in any text
 {punisher} Returns the name of the console/player who executed the punishment
 {reported} Returns the name of the player who was reported
-%% Creates a space character in any text
 ```
 ### Time:
 ```
