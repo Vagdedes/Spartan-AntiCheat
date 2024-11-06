@@ -25,7 +25,7 @@ public class Floodgate {
                 || name != null && isBedrockPlayer(name);
     }
 
-    static boolean isBedrockPlayer(String name) {
+    private static boolean isBedrockPlayer(String name) {
         String prefix = Config.settings.getString("Important.bedrock_player_prefix");
         return !prefix.isEmpty() && name.startsWith(prefix);
     }

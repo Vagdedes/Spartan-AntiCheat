@@ -12,7 +12,7 @@ public class Elytra {
 
     public static void judge(SpartanPlayer p) {
         if (((Exploits) p.getExecutor(Enums.HackType.Exploits)).elytra.isEnabled()
-                && !Permissions.isBypassing(p, Enums.HackType.Exploits)) {
+                && !Permissions.isBypassing(p.getInstance(), Enums.HackType.Exploits)) {
             if (p.getInstance().getVehicle() == null) {
                 PlayerInventory inventory = p.getInstance().getInventory();
 

@@ -160,7 +160,7 @@ public class SpartanBukkit {
             SpartanProtocol protocol = playerProtocol.remove(player.getUniqueId());
 
             if (protocol != null) {
-                protocol.getProfile().updateOnlinePlayer(null);
+                protocol.getProfile().update(null);
             }
             return protocol;
         }

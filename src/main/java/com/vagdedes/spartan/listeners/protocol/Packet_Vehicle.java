@@ -30,17 +30,19 @@ public class Packet_Vehicle extends PacketAdapter {
 
     @Override
     public void onPacketReceiving(PacketEvent event) {
-        Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+
         if (event.getPacketType() == PacketType.Play.Client.STEER_VEHICLE) {
-            boolean dismount = event.getPacket().getBooleans().read(1);
+            if (event.getPacket().getBooleans().size() > 0) {
+                boolean dismount = event.getPacket().getBooleans().read(1);
 
-            if (protocol.spartanPlayer.isBedrockPlayer()) {
-                return;
+                if (protocol.spartanPlayer.isBedrockPlayer()) {
+                    return;
+                }
+
+                protocol.keepEntity = 0;
+                protocol.vehicleStatus = dismount;
             }
-
-            protocol.keepEntity = 0;
-            protocol.vehicleStatus = dismount;
         } else {
             if (protocol.keepEntity < 10) protocol.keepEntity++;
         }

@@ -22,6 +22,7 @@ public class Event_Velocity implements Listener {
     public static void event(PlayerVelocityEvent e, boolean packets) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
         protocol.claimedVelocity = e;
+        protocol.claimedVeloGravity = e;
 
         if (protocol.packetsEnabled() == packets) {
             SpartanPlayer p = protocol.spartanPlayer;

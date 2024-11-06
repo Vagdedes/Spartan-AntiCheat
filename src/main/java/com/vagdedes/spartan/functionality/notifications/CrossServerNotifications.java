@@ -4,6 +4,7 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import me.vagdedes.spartan.system.Enums;
 
@@ -28,7 +29,7 @@ public class CrossServerNotifications {
                 if (!players.isEmpty()) {
                     try {
                         ResultSet rs = Config.sql.query("SELECT "
-                                + "id, player_name, server_name, notification, functionality"
+                                + "id, player_name, server_name, notification, information, functionality"
                                 + " FROM " + Config.sql.getTable()
                                 + " WHERE notification IS NOT NULL"
                                 + " ORDER BY id DESC LIMIT " + rowLimit + ";");
@@ -44,11 +45,12 @@ public class CrossServerNotifications {
                                         if (hackType.toString().equals(functionality)) {
                                             String notification = rs.getString("notification"),
                                                     serverName = rs.getString("server_name"),
-                                                    playerName = rs.getString("player_name");
+                                                    playerName = rs.getString("player_name"),
+                                                    detection = ResearchEngine.getDetectionInformation(rs.getString("information"));
                                             notification = "§l[" + serverName + "]§r " + notification;
 
                                             for (SpartanPlayer player : players) {
-                                                if (player.getExecutor(hackType).getDetection().canSendNotification(playerName)) {
+                                                if (player.getExecutor(hackType).getDetection(detection).canSendNotification(playerName)) {
                                                     player.getInstance().sendMessage(notification);
                                                     processed.put(id, true);
                                                 }

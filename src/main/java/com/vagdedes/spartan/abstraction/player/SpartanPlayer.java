@@ -162,7 +162,7 @@ public class SpartanPlayer {
         return this.protocol.getProfile().getExecutor(hackType);
     }
 
-    public void resetData(boolean checks) {
+    public void resetCrucialData() {
         this.protocol.loaded = false;
 
         for (PlayerTrackers.TrackerType handlerType : PlayerTrackers.TrackerType.values()) {
@@ -170,10 +170,6 @@ public class SpartanPlayer {
         }
         if (!this.movement.judgeGround()) {
             this.movement.resetAirTicks();
-        }
-
-        if (checks) {
-            this.protocol.getProfile().registerExecutors(resetChecks); // todo
         }
     }
 

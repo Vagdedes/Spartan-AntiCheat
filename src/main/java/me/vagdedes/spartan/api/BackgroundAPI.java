@@ -3,7 +3,6 @@ package me.vagdedes.spartan.api;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.functionality.connection.Latency;
 import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.moderation.Wave;
@@ -12,6 +11,7 @@ import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
 import me.vagdedes.spartan.system.Enums.Permission;
@@ -117,8 +117,9 @@ public class BackgroundAPI {
     }
 
     static double getCertainty(Player p, HackType hackType) {
+        SpartanProtocol protocol =  SpartanBukkit.getProtocol(p);
         return PlayerEvidence.probabilityToCertainty(
-                SpartanBukkit.getProtocol(p).getProfile().getExecutor(hackType).getExtremeProbability()
+                protocol.getProfile().getExecutor(hackType).getExtremeProbability(protocol.spartanPlayer.dataType)
         );
     }
 
@@ -252,13 +253,11 @@ public class BackgroundAPI {
     }
 
     static boolean isBypassing(Player p) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return Permissions.isBypassing(player, null);
+        return Permissions.isBypassing(p, null);
     }
 
     static boolean isBypassing(Player p, HackType HackType) {
-        SpartanPlayer player = SpartanBukkit.getProtocol(p).spartanPlayer;
-        return Permissions.isBypassing(player, HackType);
+        return Permissions.isBypassing(p, HackType);
     }
 
     @Deprecated

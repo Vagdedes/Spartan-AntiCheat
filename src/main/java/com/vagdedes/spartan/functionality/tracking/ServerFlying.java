@@ -11,7 +11,7 @@ public class ServerFlying {
 
     static void run(SpartanPlayer p) {
         if (((IrregularMovements) p.getExecutor(Enums.HackType.IrregularMovements)).limitServerFlying.isEnabled()
-                && !Permissions.isBypassing(p, Enums.HackType.IrregularMovements)
+                && !Permissions.isBypassing(p.getInstance(), Enums.HackType.IrregularMovements)
                 && p.movement.isFlying()
                 && !p.movement.isGliding()
                 && !p.movement.isSwimming()

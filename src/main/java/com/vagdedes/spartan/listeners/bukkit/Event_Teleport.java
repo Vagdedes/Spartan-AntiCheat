@@ -26,7 +26,7 @@ public class Event_Teleport implements Listener {
             SpartanPlayer p = protocol.spartanPlayer;
 
             // Object
-            p.resetData(false);
+            p.resetCrucialData();
 
             // Detections
             p.getExecutor(Enums.HackType.MorePackets).handle(false, MorePackets.TELEPORT);
@@ -46,7 +46,7 @@ public class Event_Teleport implements Listener {
             SpartanPlayer p = protocol.spartanPlayer;
 
             // Objects
-            p.resetData(true);
+            p.resetCrucialData();
             p.movement.setDetectionLocation();
         }
     }

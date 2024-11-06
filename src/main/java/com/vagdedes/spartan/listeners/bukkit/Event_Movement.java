@@ -27,7 +27,7 @@ public class Event_Movement implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WorldEvent(PlayerChangedWorldEvent e) {
-        SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer.resetData(true);
+        SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer.resetCrucialData();
     }
 
     public static void event(PlayerMoveEvent e, boolean packets) {

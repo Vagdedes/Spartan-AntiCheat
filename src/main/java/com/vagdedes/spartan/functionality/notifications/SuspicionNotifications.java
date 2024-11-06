@@ -46,6 +46,7 @@ public class SuspicionNotifications {
 
         for (SpartanPlayer player : online) {
             Collection<Enums.HackType> list = player.protocol.getProfile().getEvidenceList(
+                    player.dataType,
                     PlayerEvidence.notificationProbability
             );
 

@@ -111,7 +111,7 @@ public class ManageChecks extends InventoryMenu {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null),
                 silent = check.isSilent(null, null),
-                bypassing = Permissions.isBypassing(player, hackType),
+                bypassing = Permissions.isBypassing(player.getInstance(), hackType),
                 punish = check.canPunish(null);
         String[] disabledDetections = CloudBase.getShownDisabledDetections(hackType);
         String enabledOption, silentOption, punishOption, colour, secondColour;

@@ -68,6 +68,7 @@ public class PlayerInfo extends InventoryMenu {
         } else {
             setTitle(player, menu + (isOnline ? target.player.getName() : profile.name));
             Set<Map.Entry<HackType, Double>> evidenceDetails = profile.getEvidenceEntries(
+                    (isOnline ? target.spartanPlayer.dataType : profile.getLastDataType()),
                     PlayerEvidence.emptyProbability
             );
             List<String> lore = new ArrayList<>();
@@ -202,7 +203,7 @@ public class PlayerInfo extends InventoryMenu {
             return "Disabled";
         }
         CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
-        return Permissions.isBypassing(player, hackType) ? "Permission Bypass" :
+        return Permissions.isBypassing(player.getInstance(), hackType) ? "Permission Bypass" :
                 disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
                         (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
     }

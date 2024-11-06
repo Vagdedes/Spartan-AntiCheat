@@ -8,6 +8,7 @@ import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -58,7 +59,7 @@ public class ProtocolLib {
         }
     }
 
-    public static boolean isTemporary(Player player) {
+    public static boolean isTemporary(OfflinePlayer player) {
         return temporaryClass && player instanceof TemporaryPlayer;
     }
 

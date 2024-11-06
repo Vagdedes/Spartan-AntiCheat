@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.check.example;
 import com.vagdedes.spartan.abstraction.check.CheckExecutor;
 import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
 import com.vagdedes.spartan.abstraction.check.ImplementedDetectionExecutor;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import me.vagdedes.spartan.system.Enums;
 
 public class CheckExecutorExample extends CheckExecutor {
@@ -11,8 +11,8 @@ public class CheckExecutorExample extends CheckExecutor {
     private final DetectionExecutorExample detectionExecutorWithItsOwnClass;
     private final DetectionExecutor detectionExecutorInTheBaseClass;
 
-    public CheckExecutorExample(Enums.HackType hackType, SpartanPlayer player) {
-        super(hackType, player);
+    public CheckExecutorExample(Enums.HackType hackType, SpartanProtocol protocol) {
+        super(hackType, protocol);
 
         this.detectionExecutorWithItsOwnClass = new DetectionExecutorExample(
                 this

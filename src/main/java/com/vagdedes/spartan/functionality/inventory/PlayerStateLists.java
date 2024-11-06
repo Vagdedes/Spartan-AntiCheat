@@ -89,7 +89,10 @@ public class PlayerStateLists {
                     boolean breakLoop = false;
 
                     for (DetectionExecutor detectionExecutor : checkExecutor.getDetections()) {
-                        if (detectionExecutor.surpassedProbability(PlayerEvidence.preventionProbability)) {
+                        if (detectionExecutor.surpassedProbability(
+                                playerProfile.getLastDataType(),
+                                PlayerEvidence.preventionProbability
+                        )) {
                             list.add(playerProfile);
                             breakLoop = true;
                             break;
@@ -122,6 +125,7 @@ public class PlayerStateLists {
         if (listSize > 0) {
             for (PlayerProfile playerProfile : playerProfiles) {
                 Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidenceList(
+                        playerProfile.getLastDataType(),
                         PlayerEvidence.preventionProbability
                 );
 

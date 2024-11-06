@@ -48,19 +48,20 @@ public class Permissions {
 
     // Separator
 
-    public static boolean isBypassing(SpartanPlayer p, Enums.HackType hackType) {
-        if (p.getInstance().isOp()) {
+    public static boolean isBypassing(Player p, Enums.HackType hackType) {
+        if (p.isOp()) {
             return Config.settings.getBoolean("Important.op_bypass");
         } else {
-            Player n = p.getInstance();
-            return isBypassing(n, null)
-                    || hackType != null && isBypassing(n, hackType);
-        }
-    }
+            String key = Enums.Permission.BYPASS.getKey();
 
-    private static boolean isBypassing(Player p, Enums.HackType hackType) {
-        String key = Enums.Permission.BYPASS.getKey() + (hackType != null ? "." + hackType.toString().toLowerCase() : "");
-        return p.hasPermission(key);
+            if (p.hasPermission(key)) {
+                return true;
+            } else if (hackType != null) {
+                return p.hasPermission(key + "." + hackType.toString().toLowerCase());
+            } else {
+                return false;
+            }
+        }
     }
 
     // Separator
@@ -94,4 +95,5 @@ public class Permissions {
         }
         return new ArrayList<>(0);
     }
+
 }

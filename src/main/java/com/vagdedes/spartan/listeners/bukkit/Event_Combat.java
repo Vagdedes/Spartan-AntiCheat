@@ -55,6 +55,7 @@ public class Event_Combat implements Listener {
                         protocol.spartanPlayer.getExecutor(Enums.HackType.NoSwing).handle(cancelled, event);
                         protocol.spartanPlayer.getExecutor(Enums.HackType.HitReach).handle(cancelled, event);
                         protocol.spartanPlayer.getExecutor(Enums.HackType.KillAura).handle(cancelled, event);
+                        protocol.spartanPlayer.getExecutor(Enums.HackType.Exploits).handle(cancelled, event);
 
                         for (Enums.HackType hackType : handledChecks) {
                             if (protocol.spartanPlayer.getExecutor(hackType).prevent()) {
