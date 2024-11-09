@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -32,7 +32,6 @@ public class CloudBase {
             connectionRefreshCooldown = 0L,
             connectionFailedCooldown = 0L;
     private static final long refreshTime = 60_000L;
-    private static int outdatedVersion = AutoUpdater.NOT_CHECKED;
 
     // Parameters
     static String identification = "", token = null;
@@ -89,23 +88,19 @@ public class CloudBase {
         return false;
     }
 
-    public static void announce(SpartanPlayer player) {
-        if (Permissions.isStaff(player.getInstance())) {
+    public static void announce(SpartanProtocol protocol) {
+        if (Permissions.isStaff(protocol.bukkit)) {
             SpartanBukkit.connectionThread.execute(() -> {
                 String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                 if (announcements.length > 0) {
-                    List<SpartanPlayer> players = Permissions.getStaff();
-
-                    if (!players.isEmpty()) {
-                        for (String[] announcement : announcements) {
-                            if (AwarenessNotifications.canSend(
-                                    player.protocol.getUUID(),
-                                    "staff-announcement-" + announcement[0],
-                                    Integer.parseInt(announcement[2])
-                            )) {
-                                player.getInstance().sendMessage(AwarenessNotifications.getNotification(announcement[1]));
-                            }
+                    for (String[] announcement : announcements) {
+                        if (AwarenessNotifications.canSend(
+                                protocol.getUUID(),
+                                "staff-announcement-" + announcement[0],
+                                Integer.parseInt(announcement[2])
+                        )) {
+                            protocol.bukkit.sendMessage(AwarenessNotifications.getNotification(announcement[1]));
                         }
                     }
                 }
@@ -145,38 +140,6 @@ public class CloudBase {
 
             // Separator
             SpartanBukkit.connectionThread.executeIfSyncElseHere(SpartanEdition::refresh);
-
-            // Separator
-            if (outdatedVersion == AutoUpdater.NOT_CHECKED) {
-                SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
-                    try {
-                        String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
-                                + "&action=get&data=outdatedVersionCheck&version=" + version);
-
-                        if (results.length > 0) {
-                            String data = results[0];
-
-                            if (data.equals("true")) {
-                                String token = getToken();
-
-                                if (token != null) {
-                                    if (AutoUpdater.downloadFile(token)) {
-                                        outdatedVersion = AutoUpdater.UPDATE_SUCCESS;
-                                    } else {
-                                        outdatedVersion = AutoUpdater.UPDATE_FAILURE;
-                                    }
-                                } else {
-                                    outdatedVersion = AutoUpdater.OUTDATED;
-                                }
-                            } else {
-                                outdatedVersion = AutoUpdater.NOT_OUTDATED;
-                            }
-                        }
-                    } catch (Exception e) {
-                        throwError(e, "outdatedVersionCheck:GET");
-                    }
-                });
-            }
 
             // Separator
             SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
@@ -290,25 +253,25 @@ public class CloudBase {
 
             // Separator
             SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
-                List<SpartanPlayer> players = Permissions.getStaff();
+                List<SpartanProtocol> protocols = Permissions.getStaff();
 
-                if (!players.isEmpty()) {
+                if (!protocols.isEmpty()) {
                     String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                     if (announcements.length > 0) {
                         for (String[] announcement : announcements) {
-                            for (SpartanPlayer p : players) {
+                            for (SpartanProtocol p : protocols) {
                                 if (AwarenessNotifications.canSend(
-                                        p.protocol.getUUID(),
+                                        p.getUUID(),
                                         "staff-announcement-" + announcement[0],
                                         Integer.parseInt(announcement[2])
                                 )) {
-                                    p.getInstance().sendMessage(AwarenessNotifications.getNotification(announcement[1]));
+                                    p.bukkit.sendMessage(AwarenessNotifications.getNotification(announcement[1]));
                                 }
                             }
                         }
                     } else {
-                        for (SpartanPlayer p : players) {
+                        for (SpartanProtocol p : protocols) {
                             SpartanEdition.attemptNotifications(p);
                         }
                     }

@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -36,26 +36,26 @@ public class HackPrevention {
         return this.canPrevent && System.currentTimeMillis() <= this.expiration;
     }
 
-    void handle(SpartanPlayer player) {
+    void handle(SpartanProtocol protocol) {
         Runnable runnable = () -> {
             if (this.location != null
-                    && player.protocol.packetsEnabled()) {
-                player.teleport(this.location);
+                    && protocol.packetsEnabled()) {
+                protocol.spartan.teleport(this.location);
             }
             if (this.groundTeleport) {
-                player.groundTeleport();
+                protocol.spartan.groundTeleport();
             }
             if (this.damage > 0.0
                     && (this.location == null && !this.groundTeleport
                     || Config.settings.getBoolean("Detections.fall_damage_on_teleport"))) {
-                player.damage(this.damage);
+                protocol.spartan.damage(this.damage);
             }
         };
 
         if (SpartanBukkit.isSynchronised()) {
             runnable.run();
         } else {
-            SpartanBukkit.transferTask(player, runnable);
+            SpartanBukkit.transferTask(protocol.spartan, runnable);
         }
     }
 

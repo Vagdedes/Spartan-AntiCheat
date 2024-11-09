@@ -2,8 +2,8 @@ package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.PlayerViolation;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -52,7 +52,7 @@ public class AntiCheatLogs {
 
     // Separator
 
-    public static void logInfo(SpartanPlayer p,
+    public static void logInfo(SpartanProtocol p,
                                String notification,
                                String information,
                                boolean console,
@@ -86,33 +86,33 @@ public class AntiCheatLogs {
         Config.sql.logInfo(p, notification, information, material, hackType, playerViolation);
     }
 
-    public static void logMining(SpartanPlayer player, Block block, boolean cancelled) {
-        if (player.getInstance().getGameMode() == GameMode.SURVIVAL
-                && PlayerUtils.isPickaxeItem(player.getItemInHand().getType())) {
+    public static void logMining(SpartanProtocol protocol, Block block, boolean cancelled) {
+        if (protocol.bukkit.getGameMode() == GameMode.SURVIVAL
+                && PlayerUtils.isPickaxeItem(protocol.spartan.getItemInHand().getType())) {
             MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
 
             if (ore != null) {
-                SpartanLocation location = player.movement.getLocation();
+                SpartanLocation location = protocol.spartan.movement.getLocation();
                 World.Environment environment = location.world.getEnvironment();
                 int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
                 String key = ore.toString(),
-                        log = player.getInstance().getName() + " found " + amount + " " + key
+                        log = protocol.bukkit.getName() + " found " + amount + " " + key
                                 + " on " + x + ", " + y + ", " + z + ", " + BlockUtils.environmentToString(environment);
 
                 // API Event
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(player.getInstance(), log, location.getBukkitLocation(), block.getType());
+                    event = new PlayerFoundOreEvent(protocol.bukkit, log, location.bukkit(), block.getType());
                     Register.manager.callEvent(event);
                 } else {
                     event = null;
                 }
 
                 if ((event == null || !event.isCancelled())
-                        && Enums.HackType.XRay.getCheck().isEnabled(player.dataType, player.getWorld().getName())) {
+                        && Enums.HackType.XRay.getCheck().isEnabled(protocol.spartan.dataType, protocol.spartan.getWorld().getName())) {
                     AntiCheatLogs.logInfo(
-                            player,
+                            protocol,
                             null,
                             log,
                             false,
@@ -121,12 +121,12 @@ public class AntiCheatLogs {
                             null,
                             false
                     );
-                    MiningHistory miningHistory = player.protocol.getProfile().getMiningHistory(ore);
+                    MiningHistory miningHistory = protocol.getProfile().getMiningHistory(ore);
 
                     if (miningHistory != null) {
                         String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
                         miningHistory.increaseMines(environment, amount);
-                        player.getExecutor(Enums.HackType.XRay).handle(
+                        protocol.spartan.getExecutor(Enums.HackType.XRay).handle(
                                 cancelled,
                                 new Object[]{environment, miningHistory, ore, pluralKey});
                     }

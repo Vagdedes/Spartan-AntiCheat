@@ -4,7 +4,7 @@ import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
 import com.projectkorra.projectkorra.event.AbilityProgressEvent;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -19,14 +19,14 @@ public class ProjectKorra implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void AbilityStart(AbilityStartEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 60);
+            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartan, 60);
         }
     }
 
     @EventHandler
     private void AbilityProgress(AbilityProgressEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartanPlayer, 40);
+            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()).spartan, 40);
         }
     }
 
@@ -37,7 +37,7 @@ public class ProjectKorra implements Listener {
 
             if (entity instanceof Player) {
                 evadeCombatFPs(
-                        SpartanBukkit.getProtocol((Player) entity).spartanPlayer,
+                        SpartanBukkit.getProtocol((Player) entity).spartan,
                         60
                 );
             }

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -40,11 +40,11 @@ public class JarVerification {
                         + " If this download is pirated, please consider purchasing the plugin"
                         + " when your server starts making enough money. We also sell on BuiltByBit"
                         + " which supports many payment methods for all countries including yours.";
-                List<SpartanPlayer> staff = Permissions.getStaff();
+                List<SpartanProtocol> staff = Permissions.getStaff();
 
                 if (!staff.isEmpty()) {
-                    for (SpartanPlayer sp : staff) {
-                        sp.sendImportantMessage(AwarenessNotifications.getNotification(message));
+                    for (SpartanProtocol protocol : staff) {
+                        protocol.spartan.sendImportantMessage(AwarenessNotifications.getNotification(message));
                     }
                 }
                 AwarenessNotifications.forcefullySend(message);

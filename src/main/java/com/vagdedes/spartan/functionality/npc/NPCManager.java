@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.npc;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -25,7 +26,7 @@ public class NPCManager implements Listener {
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
-            List<SpartanPlayer> staff = Permissions.getStaff();
+            List<SpartanProtocol> staff = Permissions.getStaff();
 
             if (staff.isEmpty()) {
                 clear();
@@ -37,8 +38,8 @@ public class NPCManager implements Listener {
                         SpartanNPC npc = iterator.next();
                         boolean animate = false;
 
-                        for (SpartanPlayer player : staff) {
-                            if (npc.location.distance(player.movement.getLocation()) <= PlayerUtils.chunk) {
+                        for (SpartanProtocol player : staff) {
+                            if (npc.location.distance(player.spartan.movement.getLocation()) <= PlayerUtils.chunk) {
                                 animate = true;
                                 break;
                             }
@@ -117,11 +118,8 @@ public class NPCManager implements Listener {
                         if (npc.getUniqueId().equals(uuid)) {
                             e.setCancelled(true);
                             npc.updateHead();
-                            SpartanPlayer player = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
-
-                            if (player != null) {
-                                InteractiveInventory.mainMenu.open(player, Permissions.has(player.getInstance()));
-                            }
+                            SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+                            InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit));
                             break;
                         }
                     }
@@ -146,11 +144,8 @@ public class NPCManager implements Listener {
                             Entity damager = e.getDamager();
 
                             if (damager instanceof Player) {
-                                SpartanPlayer player = SpartanBukkit.getProtocol((Player) damager).spartanPlayer;
-
-                                if (player != null) {
-                                    InteractiveInventory.mainMenu.open(player, Permissions.has(player.getInstance()));
-                                }
+                                SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) damager);
+                                InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit));
                             }
                             break;
                         }

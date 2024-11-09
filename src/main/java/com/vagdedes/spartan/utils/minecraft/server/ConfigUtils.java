@@ -2,7 +2,7 @@ package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -52,26 +52,26 @@ public class ConfigUtils {
         return message;
     }
 
-    public static String replaceWithSyntax(SpartanPlayer p, String message, HackType hackType) {
-        SpartanLocation loc = p.movement.getLocation();
-        String worldName = p.getWorld().getName();
-        message = replace(message, "{player}", p.getInstance().getName());
-        message = replace(message, "{player:type}", p.dataType.toString().toLowerCase());
-        message = replace(message, "{uuid}", p.protocol.getUUID().toString());
-        message = replace(message, "{ping}", String.valueOf(p.protocol.getPing()));
+    public static String replaceWithSyntax(SpartanProtocol p, String message, HackType hackType) {
+        SpartanLocation loc = p.spartan.movement.getLocation();
+        String worldName = p.spartan.getWorld().getName();
+        message = replace(message, "{player}", p.bukkit.getName());
+        message = replace(message, "{player:type}", p.spartan.dataType.toString().toLowerCase());
+        message = replace(message, "{uuid}", p.getUUID().toString());
+        message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{world}", worldName);
-        message = replace(message, "{health}", String.valueOf(p.getHealth()));
-        message = replace(message, "{gamemode}", p.getInstance().getGameMode().toString().toLowerCase());
+        message = replace(message, "{health}", String.valueOf(p.spartan.getHealth()));
+        message = replace(message, "{gamemode}", p.bukkit.getGameMode().toString().toLowerCase());
         message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
         message = replace(message, "{y}", String.valueOf(loc.getBlockY()));
         message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
-        message = replace(message, "{cps}", String.valueOf(p.clicks.getCount()));
+        message = replace(message, "{cps}", String.valueOf(p.spartan.clicks.getCount()));
 
         if (hackType != null) {
-            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(p.dataType, worldName)));
-            message = replace(message, "{punish:detection}", String.valueOf(hackType.getCheck().canPunish(p.dataType)));
+            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(p.spartan.dataType, worldName)));
+            message = replace(message, "{punish:detection}", String.valueOf(hackType.getCheck().canPunish(p.spartan.dataType)));
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }
@@ -80,7 +80,7 @@ public class ConfigUtils {
         boolean hasHackType = hackType != null;
 
         if (off.isOnline()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol((Player) off).spartanPlayer;
+            SpartanProtocol p = SpartanBukkit.getProtocol((Player) off);
             return replaceWithSyntax(p, message, hackType);
         } else {
             UUID uuid = off.getUniqueId();

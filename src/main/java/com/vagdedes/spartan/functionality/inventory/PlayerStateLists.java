@@ -1,7 +1,5 @@
 package com.vagdedes.spartan.functionality.inventory;
 
-import com.vagdedes.spartan.abstraction.check.CheckExecutor;
-import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
@@ -78,81 +76,89 @@ public class PlayerStateLists {
         return false;
     }
 
-    private static List<PlayerProfile> getProfiles() {
-        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+    private static Map<PlayerProfile, Collection<Enums.HackType>> getProfiles() {
+        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
 
-        if (!playerProfiles.isEmpty()) {
-            List<PlayerProfile> list = new ArrayList<>(playerProfiles.size());
+        if (!profiles.isEmpty()) {
+            Map<PlayerProfile, Collection<Enums.HackType>> map = new LinkedHashMap<>();
 
-            for (PlayerProfile playerProfile : playerProfiles) {
-                for (CheckExecutor checkExecutor : playerProfile.getExecutors()) {
-                    boolean breakLoop = false;
-
-                    for (DetectionExecutor detectionExecutor : checkExecutor.getDetections()) {
-                        if (detectionExecutor.surpassedProbability(
-                                playerProfile.getLastDataType(),
-                                PlayerEvidence.preventionProbability
-                        )) {
-                            list.add(playerProfile);
-                            breakLoop = true;
-                            break;
-                        }
-                    }
-
-                    if (breakLoop) {
-                        break;
-                    }
-                }
-            }
-            return list;
-        } else {
-            return new ArrayList<>(0);
-        }
-    }
-
-    public static void fill(UUID uuid, Inventory inventory) {
-        List<String> lore = new ArrayList<>(20);
-        int slotPosition = 0,
-                limit = 15,
-                page = getPage(uuid),
-                skip = ((page - 1) * limit);
-        ;
-        Integer[] freeSlots = getFreeSlots(inventory);
-
-        List<PlayerProfile> playerProfiles = subList(getProfiles(), skip, skip + limit);
-        int listSize = playerProfiles.size();
-
-        if (listSize > 0) {
-            for (PlayerProfile playerProfile : playerProfiles) {
+            for (PlayerProfile playerProfile : profiles) {
                 Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidenceList(
-                        playerProfile.getLastDataType(),
                         PlayerEvidence.preventionProbability
                 );
 
                 if (!evidenceDetails.isEmpty()) {
-                    lore.clear();
-                    lore.add("§7Suspected for§8:");
-
-                    for (Enums.HackType hackType : evidenceDetails) {
-                        lore.add("§4" + hackType.getCheck().getName());
-                    }
-                    fill(inventory, playerProfile, lore, freeSlots[slotPosition]);
-                    slotPosition++;
-                } else {
-                    listSize--;
+                    map.put(playerProfile, evidenceDetails);
                 }
             }
+            return map;
+        } else {
+            return new HashMap<>(0);
         }
+    }
 
-        if (listSize != limit) {
-            lore.clear();
-            lore.add("");
-            lore.add("§cEmpty items like this will be filled with");
-            lore.add("§csuspected players as they are found.");
+    public static void fill(UUID uuid, Inventory inventory) {
+        Map<PlayerProfile, Collection<Enums.HackType>> selectedProfiles = getProfiles();
 
-            for (int i = listSize; i < limit; i++) {
-                InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
-                slotPosition++;
+        if (!selectedProfiles.isEmpty()) {
+            List<String> lore = new ArrayList<>();
+            int slotPosition = 0,
+                    limit = 15,
+                    page = getPage(uuid),
+                    skip = ((page - 1) * limit);
+            ;
+            Integer[] freeSlots = getFreeSlots(inventory);
+            List<PlayerProfile> selectedProfilesToReview = subList(
+                    new ArrayList<>(selectedProfiles.keySet()),
+                    skip,
+                    skip + limit
+            );
+            int listSize = selectedProfilesToReview.size();
+
+            if (listSize > 0) {
+                for (PlayerProfile playerProfile : selectedProfilesToReview) {
+                    Collection<Enums.HackType> evidenceDetails = selectedProfiles.get(playerProfile);
+
+                    if (!evidenceDetails.isEmpty()) {
+                        boolean missingData = false;
+                        lore.clear();
+                        lore.add("§7Suspected for§8:");
+
+                        for (Enums.HackType hackType : evidenceDetails) {
+                            lore.add("§4" + hackType.getCheck().getName());
+
+                            if (!missingData
+                                    && !playerProfile.getExecutor(
+                                    hackType
+                            ).hasSufficientData(
+                                    playerProfile.getLastDataType()
+                            )) {
+                                missingData = true;
+                            }
+                        }
+                        if (missingData) {
+                            lore.add("");
+                            lore.add("§eSome checks are still collecting data");
+                            lore.add("§eand will fully enable in the future.");
+                        }
+                        fill(inventory, playerProfile, lore, freeSlots[slotPosition]);
+                        slotPosition++;
+                    } else {
+                        listSize--;
+                    }
+                }
+            }
+
+            if (listSize != limit) {
+                lore.clear();
+                lore.add("");
+                lore.add("§cEmpty items like this will be filled with");
+                lore.add("§csuspected players as they are found.");
+
+                for (int i = listSize; i < limit; i++) {
+                    InventoryUtils.add(inventory, inactiveColour + "Empty", lore, InventoryUtils.getHead(), freeSlots[slotPosition]);
+                    slotPosition++;
+                }
             }
         }
     }

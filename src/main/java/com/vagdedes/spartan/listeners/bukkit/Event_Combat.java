@@ -43,7 +43,7 @@ public class Event_Combat implements Listener {
             if (protocol.packetsEnabled() == packets) {
                 // Detections
                 if (entityAttack) {
-                    protocol.spartanPlayer.calculateClicks(true);
+                    protocol.spartan.calculateClicks(true);
 
                     if (entityIsPlayer || entity instanceof LivingEntity) {
                         boolean cancelled = e.isCancelled();
@@ -52,13 +52,13 @@ public class Event_Combat implements Listener {
                                 (LivingEntity) entity,
                                 cancelled
                         );
-                        protocol.spartanPlayer.getExecutor(Enums.HackType.NoSwing).handle(cancelled, event);
-                        protocol.spartanPlayer.getExecutor(Enums.HackType.HitReach).handle(cancelled, event);
-                        protocol.spartanPlayer.getExecutor(Enums.HackType.KillAura).handle(cancelled, event);
-                        protocol.spartanPlayer.getExecutor(Enums.HackType.Exploits).handle(cancelled, event);
+                        protocol.spartan.getExecutor(Enums.HackType.NoSwing).handle(cancelled, event);
+                        protocol.spartan.getExecutor(Enums.HackType.HitReach).handle(cancelled, event);
+                        protocol.spartan.getExecutor(Enums.HackType.KillAura).handle(cancelled, event);
+                        protocol.spartan.getExecutor(Enums.HackType.Exploits).handle(cancelled, event);
 
                         for (Enums.HackType hackType : handledChecks) {
-                            if (protocol.spartanPlayer.getExecutor(hackType).prevent()) {
+                            if (protocol.spartan.getExecutor(hackType).prevent()) {
                                 e.setCancelled(true);
                             }
                         }
@@ -73,7 +73,7 @@ public class Event_Combat implements Listener {
 
             if (protocol.packetsEnabled() == packets) {
                 // Objects
-                protocol.spartanPlayer.handleReceivedDamage(e);
+                protocol.spartan.handleReceivedDamage();
 
                 // Detections
                 if (entityAttack && (damagerIsPlayer || damager instanceof LivingEntity)) {
@@ -83,7 +83,7 @@ public class Event_Combat implements Listener {
                             (LivingEntity) damager,
                             cancelled
                     );
-                    protocol.spartanPlayer.getExecutor(Enums.HackType.KillAura).handle(cancelled, event);
+                    protocol.spartan.getExecutor(Enums.HackType.KillAura).handle(cancelled, event);
                 }
             }
         } else {

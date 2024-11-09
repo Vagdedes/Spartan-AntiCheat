@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.inventory;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -36,39 +36,39 @@ public abstract class InventoryMenu {
         this(title, size, new Enums.Permission[]{permissions});
     }
 
-    protected Inventory setInventory(SpartanPlayer player, String title, int size) {
+    protected Inventory setInventory(SpartanProtocol protocol, String title, int size) {
         this.title = title;
         this.size = size;
-        return inventory = player.createInventory(size, title);
+        return inventory = protocol.spartan.createInventory(size, title);
     }
 
-    protected Inventory setSize(SpartanPlayer player, int size) {
+    protected Inventory setSize(SpartanProtocol protocol, int size) {
         this.size = size;
-        return inventory = player.createInventory(size, title);
+        return inventory = protocol.spartan.createInventory(size, title);
     }
 
-    protected Inventory setTitle(SpartanPlayer player, String title) {
+    protected Inventory setTitle(SpartanProtocol protocol, String title) {
         this.title = title;
-        return inventory = player.createInventory(size, title);
+        return inventory = protocol.spartan.createInventory(size, title);
     }
 
     protected void add(String name, List<String> lore, ItemStack item, int slot) {
         InventoryUtils.add(inventory, name, lore, item, slot);
     }
 
-    public boolean open(SpartanPlayer player, boolean permissionMessage) {
-        return open(player, permissionMessage, null);
+    public boolean open(SpartanProtocol protocol, boolean permissionMessage) {
+        return open(protocol, permissionMessage, null);
     }
 
-    public boolean open(SpartanPlayer player, Object object) {
-        return open(player, true, object);
+    public boolean open(SpartanProtocol protocol, Object object) {
+        return open(protocol, true, object);
     }
 
-    public boolean open(SpartanPlayer player) {
-        return open(player, true, null);
+    public boolean open(SpartanProtocol protocol) {
+        return open(protocol, true, null);
     }
 
-    public boolean open(SpartanPlayer player, boolean permissionMessage, Object object) {
+    public boolean open(SpartanProtocol protocol, boolean permissionMessage, Object object) {
         boolean access;
 
         if (permissions.length == 0) {
@@ -77,7 +77,7 @@ public abstract class InventoryMenu {
             boolean check = false;
 
             for (Enums.Permission permission : permissions) {
-                if (Permissions.has(player.getInstance(), permission)) {
+                if (Permissions.has(protocol.bukkit, permission)) {
                     check = true;
                     break;
                 }
@@ -86,27 +86,27 @@ public abstract class InventoryMenu {
         }
 
         if (access) {
-            inventory = player.createInventory(size, title);
-            if (internalOpen(player, permissionMessage, object)) {
+            inventory = protocol.spartan.createInventory(size, title);
+            if (internalOpen(protocol, permissionMessage, object)) {
                 SpartanBukkit.transferTask(
-                        player,
-                        () -> player.getInstance().openInventory(inventory)
+                        protocol.bukkit,
+                        () -> protocol.bukkit.openInventory(inventory)
                 );
                 return true;
             } else {
                 return false;
             }
         } else {
-            player.sendInventoryCloseMessage(
+            protocol.spartan.sendInventoryCloseMessage(
                     permissionMessage ? Config.messages.getColorfulString("no_permission") : null
             );
             return false;
         }
     }
 
-    protected abstract boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object);
+    protected abstract boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object);
 
-    public boolean handle(SpartanPlayer player, String title, ItemStack itemStack, ClickType clickType, int slot) {
+    public boolean handle(SpartanProtocol protocol, String title, ItemStack itemStack, ClickType clickType, int slot) {
         if (title.equals(this.title)) {
             boolean access;
 
@@ -116,7 +116,7 @@ public abstract class InventoryMenu {
                 boolean check = false;
 
                 for (Enums.Permission permission : permissions) {
-                    if (Permissions.has(player.getInstance(), permission)) {
+                    if (Permissions.has(protocol.bukkit, permission)) {
                         check = true;
                         break;
                     }
@@ -124,7 +124,7 @@ public abstract class InventoryMenu {
                 access = check;
 
                 if (!access) {
-                    player.getInstance().closeInventory();
+                    protocol.bukkit.closeInventory();
                 }
             }
 
@@ -132,11 +132,11 @@ public abstract class InventoryMenu {
                 this.itemStack = itemStack;
                 this.clickType = clickType;
                 this.slot = slot;
-                return internalHandle(player);
+                return internalHandle(protocol);
             }
         }
         return false;
     }
 
-    protected abstract boolean internalHandle(SpartanPlayer player);
+    protected abstract boolean internalHandle(SpartanProtocol protocol);
 }

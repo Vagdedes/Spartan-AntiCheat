@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.abstraction.pattern;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -386,11 +386,11 @@ public class Pattern {
 
     // Separator
 
-    public void learn(SpartanPlayer player, int[] situation, Number pattern) {
+    public void learn(SpartanProtocol protocol, int[] situation, Number pattern) {
         if (this.loaded) {
             long time = System.currentTimeMillis();
-            PlayerProfile profile = player.protocol.getProfile();
-            Integer frequency = DetectionNotifications.getFrequency(player);
+            PlayerProfile profile = protocol.getProfile();
+            Integer frequency = DetectionNotifications.getFrequency(protocol);
             boolean notifications = frequency != null,
                     found = false,
                     store = false,
@@ -423,8 +423,8 @@ public class Pattern {
                 );
 
                 if (message != null
-                        && AwarenessNotifications.canSend(player.protocol.getUUID(), "pattern-data", 60)) {
-                    player.getInstance().sendMessage(message);
+                        && AwarenessNotifications.canSend(protocol.getUUID(), "pattern-data", 60)) {
+                    protocol.bukkit.sendMessage(message);
                 }
             }
         }

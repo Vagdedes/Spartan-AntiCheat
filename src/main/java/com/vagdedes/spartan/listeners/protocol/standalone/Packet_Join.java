@@ -24,10 +24,10 @@ public class Packet_Join extends PacketAdapter {
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-        if (protocol.spartanPlayer.isBedrockPlayer()) {
+        if (protocol.spartan.isBedrockPlayer()) {
             return;
         }
-        Packet_LagCompensation.newPacket(protocol.spartanPlayer.getEntityId());
+        Packet_LagCompensation.newPacket(protocol.spartan.getEntityId());
     }
 
 }

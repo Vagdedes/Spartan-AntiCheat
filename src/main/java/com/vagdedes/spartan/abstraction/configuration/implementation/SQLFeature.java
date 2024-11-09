@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
@@ -325,7 +325,7 @@ public class SQLFeature extends ConfigurationBuilder {
 
     // Separator
 
-    public void logInfo(SpartanPlayer p,
+    public void logInfo(SpartanProtocol p,
                         String notification,
                         String information,
                         Material material,
@@ -336,7 +336,7 @@ public class SQLFeature extends ConfigurationBuilder {
             boolean hasPlayer = p != null,
                     hasCheck = playerViolation != null,
                     hasMaterial = material != null;
-            SpartanLocation location = hasPlayer ? p.movement.getLocation() : null;
+            SpartanLocation location = hasPlayer ? p.spartan.movement.getLocation() : null;
             update(
                     "INSERT INTO " + table
                             + " (creation_date"
@@ -352,9 +352,9 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                             + ", " + (notification != null ? syntaxForColumn(notification) : "NULL")
                             + ", " + syntaxForColumn(information)
-                            + ", " + (hasPlayer ? syntaxForColumn(p.protocol.getUUID()) : "NULL")
-                            + ", " + (hasPlayer ? syntaxForColumn(p.getInstance().getName()) : "NULL")
-                            + ", " + (hasPlayer ? syntaxForColumn(p.protocol.getPing()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.getUUID()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.bukkit.getName()) : "NULL")
+                            + ", " + (hasPlayer ? syntaxForColumn(p.getPing()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockX()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")

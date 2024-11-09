@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 import com.nisovin.magicspells.events.SpellCastEvent;
 import com.nisovin.magicspells.events.SpellCastedEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -21,7 +21,7 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartan;
 
                 Config.compatibility.evadeFalsePositives(
                         p,
@@ -42,7 +42,7 @@ public class MagicSpells implements Listener {
             LivingEntity caster = e.getCaster();
 
             if (caster instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartanPlayer;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caster).spartan;
 
                 Config.compatibility.evadeFalsePositives(
                         p,

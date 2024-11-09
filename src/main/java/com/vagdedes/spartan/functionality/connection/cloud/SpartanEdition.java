@@ -1,13 +1,14 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
+import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
-import com.vagdedes.spartan.utils.java.StringUtils;
+import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,16 +16,17 @@ import java.util.List;
 public class SpartanEdition {
 
     private static final Check.DataType
-            currentType = Check.DataType.JAVA,
+            currentType = IDs.resource.equals("25638")
+            || IDs.resource.equals("11196")
+            || IDs.resource.equals("350")
+            || Bukkit.getMotd().contains(Register.plugin.getName())
+            ? Check.DataType.JAVA
+            : Check.DataType.BEDROCK,
             oppositeType = currentType == Check.DataType.JAVA
                     ? Check.DataType.BEDROCK
                     : Check.DataType.JAVA;
 
     private static long checkTime = 0L;
-    public static final String[] jarNames = new String[]{
-            StringUtils.decodeBase64("U3BhcnRhbkJlZHJvY2tFZGl0aW9u"),
-            "Spartan",
-    };
     public static final String patreonURL = "https://www.vagdedes.com/patreon";
     private static final int notificationCooldown = 60 * 60;
     private static final String
@@ -115,7 +117,7 @@ public class SpartanEdition {
     // 2. Detection (No Slots)
     // 3. Alternative (No Other Version)
     // 4. Account (No Account)
-    public static void attemptNotifications(SpartanPlayer player) {
+    public static void attemptNotifications(SpartanProtocol protocol) {
         Check.DataType[] missingDetections =
                 !currentVersion && !alternativeVersion
                         ? new Check.DataType[]{currentType, oppositeType}
@@ -126,13 +128,13 @@ public class SpartanEdition {
                         : new Check.DataType[]{};
 
         if (missingDetections.length == Check.DataType.values().length) {
-            attemptVersionNotification(player, null);
+            attemptVersionNotification(protocol, null);
             return;
         }
 
         if (missingDetections.length > 0) {
             if (notifyCache) {
-                attemptVersionNotification(player, missingDetections[0]);
+                attemptVersionNotification(protocol, missingDetections[0]);
                 return;
             }
             long time = System.currentTimeMillis();
@@ -140,26 +142,26 @@ public class SpartanEdition {
             if ((time - checkTime) >= 60_000L) {
                 checkTime = time;
 
-                if (missingDetections[0] == player.dataType) {
+                if (missingDetections[0] == protocol.spartan.dataType) {
                     notifyCache = true;
-                    attemptVersionNotification(player, missingDetections[0]);
+                    attemptVersionNotification(protocol, missingDetections[0]);
                     return;
                 }
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
-                players.remove(player);
+                List<SpartanProtocol> players = SpartanBukkit.getProtocols();
+                players.remove(protocol);
                 int size = players.size();
                 List<PlayerProfile> checkedProfiles;
 
                 if (size > 0) {
                     checkedProfiles = new ArrayList<>(size);
 
-                    for (SpartanPlayer otherPlayer : players) {
-                        if (missingDetections[0] == otherPlayer.dataType) {
+                    for (SpartanProtocol otherProtocol : players) {
+                        if (missingDetections[0] == otherProtocol.spartan.dataType) {
                             notifyCache = true;
-                            attemptVersionNotification(player, missingDetections[0]);
+                            attemptVersionNotification(otherProtocol, missingDetections[0]);
                             return;
                         } else {
-                            checkedProfiles.add(player.protocol.getProfile());
+                            checkedProfiles.add(otherProtocol.getProfile());
                         }
                     }
                 } else {
@@ -171,14 +173,14 @@ public class SpartanEdition {
                 List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
                 if (!playerProfiles.isEmpty()) {
-                    playerProfiles.remove(player.protocol.getProfile());
+                    playerProfiles.remove(protocol.getProfile());
                     playerProfiles.removeAll(checkedProfiles);
 
                     if (!playerProfiles.isEmpty()) {
                         for (PlayerProfile profile : playerProfiles) {
-                            if (profile.hasData(missingDetections[0])) {
+                            if (profile.getLastDataType() == missingDetections[0]) {
                                 notifyCache = true;
-                                attemptVersionNotification(player, missingDetections[0]);
+                                attemptVersionNotification(protocol, missingDetections[0]);
                                 return;
                             }
                         }
@@ -186,10 +188,10 @@ public class SpartanEdition {
                 }
             }
         }
-        attemptNoAccountNotification(player);
+        attemptNoAccountNotification(protocol);
     }
 
-    private static void attemptVersionNotification(SpartanPlayer player, Check.DataType dataType) {
+    private static void attemptVersionNotification(SpartanProtocol protocol, Check.DataType dataType) {
         String message;
 
         if (dataType == null) {
@@ -214,18 +216,18 @@ public class SpartanEdition {
             );
         }
 
-        if (AwarenessNotifications.canSend(player.protocol.getUUID(), "alternative-version", notificationCooldown)) {
-            player.sendImportantMessage(message);
+        if (AwarenessNotifications.canSend(protocol.getUUID(), "alternative-version", notificationCooldown)) {
+            protocol.spartan.sendImportantMessage(message);
         }
     }
 
-    private static void attemptNoAccountNotification(SpartanPlayer player) {
+    private static void attemptNoAccountNotification(SpartanProtocol protocol) {
         if (!hasAccount) {
             String message = AwarenessNotifications.getOptionalNotification(hasAccountNotificationMessage);
 
             if (message != null
-                    && AwarenessNotifications.canSend(player.protocol.getUUID(), "has-account", notificationCooldown)) {
-                player.sendImportantMessage(message);
+                    && AwarenessNotifications.canSend(protocol.getUUID(), "has-account", notificationCooldown)) {
+                protocol.spartan.sendImportantMessage(message);
             }
         }
     }

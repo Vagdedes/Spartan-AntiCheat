@@ -4,7 +4,6 @@ import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.server.TPS;
 
 import java.io.File;
 import java.util.List;
@@ -37,7 +36,6 @@ public class Settings extends ConfigurationBuilder {
         addOption("Notifications.awareness_notifications", true);
         addOption("Notifications.message_clickable_command", "/teleport {player}");
 
-        addOption("Important.max_supported_player_latency", TPS.tickTimeInteger * 100);
         addOption("Important.op_bypass", false);
         addOption(crossServerNotificationsName, "");
         addOption("Important.bedrock_client_permission", false);

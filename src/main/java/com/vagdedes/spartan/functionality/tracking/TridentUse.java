@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.tracking;
 
-import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -13,11 +13,11 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class TridentUse {
 
-    private static final int riptideMaxSafeLevel = 3;
+    private static final double riptideMaxSafeLevel = 3.0;
 
-    public static void run(SpartanPlayer p) {
+    public static void run(SpartanProtocol p) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            PlayerInventory inventory = p.getInstance().getInventory();
+            PlayerInventory inventory = p.bukkit.getInventory();
 
             for (ItemStack item : new ItemStack[]{inventory.getItemInHand(), inventory.getItemInOffHand()}) {
                 if (item.getType() == Material.TRIDENT) {
@@ -26,12 +26,15 @@ public class TridentUse {
                         int ticks = AlgebraUtils.integerRound(Math.log(level) * TPS.maximum);
 
                         if (level > riptideMaxSafeLevel) {
-                            p.trackers.add(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY, ticks);
+                            p.spartan.trackers.add(
+                                    PlayerTrackers.TrackerType.TRIDENT,
+                                    AlgebraUtils.integerCeil(ticks * (level / riptideMaxSafeLevel))
+                            );
                         } else {
-                            p.trackers.add(PlayerTrackers.TrackerType.TRIDENT, ticks);
+                            p.spartan.trackers.add(PlayerTrackers.TrackerType.TRIDENT, ticks);
                         }
 
-                        p.getExecutor(Enums.HackType.Speed).handle(false, level);
+                        p.spartan.getExecutor(Enums.HackType.Speed).handle(false, level);
                     }
                     break;
                 }

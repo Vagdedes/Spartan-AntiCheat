@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
@@ -11,14 +10,12 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.tracking.Piston;
 import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
-import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -26,7 +23,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -45,7 +41,7 @@ public class Event_World implements Listener {
                     Set<World> worlds = new HashSet<>();
 
                     for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
-                        worlds.add(protocol.spartanPlayer.getWorld());
+                        worlds.add(protocol.spartan.getWorld());
                     }
                     for (World world : worlds) {
                         Map<Long, List<Entity>> perChunkEntities = new LinkedHashMap<>();
@@ -85,35 +81,35 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockBreak(BlockBreakEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
         Block nb = e.getBlock();
         Event_Chunks.cache(nb.getChunk(), false);
         boolean cancelled = e.isCancelled();
-        p.movement.judgeGround();
+        protocol.spartan.movement.judgeGround();
 
         // Detections
         if (!ItemsAdder.is(nb)) {
-            p.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.GhostHand).handle(cancelled, nb);
+            protocol.spartan.getExecutor(Enums.HackType.NoSwing).handle(cancelled, e);
+            protocol.spartan.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
+            protocol.spartan.getExecutor(Enums.HackType.FastBreak).handle(cancelled, e);
+            protocol.spartan.getExecutor(Enums.HackType.GhostHand).handle(cancelled, nb);
         }
-        p.getExecutor(Enums.HackType.Exploits).handle(cancelled, e);
-        p.getExecutor(Enums.HackType.FastClicks).handle(cancelled, null);
-        AntiCheatLogs.logMining(p, nb, cancelled);
+        protocol.spartan.getExecutor(Enums.HackType.Exploits).handle(cancelled, e);
+        protocol.spartan.getExecutor(Enums.HackType.FastClicks).handle(cancelled, null);
+        AntiCheatLogs.logMining(protocol, nb, cancelled);
 
-        if (p.getExecutor(Enums.HackType.NoSwing).prevent()
-                || p.getExecutor(Enums.HackType.BlockReach).prevent()
-                || p.getExecutor(Enums.HackType.FastBreak).prevent()
-                || p.getExecutor(Enums.HackType.GhostHand).prevent()
-                || p.getExecutor(Enums.HackType.XRay).prevent()) {
+        if (protocol.spartan.getExecutor(Enums.HackType.NoSwing).prevent()
+                || protocol.spartan.getExecutor(Enums.HackType.BlockReach).prevent()
+                || protocol.spartan.getExecutor(Enums.HackType.FastBreak).prevent()
+                || protocol.spartan.getExecutor(Enums.HackType.GhostHand).prevent()
+                || protocol.spartan.getExecutor(Enums.HackType.XRay).prevent()) {
             e.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Sign(SignChangeEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
 
         // Detections
         p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getLines());
@@ -128,12 +124,12 @@ public class Event_World implements Listener {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
 
         // Detections
-        protocol.spartanPlayer.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
+        protocol.spartan.getExecutor(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Interact(PlayerInteractEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
         Block nb = e.getClickedBlock();
         Action action = e.getAction();
         boolean notNull = nb != null,
@@ -182,34 +178,6 @@ public class Event_World implements Listener {
         if (!e.isCancelled()) {
             // Handlers
             Piston.run(e.getBlock(), e.getBlocks());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void EntityExplosion(EntityExplodeEvent e) {
-        if (v1_21
-                && !e.isCancelled()
-                && SpartanBukkit.getPlayerCount() > 0) {
-            Location location = e.getLocation();
-            Collection<Entity> entities = location.getNearbyEntities(
-                    CombatUtils.maxHitDistance,
-                    CombatUtils.maxHitDistance,
-                    CombatUtils.maxHitDistance
-            );
-
-            if (!entities.isEmpty()) {
-                for (Entity entity : entities) {
-                    if (entity instanceof Player) {
-                        SpartanBukkit.getProtocol((Player) entity).spartanPlayer.trackers.add(
-                                PlayerTrackers.TrackerType.ABSTRACT_VELOCITY,
-                                AlgebraUtils.integerCeil(
-                                        CombatUtils.maxHitDistance
-                                                - ProtocolLib.getLocation((Player) entity).distance(location)
-                                ) * 5
-                        );
-                    }
-                }
-            }
         }
     }
 

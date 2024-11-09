@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -20,21 +20,21 @@ public class Event_Movement implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void MoveEvent(PlayerMoveEvent e) {
         event(e, false);
-        SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer.getExecutor(
+        SpartanBukkit.getProtocol(e.getPlayer()).spartan.getExecutor(
                 Enums.HackType.MorePackets
         ).handle(e.isCancelled(), null);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WorldEvent(PlayerChangedWorldEvent e) {
-        SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer.resetCrucialData();
+        SpartanBukkit.getProtocol(e.getPlayer()).spartan.resetCrucialData();
     }
 
     public static void event(PlayerMoveEvent e, boolean packets) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
 
         if (protocol.packetsEnabled() == packets) {
-            SpartanPlayer p = protocol.spartanPlayer;
+            SpartanPlayer p = protocol.spartan;
             Location nto = e.getTo();
 
             if (nto == null) {
@@ -72,7 +72,7 @@ public class Event_Movement implements Listener {
                 p.movement.judgeGround();
                 return;
             }
-            MovementProcessing.run(p, to, ver, box);
+            MovementProcessing.run(protocol, to, ver, box);
 
             // Detections
             boolean cancelled = e.isCancelled();
@@ -91,7 +91,7 @@ public class Event_Movement implements Listener {
 
     public static void tick(PlayerTickEvent tickEvent) {
         SpartanProtocol protocol = tickEvent.protocol;
-        SpartanPlayer p = protocol.spartanPlayer;
+        SpartanPlayer p = protocol.spartan;
         p.getExecutor(Enums.HackType.MorePackets).handle(false, tickEvent);
     }
 

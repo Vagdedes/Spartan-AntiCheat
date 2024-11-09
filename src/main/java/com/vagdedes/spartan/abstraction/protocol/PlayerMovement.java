@@ -1,0 +1,428 @@
+package com.vagdedes.spartan.abstraction.protocol;
+
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
+import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.util.Vector;
+
+import java.util.*;
+
+public class PlayerMovement {
+
+    private final SpartanPlayer parent;
+    private Double
+            eventDistance,
+            eventHorizontal,
+            eventPreviousHorizontal,
+            eventVertical,
+            eventXDiff,
+            eventZDiff,
+            eventPreviousVertical,
+            eventBox,
+            eventPreviousBox;
+    private final Map<Long, SpartanLocation> locations;
+    private int
+            airTicks;
+    private long
+            lastFlight,
+            lastGlide,
+            artificialSwimming,
+            lastLiquidTicks;
+    private Material lastLiquidMaterial;
+    private SpartanLocation
+            location,
+            eventFrom,
+            detectionLocation;
+    SpartanLocation schedulerFrom;
+    private Vector clampVector;
+    public double motionY;
+
+    PlayerMovement(SpartanPlayer parent) {
+        this.parent = parent;
+        this.lastLiquidMaterial = Material.AIR;
+
+        SpartanLocation location = new SpartanLocation(
+                ProtocolLib.getLocation(parent.protocol.bukkit)
+        );
+        this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.locations.put(System.currentTimeMillis(), location);
+
+        this.location = location;
+        this.eventFrom = location;
+        this.schedulerFrom = location;
+        this.detectionLocation = location;
+
+        this.clampVector = new Vector();
+        this.motionY = 0;
+    }
+
+    // Separator
+
+    public double getValueOrDefault(Double value, double def) {
+        return value == null ? def : value;
+    }
+
+    // Separator
+
+    public Double getEventDistance() {
+        return eventDistance;
+    }
+
+    // Separator
+
+    public Double getEventHorizontal() {
+        return eventHorizontal;
+    }
+
+    public Double getPreviousEventHorizontal() {
+        return eventPreviousHorizontal;
+    }
+
+    // Separator
+
+    public Double getEventXDiff() {
+        return eventXDiff;
+    }
+
+    public Double getEventZDiff() {
+        return eventZDiff;
+    }
+
+    // Separator
+
+    public Double getEventVertical() {
+        return eventVertical;
+    }
+
+    public Double getPreviousEventVertical() {
+        return eventPreviousVertical;
+    }
+
+    // Separator
+
+    public Double getEventBox() {
+        return eventBox;
+    }
+
+    public Double getPreviousEventBox() {
+        return eventPreviousBox;
+    }
+
+    // Separator
+
+    public boolean isInLiquids() {
+        return this.isSwimming()
+                || System.currentTimeMillis() - this.lastLiquidTicks <= Math.max(
+                this.parent.protocol.getPing(),
+                5L * TPS.tickTime
+        );
+    }
+
+    public Material getLastLiquidMaterial() {
+        return lastLiquidMaterial;
+    }
+
+    public void setLastLiquid(Material material) {
+        lastLiquidTicks = System.currentTimeMillis();
+        lastLiquidMaterial = material;
+    }
+
+    public void removeLastLiquidTime() {
+        lastLiquidTicks = 0L;
+    }
+
+    // Separator
+
+    public boolean isSwimming() {
+        if (artificialSwimming >= System.currentTimeMillis()) {
+            return true;
+        } else if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+            return this.parent.protocol.bukkit.isSwimming();
+        } else {
+            return false;
+        }
+    }
+
+    public void setArtificialSwimming() {
+        this.artificialSwimming = System.currentTimeMillis() + TPS.tickTime;
+    }
+
+    // Separator
+
+    public boolean isLowEyeHeight() {
+        return this.parent.protocol.bukkit.getEyeHeight() < 1.0;
+    }
+
+    public boolean isFlying() {
+        Entity vehicle = this.parent.protocol.spartan.getVehicle();
+        boolean flying;
+
+        if (vehicle != null) {
+            flying = vehicle instanceof Player && ((Player) vehicle).isFlying();
+        } else {
+            flying = this.parent.protocol.bukkit.isFlying();
+        }
+        if (flying) {
+            this.lastFlight = System.currentTimeMillis();
+        }
+        return flying;
+    }
+
+    public boolean wasFlying() {
+        return this.isFlying()
+                || System.currentTimeMillis() - this.lastFlight <= TPS.maximum * TPS.tickTime;
+    }
+
+    // Separator
+
+    public boolean isJumping(double d) {
+        return PlayerUtils.isJumping(
+                d,
+                PlayerUtils.getPotionLevel(this.parent, PotionEffectUtils.JUMP) + 1,
+                GroundUtils.maxHeightLengthRatio
+        );
+    }
+
+    public boolean justJumped(double d) {
+        return PlayerUtils.justJumped(
+                d,
+                PlayerUtils.getPotionLevel(this.parent, PotionEffectUtils.JUMP) + 1,
+                GroundUtils.maxHeightLengthRatio
+        );
+    }
+
+    // Separator
+
+    public double getAirAcceleration() {
+        return this.location.isChunkLoaded()
+                ? PlayerUtils.airAcceleration
+                : PlayerUtils.airAccelerationUnloaded;
+    }
+
+    public int getFallTick(double d, double acceleration, double drag, double precision) {
+        return PlayerUtils.getFallTick(
+                d,
+                acceleration,
+                drag,
+                precision,
+                PlayerUtils.getPotionLevel(this.parent, PotionEffectUtils.JUMP) + 1
+        );
+    }
+
+    public boolean isFalling(double d, double acceleration, double drag, double precision) {
+        return getFallTick(
+                d,
+                acceleration,
+                drag,
+                precision
+        ) != -1;
+    }
+
+    public boolean justFell(double d) {
+        return d < 0.0
+                && Math.abs((0.0 - d) - (this.getAirAcceleration() * PlayerUtils.airDrag))
+                <= GroundUtils.maxHeightLengthRatio;
+    }
+
+    public boolean justLanded(double now, double before, double acceleration, double drag, double precision) {
+        return !isFalling(now, acceleration, drag, precision)
+                && isFalling(before, acceleration, drag, precision);
+    }
+
+    // Separator
+
+    public boolean isGliding() {
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)) {
+            if (this.parent.protocol.bukkit.isGliding()) {
+                this.lastGlide = System.currentTimeMillis();
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public boolean wasGliding() {
+        return this.isGliding()
+                || System.currentTimeMillis() - this.lastGlide <= TPS.maximum * TPS.tickTime;
+    }
+
+    // Separator
+
+    public int getTicksOnAir() {
+        return airTicks;
+    }
+
+    // Separator
+
+    public SpartanLocation getSchedulerFromLocation() {
+        return schedulerFrom;
+    }
+
+    public SpartanLocation getEventFromLocation() {
+        return eventFrom;
+    }
+
+    // Separator
+
+    public List<SpartanLocation> getLocations() {
+        return new ArrayList<>(this.locations.values());
+    }
+
+    public Set<Map.Entry<Long, SpartanLocation>> getLocationEntries() {
+        synchronized (this.locations) {
+            return new HashSet<>(locations.entrySet());
+        }
+    }
+
+    // Separator
+
+    public SpartanLocation getDetectionLocation() {
+        return detectionLocation;
+    }
+
+    public void setDetectionLocation() {
+        this.setDetectionLocation(this.getLocation(), true);
+    }
+
+    private void setDetectionLocation(SpartanLocation location, boolean force) {
+        if (force
+                || !location.world.equals(this.detectionLocation.world)
+                || location.distance(this.detectionLocation) > 4.0) {
+            this.detectionLocation = location;
+        }
+    }
+
+    // Separator
+
+    public SpartanLocation getVehicleLocation() {
+        Entity vehicle = this.parent.getVehicle();
+
+        if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
+            return new SpartanLocation(
+                    ProtocolLib.getLocation(vehicle)
+            );
+        }
+        return null;
+    }
+
+    public SpartanLocation getLocation() {
+        SpartanLocation vehicleLocation = getVehicleLocation();
+        this.refreshLocation(this.parent.protocol.getLocation());
+
+        if (vehicleLocation == null) {
+            return this.location;
+        } else {
+            return vehicleLocation;
+        }
+    }
+
+    // Separator
+
+    public Location refreshLocation(Location location) {
+        if (this.location.getX() != location.getX()
+                || this.location.getY() != location.getY()
+                || this.location.getZ() != location.getZ()
+                || this.location.getYaw() != location.getYaw()
+                || this.location.getPitch() != location.getPitch()) {
+            SpartanLocation spartanLocation = new SpartanLocation(location);
+
+            synchronized (this.locations) {
+                if (this.locations.size() == TPS.maximum) {
+                    Iterator<Long> iterator = this.locations.keySet().iterator();
+                    iterator.next();
+                    iterator.remove();
+                }
+                this.locations.put(System.currentTimeMillis(), spartanLocation);
+            }
+            this.location = spartanLocation;
+            this.setDetectionLocation(spartanLocation, false);
+        }
+        return location;
+    }
+
+    // Separator
+
+    public boolean processLastMoveEvent(Location originalTo, SpartanLocation vehicle,
+                                        SpartanLocation to, SpartanLocation from,
+                                        double distance, double horizontal,
+                                        double vertical, double xDiff, double zDiff,
+                                        double box) {
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
+            double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
+                    y = clampMin(to.getY(), -2.0E7D, 2.0E7D),
+                    z = clampMin(to.getZ(), -3.0E7D, 3.0E7D);
+            Vector vector = new Vector(x, y, z);
+            double d = this.clampVector.distanceSquared(vector);
+            this.clampVector = vector;
+
+            if (d < 4e-8) {
+                return false;
+            }
+        }
+        if (vehicle == null) {
+            this.refreshLocation(originalTo);
+        }
+        this.eventFrom = from;
+        this.eventDistance = distance;
+        this.eventPreviousHorizontal = this.eventHorizontal;
+        this.eventHorizontal = horizontal;
+        this.eventPreviousVertical = this.eventVertical;
+        this.eventVertical = vertical;
+        this.eventXDiff = xDiff;
+        this.eventZDiff = zDiff;
+        this.eventPreviousBox = this.eventBox;
+        this.eventBox = box;
+        this.judgeGround(true);
+        return this.eventPreviousHorizontal != null
+                && this.eventPreviousVertical != null
+                && this.eventPreviousBox != null;
+    }
+
+    private double clampMin(double d, double d2, double d3) {
+        return d < d2 ? d2 : Math.min(d, d3);
+    }
+
+    // Separator
+
+    private boolean judgeGround(boolean increase) {
+        if (this.parent.isOnGround(false)) {
+            this.resetAirTicks();
+            return true;
+        } else {
+            if (increase) {
+                this.airTicks++;
+            }
+            return false;
+        }
+    }
+
+    public boolean judgeGround() {
+        return this.judgeGround(false);
+    }
+
+    public void resetAirTicks() {
+        this.airTicks = 0;
+    }
+
+    // Separator
+
+    public boolean isInVoid() {
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)
+                ? this.location.getY() < this.location.world.getMinHeight()
+                : this.location.getY() < 0;
+    }
+
+}

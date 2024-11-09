@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.protocol;
 
 import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.TimerBalancer;
 import com.vagdedes.spartan.abstraction.data.CheckBoundData;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.connection.Latency;
@@ -20,9 +19,11 @@ import java.util.*;
 
 public class SpartanProtocol {
 
-    public final Player player;
-    public final SpartanPlayer spartanPlayer;
+    public final Player bukkit;
+    public final SpartanPlayer spartan;
     public final TimerBalancer timerBalancer;
+
+    // Custom
     private boolean onGround, onGroundFrom;
     private int hashPosBuffer;
     public int rightClickCounter;
@@ -44,12 +45,12 @@ public class SpartanProtocol {
     public long placeTime, placeHash;
     public BlockPlaceEvent oldBlockEvent;
 
-
     public SpartanProtocol(Player player) {
-        this.player = player;
+        long time = System.currentTimeMillis();
+        this.bukkit = player;
         this.version = MultiVersion.get(player);
 
-        this.placeTime = System.currentTimeMillis();
+        this.placeTime = time;
         this.placeHash = 0;
         this.onGround = false;
         this.onGroundFrom = false;
@@ -61,7 +62,7 @@ public class SpartanProtocol {
         this.teleportEngine = new LinkedList<>();
         this.simulationFlag = false;
 
-        this.spartanPlayer = new SpartanPlayer(this);
+        this.spartan = new SpartanPlayer(this);
         this.timerBalancer = new TimerBalancer();
         this.mcClient = new MCClient(player);
         this.simulationStartPoint = this.location.clone();
@@ -69,7 +70,7 @@ public class SpartanProtocol {
         this.teleported = false;
         this.vehicleStatus = true;
         this.keepEntity = 0;
-        this.tickTime = System.currentTimeMillis();
+        this.tickTime = time;
 
         this.rightClickCounter = 0;
         this.positionHistory = new LinkedList<>();
@@ -107,25 +108,25 @@ public class SpartanProtocol {
     public boolean isOnGround() {
         return packetsEnabled()
                 ? this.onGround
-                : this.player.isOnGround();
+                : this.bukkit.isOnGround();
     }
 
     public boolean isOnGroundFrom() {
         return packetsEnabled()
                 ? this.onGroundFrom
-                : this.player.isOnGround();
+                : this.bukkit.isOnGround();
     }
 
     public boolean isSprinting() {
         return packetsEnabled()
                 ? this.sprinting
-                : this.player.isSprinting();
+                : this.bukkit.isSprinting();
     }
 
     public boolean isSneaking() {
         return packetsEnabled()
                 ? this.sneaking
-                : this.player.isSneaking();
+                : this.bukkit.isSneaking();
     }
 
     public boolean isLoading() {
@@ -135,22 +136,22 @@ public class SpartanProtocol {
     public Location getLocation() {
         return packetsEnabled()
                 ? this.location
-                : ProtocolLib.getLocation(this.player);
+                : ProtocolLib.getLocation(this.bukkit);
     }
 
     public int getPing() {
-        return Latency.ping(this.player);
+        return Latency.ping(this.bukkit);
     }
 
     public UUID getUUID() {
-        return ProtocolLib.isTemporary(this.player)
+        return ProtocolLib.isTemporary(this.bukkit)
                 ? UUID.randomUUID()
-                : this.player.getUniqueId();
+                : this.bukkit.getUniqueId();
     }
 
     public void startSimulationFlag() {
-        this.spartanPlayer.teleport(this.spartanPlayer.movement.getEventFromLocation());
-        this.simulationStartPoint = this.spartanPlayer.movement.getEventFromLocation().getBukkitLocation().clone();
+        this.spartan.teleport(this.spartan.movement.getEventFromLocation());
+        this.simulationStartPoint = this.spartan.movement.getEventFromLocation().bukkit().clone();
         this.simulationFlag = true;
         this.simulationDelayPerTP = 1;
     }
@@ -170,7 +171,7 @@ public class SpartanProtocol {
         this.onGround = isOnGround;
 
         if (this.onGround) {
-            this.spartanPlayer.movement.resetAirTicks();
+            this.spartan.movement.resetAirTicks();
         }
     }
 
@@ -191,7 +192,7 @@ public class SpartanProtocol {
     }
 
     public boolean packetsEnabled() {
-        return SpartanBukkit.packetsEnabled() && !this.spartanPlayer.isBedrockPlayer();
+        return SpartanBukkit.packetsEnabled() && !this.spartan.isBedrockPlayer();
     }
 
     public Set<AxisAlignedBB> getAxisMatrixCache() {

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.notifications;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
@@ -24,9 +24,9 @@ public class CrossServerNotifications {
     static {
         SpartanBukkit.runRepeatingTask(() -> SpartanBukkit.connectionThread.executeIfFree(() -> {
             if (Config.sql.isEnabled()) {
-                List<SpartanPlayer> players = DetectionNotifications.getPlayers();
+                List<SpartanProtocol> protocols = DetectionNotifications.getPlayers();
 
-                if (!players.isEmpty()) {
+                if (!protocols.isEmpty()) {
                     try {
                         ResultSet rs = Config.sql.query("SELECT "
                                 + "id, player_name, server_name, notification, information, functionality"
@@ -49,9 +49,9 @@ public class CrossServerNotifications {
                                                     detection = ResearchEngine.getDetectionInformation(rs.getString("information"));
                                             notification = "§l[" + serverName + "]§r " + notification;
 
-                                            for (SpartanPlayer player : players) {
-                                                if (player.getExecutor(hackType).getDetection(detection).canSendNotification(playerName)) {
-                                                    player.getInstance().sendMessage(notification);
+                                            for (SpartanProtocol protocol : protocols) {
+                                                if (protocol.spartan.getExecutor(hackType).getDetection(detection).canSendNotification(playerName, 0)) {
+                                                    protocol.bukkit.sendMessage(notification);
                                                     processed.put(id, true);
                                                 }
                                             }

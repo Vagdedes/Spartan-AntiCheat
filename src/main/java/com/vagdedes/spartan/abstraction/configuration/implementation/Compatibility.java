@@ -3,7 +3,7 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.manual.abilities.*;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShot;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShotPlus;
@@ -48,7 +48,6 @@ public class Compatibility {
         ITEM_ATTRIBUTES("ItemAttributes"), PRINTER_MODE("PrinterMode"),
         VEHICLES("Vehicles"), MINE_TINKER("MineTinker"),
         WILD_TOOLS("WildTools"), AURELIUM_SKILLS("AureliumSkills"),
-        KNOCKBACK_MASTER("KnockbackMaster"), MY_PET("MyPet"),
         CUSTOM_ENCHANTS_PLUS("CustomEncahntsPlus"), ECO_ENCHANTS("EcoEnchants"),
         ITEMS_ADDER("ItemsAdder"), RAMPEN_DRILLS("RampenDrills"),
         OLD_COMBAT_MECHANICS("OldCombatMechanics"), CUSTOM_KNOCKBACK("CustomKnockback"),
@@ -244,15 +243,6 @@ public class Compatibility {
                 null,
                 null,
                 null);
-        CompatibilityType.KNOCKBACK_MASTER.setFunctional(
-                new String[]{
-                        "com.xdefcon.knockbackmaster.api.KnockbackMasterAPI+",
-                        CompatibilityType.KNOCKBACK_MASTER + "+"
-                },
-                null,
-                null,
-                null
-        );
         CompatibilityType.REAL_DUAL_WIELD.setFunctional(
                 () -> Register.enable(new RealDualWield()),
                 null
@@ -349,7 +339,6 @@ public class Compatibility {
                 ProtocolLib::run,
                 ProtocolLib::otherwise
         );
-        CompatibilityType.MY_PET.setFunctional();
         CompatibilityType.RAMPEN_DRILLS.setFunctional(
                 () -> Register.enable(new RampenDrills()),
                 null

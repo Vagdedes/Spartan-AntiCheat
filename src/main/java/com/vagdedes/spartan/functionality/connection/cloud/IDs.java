@@ -7,7 +7,8 @@ import java.util.Objects;
 
 public class IDs {
 
-    public static final boolean enabled = AlgebraUtils.validInteger("%%__RESOURCE__%%");
+    public static final String resource = "%%__RESOURCE__%%";
+    public static final boolean enabled = AlgebraUtils.validInteger(resource);
     private static String
             user = "%%__USER__%%",
             file = "%%__NONCE__%%";

@@ -1,10 +1,9 @@
 package com.vagdedes.spartan.utils.minecraft.entity;
 
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
-import com.vagdedes.spartan.compatibility.manual.abilities.mcMMO;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
@@ -17,8 +16,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
-
-import java.util.List;
 
 public class CombatUtils {
 
@@ -184,40 +181,15 @@ public class CombatUtils {
         return false;
     }
 
-    public static boolean newPvPMechanicsEnabled() {
-        return Compatibility.CompatibilityType.RECENT_PVP_MECHANICS.isFunctional()
-                && !Compatibility.CompatibilityType.OLD_COMBAT_MECHANICS.isFunctional();
-    }
-
-    public static boolean isNewPvPMechanic(SpartanPlayer p, Entity entity) {
-        if (newPvPMechanicsEnabled()
-                && p.getAttackCooldown() == 1.0f
-                && PlayerUtils.isSwordItem(p.getItemInHand().getType())) {
-            double distance = 4.0;
-            List<Entity> nearbyEntities = entity.getNearbyEntities(distance, distance, distance);
-            nearbyEntities.remove(p.getInstance());
-            int i = 0;
-
-            for (Entity e : nearbyEntities) {
-                if (e instanceof LivingEntity) {
-                    i++;
-                }
-            }
-            return i > 0;
-        }
-        return false;
-    }
-
-    public static boolean canCheck(SpartanPlayer player) {
-        if (!player.movement.isLowEyeHeight() // Covers swimming & gliding
-                && !player.movement.wasFlying()
-                && player.getInstance().getVehicle() == null
-                && !mcMMO.hasGeneralAbility(player)
-                && Attributes.getAmount(player, Attributes.GENERIC_ARMOR) == 0.0
-                && Attributes.getAmount(player, Attributes.GENERIC_ATTACK_SPEED) == 0.0
-                && Attributes.getAmount(player, Attributes.GENERIC_KNOCKBACK_RESISTANCE) == 0.0
-                && Attributes.getAmount(player, Attributes.PLAYER_ENTITY_INTERACTION_RANGE) == 0.0) {
-            GameMode gameMode = player.getInstance().getGameMode();
+    public static boolean canCheck(SpartanProtocol protocol) {
+        if (!protocol.spartan.movement.isLowEyeHeight() // Covers swimming & gliding
+                && !protocol.spartan.movement.wasFlying()
+                && protocol.spartan.getVehicle() == null
+                && Attributes.getAmount(protocol, Attributes.GENERIC_ARMOR) == 0.0
+                && Attributes.getAmount(protocol, Attributes.GENERIC_ATTACK_SPEED) == 0.0
+                && Attributes.getAmount(protocol, Attributes.GENERIC_KNOCKBACK_RESISTANCE) == 0.0
+                && Attributes.getAmount(protocol, Attributes.PLAYER_ENTITY_INTERACTION_RANGE) == 0.0) {
+            GameMode gameMode = protocol.bukkit.getGameMode();
             return gameMode == GameMode.SURVIVAL
                     || gameMode == GameMode.ADVENTURE
                     || gameMode == GameMode.CREATIVE;
@@ -226,8 +198,8 @@ public class CombatUtils {
         }
     }
 
-    public static boolean canCheck(SpartanPlayer player, LivingEntity entity) {
-        return !player.getInstance().getName().equals(entity.getName())
+    public static boolean canCheck(SpartanProtocol protocol, LivingEntity entity) {
+        return !protocol.bukkit.getName().equals(entity.getName())
                 && !MythicMobs.is(entity)
                 && !ItemsAdder.is(entity);
     }

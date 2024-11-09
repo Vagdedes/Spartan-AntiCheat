@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.entity;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
+import com.vagdedes.spartan.abstraction.protocol.ExtendedPotionEffect;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
@@ -12,8 +12,6 @@ import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
@@ -130,16 +128,6 @@ public class PlayerUtils {
         } else {
             height = 256;
         }
-    }
-
-    // Enchantments
-
-    public static int getDepthStriderLevel(SpartanPlayer p) {
-        if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
-            return 0;
-        }
-        ItemStack b = p.getInstance().getInventory().getBoots();
-        return b != null ? b.getEnchantmentLevel(Enchantment.DEPTH_STRIDER) : 0;
     }
 
     // Jumping
@@ -308,7 +296,7 @@ public class PlayerUtils {
     // Potion Effects
 
     public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
-        SpartanPotionEffect potionEffect = entity.getPotionEffect(
+        ExtendedPotionEffect potionEffect = entity.getPotionEffect(
                 potionEffectType,
                 handledPotionEffects.getOrDefault(potionEffectType, 0L)
         );

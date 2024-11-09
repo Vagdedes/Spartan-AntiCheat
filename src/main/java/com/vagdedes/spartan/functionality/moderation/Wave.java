@@ -140,7 +140,7 @@ public class Wave {
 
                         for (SpartanProtocol protocol : protocols) {
                             if (DetectionNotifications.hasPermission(protocol)) {
-                                protocol.player.sendMessage(message);
+                                protocol.bukkit.sendMessage(message);
                             }
                         }
                     }
@@ -178,7 +178,7 @@ public class Wave {
 
                 for (SpartanProtocol protocol : protocols) {
                     if (DetectionNotifications.hasPermission(protocol)) {
-                        protocol.player.sendMessage(message);
+                        protocol.bukkit.sendMessage(message);
                     }
                 }
             }

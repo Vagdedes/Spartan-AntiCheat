@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.world;
 
-import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -185,11 +185,11 @@ public class GroundUtils {
 
     // Method
 
-    public static boolean isOnGround(SpartanPlayer p, SpartanLocation loc,
+    public static boolean isOnGround(SpartanProtocol p, SpartanLocation loc,
                                      boolean defaultOnGround,
                                      boolean checkEntities) {
         if (checkEntities
-                && (p.trackers.has(PlayerTrackers.TrackerType.PISTON)
+                && (p.spartan.trackers.has(PlayerTrackers.TrackerType.PISTON)
                 || stepsOnBoats(p)
                 || v1_9 && (stepsOnShulkers(p) || v1_20 && stepsOnSniffers(p)))) {
             return true;
@@ -206,7 +206,7 @@ public class GroundUtils {
                     return true;
                 }
             }
-            Entity vehicle = p.getInstance().getVehicle();
+            Entity vehicle = p.spartan.getVehicle();
             boolean hasVehicle = vehicle != null;
 
             if (hasVehicle) {
@@ -310,8 +310,8 @@ public class GroundUtils {
 
     // Entities
 
-    public static boolean stepsOnBoats(SpartanPlayer p) {
-        List<Entity> entities = p.getNearbyEntities(2.0, 2.0, 2.0);
+    public static boolean stepsOnBoats(SpartanProtocol p) {
+        List<Entity> entities = p.spartan.getNearbyEntities(2.0, 2.0, 2.0);
 
         if (!entities.isEmpty()) {
             for (Entity entity : entities) {
@@ -323,8 +323,8 @@ public class GroundUtils {
         return false;
     }
 
-    private static boolean stepsOnShulkers(SpartanPlayer p) {
-        List<Entity> entities = p.getNearbyEntities(3.0, 3.0, 3.0);
+    private static boolean stepsOnShulkers(SpartanProtocol p) {
+        List<Entity> entities = p.spartan.getNearbyEntities(3.0, 3.0, 3.0);
 
         if (!entities.isEmpty()) {
             for (Entity entity : entities) {
@@ -336,8 +336,8 @@ public class GroundUtils {
         return false;
     }
 
-    private static boolean stepsOnSniffers(SpartanPlayer p) {
-        List<Entity> entities = p.getNearbyEntities(1.0, 1.0, 1.0);
+    private static boolean stepsOnSniffers(SpartanProtocol p) {
+        List<Entity> entities = p.spartan.getNearbyEntities(1.0, 1.0, 1.0);
 
         if (!entities.isEmpty()) {
             for (Entity entity : entities) {

@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.PlayerTrackers;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
@@ -35,82 +35,82 @@ public class MovementProcessing {
             motionPrecision = 4,
             heightPrecision = 3;
 
-    public static void run(SpartanPlayer player,
+    public static void run(SpartanProtocol protocol,
                            SpartanLocation to,
                            double vertical, double box) {
-        if (!calculateLiquid(player, to)) {
-            if (!calculateGroundCollision(player, vertical, box)) {
-                calculateBouncing(player, to, vertical);
+        if (!calculateLiquid(protocol, to)) {
+            if (!calculateGroundCollision(protocol, vertical, box)) {
+                calculateBouncing(protocol, to, vertical);
             }
         } else {
-            calculateBouncing(player, to, vertical);
+            calculateBouncing(protocol, to, vertical);
         }
 
         // Separator
 
-        ServerFlying.run(player);
+        ServerFlying.run(protocol);
     }
 
-    private static boolean calculateGroundCollision(SpartanPlayer player,
+    private static boolean calculateGroundCollision(SpartanProtocol protocol,
                                                     double vertical, double box) {
-        if (player.isOnGround(true)
-                && player.movement.getTicksOnAir() == 0
-                && player.getInstance().getVehicle() == null
+        if (protocol.spartan.isOnGround(true)
+                && protocol.spartan.movement.getTicksOnAir() == 0
+                && protocol.spartan.getVehicle() == null
                 && vertical == 0.0
                 && GroundUtils.collisionHeightExists(box)) {
-            player.trackers.removeMany(PlayerTrackers.TrackerFamily.MOTION);
-            player.trackers.removeMany(PlayerTrackers.TrackerFamily.VELOCITY);
-            player.movement.removeLastLiquidTime();
+            protocol.spartan.trackers.removeMany(PlayerTrackers.TrackerFamily.MOTION);
+            protocol.spartan.trackers.removeMany(PlayerTrackers.TrackerFamily.VELOCITY);
+            protocol.spartan.movement.removeLastLiquidTime();
             return true;
         } else {
             return false;
         }
     }
 
-    private static void calculateBouncing(SpartanPlayer player, SpartanLocation location,
+    private static void calculateBouncing(SpartanProtocol protocol, SpartanLocation location,
                                           double vertical) {
         if (v1_8 && vertical != 0.0) {
-            if (BlockUtils.isSlime(player, location, 4)) {
+            if (BlockUtils.isSlime(protocol.spartan, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
-                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
-                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
-            } else if (BlockUtils.isBed(player, location, 4)) {
+                protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
+                protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
+            } else if (BlockUtils.isBed(protocol.spartan, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
-                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
-                player.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
+                protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
+                protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
             }
         }
     }
 
     // Separator
 
-    private static boolean calculateLiquid(SpartanPlayer player, SpartanLocation location) {
+    private static boolean calculateLiquid(SpartanProtocol protocol, SpartanLocation location) {
         if (location.getBlock().isLiquidOrWaterLogged(false)) {
-            player.movement.setLastLiquid(WATER);
+            protocol.spartan.movement.setLastLiquid(WATER);
 
             if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                    && player.movement.isLowEyeHeight()) {
-                player.movement.setArtificialSwimming();
+                    && protocol.spartan.movement.isLowEyeHeight()) {
+                protocol.spartan.movement.setArtificialSwimming();
             }
-            calculateBubbleWater(player, location);
+            calculateBubbleWater(protocol, location);
             return true;
         } else if (location.getBlock().isLiquid(LAVA)) {
-            player.movement.setLastLiquid(LAVA);
+            protocol.spartan.movement.setLastLiquid(LAVA);
             return true;
         } else {
-            for (double i = 0.0; i < Math.ceil(player.getInstance().getEyeHeight()); i++) {
+            for (double i = 0.0; i < Math.ceil(protocol.bukkit.getEyeHeight()); i++) {
                 for (SpartanLocation locationModified : location.getSurroundingLocations(GroundUtils.boundingBox, i, GroundUtils.boundingBox)) {
                     if (locationModified.getBlock().isLiquidOrWaterLogged(false)) {
-                        player.movement.setLastLiquid(WATER);
+                        protocol.spartan.movement.setLastLiquid(WATER);
 
                         if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                                && player.movement.isLowEyeHeight()) {
-                            player.movement.setArtificialSwimming();
+                                && protocol.spartan.movement.isLowEyeHeight()) {
+                            protocol.spartan.movement.setArtificialSwimming();
                         }
-                        calculateBubbleWater(player, locationModified);
+                        calculateBubbleWater(protocol, locationModified);
                         return true;
                     } else if (locationModified.getBlock().isLiquid(LAVA)) {
-                        player.movement.setLastLiquid(LAVA);
+                        protocol.spartan.movement.setLastLiquid(LAVA);
                         return true;
                     }
                 }
@@ -119,14 +119,14 @@ public class MovementProcessing {
         return false;
     }
 
-    private static void calculateBubbleWater(SpartanPlayer player, SpartanLocation location) {
+    private static void calculateBubbleWater(SpartanProtocol protocol, SpartanLocation location) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            int blockY = location.getBlockY(), minY = BlockUtils.getMinHeight(player.getWorld());
+            int blockY = location.getBlockY(), minY = BlockUtils.getMinHeight(protocol.spartan.getWorld());
 
             if (blockY > minY) {
                 SpartanLocation locationModified = location.clone();
                 int max = (blockY - minY),
-                        playerHeight = AlgebraUtils.integerCeil(player.getInstance().getEyeHeight());
+                        playerHeight = AlgebraUtils.integerCeil(protocol.bukkit.getEyeHeight());
                 Set<Integer> emptyNonLiquid = new HashSet<>(max),
                         fullNonLiquid = new HashSet<>(max);
 
@@ -138,12 +138,12 @@ public class MovementProcessing {
                         Material type = block.getType();
 
                         if (type == Material.SOUL_SAND) {
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "soul-sand", AlgebraUtils.integerCeil(TPS.maximum));
+                            protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
+                            protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "soul-sand", AlgebraUtils.integerCeil(TPS.maximum));
                             return;
                         } else if (type == MAGMA_BLOCK) {
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
-                            player.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", AlgebraUtils.integerCeil(TPS.maximum));
+                            protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, AlgebraUtils.integerCeil(TPS.maximum));
+                            protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BUBBLE_WATER, "magma-block", AlgebraUtils.integerCeil(TPS.maximum));
                             return;
                         } else if (BlockUtils.isSolid(type)) {
                             if (!block.isWaterLogged()) {
@@ -168,26 +168,25 @@ public class MovementProcessing {
 
     // Separator
 
-    public static boolean canCheck(SpartanPlayer player,
-                                   boolean elytra, boolean velocity,
+    public static boolean canCheck(SpartanProtocol protocol,
+                                   boolean elytra,
                                    boolean flight,
                                    boolean playerAttributes,
                                    boolean environmentalAttributes) {
-        if ((elytra || !player.movement.isGliding())
-                && (flight || !player.movement.wasFlying())
-                && (velocity || !player.trackers.has(PlayerTrackers.TrackerType.ABSTRACT_VELOCITY))
+        if ((elytra || !protocol.spartan.movement.isGliding())
+                && (flight || !protocol.spartan.movement.wasFlying())
 
                 && (playerAttributes
-                || Attributes.getAmount(player, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0
-                && Attributes.getAmount(player, Attributes.GENERIC_JUMP_STRENGTH) == 0.0)
+                || Attributes.getAmount(protocol, Attributes.GENERIC_MOVEMENT_SPEED) == 0.0
+                && Attributes.getAmount(protocol, Attributes.GENERIC_JUMP_STRENGTH) == 0.0)
 
                 && (environmentalAttributes
-                || Attributes.getAmount(player, Attributes.GENERIC_STEP_HEIGHT) == 0.0
-                && Attributes.getAmount(player, Attributes.GENERIC_GRAVITY) == 0.0
-                && Attributes.getAmount(player, Attributes.GENERIC_STEP_HEIGHT) == 0.0)) {
+                || Attributes.getAmount(protocol, Attributes.GENERIC_STEP_HEIGHT) == 0.0
+                && Attributes.getAmount(protocol, Attributes.GENERIC_GRAVITY) == 0.0
+                && Attributes.getAmount(protocol, Attributes.GENERIC_STEP_HEIGHT) == 0.0)) {
             if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()
                     || Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
-                List<Entity> entities = player.getNearbyEntities(
+                List<Entity> entities = protocol.spartan.getNearbyEntities(
                         CombatUtils.maxHitDistance,
                         CombatUtils.maxHitDistance,
                         CombatUtils.maxHitDistance

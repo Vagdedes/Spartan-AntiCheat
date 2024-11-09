@@ -18,7 +18,7 @@ public class Event_Trident implements Listener {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
 
         if (protocol.packetsEnabled() == packets) {
-            TridentUse.run(protocol.spartanPlayer);
+            TridentUse.run(protocol);
         }
     }
 

@@ -22,7 +22,7 @@ public class Event_VehicleDeath implements Listener {
         if (passengers.length > 0) {
             for (Entity passenger : passengers) {
                 if (passenger instanceof Player) {
-                    Event_Vehicle.exit(SpartanBukkit.getProtocol((Player) passenger).spartanPlayer);
+                    Event_Vehicle.exit(SpartanBukkit.getProtocol((Player) passenger).spartan);
                 }
             }
         }

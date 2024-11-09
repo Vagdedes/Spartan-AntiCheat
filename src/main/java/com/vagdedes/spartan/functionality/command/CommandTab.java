@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.command;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -89,12 +88,12 @@ public class CommandTab implements TabCompleter {
             if (!protocols.isEmpty()) {
                 String argAbstract = args[length - 1].toLowerCase();
                 boolean player = sender instanceof Player;
-                SpartanPlayer p = player ? SpartanBukkit.getProtocol((Player) sender).spartanPlayer : null;
+                SpartanProtocol p = player ? SpartanBukkit.getProtocol((Player) sender) : null;
                 player &= p != null;
 
                 for (SpartanProtocol protocol : protocols) {
-                    if (!player || p.getInstance().canSee(protocol.player)) {
-                        String name = protocol.player.getName();
+                    if (!player || p.bukkit.canSee(protocol.bukkit)) {
+                        String name = protocol.bukkit.getName();
 
                         if (name.toLowerCase().contains(argAbstract)) {
                             list.add(name);

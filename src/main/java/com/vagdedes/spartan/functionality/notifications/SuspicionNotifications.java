@@ -1,12 +1,11 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
-import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.ArrayList;
@@ -21,11 +20,11 @@ public class SuspicionNotifications {
     static void run() {
         SpartanBukkit.runRepeatingTask(() -> { // Here because there are no other class calls
             if (!Config.settings.getBoolean("Notifications.individual_only_notifications")) {
-                List<SpartanPlayer> players = SpartanBukkit.getPlayers();
+                List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-                if (!players.isEmpty()) {
-                    List<SpartanPlayer> staff = new ArrayList<>(players);
-                    Iterator<SpartanPlayer> iterator = staff.iterator();
+                if (!protocols.isEmpty()) {
+                    List<SpartanProtocol> staff = new ArrayList<>(protocols);
+                    Iterator<SpartanProtocol> iterator = staff.iterator();
 
                     while (iterator.hasNext()) {
                         Integer frequency = DetectionNotifications.getFrequency(iterator.next());
@@ -34,19 +33,18 @@ public class SuspicionNotifications {
                             iterator.remove();
                         }
                     }
-                    run(staff, players);
+                    run(staff, protocols);
                 }
             }
         }, 1L, 300L);
     }
 
-    private static void run(List<SpartanPlayer> staff, List<SpartanPlayer> online) {
+    private static void run(List<SpartanProtocol> staff, List<SpartanProtocol> online) {
         StringBuilder players = new StringBuilder();
         int size = 0, commaLength = comma.length();
 
-        for (SpartanPlayer player : online) {
-            Collection<Enums.HackType> list = player.protocol.getProfile().getEvidenceList(
-                    player.dataType,
+        for (SpartanProtocol protocol : online) {
+            Collection<Enums.HackType> list = protocol.getProfile().getEvidenceList(
                     PlayerEvidence.notificationProbability
             );
 
@@ -54,20 +52,29 @@ public class SuspicionNotifications {
                 StringBuilder evidence = new StringBuilder();
 
                 for (Enums.HackType hackType : list) {
-                    if (ResearchEngine.getRequiredPlayers(hackType, PlayerEvidence.notificationProbability) == 0) {
-                        evidence.append(hackType.getCheck().getName()).append(comma);
-                    }
+                    evidence.append(
+                            hackType.getCheck().getName()
+                                    + (protocol.spartan.getExecutor(hackType).hasSufficientData(protocol.spartan.dataType)
+                                    ? ""
+                                    : " (Unlikely)")
+                    ).append(
+                            comma
+                    );
                 }
 
                 if (evidence.length() > 0) {
                     size++;
-                    players.append(player.getInstance().getName()).append(comma);
-                    SpartanLocation location = player.movement.getLocation();
+                    players.append(protocol.bukkit.getName()).append(comma);
+                    SpartanLocation location = protocol.spartan.movement.getLocation();
                     CloudConnections.executeDiscordWebhook(
                             "checks",
-                            player.protocol.getUUID(), player.getInstance().getName(),
-                            location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                            "Suspected for", evidence.substring(0, evidence.length() - commaLength)
+                            protocol.getUUID(),
+                            protocol.bukkit.getName(),
+                            location.getBlockX(),
+                            location.getBlockY(),
+                            location.getBlockZ(),
+                            "Suspected for",
+                            evidence.substring(0, evidence.length() - commaLength)
                     );
                 }
             }
@@ -79,8 +86,8 @@ public class SuspicionNotifications {
                     .replace("{players}", players.substring(0, players.length() - comma.length()));
 
             if (!staff.isEmpty()) {
-                for (SpartanPlayer player : staff) {
-                    player.getInstance().sendMessage(message);
+                for (SpartanProtocol protocol : staff) {
+                    protocol.bukkit.sendMessage(message);
                 }
             }
         }

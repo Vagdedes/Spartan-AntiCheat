@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.building;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -20,7 +20,7 @@ public class VeinMiner implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Event(PlayerVeinMineEvent e) {
         if (Compatibility.CompatibilityType.VEIN_MINER.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
             Config.compatibility.evadeFalsePositives(
                     p,
                     Compatibility.CompatibilityType.VEIN_MINER,

@@ -52,12 +52,8 @@ public class SpartanLocation implements Cloneable {
         this.time = System.currentTimeMillis();
     }
 
-    public SpartanLocation(Location loc, float yaw, float pitch) { // Used for vehicles
-        this(loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), yaw, pitch);
-    }
-
     public SpartanLocation(Location loc) { // Used globally
-        this(loc, loc.getYaw(), loc.getPitch());
+        this(loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
     }
 
     // Methods
@@ -295,7 +291,7 @@ public class SpartanLocation implements Cloneable {
         return AlgebraUtils.getDistance(this.x, loc.getX(), this.y, loc.getY(), this.z, loc.getZ());
     }
 
-    public Location getBukkitLocation() {
+    public Location bukkit() {
         return new Location(this.world, this.x, this.y, this.z, this.yaw, this.pitch);
     }
 

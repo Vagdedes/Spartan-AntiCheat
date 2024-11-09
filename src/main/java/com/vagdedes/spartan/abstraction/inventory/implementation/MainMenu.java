@@ -4,7 +4,6 @@ import com.vagdedes.filegui.api.FileGUIAPI;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
@@ -41,12 +40,12 @@ public class MainMenu extends InventoryMenu {
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
-                SpartanBukkit.transferTask(protocol.spartanPlayer, () -> {
-                    String title = protocol.player.getOpenInventory().getTitle();
+                SpartanBukkit.transferTask(protocol.spartan, () -> {
+                    String title = protocol.bukkit.getOpenInventory().getTitle();
 
                     if (title.startsWith(name)) {
                         DiscordMemberCount.ignore();
-                        InteractiveInventory.mainMenu.open(protocol.spartanPlayer);
+                        InteractiveInventory.mainMenu.open(protocol);
                     }
                 });
             }
@@ -54,11 +53,11 @@ public class MainMenu extends InventoryMenu {
     }
 
     @Override
-    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
+    public boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
-        UUID uuid = player.protocol.getUUID();
+        UUID uuid = protocol.getUUID();
         int page = PlayerStateLists.getPage(uuid), previousPageSlot = 18, nextPageSlot = 26;
-        setTitle(player, name + page + ")");
+        setTitle(protocol, name + page + ")");
 
         // AntiCheat Updates
         int random = AlgebraUtils.randomInteger(1, 64);
@@ -141,31 +140,31 @@ public class MainMenu extends InventoryMenu {
     }
 
     @Override
-    public boolean internalHandle(SpartanPlayer player) {
+    public boolean internalHandle(SpartanProtocol protocol) {
         String name = itemStack.getItemMeta().getDisplayName(),
                 item = (name.startsWith("§") ? name.substring(2) : name);
 
         if (item.equals("Auto Updater")) {
-            player.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
+            protocol.spartan.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
 
         } else if (item.equals("Compatibilities")) {
-            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
-                player.getInstance().closeInventory();
+            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
+                protocol.bukkit.closeInventory();
                 ClickableMessage.sendURL(
-                        player.getInstance(),
+                        protocol.bukkit,
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL
                 );
             } else if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
-                Player n = player.getInstance();
+                Player n = protocol.bukkit;
 
                 if (n != null && n.hasPermission("filegui.modify")) {
                     FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                 } else {
-                    player.getInstance().closeInventory();
+                    protocol.bukkit.closeInventory();
                     ClickableMessage.sendURL(
-                            player.getInstance(),
+                            protocol.bukkit,
                             Config.messages.getColorfulString("no_permission"),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
@@ -174,16 +173,16 @@ public class MainMenu extends InventoryMenu {
             }
 
         } else if (item.equals("Management")) {
-            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
-                player.getInstance().closeInventory();
+            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
+                protocol.bukkit.closeInventory();
                 ClickableMessage.sendURL(
-                        player.getInstance(),
+                        protocol.bukkit,
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL
                 );
             } else {
-                InteractiveInventory.manageChecks.open(player);
+                InteractiveInventory.manageChecks.open(protocol);
             }
 
         } else if (item.startsWith("Page")) {
@@ -193,25 +192,25 @@ public class MainMenu extends InventoryMenu {
                 String number = split[1];
 
                 if (AlgebraUtils.validInteger(number)) {
-                    UUID uuid = player.protocol.getUUID();
+                    UUID uuid = protocol.getUUID();
                     int itemPage = Integer.parseInt(number), currentPage = PlayerStateLists.getPage(uuid);
 
                     if (itemPage < currentPage) {
                         if (PlayerStateLists.previousPage(uuid)) {
                             DiscordMemberCount.ignore();
-                            open(player);
+                            open(protocol);
                         }
                     } else if (itemPage > currentPage) {
                         if (PlayerStateLists.nextPage(uuid)) {
                             DiscordMemberCount.ignore();
-                            open(player);
+                            open(protocol);
                         }
                     }
                 }
             }
         } else if (!name.startsWith(PlayerStateLists.inactiveColour)
                 && !item.equals("Summary")) {
-            InteractiveInventory.playerInfo.open(player, false, item);
+            InteractiveInventory.playerInfo.open(protocol, false, item);
         }
         return true;
     }

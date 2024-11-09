@@ -36,7 +36,7 @@ public class Packet_Vehicle extends PacketAdapter {
             if (event.getPacket().getBooleans().size() > 0) {
                 boolean dismount = event.getPacket().getBooleans().read(1);
 
-                if (protocol.spartanPlayer.isBedrockPlayer()) {
+                if (protocol.spartan.isBedrockPlayer()) {
                     return;
                 }
 
@@ -54,7 +54,7 @@ public class Packet_Vehicle extends PacketAdapter {
             Player player = event.getPlayer();
             SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
             protocol.timerBalancer.addBalance(50);
-            Entity entity = player.getVehicle();
+            Entity entity = protocol.spartan.getVehicle();
 
             if (entity instanceof Vehicle) {
                 if (protocol.vehicleStatus && protocol.keepEntity != 0) {

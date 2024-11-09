@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.data.Buffer;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.OverflowMap;
@@ -27,11 +27,11 @@ public class CrackShotPlus implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponSecondScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
 
             if (!e.isCancelled()) {
                 Config.compatibility.evadeFalsePositives(
-                        p,
+                        protocol.spartan,
                         Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -41,12 +41,12 @@ public class CrackShotPlus implements Listener {
                 );
 
                 if (e.isZoomIn()) {
-                    buffers.set(p.protocol.getUUID() + "=crackshotplus=compatibility=scope", 1);
+                    buffers.set(protocol.getUUID() + "=crackshotplus=compatibility=scope", 1);
                 } else {
-                    buffers.remove(p.protocol.getUUID() + "=crackshotplus=compatibility=scope");
+                    buffers.remove(protocol.getUUID() + "=crackshotplus=compatibility=scope");
                 }
             } else {
-                buffers.remove(p.protocol.getUUID() + "=crackshotplus=compatibility=scope");
+                buffers.remove(protocol.getUUID() + "=crackshotplus=compatibility=scope");
             }
         }
     }
@@ -57,11 +57,11 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p,
+                            p.spartan,
                             Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,
@@ -80,11 +80,11 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartanPlayer;
+                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p,
+                            p.spartan,
                             Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,
@@ -97,9 +97,9 @@ public class CrackShotPlus implements Listener {
         }
     }
 
-    static boolean isUsingScope(SpartanPlayer p) {
+    static boolean isUsingScope(SpartanProtocol p) {
         return Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()
-                && buffers.get(p.protocol.getUUID() + "=crackshotplus=compatibility=scope") != 0;
+                && buffers.get(p.getUUID() + "=crackshotplus=compatibility=scope") != 0;
     }
 }
 

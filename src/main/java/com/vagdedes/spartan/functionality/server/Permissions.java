@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.server;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
@@ -79,16 +78,16 @@ public class Permissions {
         }
     }
 
-    public static List<SpartanPlayer> getStaff() {
+    public static List<SpartanProtocol> getStaff() {
         List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
         int size = protocols.size();
 
         if (size > 0) {
-            List<SpartanPlayer> array = new ArrayList<>(size);
+            List<SpartanProtocol> array = new ArrayList<>(size);
 
             for (SpartanProtocol protocol : protocols) {
-                if (isStaff(protocol.player)) {
-                    array.add(protocol.spartanPlayer);
+                if (isStaff(protocol.bukkit)) {
+                    array.add(protocol);
                 }
             }
             return array;

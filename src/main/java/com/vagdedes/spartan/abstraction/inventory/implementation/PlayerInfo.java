@@ -4,7 +4,6 @@ import com.vagdedes.spartan.abstraction.check.CancelCause;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
@@ -48,27 +47,26 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     @Override
-    public boolean internalOpen(SpartanPlayer player, boolean permissionMessage, Object object) {
+    public boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object) {
         boolean back = !permissionMessage;
-        SpartanProtocol target = SpartanBukkit.getProtocol(object.toString());
+        SpartanProtocol target = SpartanBukkit.getAnyCaseProtocol(object.toString());
         boolean isOnline = target != null;
         PlayerProfile profile = isOnline
                 ? target.getProfile()
-                : ResearchEngine.getPlayerProfile(object.toString(), false);
+                : ResearchEngine.getAnyCasePlayerProfile(object.toString());
 
         if (profile == null) {
-            player.getInstance().closeInventory();
+            protocol.bukkit.closeInventory();
             ClickableMessage.sendURL(
-                    player.getInstance(),
+                    protocol.bukkit,
                     Config.messages.getColorfulString("player_not_found_message"),
                     CommandExecution.support,
                     DiscordMemberCount.discordURL
             );
             return false;
         } else {
-            setTitle(player, menu + (isOnline ? target.player.getName() : profile.name));
+            setTitle(protocol, menu + (isOnline ? target.bukkit.getName() : profile.name));
             Set<Map.Entry<HackType, Double>> evidenceDetails = profile.getEvidenceEntries(
-                    (isOnline ? target.spartanPlayer.dataType : profile.getLastDataType()),
                     PlayerEvidence.emptyProbability
             );
             List<String> lore = new ArrayList<>();
@@ -79,12 +77,22 @@ public class PlayerInfo extends InventoryMenu {
                 Map<Double, HackType> map = PlayerEvidence.POSITIVE
                         ? new TreeMap<>(Collections.reverseOrder())
                         : new TreeMap<>();
+                boolean missingData = false;
 
                 for (Map.Entry<HackType, Double> entry : evidenceDetails) {
                     map.put(
                             entry.getValue(),
                             entry.getKey()
                     );
+
+                    if (!missingData
+                            && !profile.getExecutor(
+                            entry.getKey()
+                    ).hasSufficientData(
+                            profile.getLastDataType()
+                    )) {
+                        missingData = true;
+                    }
                 }
                 for (Map.Entry<Double, HackType> entry : map.entrySet()) {
                     HackType hackType = entry.getValue();
@@ -128,14 +136,19 @@ public class PlayerInfo extends InventoryMenu {
                         }
                     }
                 }
+                if (missingData) {
+                    lore.add("");
+                    lore.add("§eSome checks are still collecting data");
+                    lore.add("§eand will fully enable in the future.");
+                }
                 lore.add("");
             }
 
             if (isOnline) {
                 lore.add("§7Version§8:§c " + target.version.toString());
-                lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartanPlayer.clicks.getCount());
+                lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartan.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
-                lore.add("§7Edition§8:§c " + target.spartanPlayer.dataType);
+                lore.add("§7Edition§8:§c " + target.spartan.dataType);
                 lore.add("");
             }
             lore.add("§cClick to delete the player's stored data.");
@@ -145,10 +158,8 @@ public class PlayerInfo extends InventoryMenu {
                     profile.getSkull(),
                     4
             );
-            SpartanPlayer sp = isOnline ? target.spartanPlayer : null;
-
             for (Enums.HackCategoryType checkType : Enums.HackCategoryType.values()) {
-                addChecks(slots[checkType.ordinal()], isOnline, sp, lore, checkType);
+                addChecks(slots[checkType.ordinal()], isOnline, target, profile, lore, checkType);
             }
 
             add("§c" + (back ? "Back" : "Close"), null, new ItemStack(Material.ARROW), 40);
@@ -157,7 +168,8 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     private void addChecks(int slot, boolean isOnline,
-                           SpartanPlayer player,
+                           SpartanProtocol protocol,
+                           PlayerProfile profile,
                            List<String> lore, Enums.HackCategoryType checkType) {
         lore.clear();
         lore.add("");
@@ -168,14 +180,12 @@ public class PlayerInfo extends InventoryMenu {
 
         // Separator
 
-        Check.DataType dataType = isOnline ? player.dataType : null;
-
         for (HackType hackType : Enums.HackType.values()) {
             if (hackType.category == checkType) {
                 String state = getDetectionState(
-                        player,
+                        protocol,
                         hackType,
-                        dataType,
+                        profile.getLastDataType(),
                         isOnline
                 );
                 lore.add(
@@ -186,24 +196,24 @@ public class PlayerInfo extends InventoryMenu {
         add("§2" + checkType + " Checks", lore, item, slot);
     }
 
-    private String getDetectionState(SpartanPlayer player,
+    private String getDetectionState(SpartanProtocol protocol,
                                      HackType hackType,
                                      Check.DataType dataType,
                                      boolean hasPlayer) {
         if (!hasPlayer) {
             return "Offline";
         }
-        if (dataType != null && !SpartanEdition.hasDetectionsPurchased(dataType)) {
+        if (!SpartanEdition.hasDetectionsPurchased(dataType)) {
             return "Detection Missing";
         }
-        String worldName = player.getWorld().getName();
+        String worldName = protocol.spartan.getWorld().getName();
         Check check = hackType.getCheck();
 
         if (!check.isEnabled(dataType, worldName)) { // Do not put player because we calculate it below
             return "Disabled";
         }
-        CancelCause disabledCause = player.getExecutor(hackType).getDisableCause();
-        return Permissions.isBypassing(player.getInstance(), hackType) ? "Permission Bypass" :
+        CancelCause disabledCause = protocol.spartan.getExecutor(hackType).getDisableCause();
+        return Permissions.isBypassing(protocol.bukkit, hackType) ? "Permission Bypass" :
                 disabledCause != null ? "Cancelled (" + disabledCause.getReason() + ")" :
                         (check.isSilent(dataType, worldName) ? "Silent " : "") + "Checking";
     }
@@ -213,28 +223,28 @@ public class PlayerInfo extends InventoryMenu {
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
-                InventoryView inventoryView = protocol.player.getOpenInventory();
+                InventoryView inventoryView = protocol.bukkit.getOpenInventory();
 
                 if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)
                         && cooldowns.canDo("player-info=" + protocol.getUUID())) {
                     cooldowns.add("player-info=" + protocol.getUUID(), 1);
-                    InteractiveInventory.playerInfo.open(protocol.spartanPlayer, targetName);
+                    InteractiveInventory.playerInfo.open(protocol, targetName);
                 }
             }
         }
     }
 
     @Override
-    public boolean internalHandle(SpartanPlayer player) {
+    public boolean internalHandle(SpartanProtocol protocol) {
         String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
         String playerName = title.substring(menu.length());
 
         if (item.equalsIgnoreCase(playerName)) {
-            if (!Permissions.has(player.getInstance(), Permission.MANAGE)) {
-                player.getInstance().closeInventory();
+            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
+                protocol.bukkit.closeInventory();
                 ClickableMessage.sendURL(
-                        player.getInstance(),
+                        protocol.bukkit,
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL
@@ -244,23 +254,23 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (name == null) {
                     ClickableMessage.sendURL(
-                            player.getInstance(),
+                            protocol.bukkit,
                             Config.messages.getColorfulString("player_not_found_message"),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
                     );
                 } else {
                     ResearchEngine.resetData(name);
-                    player.getInstance().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
+                    protocol.bukkit.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                 }
-                player.getInstance().closeInventory();
+                protocol.bukkit.closeInventory();
             }
         } else if (item.equals("Close")) {
-            player.getInstance().closeInventory();
+            protocol.bukkit.closeInventory();
         } else if (item.equals("Back")) {
-            InteractiveInventory.mainMenu.open(player);
+            InteractiveInventory.mainMenu.open(protocol);
         } else {
-            player.sendImportantMessage("§7Click to learn more about the detection states§8: \n§a§n" + documentationURL);
+            protocol.spartan.sendImportantMessage("§7Click to learn more about the detection states§8: \n§a§n" + documentationURL);
         }
         return true;
     }

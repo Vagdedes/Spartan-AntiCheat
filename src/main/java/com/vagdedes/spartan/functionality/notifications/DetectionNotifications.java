@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -23,15 +22,15 @@ public class DetectionNotifications {
 
     private static final Map<UUID, Integer> notifications = new ConcurrentHashMap<>();
 
-    public static List<SpartanPlayer> getPlayers() {
+    public static List<SpartanProtocol> getPlayers() {
         if (!notifications.isEmpty()) {
-            List<SpartanPlayer> list = new ArrayList<>(notifications.size());
+            List<SpartanProtocol> list = new ArrayList<>(notifications.size());
 
             for (UUID uuid : notifications.keySet()) {
                 SpartanProtocol protocol = SpartanBukkit.getProtocol(uuid);
 
                 if (protocol != null) {
-                    list.add(protocol.spartanPlayer);
+                    list.add(protocol);
                 }
             }
             return list;
@@ -44,11 +43,11 @@ public class DetectionNotifications {
     }
 
     public static boolean hasPermission(SpartanProtocol p) {
-        return Permissions.has(p.player, Enums.Permission.NOTIFICATIONS);
+        return Permissions.has(p.bukkit, Enums.Permission.NOTIFICATIONS);
     }
 
-    public static Integer getFrequency(SpartanPlayer p) {
-        return notifications.get(p.protocol.getUUID());
+    public static Integer getFrequency(SpartanProtocol p) {
+        return notifications.get(p.getUUID());
     }
 
     public static void remove(SpartanProtocol p) {
@@ -59,12 +58,12 @@ public class DetectionNotifications {
         Integer frequency = notifications.put(p.getUUID(), i);
 
         if (frequency == null) {
-            p.player.sendMessage(Config.messages.getColorfulString("notifications_enable"));
+            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
-            p.player.sendMessage(Config.messages.getColorfulString("notifications_modified"));
+            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
             notifications.remove(p.getUUID());
-            p.player.sendMessage(Config.messages.getColorfulString("notifications_disable"));
+            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }
 

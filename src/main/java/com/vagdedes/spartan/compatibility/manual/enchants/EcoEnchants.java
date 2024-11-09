@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.enchants;
 
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.willfp.ecoenchants.enchants.EcoEnchant;
 import org.bukkit.enchantments.Enchantment;
@@ -10,9 +10,9 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class EcoEnchants {
 
-    public static boolean has(SpartanPlayer player) {
+    public static boolean has(SpartanProtocol protocol) {
         if (Compatibility.CompatibilityType.ECO_ENCHANTS.isFunctional()) {
-            PlayerInventory inventory = player.getInstance().getInventory();
+            PlayerInventory inventory = protocol.bukkit.getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
                 if (armor != null && has(armor)) {

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.inventory;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.player.SpartanPotionEffect;
+import com.vagdedes.spartan.abstraction.protocol.ExtendedPotionEffect;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -201,7 +201,7 @@ public class MaterialUtils {
         return Material.getMaterial(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? recent.toUpperCase() : older.toUpperCase());
     }
 
-    public static long getBlockBreakTime(SpartanPlayer player, ItemStack itemStack, Material blockType) {
+    public static long getBlockBreakTime(SpartanProtocol protocol, ItemStack itemStack, Material blockType) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && blockType.isBlock()) {
             double multiplier = baseMultiplier.getOrDefault(itemStack.getType(), 1.0);
             boolean canHarvest = true; // No need for method, players cannot break such blocks, thus they will never be checked
@@ -233,7 +233,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            SpartanPotionEffect hasteEffect = player.getPotionEffect(PotionEffectUtils.FAST_DIGGING, 0L);
+            ExtendedPotionEffect hasteEffect = protocol.spartan.getPotionEffect(PotionEffectUtils.FAST_DIGGING, 0L);
 
             if (hasteEffect != null
                     && hasteEffect.isActive()) {
@@ -241,7 +241,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            SpartanPotionEffect miningFatigueEffect = player.getPotionEffect(PotionEffectUtils.SLOW_DIGGING, 0);
+            ExtendedPotionEffect miningFatigueEffect = protocol.spartan.getPotionEffect(PotionEffectUtils.SLOW_DIGGING, 0);
 
             if (miningFatigueEffect != null
                     && miningFatigueEffect.isActive()) {
@@ -251,10 +251,10 @@ public class MaterialUtils {
             // Separator
             boolean water;
 
-            if (player.movement.isSwimming()) {
+            if (protocol.spartan.movement.isSwimming()) {
                 water = true;
             } else {
-                SpartanBlock block = player.movement.getLocation().clone().add(0, player.getInstance().getEyeHeight(), 0).getBlock();
+                SpartanBlock block = protocol.spartan.movement.getLocation().clone().add(0, protocol.bukkit.getEyeHeight(), 0).getBlock();
                 water = block.isWaterLogged() || block.getType() == MaterialUtils.get("water");
             }
             if (water) {
@@ -263,7 +263,7 @@ public class MaterialUtils {
                 if (itemStack.getEnchantmentLevel(EnchantmentUtils.WATER_WORKER) > 0) {
                     aquaInfinity = true;
                 } else {
-                    PlayerInventory inventory = player.getInstance().getInventory();
+                    PlayerInventory inventory = protocol.bukkit.getInventory();
                     List<ItemStack> items = new ArrayList<>(4 + 1);
                     items.addAll(Arrays.asList(inventory.getArmorContents()));
                     items.add(inventory.getItemInHand());
@@ -280,7 +280,7 @@ public class MaterialUtils {
                     multiplier /= 5.0;
                 }
             }
-            if (!player.isOnGround(false)) {
+            if (!protocol.spartan.isOnGround(false)) {
                 multiplier /= 5.0;
             }
 

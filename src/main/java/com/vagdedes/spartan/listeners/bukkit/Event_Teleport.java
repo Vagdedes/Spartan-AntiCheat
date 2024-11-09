@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.MorePackets;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -23,7 +23,7 @@ public class Event_Teleport implements Listener {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
         if (protocol.packetsEnabled() == packets) {
-            SpartanPlayer p = protocol.spartanPlayer;
+            SpartanPlayer p = protocol.spartan;
 
             // Object
             p.resetCrucialData();
@@ -43,7 +43,7 @@ public class Event_Teleport implements Listener {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
         if (protocol.packetsEnabled() == packets) {
-            SpartanPlayer p = protocol.spartanPlayer;
+            SpartanPlayer p = protocol.spartan;
 
             // Objects
             p.resetCrucialData();

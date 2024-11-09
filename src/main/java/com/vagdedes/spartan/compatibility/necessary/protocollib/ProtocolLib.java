@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.necessary.protocollib;
 
 import com.comphenix.protocol.injector.temporary.TemporaryPlayer;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
@@ -47,12 +47,12 @@ public class ProtocolLib {
         );
 
         if (message != null) {
-            List<SpartanPlayer> players = Permissions.getStaff();
+            List<SpartanProtocol> players = Permissions.getStaff();
 
             if (!players.isEmpty()) {
-                for (SpartanPlayer p : players) {
-                    if (AwarenessNotifications.canSend(p.protocol.getUUID(), "protocol-lib", 0)) {
-                        p.getInstance().sendMessage(message);
+                for (SpartanProtocol p : players) {
+                    if (AwarenessNotifications.canSend(p.getUUID(), "protocol-lib", 0)) {
+                        p.bukkit.sendMessage(message);
                     }
                 }
             }
@@ -102,4 +102,17 @@ public class ProtocolLib {
             return player.getLocation();
         }
     }
+
+    public static Entity getVehicle(Entity entity) {
+        if (entity instanceof Player) {
+            if (ProtocolLib.isTemporary((Player) entity)) {
+                return null;
+            } else {
+                return entity.getVehicle();
+            }
+        } else {
+            return entity.getVehicle();
+        }
+    }
+
 }

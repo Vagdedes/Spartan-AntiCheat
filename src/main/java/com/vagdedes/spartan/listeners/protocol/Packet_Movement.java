@@ -40,7 +40,7 @@ public class Packet_Movement extends PacketAdapter {
         long time = System.currentTimeMillis();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-        if (protocol.spartanPlayer.isBedrockPlayer()) {
+        if (protocol.spartan.isBedrockPlayer()) {
             return;
         }
         PacketContainer p = event.getPacket();
@@ -88,7 +88,7 @@ public class Packet_Movement extends PacketAdapter {
 
         if (protocol.simulationFlag) {
             Location to = protocol.getLocation();
-            Location from = protocol.spartanPlayer.movement.getEventFromLocation().getBukkitLocation();
+            Location from = protocol.spartan.movement.getEventFromLocation().bukkit();
             double dx = RayUtils.scaleVal(to.getX() - from.getX(), 6),
                     dy = RayUtils.scaleVal(to.getY() - from.getY(), 6),
                     dz = RayUtils.scaleVal(to.getZ() - from.getZ(), 6);
@@ -96,12 +96,12 @@ public class Packet_Movement extends PacketAdapter {
             MotionVector v = c.getNext(dx, dy, dz);
             Location finalLocation = protocol.simulationStartPoint.clone().add(v.x, v.y, v.z);
 
-            if (RayUtils.isSaveToTeleport(protocol.player, finalLocation)
-                    && RayUtils.isSaveToTeleport(protocol.player, finalLocation.clone().add(0, 1, 0))) {
+            if (RayUtils.isSaveToTeleport(protocol.bukkit, finalLocation)
+                    && RayUtils.isSaveToTeleport(protocol.bukkit, finalLocation.clone().add(0, 1, 0))) {
                 if (protocol.simulationDelayPerTP > 0) {
                     protocol.simulationDelayPerTP--;
                 } else {
-                    protocol.spartanPlayer.teleport(new SpartanLocation(finalLocation));
+                    protocol.spartan.teleport(new SpartanLocation(finalLocation));
                     protocol.simulationStartPoint = finalLocation.clone();
                     protocol.simulationDelayPerTP = 2;
                 }
@@ -147,7 +147,7 @@ public class Packet_Movement extends PacketAdapter {
 
             if (!from.getWorld().equals(protocol.getLocation().getWorld())
                     || ProtocolTools.invalidTeleport(protocol.getLocation())) {
-                protocol.spartanPlayer.resetCrucialData();
+                protocol.spartan.resetCrucialData();
             } else if (!protocol.loaded) {
                 protocol.loaded = true;
             } else {
@@ -175,7 +175,7 @@ public class Packet_Movement extends PacketAdapter {
             }
             if (!from.getWorld().equals(location.getWorld())
                     || ProtocolTools.invalidTeleport(location)) {
-                protocol.spartanPlayer.resetCrucialData();
+                protocol.spartan.resetCrucialData();
             } else if (!protocol.loaded) {
                 protocol.loaded = true;
             } else {
@@ -194,7 +194,7 @@ public class Packet_Movement extends PacketAdapter {
 
     private static void superPosition(SuperPositionPacketEvent packet) {
         boolean cancelled = packet.packetEvent.isCancelled();
-        packet.protocol.spartanPlayer.getExecutor(Enums.HackType.Exploits).handle(cancelled, packet);
+        packet.protocol.spartan.getExecutor(Enums.HackType.Exploits).handle(cancelled, packet);
     }
 
 }

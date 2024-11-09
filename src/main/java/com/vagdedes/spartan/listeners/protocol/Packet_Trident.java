@@ -30,7 +30,7 @@ public class Packet_Trident extends PacketAdapter {
         if (!event.isCancelled()) { // PlayerRiptideEvent does not implement cancellable
             Player player = event.getPlayer();
             SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
-            if (protocol.spartanPlayer.isBedrockPlayer()) {
+            if (protocol.spartan.isBedrockPlayer()) {
                 return;
             }
             ItemStack item = player.getInventory().getItemInMainHand();

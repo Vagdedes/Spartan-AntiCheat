@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
@@ -53,13 +52,12 @@ public class ProxyUtils {
                 if (!entries.isEmpty()) { // 1 because we already know we have one player
                     for (Map.Entry<UUID, SpartanProtocol> entry : entries) {
                         SpartanProtocol protocol = entry.getValue();
-                        SpartanPlayer loopPlayer = protocol.spartanPlayer;
 
-                        if (loopPlayer.getInstance().isOp()) {
-                            player = loopPlayer.getInstance();
+                        if (protocol.bukkit.isOp()) {
+                            player = protocol.bukkit;
                             break;
-                        } else if (Permissions.isStaff(protocol.player)) {
-                            player = loopPlayer.getInstance();
+                        } else if (Permissions.isStaff(protocol.bukkit)) {
+                            player = protocol.bukkit;
                         }
                     }
                 }

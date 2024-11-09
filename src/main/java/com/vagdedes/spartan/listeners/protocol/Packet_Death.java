@@ -25,7 +25,7 @@ public class Packet_Death extends PacketAdapter {
     public void onPacketSending(PacketEvent event) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-        if (protocol.spartanPlayer.isBedrockPlayer()) {
+        if (protocol.spartan.isBedrockPlayer()) {
             return;
         }
         PacketContainer packet = event.getPacket();

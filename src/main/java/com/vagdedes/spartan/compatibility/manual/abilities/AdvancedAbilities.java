@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import be.anybody.api.advancedabilities.ability.event.AbilityCallEvent;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;
@@ -15,7 +15,7 @@ public class AdvancedAbilities implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void AbilityEvent(AbilityCallEvent e) {
         if (Compatibility.CompatibilityType.ADVANCED_ABILITIES.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
 
             Config.compatibility.evadeFalsePositives(
                     p,

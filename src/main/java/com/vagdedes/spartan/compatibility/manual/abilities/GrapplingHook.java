@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.snowgears.grapplinghook.api.HookAPI;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
@@ -34,8 +34,8 @@ public class GrapplingHook implements Listener {
             Entity caught = e.getCaught();
 
             if (caught instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caught).spartanPlayer,
-                        t = SpartanBukkit.getProtocol(e.getPlayer()).spartanPlayer;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caught).spartan,
+                        t = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
 
                 if (!p.equals(t) && isItem(t.getItemInHand())) {
                     if (PluginUtils.exists("grapplinghook")) {

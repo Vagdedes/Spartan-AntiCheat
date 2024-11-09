@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.functionality.npc;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
@@ -38,7 +38,7 @@ public class SpartanNPC {
         loc.setZ(loc.getBlockZ() + 0.5);
         this.location = loc;
         this.armorStand = (ArmorStand) loc.world.spawnEntity(
-                loc.getBukkitLocation(),
+                loc.bukkit(),
                 EntityType.ARMOR_STAND
         );
         armorStand.setGravity(false);
@@ -99,7 +99,7 @@ public class SpartanNPC {
         ));
     }
 
-    boolean animate(List<SpartanPlayer> players) {
+    boolean animate(List<SpartanProtocol> protocols) {
         if (armorStand.isDead()) {
             return false;
         } else {
@@ -139,16 +139,16 @@ public class SpartanNPC {
                     0.0,
                     -Math.toRadians(Math.abs(handPose))
             ));
-            SpartanPlayer closest = null;
+            SpartanProtocol closest = null;
 
-            for (SpartanPlayer player : players) {
+            for (SpartanProtocol protocol : protocols) {
                 if (closest == null
-                        || player.movement.getLocation().distance(location)
-                        < closest.movement.getLocation().distance(location)) {
-                    closest = player;
+                        || protocol.spartan.movement.getLocation().distance(location)
+                        < closest.spartan.movement.getLocation().distance(location)) {
+                    closest = protocol;
                 }
             }
-            Vector playerVec = closest.movement.getLocation().toVector().clone();
+            Vector playerVec = closest.spartan.movement.getLocation().toVector().clone();
             Vector sheepVec = armorStand.getLocation().toVector();
             Vector toLookAtVec = playerVec.subtract(sheepVec);
             armorStand.teleport(armorStand.getLocation().setDirection(toLookAtVec));

@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.world;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -1488,10 +1489,10 @@ public class BlockUtils {
         return time >= 0L && time <= sensitiveBlockBreakTime || sensitive.contains(m);
     }
 
-    public static boolean isSensitive(SpartanPlayer p, Material m) {
+    public static boolean isSensitive(SpartanProtocol p, Material m) {
         return isSensitive(
                 m,
-                p == null ? -1 : MaterialUtils.getBlockBreakTime(p, p.getItemInHand(), m)
+                p == null ? -1 : MaterialUtils.getBlockBreakTime(p, p.spartan.getItemInHand(), m)
         );
     }
 

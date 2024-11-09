@@ -41,7 +41,7 @@ public class Packet_Combat extends PacketAdapter {
         if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
             SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-            if (protocol.spartanPlayer.isBedrockPlayer()) {
+            if (protocol.spartan.isBedrockPlayer()) {
                 return;
             }
             PacketContainer packet = event.getPacket();
@@ -61,7 +61,7 @@ public class Packet_Combat extends PacketAdapter {
         if (event.getPacketType() == PacketType.Play.Server.DAMAGE_EVENT) {
             SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
 
-            if (protocol.spartanPlayer.isBedrockPlayer()) {
+            if (protocol.spartan.isBedrockPlayer()) {
                 return;
             }
             int entityId = event.getPacket().getIntegers().read(0);

@@ -1,8 +1,9 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
+import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
@@ -31,6 +32,7 @@ public abstract class DetectionExecutor extends CheckDetection {
 
     public final String name, random;
     private final boolean def;
+    private int lastProbability;
     private long notifications;
     private final Map<Check.DataType, Double> probability;
     private final Map<Check.DataType, Map<Long, Double>> data;
@@ -87,8 +89,12 @@ public abstract class DetectionExecutor extends CheckDetection {
 
     public final boolean isEnabled() {
         return this.hackType.getCheck().isEnabled(
-                this.protocol().spartanPlayer == null ? null : this.protocol().spartanPlayer.dataType,
-                this.protocol().spartanPlayer == null ? null : this.protocol().spartanPlayer.getWorld().getName()
+                this.protocol() == null || this.protocol().spartan == null
+                        ? null
+                        : this.protocol().spartan.dataType,
+                this.protocol() == null || this.protocol().spartan == null
+                        ? null
+                        : this.protocol().spartan.getWorld().getName()
         )
                 && (this.name == null
                 || this.hackType.getCheck().getBooleanOption("check_" + this.name, this.def));
@@ -147,7 +153,27 @@ public abstract class DetectionExecutor extends CheckDetection {
 
     // Probability
 
-    public final boolean surpassedProbability(Check.DataType dataType, double threshold) {
+    final boolean hasSufficientData(Check.DataType dataType) {
+        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+        int requirement = PlayerEvidence.probabilityToFactors(PlayerEvidence.punishmentProbability);
+
+        if (playerProfiles.size() >= requirement) {
+            int count = 0;
+
+            for (PlayerProfile profile : playerProfiles) {
+                if (profile.getExecutor(this.hackType).getDetection(this.name).hasDataToCompare(dataType)) {
+                    count++;
+
+                    if (count == requirement) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean surpassedProbability(Check.DataType dataType, double threshold) {
         return PlayerEvidence.surpassedProbability(this.getProbability(dataType), threshold);
     }
 
@@ -159,7 +185,7 @@ public abstract class DetectionExecutor extends CheckDetection {
         this.probability.put(dataType, probability);
     }
 
-    public final double getProbability(Check.DataType dataType) {
+    final double getProbability(Check.DataType dataType) {
         return isEnabled()
                 ? this.probability.getOrDefault(dataType, PlayerEvidence.emptyProbability)
                 : PlayerEvidence.emptyProbability;
@@ -186,7 +212,7 @@ public abstract class DetectionExecutor extends CheckDetection {
             Runnable runnable = () -> {
                 if (event) {
                     PlayerViolationEvent playerViolationEvent = new PlayerViolationEvent(
-                            this.protocol().spartanPlayer.getInstance(),
+                            this.protocol().bukkit,
                             hackType,
                             playerViolation.increase,
                             information
@@ -197,36 +223,38 @@ public abstract class DetectionExecutor extends CheckDetection {
                         return;
                     }
                 }
-                this.store(this.protocol().spartanPlayer.dataType, playerViolation);
+                this.store(this.protocol().spartan.dataType, playerViolation);
                 this.notify(playerViolation, information);
                 this.punish();
                 this.executor.prevention = newPrevention;
                 this.executor.prevention.canPrevent =
-                        !hackType.getCheck().isSilent(this.protocol().spartanPlayer.dataType, this.protocol().spartanPlayer.getWorld().getName())
+                        !hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName())
                                 && (silentCause == null
                                 || silentCause.hasExpired()
                                 || !silentCause.pointerMatches(information))
-                                && ResearchEngine.getRequiredPlayers(this, this.protocol().spartanPlayer.dataType, PlayerEvidence.preventionProbability) == 0
-                                && this.surpassedProbability(this.protocol().spartanPlayer.dataType, PlayerEvidence.preventionProbability);
+                                && this.hasSufficientData(this.protocol().spartan.dataType)
+                                && this.surpassedProbability(this.protocol().spartan.dataType, PlayerEvidence.preventionProbability);
             };
 
             if (!event || SpartanBukkit.isSynchronised()) {
                 runnable.run();
             } else {
-                SpartanBukkit.transferTask(this.protocol().spartanPlayer, runnable);
+                SpartanBukkit.transferTask(this.protocol().spartan, runnable);
             }
         }
     }
 
     // Notification
 
-    public final boolean canSendNotification(Object detected) {
+    public final boolean canSendNotification(Object detected, int probability) {
         long time = System.currentTimeMillis();
 
-        if (this.notifications <= time) {
+        if (this.notifications <= time
+                && (this.lastProbability != probability
+                || time - this.notifications >= 5_000L)) {
             boolean player = detected instanceof SpartanPlayer;
             int ticks = this.executor.getNotificationTicksCooldown(
-                    player ? (SpartanPlayer) detected : null
+                    player ? (SpartanProtocol) detected : null
             );
 
             if (ticks > 0) {
@@ -255,9 +283,12 @@ public abstract class DetectionExecutor extends CheckDetection {
 
                 if (access) {
                     this.notifications = time + (ticks * TPS.tickTime);
+                    this.lastProbability = probability;
                     return true;
                 }
             } else {
+                this.notifications = time;
+                this.lastProbability = probability;
                 return true;
             }
         }
@@ -265,36 +296,38 @@ public abstract class DetectionExecutor extends CheckDetection {
     }
 
     private void notify(PlayerViolation playerViolation, String information) {
-        double probability = this.getProbability(this.protocol().spartanPlayer.dataType),
+        double probability = this.getProbability(this.protocol().spartan.dataType),
                 certainty = PlayerEvidence.probabilityToCertainty(probability) * 100.0;
         int roundedCertainty = AlgebraUtils.integerRound(certainty);
-        boolean hasSufficientData = ResearchEngine.getRequiredPlayers(this, this.protocol().spartanPlayer.dataType, PlayerEvidence.notificationProbability) == 0;
+        boolean hasSufficientData = this.hasSufficientData(this.protocol().spartan.dataType);
         String notification = ConfigUtils.replaceWithSyntax(
-                this.protocol().spartanPlayer,
+                this.protocol(),
                 Config.messages.getColorfulString("detection_notification")
                         .replace("{info}", information)
                         .replace("{vls:detection}", String.valueOf(AlgebraUtils.cut(playerViolation.increase, 2)))
                         .replace("{vls:percentage}",
-                                hasSufficientData && roundedCertainty > 0 ? (roundedCertainty + "%") : "unlikely"
+                                hasSufficientData && roundedCertainty > 0
+                                        ? (roundedCertainty + "%")
+                                        : "unlikely"
                         ),
                 hackType
         );
 
-        SpartanLocation location = this.protocol().spartanPlayer.movement.getLocation();
-        information = this.protocol().spartanPlayer.getInstance().getName() + " failed " + hackType
+        SpartanLocation location = this.protocol().spartan.movement.getLocation();
+        information = this.protocol().bukkit.getName() + " failed " + hackType
                 + " (" + CheckExecutor.violationLevelIdentifier + " " + playerViolation.increase + "), "
                 + "(Server-Version: " + MultiVersion.serverVersion.toString() + "), "
                 + "(Certainty: " + AlgebraUtils.cut(certainty, 2) + "), "
                 + "(Plugin-Version: " + API.getVersion() + "), "
-                + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartanPlayer.dataType, this.protocol().spartanPlayer.getWorld().getName()) + "), "
-                + "(" + CheckExecutor.javaPlayerIdentifier + " " + (!this.protocol().spartanPlayer.isBedrockPlayer()) + ")" + ", "
+                + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName()) + "), "
+                + "(" + CheckExecutor.javaPlayerIdentifier + " " + (!this.protocol().spartan.isBedrockPlayer()) + ")" + ", "
                 + "(" + CheckExecutor.detectionIdentifier + " " + this.name + ")" + ", "
-                + "(Packets: " + this.protocol().spartanPlayer.protocol.packetsEnabled() + "), "
-                + "(Ping: " + this.protocol().spartanPlayer.protocol.getPing() + "ms), "
+                + "(Packets: " + this.protocol().packetsEnabled() + "), "
+                + "(Ping: " + this.protocol().getPing() + "ms), "
                 + "(W-XYZ: " + location.world.getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ() + "), "
                 + "[Information: " + information + "]";
         AntiCheatLogs.logInfo(
-                this.protocol().spartanPlayer,
+                this.protocol(),
                 notification,
                 information,
                 hasSufficientData
@@ -310,20 +343,20 @@ public abstract class DetectionExecutor extends CheckDetection {
 
         // Local Notifications
         String command = Config.settings.getString("Notifications.message_clickable_command")
-                .replace("{player}", this.protocol().spartanPlayer.getInstance().getName());
+                .replace("{player}", this.protocol().bukkit.getName());
 
         if (Config.settings.getBoolean("Notifications.individual_only_notifications")) {
-            if (DetectionNotifications.isEnabled(this.protocol().spartanPlayer.protocol)) { // Attention
-                ClickableMessage.sendCommand(this.protocol().spartanPlayer.getInstance(), notification, command, command);
+            if (DetectionNotifications.isEnabled(this.protocol())) { // Attention
+                ClickableMessage.sendCommand(this.protocol().bukkit, notification, command, command);
             }
         } else {
-            List<SpartanPlayer> notificationPlayers = DetectionNotifications.getPlayers();
+            List<SpartanProtocol> protocols = DetectionNotifications.getPlayers();
 
-            if (!notificationPlayers.isEmpty()) {
-                for (SpartanPlayer staff : notificationPlayers) {
-                    if (staff.getExecutor(this.hackType).getDetection(this.name).canSendNotification(this.protocol().spartanPlayer)) {
+            if (!protocols.isEmpty()) {
+                for (SpartanProtocol staff : protocols) {
+                    if (staff.spartan.getExecutor(this.hackType).getDetection(this.name).canSendNotification(this.protocol(), roundedCertainty)) {
                         ClickableMessage.sendCommand(
-                                staff.getInstance(),
+                                staff.bukkit,
                                 notification,
                                 command,
                                 command
@@ -339,16 +372,15 @@ public abstract class DetectionExecutor extends CheckDetection {
     private void punish() {
         Check check = hackType.getCheck();
 
-        if (check.canPunish(this.protocol().spartanPlayer.dataType)) {
+        if (check.canPunish(this.protocol().spartan.dataType)) {
             List<String> commands = check.getPunishmentCommands();
 
             if (!commands.isEmpty()
-                    && ResearchEngine.getRequiredPlayers(this, this.protocol().spartanPlayer.dataType, PlayerEvidence.punishmentProbability) == 0) {
-                Collection<Enums.HackType> detectedHacks = this.protocol().spartanPlayer.protocol.getProfile().getEvidenceList(
-                        this.protocol().spartanPlayer.dataType,
+                    && this.hasSufficientData(this.protocol().spartan.dataType)) {
+                Collection<Enums.HackType> detectedHacks = this.protocol().getProfile().getEvidenceList(
                         PlayerEvidence.punishmentProbability
                 );
-                detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish(this.protocol().spartanPlayer.dataType));
+                detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish(this.protocol().spartan.dataType));
 
                 if (!detectedHacks.isEmpty()
                         && detectedHacks.contains(hackType)) {
@@ -363,7 +395,7 @@ public abstract class DetectionExecutor extends CheckDetection {
 
                     for (String command : commands) {
                         String modifiedCommand = ConfigUtils.replaceWithSyntax(
-                                this.protocol().spartanPlayer,
+                                this.protocol(),
                                 command.replaceAll("\\{detections}|\\{detection}", detections),
                                 null
                         );
@@ -372,7 +404,7 @@ public abstract class DetectionExecutor extends CheckDetection {
                         if (enabledDeveloperAPI) {
                             Runnable runnable = () -> {
                                 PlayerViolationCommandEvent event = new PlayerViolationCommandEvent(
-                                        this.protocol().spartanPlayer.getInstance(),
+                                        this.protocol().bukkit,
                                         hackType,
                                         detectedHacks,
                                         modifiedCommand
@@ -387,17 +419,17 @@ public abstract class DetectionExecutor extends CheckDetection {
                             if (SpartanBukkit.isSynchronised()) {
                                 runnable.run();
                             } else {
-                                SpartanBukkit.transferTask(this.protocol().spartanPlayer, runnable);
+                                SpartanBukkit.transferTask(this.protocol().spartan, runnable);
                             }
                         } else {
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), modifiedCommand);
                         }
                     }
-                    SpartanLocation location = this.protocol().spartanPlayer.movement.getLocation();
+                    SpartanLocation location = this.protocol().spartan.movement.getLocation();
                     CloudConnections.executeDiscordWebhook(
                             "punishments",
-                            this.protocol().spartanPlayer.protocol.getUUID(),
-                            this.protocol().spartanPlayer.getInstance().getName(),
+                            this.protocol().getUUID(),
+                            this.protocol().bukkit.getName(),
                             location.getBlockX(),
                             location.getBlockY(),
                             location.getBlockZ(),

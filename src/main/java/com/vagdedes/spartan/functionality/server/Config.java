@@ -6,7 +6,6 @@ import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibili
 import com.vagdedes.spartan.abstraction.configuration.implementation.Messages;
 import com.vagdedes.spartan.abstraction.configuration.implementation.SQLFeature;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
@@ -76,7 +75,7 @@ public class Config {
         ResearchEngine.refresh(enabledPlugin);
     }
 
-    public static void reload(Object sender) {
+    public static void reload(CommandSender sender) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanReloadEvent event = new SpartanReloadEvent();
             Register.manager.callEvent(event);
@@ -86,13 +85,9 @@ public class Config {
             }
         }
         if (sender != null) {
-            String message = Config.messages.getColorfulString("config_reload");
-
-            if (sender instanceof CommandSender) {
-                ((CommandSender) sender).sendMessage(message);
-            } else if (sender instanceof SpartanPlayer) {
-                ((SpartanPlayer) sender).getInstance().sendMessage(message);
-            }
+            sender.sendMessage(
+                    Config.messages.getColorfulString("config_reload")
+            );
         }
         create();
     }

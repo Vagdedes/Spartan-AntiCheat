@@ -1,9 +1,8 @@
 package com.vagdedes.spartan.functionality.notifications;
 
-import com.vagdedes.spartan.abstraction.player.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -71,24 +70,14 @@ public class AwarenessNotifications {
         return !areEnabled() || s == null ? null : getNotification(s, true);
     }
 
-    public static void forcefullySend(Object sender, String message, boolean console) {
+    public static void forcefullySend(SpartanProtocol protocol, String message, boolean console) {
         message = getNotification(message);
 
-        if (sender != null) {
-            if (sender instanceof CommandSender) { // Player
-                CommandSender commandSender = (CommandSender) sender;
-                commandSender.sendMessage(message);
+        if (protocol != null) {
+            protocol.bukkit.sendMessage(message);
 
-                if (console && commandSender != Bukkit.getConsoleSender()) {
-                    Bukkit.getConsoleSender().sendMessage("(" + commandSender.getName() + ") " + message);
-                }
-            } else if (sender instanceof SpartanPlayer) {
-                SpartanPlayer spartanPlayer = (SpartanPlayer) sender;
-                spartanPlayer.getInstance().sendMessage(message);
-
-                if (console) {
-                    Bukkit.getConsoleSender().sendMessage("(" + spartanPlayer.getInstance().getName() + ") " + message);
-                }
+            if (console) {
+                Bukkit.getConsoleSender().sendMessage("(" + protocol.bukkit.getName() + ") " + message);
             }
         } else if (console) {
             Bukkit.getConsoleSender().sendMessage(message);
