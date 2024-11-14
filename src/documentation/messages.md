@@ -65,11 +65,12 @@ Detection Notifications:
 {detections} List of detections with their custom names
 {detection} A check’s custom name gathered from Spartan’s configuration
 {detection:real} A check’s real name set by Spartan’s developer/s
-{silent:detection} True/False depending if a check is silent, thus allowing it to prevent player interactions
-{punish:detection} True/False depending if a check can and is configured to punish with commands
+{detection:silent} True/False depending if a check is silent, thus allowing it to prevent player interactions
+{detection:punish} True/False depending if a check can and is configured to punish with commands
 ```
 ### Detection:
 ```
-{vls:detection} Player’s amount of violations on a given check.
-{vls:percentage} The percentage determining the certainty of a check that a given player is hacking.
+{detection:violations} Player’s amount of violations on a given check.
+{detection:percentage} The percentage determining the certainty of a check's detection that a given player is hacking.
+{detection:data} The percentage determining the completion of a check's necessary data collection.
 ```
