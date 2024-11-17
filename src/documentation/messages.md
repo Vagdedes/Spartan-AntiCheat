@@ -72,5 +72,4 @@ Detection Notifications:
 ```
 {detection:violations} Player’s amount of violations on a given check.
 {detection:percentage} The percentage determining the certainty of a check's detection that a given player is hacking.
-{detection:data} The percentage determining the completion of a check's necessary data collection.
 ```
