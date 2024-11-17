@@ -13,6 +13,9 @@
 ## Post Refund Period:
 * Following a successful refund, your license along with its associated products may be terminated, and you may be disallowed from temporarily/permanently purchasing the same product and/or its associated products.
 
+## Special Refund Offer:
+* Once we have established the fact you will be refunded, we may ask you to refund you 51% of your purchase in which case we also let you keep the product. This is a way of you supporting our development into the future and us supporting you by allowing you to try our product again in the future with more than half your money refunded.
+
 Signed,<br>
 Evangelos Dedes<br>
 @vagdedes
