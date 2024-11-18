@@ -31,5 +31,3 @@ Speed: Check Category
 ```
 ## Canceled Server Events
 When a Minecraft server’s events are canceled, it is unlikely our Minecraft plugins will measure this event until it’s allowed again. For example, when the PlayerMoveEvent is canceled on Bukkit-based servers, a player cannot move on the server, leading to the Spartan anti-cheat to ignore checking the player for hack modules.
-## Other Checks
-Spartan’s checks.yml configuration of your server will slowly load as the anti-cheat calls detections for the first time, do not worry if you have less options than expected as they will appear over time.
