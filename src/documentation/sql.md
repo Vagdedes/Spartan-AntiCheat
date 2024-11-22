@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
+# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">Get Java & Bedrock Edition in one jar</a>
 
 ## sql.yml Example
 ```
