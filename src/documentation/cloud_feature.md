@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
+# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">Get Java & Bedrock Edition in one jar</a>
 
 ## Automatic Configuration Changes
 The development team is given the ability to manually queue configuration changes for the user base, either individually or in masses. This feature helps prevent major issues/spam, correct temporary/semi-permanent issues, but also save time by not always explaining to the user what & when to change something in the plugin configuration. It doesn't collect any private information and is purely used for issue resolution & ease of use purposes.
