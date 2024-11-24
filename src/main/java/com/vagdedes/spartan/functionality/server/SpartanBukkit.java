@@ -82,10 +82,14 @@ public class SpartanBukkit {
         if (ProtocolLib.isTemporary(player)) {
             return new SpartanProtocol(player);
         } else {
-            return playerProtocol.computeIfAbsent(
-                    player.getUniqueId(),
-                    k -> new SpartanProtocol(player)
-            );
+            SpartanProtocol protocol = playerProtocol.get(player.getUniqueId());
+
+            if (protocol == null) {
+                protocol = new SpartanProtocol(player);
+                playerProtocol.put(player.getUniqueId(), protocol);
+            }
+            protocol.spartan.setLastInteraction();
+            return protocol;
         }
     }
 
@@ -134,11 +138,25 @@ public class SpartanBukkit {
         }
     }
 
+    public static boolean isOnline(UUID uuid) {
+        return playerProtocol.containsKey(uuid);
+    }
+
     public static SpartanProtocol deleteProtocol(Player player) {
         if (ProtocolLib.isTemporary(player)) {
             return null;
         } else {
-            return playerProtocol.remove(player.getUniqueId());
+            SpartanProtocol protocol = playerProtocol.remove(player.getUniqueId());
+
+            if (protocol != null) {
+                protocol.spartan.setLastInteraction();
+                protocol.getProfile().setOnlineFor(
+                        System.currentTimeMillis(),
+                        protocol.getTimePlayed(),
+                        true
+                );
+            }
+            return protocol;
         }
     }
 
@@ -190,6 +208,15 @@ public class SpartanBukkit {
 
     public static void cancelTask(Object task) {
         SpartanScheduler.cancel(task);
+    }
+
+    // Separator
+
+    public static void runCommand(String command) {
+        Bukkit.getScheduler().runTask(
+                Register.plugin,
+                () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command)
+        );
     }
 
     // Separator

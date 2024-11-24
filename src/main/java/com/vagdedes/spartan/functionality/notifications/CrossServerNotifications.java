@@ -39,23 +39,25 @@ public class CrossServerNotifications {
                                 long id = rs.getLong("id");
 
                                 if (!processed.containsKey(id)) {
-                                    String functionality = rs.getString("functionality");
+                                    String functionality = rs.getString("functionality"),
+                                            playerName = rs.getString("player_name");
 
-                                    for (Enums.HackType hackType : Enums.HackType.values()) {
-                                        if (hackType.toString().equals(functionality)) {
-                                            String notification = rs.getString("notification"),
-                                                    serverName = rs.getString("server_name"),
-                                                    playerName = rs.getString("player_name"),
-                                                    detection = ResearchEngine.getDetectionInformation(rs.getString("information"));
-                                            notification = "§l[" + serverName + "]§r " + notification;
+                                    if (playerName != null) {
+                                        for (Enums.HackType hackType : Enums.HackType.values()) {
+                                            if (hackType.toString().equals(functionality)) {
+                                                String notification = rs.getString("notification"),
+                                                        serverName = rs.getString("server_name"),
+                                                        detection = ResearchEngine.getDetectionInformation(rs.getString("information"));
+                                                notification = "§l[" + serverName + "]§r " + notification;
 
-                                            for (SpartanProtocol protocol : protocols) {
-                                                if (protocol.spartan.getExecutor(hackType).getDetection(detection).canSendNotification(playerName, 0)) {
-                                                    protocol.bukkit.sendMessage(notification);
-                                                    processed.put(id, true);
+                                                for (SpartanProtocol protocol : protocols) {
+                                                    if (protocol.spartan.getRunner(hackType).getDetection(detection).canSendNotification(playerName, 0)) {
+                                                        protocol.bukkit.sendMessage(notification);
+                                                        processed.put(id, true);
+                                                    }
                                                 }
+                                                break;
                                             }
-                                            break;
                                         }
                                     }
                                 }

@@ -15,7 +15,7 @@ public class Event_Chat implements Listener {
         SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
 
         // Detections
-        p.getExecutor(Enums.HackType.Exploits).handle(e.isCancelled(), e.getMessage());
+        p.getRunner(Enums.HackType.Exploits).handle(e.isCancelled(), e.getMessage());
     }
 
 }

@@ -1,11 +1,15 @@
 package com.vagdedes.spartan.functionality.notifications;
 
+import com.vagdedes.spartan.abstraction.check.CheckRunner;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.utils.java.TimeUtils;
+import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
 
 import java.util.ArrayList;
@@ -44,7 +48,8 @@ public class SuspicionNotifications {
         int size = 0, commaLength = comma.length();
 
         for (SpartanProtocol protocol : online) {
-            Collection<Enums.HackType> list = protocol.getProfile().getEvidenceList(
+            PlayerProfile profile = protocol.getProfile();
+            Collection<Enums.HackType> list = profile.getEvidenceList(
                     PlayerEvidence.notificationProbability
             );
 
@@ -52,11 +57,21 @@ public class SuspicionNotifications {
                 StringBuilder evidence = new StringBuilder();
 
                 for (Enums.HackType hackType : list) {
+                    CheckRunner runner = protocol.spartan.getRunner(hackType);
+                    boolean sufficientData = runner.hasSufficientData(protocol.spartan.dataType);
+                    Long remainingTime = sufficientData
+                            ? null
+                            : profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType());
                     evidence.append(
                             hackType.getCheck().getName()
-                                    + (protocol.spartan.getExecutor(hackType).hasSufficientData(protocol.spartan.dataType)
-                                    ? ""
-                                    : " (Unlikely)")
+                                    + (sufficientData
+                                    ? " (" + AlgebraUtils.integerRound(
+                                    PlayerEvidence.probabilityToCertainty(
+                                            runner.getExtremeProbability(protocol.spartan.dataType)
+                                    ) * 100.0) + "%)"
+                                    : remainingTime != null
+                                    ? " (Data pending: " + TimeUtils.convertMilliseconds(remainingTime) + ")"
+                                    : " [Unlikely (Data pending)]")
                     ).append(
                             comma
                     );

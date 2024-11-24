@@ -165,7 +165,7 @@ public class Enums {
                         "blocks irregularly fast."
                 }
         ),
-        Speed(
+        Speed( // todo remove
                 HackCategoryType.MOVEMENT,
                 com.vagdedes.spartan.abstraction.check.implementation.movement.Speed.class,
                 new String[]{

@@ -70,8 +70,8 @@ public class ConfigUtils {
         message = replace(message, "{cps}", String.valueOf(p.spartan.clicks.getCount()));
 
         if (hackType != null) {
-            message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(p.spartan.dataType, worldName)));
-            message = replace(message, "{punish:detection}", String.valueOf(hackType.getCheck().canPunish(p.spartan.dataType)));
+            message = replace(message, "{detection:silent}", String.valueOf(hackType.getCheck().isSilent(p.spartan.dataType, worldName)));
+            message = replace(message, "{detection:punish}", String.valueOf(hackType.getCheck().canPunish(p.spartan.dataType)));
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }
@@ -92,8 +92,8 @@ public class ConfigUtils {
             message = replace(message, "{uuid}", uuid.toString());
 
             if (hasHackType) {
-                message = replace(message, "{silent:detection}", String.valueOf(hackType.getCheck().isSilent(null, null)));
-                message = replace(message, "{punish:detection}", String.valueOf(hackType.getCheck().canPunish(null)));
+                message = replace(message, "{detection:silent}", String.valueOf(hackType.getCheck().isSilent(null, null)));
+                message = replace(message, "{detection:punish}", String.valueOf(hackType.getCheck().canPunish(null)));
             }
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));

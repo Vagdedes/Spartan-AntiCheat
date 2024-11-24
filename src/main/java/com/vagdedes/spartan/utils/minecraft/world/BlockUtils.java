@@ -910,6 +910,13 @@ public class BlockUtils {
         } else {
             helper.add(Material.getMaterial("SIGN"));
         }
+        for (Material m : materials) {
+            String s = m.toString();
+
+            if (endsWith(s, "GRASS")) {
+                helper.add(m);
+            }
+        }
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)) {
                 if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
@@ -940,11 +947,7 @@ public class BlockUtils {
                 helper.add(Material.CRIMSON_FUNGUS);
                 helper.add(Material.NETHER_SPROUTS);
             }
-            Material material = MaterialUtils.findMaterial("SHORT_GRASS");
-
-            if (material != null) {
-                helper.add(material);
-            }
+            helper.add(Material.GRASS_BLOCK);
             helper.add(Material.REDSTONE_TORCH);
             helper.add(Material.REDSTONE_WALL_TORCH);
             helper.add(Material.WALL_TORCH);
@@ -1306,6 +1309,14 @@ public class BlockUtils {
         return blockDataExists && isWaterLogged(block.getBlockData());
     }
 
+    public static boolean isLiquidOrWaterLogged(Object block, boolean lava) {
+        return block instanceof Block
+                ? isLiquidOrWaterLogged((Block) block, lava)
+                : blockDataExists
+                && block instanceof BlockData
+                && isLiquidOrWaterLogged((BlockData) block, lava);
+    }
+
     public static boolean isLiquidOrWaterLogged(Block block, boolean lava) {
         return (isLiquid(block) || isWaterLogged(block))
                 && (lava || block.getType() != MaterialUtils.get("lava"));
@@ -1497,7 +1508,7 @@ public class BlockUtils {
     }
 
     public static boolean isSolid(Material m) {
-        return solid.contains(m) || semi_solid.contains(m);
+        return solid.contains(m) || semi_solid.contains(m) || m.isSolid();
     }
 
     public static boolean isFullSolid(Material m) {

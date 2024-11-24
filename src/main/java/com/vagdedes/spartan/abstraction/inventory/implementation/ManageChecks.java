@@ -165,17 +165,17 @@ public class ManageChecks extends InventoryMenu {
         }
 
         // Separator
-        boolean enoughData = false;
+        boolean enoughData = true;
 
         for (Check.DataType dataType : Check.DataType.values()) {
-            if (protocol.spartan.getExecutor(hackType).hasSufficientData(dataType)) {
-                enoughData = true;
+            if (!protocol.spartan.getRunner(hackType).hasSufficientData(dataType)) {
+                enoughData = false;
                 break;
             }
         }
         lore.add("");
         lore.add((enabled ? "§a" : "§c") + "Enabled §8/ "
-                + (silent ? (!enoughData ? "§e" : "§a") : "§c") + "Silent §8/ "
+                + (silent ? "§a" : (!enoughData ? "§e" : "§c")) + "Silent §8/ "
                 + (punish ? (!enoughData ? "§e" : "§a") : "§c") + "Punishments §8/ "
                 + (bypassing ? "§a" : "§c") + "Bypassing");
         int counter = 0;

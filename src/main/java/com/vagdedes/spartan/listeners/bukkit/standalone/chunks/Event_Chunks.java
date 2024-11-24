@@ -125,10 +125,12 @@ public class Event_Chunks implements Listener {
         if (data == null || data.snapshot == null) {
             return null;
         }
-        return (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_10))
-                        ? data.snapshot.getBlockType(x & 0xF, y, z & 0xF)
-                        : (getBlockAsync(new Location(world, x, y, z)) == null)
-                        ? Material.AIR : getBlockAsync(new Location(world, x, y, z)).getType();
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_10)) {
+            return data.snapshot.getBlockType(x & 0xF, y, z & 0xF);
+        } else {
+            Block block = getBlockAsync(new Location(world, x, y, z));
+            return block == null ? Material.AIR : block.getType();
+        }
     }
 
     private static boolean hasPlayers(World world, int x, int z) {
@@ -226,7 +228,7 @@ public class Event_Chunks implements Listener {
         }
     }
 
-    public static Block getBlockAsync(final Location location) {
+    private static Block getBlockAsync(final Location location) {
         if (Event_Chunks.isLoaded(
                         location.getWorld(),
                         location.getBlockX() >> 4,

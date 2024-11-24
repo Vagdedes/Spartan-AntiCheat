@@ -11,7 +11,7 @@ import org.bukkit.inventory.PlayerInventory;
 public class Elytra {
 
     public static void judge(SpartanProtocol p) {
-        if (((Exploits) p.spartan.getExecutor(Enums.HackType.Exploits)).elytra.isEnabled()
+        if (((Exploits) p.spartan.getRunner(Enums.HackType.Exploits)).elytra.isEnabled()
                 && !Permissions.isBypassing(p.bukkit, Enums.HackType.Exploits)) {
             if (p.spartan.getVehicle() == null) {
                 PlayerInventory inventory = p.bukkit.getInventory();
@@ -22,7 +22,7 @@ public class Elytra {
                     if (i != null) {
                         if (i.getType() == Material.ELYTRA) {
                             if (i.getDurability() < 432) {
-                                p.spartan.getExecutor(Enums.HackType.Exploits).handle(false, Elytra.class);
+                                p.spartan.getRunner(Enums.HackType.Exploits).handle(false, Elytra.class);
                             } else {
                                 p.bukkit.setGliding(false);
                             }

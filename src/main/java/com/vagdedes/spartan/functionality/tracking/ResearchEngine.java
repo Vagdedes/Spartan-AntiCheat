@@ -2,9 +2,8 @@ package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.CheckExecutor;
-import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
-import com.vagdedes.spartan.abstraction.check.PlayerViolation;
+import com.vagdedes.spartan.abstraction.check.CheckDetection;
+import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
@@ -125,9 +124,10 @@ public class ResearchEngine {
 
                 if (!playerProfiles.isEmpty()) {
                     for (PlayerProfile playerProfile : playerProfiles.values()) {
-                        for (DetectionExecutor detectionExecutor : playerProfile.getExecutor(hackType).getDetections()) {
+                        for (CheckDetection detectionExecutor : playerProfile.getRunner(hackType).getDetections()) {
                             for (Check.DataType dataType : Check.DataType.values()) {
                                 detectionExecutor.clearProbability(dataType);
+                                detectionExecutor.clearData(dataType);
                             }
                         }
                     }
@@ -225,7 +225,7 @@ public class ResearchEngine {
     // Separator
 
     public static String getDetectionInformation(String s) {
-        String find = "(" + CheckExecutor.detectionIdentifier + " ";
+        String find = "(" + CheckDetection.detectionIdentifier + " ";
         int index = s.indexOf(find);
 
         if (index > -1) {
@@ -236,27 +236,8 @@ public class ResearchEngine {
         return null;
     }
 
-    private static Double getViolationIncrease(String s) {
-        String search = "(" + CheckExecutor.violationLevelIdentifier + " ";
-        int index1 = s.indexOf(search);
-
-        if (index1 > -1) {
-            s = s.substring(index1 + search.length());
-            int index2 = s.indexOf(")");
-
-            if (index2 != -1) {
-                String number = s.substring(0, index2);
-
-                if (AlgebraUtils.validDecimal(number)) {
-                    return Double.parseDouble(number);
-                }
-            }
-        }
-        return null;
-    }
-
     private static Check.DataType getDataType(String s) {
-        String find = "(" + CheckExecutor.javaPlayerIdentifier + " ";
+        String find = "(" + CheckDetection.javaPlayerIdentifier + " ";
         int index = s.indexOf(find);
 
         if (index > -1) {
@@ -399,6 +380,20 @@ public class ResearchEngine {
             SpartanBukkit.analysisThread.execute(runnable);
             firstLoad = true;
         }
+
+        if (!enabledPlugin) {
+            for (PlayerProfile profile : playerProfiles.values()) {
+                SpartanProtocol protocol = profile.protocol();
+
+                if (protocol != null) {
+                    profile.setOnlineFor(
+                            System.currentTimeMillis(),
+                            protocol.getTimePlayed(),
+                            true
+                    );
+                }
+            }
+        }
     }
 
     private static void buildCache() {
@@ -412,7 +407,7 @@ public class ResearchEngine {
                                 partialDate = fullDate.substring(0, 10),
                                 data = entry.getValue();
 
-                        if (data.contains(" failed ")) {
+                        if (data.contains(CheckDetection.failed)) {
                             String[] split = data.split(" ");
 
                             if (split.length >= 3) {
@@ -423,29 +418,22 @@ public class ResearchEngine {
                                         String detection = getDetectionInformation(data);
 
                                         if (detection != null) {
-                                            Double violationIncrease = getViolationIncrease(data);
+                                            PlayerProfile profile = getPlayerProfile(split[0], true);
+                                            CheckDetection detectionExecutor = profile.getRunner(hackType).getDetection(detection);
 
-                                            if (violationIncrease != null) {
-                                                PlayerProfile profile = getPlayerProfile(split[0], true);
-                                                DetectionExecutor detectionExecutor = profile.getExecutor(hackType).getDetection(detection);
-
-                                                if (detectionExecutor != null) {
-                                                    SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
-                                                    detectionExecutor.store(
-                                                            getDataType(data),
-                                                            new PlayerViolation(
-                                                                    sdf.parse(fullDate).getTime(),
-                                                                    violationIncrease
-                                                            )
-                                                    );
-                                                }
+                                            if (detectionExecutor != null) {
+                                                SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+                                                detectionExecutor.store(
+                                                        getDataType(data),
+                                                        sdf.parse(fullDate).getTime()
+                                                );
                                             }
-                                            break;
                                         }
+                                        break;
                                     }
                                 }
                             }
-                        } else if (data.contains(" found ")) {
+                        } else if (data.contains(MiningHistory.found)) {
                             String[] split = data.split(" ");
 
                             if (split.length >= 9) {
@@ -471,15 +459,40 @@ public class ResearchEngine {
                                 } catch (Exception ignored) {
                                 }
                             }
+                        } else {
+                            int index = data.indexOf(PlayerProfile.onlineFor);
+
+                            if (index != -1) {
+                                SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+
+                                try {
+                                    ResearchEngine.getPlayerProfile(data.split(" ", 2)[0], true).setOnlineFor(
+                                            sdf.parse(fullDate).getTime(),
+                                            Long.parseLong(data.substring(index + PlayerProfile.onlineFor.length())),
+                                            false
+                                    );
+                                } catch (Exception ignored) {
+                                }
+                            } else {
+                                index = data.indexOf(PlayerProfile.afkFor);
+
+                                if (index != -1) {
+                                    SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+                                    ResearchEngine.getPlayerProfile(data.split(" ", 2)[0], true).setAFKFor(
+                                            sdf.parse(fullDate).getTime(),
+                                            Long.parseLong(data.substring(index + PlayerProfile.afkFor.length())),
+                                            false
+                                    );
+                                }
+                            }
                         }
                     } catch (Exception ignored) {
-
                     }
                 }
-                updateCache(true);
-                MainMenu.refresh();
             }
         }
+        updateCache(true);
+        MainMenu.refresh();
     }
 
     private static void updateCache(boolean force) {
@@ -488,8 +501,8 @@ public class ResearchEngine {
 
             if (force) {
                 for (PlayerProfile profile : profiles) {
-                    for (CheckExecutor executor : profile.getExecutors()) {
-                        for (DetectionExecutor detectionExecutor : executor.getDetections()) {
+                    for (CheckRunner executor : profile.getRunners()) {
+                        for (CheckDetection detectionExecutor : executor.getDetections()) {
                             for (Check.DataType dataType : Check.DataType.values()) {
                                 detectionExecutor.clearProbability(dataType);
                             }
@@ -502,29 +515,34 @@ public class ResearchEngine {
                     ? Arrays.asList(Enums.HackType.values())
                     : violationFired.keySet())) {
                 for (Check.DataType dataType : Check.DataType.values()) {
-                    if (!hackType.getCheck().isEnabled(dataType, null)) {
-                        continue;
-                    }
-                    Map<String, Map<DetectionExecutor, Double>> wave = new LinkedHashMap<>();
+                    Map<String, Map<CheckDetection, Double>> wave = new LinkedHashMap<>();
 
-                    for (PlayerProfile profile : profiles) {
-                        for (DetectionExecutor detectionExecutor : profile.getExecutor(hackType).getDetections()) {
-                            Double timeDifference = detectionExecutor.getTimeDifference(dataType);
+                    if (hackType.getCheck().isEnabled(dataType, null)) {
+                        for (PlayerProfile profile : profiles) {
+                            for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
+                                Double data = detectionExecutor.getData(dataType);
 
-                            if (timeDifference != null) {
-                                wave.computeIfAbsent(
-                                        detectionExecutor.name,
-                                        k -> new LinkedHashMap<>()
-                                ).put(
-                                        detectionExecutor,
-                                        timeDifference
-                                );
+                                if (data != null) {
+                                    wave.computeIfAbsent(
+                                            detectionExecutor.name,
+                                            k -> new LinkedHashMap<>()
+                                    ).put(
+                                            detectionExecutor,
+                                            data
+                                    );
+                                }
                             }
                         }
                     }
 
-                    if (!wave.isEmpty()) {
-                        for (Map<DetectionExecutor, Double> map : wave.values()) {
+                    if (wave.isEmpty()) {
+                        for (PlayerProfile profile : profiles) {
+                            for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
+                                detectionExecutor.clearProbability(dataType);
+                            }
+                        }
+                    } else {
+                        for (Map<CheckDetection, Double> map : wave.values()) {
                             double sum = 0,
                                     squareSum = 0,
                                     min = Double.MAX_VALUE,
@@ -538,7 +556,7 @@ public class ResearchEngine {
                                     mean = sum / divisor,
                                     deviation = Math.sqrt(squareSum / divisor);
 
-                            for (Map.Entry<DetectionExecutor, Double> entry : map.entrySet()) {
+                            for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
                                 double probability = StatisticsMath.getCumulativeProbability(
                                         (entry.getValue() - mean) / deviation
                                 );
@@ -554,7 +572,7 @@ public class ResearchEngine {
                             max = 1.0 - max;
                             double distributionDifference = Math.abs(max - min);
 
-                            for (Map.Entry<DetectionExecutor, Double> entry : map.entrySet()) {
+                            for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
                                 entry.getKey().setProbability(
                                         dataType,
                                         PlayerEvidence.modifyProbability(

@@ -20,7 +20,7 @@ public class Event_Movement implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void MoveEvent(PlayerMoveEvent e) {
         event(e, false);
-        SpartanBukkit.getProtocol(e.getPlayer()).spartan.getExecutor(
+        SpartanBukkit.getProtocol(e.getPlayer()).spartan.getRunner(
                 Enums.HackType.MorePackets
         ).handle(e.isCancelled(), null);
     }
@@ -76,23 +76,25 @@ public class Event_Movement implements Listener {
 
             // Detections
             boolean cancelled = e.isCancelled();
-            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, null);
-            p.getExecutor(Enums.HackType.Exploits).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.ImpossibleInventory).run(cancelled);
-            p.getExecutor(Enums.HackType.IrregularMovements).run(cancelled);
-            p.getExecutor(Enums.HackType.Speed).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.Velocity).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.KillAura).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.Criticals).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.Simulation).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.MorePackets).handle(cancelled, null);
+            p.getRunner(Enums.HackType.Exploits).handle(cancelled, null);
+            p.getRunner(Enums.HackType.Exploits).handle(cancelled, e);
+            p.getRunner(Enums.HackType.ImpossibleInventory).run(cancelled);
+            p.getRunner(Enums.HackType.IrregularMovements).run(cancelled);
+            p.getRunner(Enums.HackType.Speed).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Velocity).handle(cancelled, e);
+            p.getRunner(Enums.HackType.KillAura).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Criticals).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Simulation).handle(cancelled, e);
+            p.getRunner(Enums.HackType.MorePackets).handle(cancelled, null);
         }
     }
 
     public static void tick(PlayerTickEvent tickEvent) {
         SpartanProtocol protocol = tickEvent.protocol;
+        protocol.lastTickEvent = tickEvent;
+        protocol.packetWorld.tick(tickEvent);
         SpartanPlayer p = protocol.spartan;
-        p.getExecutor(Enums.HackType.MorePackets).handle(false, tickEvent);
+        p.getRunner(Enums.HackType.MorePackets).handle(false, tickEvent);
     }
 
 }

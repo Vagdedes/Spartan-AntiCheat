@@ -3,6 +3,7 @@ package com.vagdedes.spartan.abstraction.check;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import me.vagdedes.spartan.api.CheckPunishmentToggleEvent;
@@ -295,6 +296,7 @@ public class Check {
 
             if (event == null || !event.isCancelled()) {
                 this.enabled[type.ordinal()] = b;
+                ResearchEngine.queueToCache(this.hackType);
                 setOption("enabled." + type.toString().toLowerCase(), b);
 
                 synchronized (options) {
@@ -345,41 +347,6 @@ public class Check {
         }
         AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
         return false;
-    }
-
-    public Collection<String> getOptionKeys() {
-        synchronized (options) {
-            return new ArrayList<>(options.keySet());
-        }
-    }
-
-    public Collection<Object> getOptionValues() {
-        synchronized (options) {
-            return new ArrayList<>(options.values());
-        }
-    }
-
-    public Collection<Map.Entry<String, Object>> getOptions() {
-        synchronized (options) {
-            return new ArrayList<>(options.entrySet());
-        }
-    }
-
-    public Set<String[]> getStoredOptions() {
-        Set<String[]> set = new LinkedHashSet<>(30);
-        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-        String hackTypeString = this.hackType.toString();
-
-        for (String key : configuration.getKeys(true)) {
-            if (key.split("\\.", 2)[0].equalsIgnoreCase(hackTypeString)) {
-                Object option = configuration.get(key, null);
-
-                if (option != null) {
-                    set.add(new String[]{key, option.toString()});
-                }
-            }
-        }
-        return set;
     }
 
     public Object getOption(String option, Object def, boolean cache) {
@@ -438,10 +405,6 @@ public class Check {
             ex.printStackTrace();
         }
         return def;
-    }
-
-    public String getTextOption(String option, boolean def) {
-        return getOption(option, def, true).toString();
     }
 
     public boolean getBooleanOption(String option, Boolean def) {

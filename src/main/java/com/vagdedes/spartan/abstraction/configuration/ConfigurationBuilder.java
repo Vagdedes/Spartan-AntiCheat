@@ -16,131 +16,167 @@ public abstract class ConfigurationBuilder {
         return Register.plugin.getDataFolder() + "/" + fileName + ".yml";
     }
 
-    protected File file;
-    protected final String directory;
-
     protected static final String prefix = "{prefix}";
 
+    // Separator
+
+    protected final File file;
     private final Map<String, Boolean>
             bool = new LinkedHashMap<>(),
             exists = new LinkedHashMap<>();
     private final Map<String, Integer> ints = new LinkedHashMap<>();
+    private final Map<String, Double> dbls = new LinkedHashMap<>();
     private final Map<String, String> str = new LinkedHashMap<>();
 
     public ConfigurationBuilder(String fileName) {
-        this.directory = getDirectory(fileName);
-        this.file = new File(directory);
+        this.file = new File(getDirectory(fileName));
     }
 
-    protected YamlConfiguration getPath() {
+    protected final YamlConfiguration getPath() {
         if (!file.exists()) {
             create();
         }
         return YamlConfiguration.loadConfiguration(file);
     }
 
-    protected void internalClear() {
+    protected final void internalClear() {
         bool.clear();
         exists.clear();
         ints.clear();
         str.clear();
     }
 
-    public File getFile() {
+    public final File getFile() {
         return file;
     }
 
-    public boolean exists(String path) {
-        Boolean data = exists.get(path);
+    public final boolean exists(String path) {
+        synchronized (this.exists) {
+            Boolean data = exists.get(path);
 
-        if (data != null) {
-            return data;
+            if (data != null) {
+                return data;
+            }
+            boolean result = getPath().contains(path);
+            exists.put(path, result);
+            return result;
         }
-        boolean result = getPath().contains(path);
-        exists.put(path, result);
-        return result;
     }
 
-    public boolean getBoolean(String path) {
-        Boolean data = bool.get(path);
+    public final boolean getBoolean(String path) {
+        synchronized (this.bool) {
+            Boolean data = bool.get(path);
 
-        if (data != null) {
-            return data;
+            if (data != null) {
+                return data;
+            }
+            boolean value = getPath().getBoolean(path);
+            bool.put(path, value);
+            return value;
         }
-        boolean value = getPath().getBoolean(path);
-        bool.put(path, value);
-        return value;
     }
 
-    public int getInteger(String path) {
-        Integer data = ints.get(path);
+    public final int getInteger(String path) {
+        synchronized (this.ints) {
+            Integer data = ints.get(path);
 
-        if (data != null) {
-            return data;
+            if (data != null) {
+                return data;
+            }
+            int value = getPath().getInt(path);
+            ints.put(path, value);
+            return value;
         }
-        int value = getPath().getInt(path);
-        ints.put(path, value);
-        return value;
     }
 
-    public String getString(String path) {
-        String data = str.get(path);
+    public final double getDouble(String path) {
+        synchronized (this.dbls) {
+            Double data = dbls.get(path);
 
-        if (data != null) {
-            return data;
+            if (data != null) {
+                return data;
+            }
+            double value = getPath().getDouble(path);
+            dbls.put(path, value);
+            return value;
         }
-        String value = getPath().getString(path);
-
-        if (value == null) {
-            return path;
-        }
-        str.put(path, value);
-        return value;
     }
 
-    public String getColorfulString(String path) {
-        String data = str.get(path);
+    public final String getString(String path) {
+        synchronized (this.str) {
+            String data = str.get(path);
 
-        if (data != null) {
-            return data;
-        }
-        if (!file.exists()) {
-            create();
-        }
-        String value = getPath().getString(path);
+            if (data != null) {
+                return data;
+            }
+            String value = getPath().getString(path);
 
-        if (value == null) {
-            return path;
-        } else {
-            value = ChatColor.translateAlternateColorCodes('&', value)
-                    .replace(prefix, SpartanEdition.getProductName());
+            if (value == null) {
+                return path;
+            }
+            str.put(path, value);
+            return value;
         }
-        str.put(path, value);
-        return value;
     }
 
-    public void clearOption(String name) {
-        bool.remove(name);
-        exists.remove(name);
-        ints.remove(name);
-        str.remove(name);
+    public final String getColorfulString(String path) {
+        synchronized (this.str) {
+            String data = str.get(path);
+
+            if (data != null) {
+                return data;
+            }
+            if (!file.exists()) {
+                create();
+            }
+            String value = getPath().getString(path);
+
+            if (value == null) {
+                return path;
+            } else {
+                value = ChatColor.translateAlternateColorCodes('&', value);
+                value = value.replace(prefix, SpartanEdition.getProductName(value));
+            }
+            str.put(path, value);
+            return value;
+        }
     }
 
-    public void setOption(String name, Object value) {
+    public final void clearOption(String name) {
+        synchronized (this.bool) {
+            bool.remove(name);
+        }
+        synchronized (this.exists) {
+            exists.remove(name);
+        }
+        synchronized (this.ints) {
+            ints.remove(name);
+        }
+        synchronized (this.dbls) {
+            dbls.remove(name);
+        }
+        synchronized (this.str) {
+            str.remove(name);
+        }
+    }
+
+    public final void setOption(String name, Object value) {
         ConfigUtils.set(file, name, value);
         clearOption(name);
     }
 
-    public void addOption(String name, Object value) {
+    public final void addOption(String name, Object value) {
         ConfigUtils.add(file, name, value);
         clearOption(name);
     }
 
-    public String getOldOption(String old, String current) {
+    public final String getOldOption(String old, String current) {
         return exists(old) ? old : current;
     }
 
-    abstract public void clear();
+    public void clear() {
+        internalClear();
+    }
 
     abstract public void create();
 

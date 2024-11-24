@@ -25,8 +25,8 @@ public class Event_Death implements Listener {
             SpartanPlayer p = protocol.spartan;
 
             // Detections
-            p.getExecutor(Enums.HackType.AutoRespawn).handle(false, null);
-            p.getExecutor(Enums.HackType.ImpossibleInventory).handle(false, null);
+            p.getRunner(Enums.HackType.AutoRespawn).handle(false, null);
+            p.getRunner(Enums.HackType.ImpossibleInventory).handle(false, null);
             // Objects
             p.resetCrucialData();
             p.movement.setDetectionLocation();

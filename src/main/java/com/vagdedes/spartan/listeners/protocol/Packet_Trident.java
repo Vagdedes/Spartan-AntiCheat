@@ -5,12 +5,12 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.event.SpartanPlayerRiptideEvent;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.Event_Trident;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -37,7 +37,7 @@ public class Packet_Trident extends PacketAdapter {
             if (item.getType().equals(Material.TRIDENT)) {
                 double r = Math.toRadians(protocol.getLocation().getYaw());
                 Event_Trident.event(
-                                new PlayerRiptideEvent(
+                                new SpartanPlayerRiptideEvent(
                                                 player,
                                                 item,
                                                 new Vector(-Math.sin(r), protocol.getLocation().getPitch() / 90, Math.cos(r))

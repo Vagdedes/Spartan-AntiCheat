@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
-import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -15,9 +14,10 @@ import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Material;
 
-import java.io.File;
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 public class SQLFeature extends ConfigurationBuilder {
@@ -31,11 +31,6 @@ public class SQLFeature extends ConfigurationBuilder {
     private static Connection con = null;
 
     // Separator
-
-    @Override
-    public void clear() {
-        internalClear();
-    }
 
     public String getHost() {
         String result = getString("host");
@@ -121,9 +116,9 @@ public class SQLFeature extends ConfigurationBuilder {
 
     // Separator
 
-    public void refreshConfiguration() {
-        clear();
-        // Always after cache is cleared
+    @Override
+    public void clear() {
+        super.clear();
         enabled = !getHost().isEmpty()
                 && !getUser().isEmpty()
                 && !getPassword().isEmpty()
@@ -150,7 +145,6 @@ public class SQLFeature extends ConfigurationBuilder {
 
     @Override
     public void create() {
-        file = new File(directory);
         addOption("host", "");
         addOption("user", "");
         addOption("password", "");
@@ -162,7 +156,7 @@ public class SQLFeature extends ConfigurationBuilder {
         addOption("use_SSL", true);
         addOption("allow_public_key_retrieval", false);
         addOption("escape_special_characters", false);
-        refreshConfiguration();
+        clear();
 
         SpartanBukkit.sqlThread.executeWithPriority(this::connect);
     }
@@ -317,7 +311,6 @@ public class SQLFeature extends ConfigurationBuilder {
                         "player_z INT(11), " +
 
                         "functionality VARCHAR(32), " +
-                        "violation_increase INT(11), " +
 
                         "primary key (id));"
         );
@@ -330,11 +323,11 @@ public class SQLFeature extends ConfigurationBuilder {
                         String information,
                         Material material,
                         Enums.HackType hackType,
-                        PlayerViolation playerViolation) {
+                        long time) {
         if (enabled) {
             String table = getTable();
             boolean hasPlayer = p != null,
-                    hasCheck = playerViolation != null,
+                    hasCheck = hackType != null,
                     hasMaterial = material != null;
             SpartanLocation location = hasPlayer ? p.spartan.movement.getLocation() : null;
             update(
@@ -343,8 +336,10 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", server_name, plugin_version, server_version, online_players"
                             + ", type, notification, information"
                             + ", player_uuid, player_name, player_latency, player_x, player_y, player_z"
-                            + ", functionality, violation_increase) "
-                            + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(LocalDateTime.now()))
+                            + ", functionality) "
+                            + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(
+                            LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
+                    ))
                             + ", " + syntaxForColumn(CrossServerNotifications.getServerName())
                             + ", " + syntaxForColumn(API.getVersion())
                             + ", " + syntaxForColumn(MultiVersion.serverVersion.toString())
@@ -359,7 +354,6 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockY()) : "NULL")
                             + ", " + (hasPlayer ? syntaxForColumn(location.getBlockZ()) : "NULL")
                             + ", " + (hasMaterial ? syntaxForColumn(material) : hasCheck ? syntaxForColumn(hackType) : "NULL")
-                            + ", " + (hasCheck ? syntaxForColumn(playerViolation.increase) : "NULL")
                             + ");"
             );
         }

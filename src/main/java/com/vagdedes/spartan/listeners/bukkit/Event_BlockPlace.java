@@ -27,14 +27,14 @@ public class Event_BlockPlace implements Listener {
 
         // Detections
         if (!ItemsAdder.is(nb)) {
-            p.getExecutor(Enums.HackType.ImpossibleActions).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.BlockReach).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.FastPlace).handle(cancelled, e);
+            p.getRunner(Enums.HackType.ImpossibleActions).handle(cancelled, e);
+            p.getRunner(Enums.HackType.BlockReach).handle(cancelled, e);
+            p.getRunner(Enums.HackType.FastPlace).handle(cancelled, e);
         }
 
-        if (p.getExecutor(Enums.HackType.FastPlace).prevent()
-                || p.getExecutor(Enums.HackType.BlockReach).prevent()
-                || p.getExecutor(Enums.HackType.ImpossibleActions).prevent()) {
+        if (p.getRunner(Enums.HackType.FastPlace).prevent()
+                || p.getRunner(Enums.HackType.BlockReach).prevent()
+                || p.getRunner(Enums.HackType.ImpossibleActions).prevent()) {
             e.setCancelled(true);
         }
     }

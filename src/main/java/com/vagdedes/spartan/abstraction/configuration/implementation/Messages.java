@@ -2,8 +2,6 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 
-import java.io.File;
-
 public class Messages extends ConfigurationBuilder {
 
     public Messages() {
@@ -11,15 +9,9 @@ public class Messages extends ConfigurationBuilder {
     }
 
     @Override
-    public void clear() {
-        internalClear();
-    }
-
-    @Override
     public void create() {
-        file = new File(directory);
-
         clear();
+
         addOption("console_name", "Console");
         addOption("no_permission", "&8[&2" + prefix + "&8]&c You don't have permission to interact with this.");
         addOption("player_not_found_message", "&8[&2" + prefix + "&8]&c Player not found.");
@@ -40,8 +32,8 @@ public class Messages extends ConfigurationBuilder {
         addOption("player_violation_reset_message", "&8[&2" + prefix + "&8]&a Violations successfully reset for player&8: &2{player}");
         addOption("player_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for player&8: &2{player}");
         addOption("detection_notification", "&8[&2" + prefix + "&8] "
-                + "&4{player} &cis §4{vls:percentage} §cusing &4{detection} "
-                + "&8&b| &r&f{ping}ms &8&b| &r&fsilent: {silent:detection}, {info}");
+                + "&4{player} &cis §4{detection:percentage} §cusing &4{detection:real} "
+                + "&8&b| &r&fsilent: {detection:silent} &8&b| &r&f{ping}ms, {info}");
 
         // Checks
         addOption("check_stored_data_delete_message", "&8[&2" + prefix + "&8]&a Stored data successfully deleted for check&8: &2{check}");
@@ -77,7 +69,7 @@ public class Messages extends ConfigurationBuilder {
 
         // Commands
         addOption("unknown_command", "&fUnknown command. Please type \"/help\" for help.");
-        addOption("failed_command", "&8[&2" + prefix + "&8]&c Command failed. Please check your arguments and try again.");
+        addOption("failed_command", "&8[&2" + prefix + "&8]&c Command failed ({command}). Please check your arguments and try again.");
         addOption("successful_command", "&8[&2" + prefix + "&8]&a Command successful.");
         addOption("massive_command_reason", "&8[&2" + prefix + "&8]&c The length of the reason is too big.");
     }

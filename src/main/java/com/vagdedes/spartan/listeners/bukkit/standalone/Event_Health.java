@@ -22,10 +22,10 @@ public class Event_Health implements Listener {
             boolean cancelled = e.isCancelled();
 
             // Detections
-            p.getExecutor(Enums.HackType.FastEat).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.FastHeal).handle(cancelled, e);
+            p.getRunner(Enums.HackType.FastEat).handle(cancelled, e);
+            p.getRunner(Enums.HackType.FastHeal).handle(cancelled, e);
 
-            if (p.getExecutor(Enums.HackType.FastEat).prevent()) {
+            if (p.getRunner(Enums.HackType.FastEat).prevent()) {
                 e.setCancelled(true);
             }
         }
@@ -39,9 +39,9 @@ public class Event_Health implements Listener {
             SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartan;
 
             // Detections
-            p.getExecutor(Enums.HackType.FastHeal).handle(e.isCancelled(), e);
+            p.getRunner(Enums.HackType.FastHeal).handle(e.isCancelled(), e);
 
-            if (p.getExecutor(Enums.HackType.FastHeal).prevent()) {
+            if (p.getRunner(Enums.HackType.FastHeal).prevent()) {
                 e.setCancelled(true);
             }
         }

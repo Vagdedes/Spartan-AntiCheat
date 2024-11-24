@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.abstraction.check.example;
 
-import com.vagdedes.spartan.abstraction.check.CheckExecutor;
-import com.vagdedes.spartan.abstraction.check.DetectionExecutor;
+import com.vagdedes.spartan.abstraction.check.CheckRunner;
+import com.vagdedes.spartan.abstraction.check.ProbabilityDetection;
 
-public class DetectionExecutorExample extends DetectionExecutor {
+public class DetectionExecutorProbabilityExample extends ProbabilityDetection {
 
-    DetectionExecutorExample(CheckExecutor executor) {
+    DetectionExecutorProbabilityExample(CheckRunner executor) {
         super(
                 executor,
                 "detection_option_name_in_checks_yml",

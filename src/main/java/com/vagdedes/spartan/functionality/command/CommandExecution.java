@@ -14,6 +14,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ProxyUtils;
@@ -306,7 +307,7 @@ public class CommandExecution implements CommandExecutor {
 
         if (label.equalsIgnoreCase(Register.plugin.getName()) && (isPlayer || sender instanceof ConsoleCommandSender)) {
             SpartanProtocol protocol = isPlayer ? SpartanBukkit.getProtocol((Player) sender) : null;
-            
+
             if (args.length == 0) {
                 if (isPlayer) {
                     if (NPCManager.supported && Permissions.isStaff(protocol.bukkit)) {
@@ -426,7 +427,10 @@ public class CommandExecution implements CommandExecutor {
                     if (!ProxyUtils.executeCommand(isPlayer ? protocol.bukkit : null, argumentsToString)) {
                         ClickableMessage.sendURL(
                                 sender,
-                                Config.messages.getColorfulString("failed_command"),
+                                Config.messages.getColorfulString("failed_command").replace(
+                                        "{command}",
+                                        StringUtils.toString(args, " ")
+                                ),
                                 support,
                                 DiscordMemberCount.discordURL
                         );
@@ -465,7 +469,10 @@ public class CommandExecution implements CommandExecutor {
                                 if (!Wave.start()) {
                                     ClickableMessage.sendURL(
                                             sender,
-                                            Config.messages.getColorfulString("failed_command"),
+                                            Config.messages.getColorfulString("failed_command").replace(
+                                                    "{command}",
+                                                    StringUtils.toString(args, " ")
+                                            ),
                                             support,
                                             DiscordMemberCount.discordURL
                                     );
@@ -662,7 +669,10 @@ public class CommandExecution implements CommandExecutor {
                                 } else {
                                     ClickableMessage.sendURL(
                                             sender,
-                                            Config.messages.getColorfulString("failed_command"),
+                                            Config.messages.getColorfulString("failed_command").replace(
+                                                    "{command}",
+                                                    StringUtils.toString(args, " ")
+                                            ),
                                             support,
                                             DiscordMemberCount.discordURL
                                     );
@@ -670,7 +680,10 @@ public class CommandExecution implements CommandExecutor {
                             } else {
                                 ClickableMessage.sendURL(
                                         sender,
-                                        Config.messages.getColorfulString("failed_command"),
+                                        Config.messages.getColorfulString("failed_command").replace(
+                                                "{command}",
+                                                StringUtils.toString(args, " ")
+                                        ),
                                         support,
                                         DiscordMemberCount.discordURL
                                 );
@@ -719,7 +732,10 @@ public class CommandExecution implements CommandExecutor {
                             if (!t.spartan.punishments.kick(sender, argumentsToString)) {
                                 ClickableMessage.sendURL(
                                         sender,
-                                        Config.messages.getColorfulString("failed_command"),
+                                        Config.messages.getColorfulString("failed_command").replace(
+                                                "{command}",
+                                                StringUtils.toString(args, " ")
+                                        ),
                                         support,
                                         DiscordMemberCount.discordURL
                                 );
@@ -758,7 +774,10 @@ public class CommandExecution implements CommandExecutor {
                             if (!t.spartan.punishments.warn(sender, argumentsToString)) {
                                 ClickableMessage.sendURL(
                                         sender,
-                                        Config.messages.getColorfulString("failed_command"),
+                                        Config.messages.getColorfulString("failed_command").replace(
+                                                "{command}",
+                                                StringUtils.toString(args, " ")
+                                        ),
                                         support,
                                         DiscordMemberCount.discordURL
                                 );
@@ -808,13 +827,13 @@ public class CommandExecution implements CommandExecutor {
                                         int seconds = noSeconds ? 0 : Integer.parseInt(sec);
 
                                         if (noSeconds) {
-                                            t.spartan.getExecutor(hackType).addDisableCause("Command-" + sender.getName(), null, 0);
+                                            t.spartan.getRunner(hackType).addDisableCause("Command-" + sender.getName(), null, 0);
                                         } else {
                                             if (seconds < 1 || seconds > 3600) {
                                                 sender.sendMessage(ChatColor.RED + "Seconds must be between 1 and 3600.");
                                                 return true;
                                             }
-                                            t.spartan.getExecutor(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * (AlgebraUtils.integerCeil(TPS.maximum)));
+                                            t.spartan.getRunner(hackType).addDisableCause("Command-" + sender.getName(), null, seconds * (AlgebraUtils.integerCeil(TPS.maximum)));
                                         }
                                         String message = ConfigUtils.replaceWithSyntax(t, Config.messages.getColorfulString("bypass_message"), hackType)
                                                 .replace("{time}", noSeconds ? "infinite" : String.valueOf(seconds));
@@ -932,18 +951,18 @@ public class CommandExecution implements CommandExecutor {
                                         case "equals":
                                         case "=":
                                             if (condition.equalsIgnoreCase(result)) {
-                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                SpartanBukkit.runCommand(command);
                                             }
                                             break;
                                         case "not-equals":
                                         case "/=":
                                             if (!condition.equalsIgnoreCase(result)) {
-                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                SpartanBukkit.runCommand(command);
                                             }
                                             break;
                                         case "contains":
                                             if (condition.contains(result)) {
-                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                SpartanBukkit.runCommand(command);
                                             }
                                             break;
                                         case "is-less-than":
@@ -952,7 +971,7 @@ public class CommandExecution implements CommandExecutor {
                                                     || AlgebraUtils.validDecimal(condition) && AlgebraUtils.validDecimal(result) && dbl(condition) < dbl(result)
                                                     || AlgebraUtils.validInteger(condition) && AlgebraUtils.validDecimal(result) && num(condition) < dbl(result)
                                                     || AlgebraUtils.validDecimal(condition) && AlgebraUtils.validInteger(result) && dbl(condition) < num(result)) {
-                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                SpartanBukkit.runCommand(command);
                                             }
                                             break;
                                         case "is-greater-than":
@@ -961,7 +980,7 @@ public class CommandExecution implements CommandExecutor {
                                                     || AlgebraUtils.validDecimal(condition) && AlgebraUtils.validDecimal(result) && dbl(condition) > dbl(result)
                                                     || AlgebraUtils.validInteger(condition) && AlgebraUtils.validDecimal(result) && num(condition) > dbl(result)
                                                     || AlgebraUtils.validDecimal(condition) && AlgebraUtils.validInteger(result) && dbl(condition) > num(result)) {
-                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                                SpartanBukkit.runCommand(command);
                                             }
                                             break;
                                         default:

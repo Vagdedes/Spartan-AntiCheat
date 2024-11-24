@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -19,9 +20,9 @@ import java.util.*;
 public class CloudBase {
 
     // URLs
-    static final String website = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL21pbmVjcmFmdC9jbG91ZC8=",
+    static final String
+            website = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL21pbmVjcmFmdC9jbG91ZC8=",
             accountWebsite = "aHR0cHM6Ly93d3cuaWRlYWxpc3RpYy5haS9hcGkvdjEvcHJvZHVjdC92ZXJpZnlEb3dubG9hZC8=";
-    public static final String downloadWebsite = "aHR0cHM6Ly93d3cuaWRlYWxpc3RpYy5haS9hcGkvdjEvcHJvZHVjdC9kb3dubG9hZEZpbGUvP3Rva2VuPQ==";
 
     // Cache
     private static final Map<Enums.HackType, String[]>
@@ -190,9 +191,9 @@ public class CloudBase {
                         }
 
                         if (changed) {
-                            Config.settings.clear();
-                            Config.messages.clear();
-                            Config.sql.refreshConfiguration();
+                            for (ConfigurationBuilder configuration : Config.configurations) {
+                                configuration.clear();
+                            }
                             Config.compatibility.clearCache();
                             Config.compatibility.fastRefresh();
 

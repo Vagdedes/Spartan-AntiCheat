@@ -1,7 +1,9 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
@@ -12,41 +14,43 @@ import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.*;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
+import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import me.vagdedes.spartan.api.CheckCancelEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.GameMode;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class CheckExecutor extends CheckDetection {
+public abstract class CheckRunner extends CheckProcess {
 
     private static final boolean v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
-    public static final String
-            violationLevelIdentifier = "Violations:",
-            javaPlayerIdentifier = "Java:",
-            detectionIdentifier = "Detection:";
 
     private final long creation;
-    private CancelCause disableCause, silentCause;
-    HackPrevention prevention;
+    private final Collection<CheckCancellation> disableCauses, silentCauses;
+    CheckPrevention prevention;
     private boolean cancelled;
-    final Map<String, DetectionExecutor> detections;
+    protected final Map<String, CheckDetection> detections;
+    final Map<Check.DataType, Map<Long, Long>> continuity;
 
-    public CheckExecutor(Enums.HackType hackType, SpartanProtocol protocol) {
+    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
         super(hackType, protocol);
         this.creation = System.currentTimeMillis();
-        this.prevention = new HackPrevention();
+        this.prevention = new CheckPrevention();
         this.detections = new ConcurrentHashMap<>(2);
+        this.disableCauses = Collections.synchronizedList(new ArrayList<>(1));
+        this.silentCauses = Collections.synchronizedList(new ArrayList<>(1));
+        this.continuity = Collections.synchronizedMap(
+                new LinkedHashMap<>(Check.DataType.values().length)
+        );
     }
 
     // Probability
 
-    public boolean hasSufficientData(Check.DataType dataType) {
-        for (DetectionExecutor detectionExecutor : this.detections.values()) {
+    public final boolean hasSufficientData(Check.DataType dataType) {
+        for (CheckDetection detectionExecutor : this.detections.values()) {
             if (detectionExecutor.hasSufficientData(dataType)) {
                 return true;
             }
@@ -54,10 +58,10 @@ public abstract class CheckExecutor extends CheckDetection {
         return false;
     }
 
-    public double getExtremeProbability(Check.DataType dataType) {
+    public final double getExtremeProbability(Check.DataType dataType) {
         double num = PlayerEvidence.emptyProbability;
 
-        for (DetectionExecutor detectionExecutor : this.detections.values()) {
+        for (CheckDetection detectionExecutor : this.detections.values()) {
             if (PlayerEvidence.POSITIVE) {
                 num = Math.max(num, detectionExecutor.getProbability(dataType));
             } else {
@@ -67,22 +71,60 @@ public abstract class CheckExecutor extends CheckDetection {
         return num;
     }
 
+    public final Long getRemainingCompletionTime(Check.DataType dataType) {
+        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+
+        if (playerProfiles.isEmpty()) {
+            return null;
+        } else {
+            double averageTime = 0.0,
+                    averageCompletion = 0.0;
+            int size = 0;
+
+            for (PlayerProfile profile : playerProfiles) {
+                for (CheckDetection detection : profile.getRunner(this.hackType).getDetections()) {
+                    Long firstTime = detection.getFirstTime(dataType);
+
+                    if (firstTime != null) {
+                        Long lastTime = detection.getLastTime(dataType);
+
+                        if (lastTime != null) {
+                            double completion = detection.getDataCompletion(dataType);
+                            averageCompletion += completion * completion;
+                            lastTime -= firstTime;
+                            averageTime += lastTime * lastTime;
+                            size++;
+                        }
+                    }
+                }
+            }
+
+            if (size == 0) {
+                return null;
+            }
+            averageTime = Math.sqrt(averageTime / size);
+            averageCompletion = Math.sqrt(averageCompletion / size);
+            long time = (long) ((1.0 - averageCompletion) * averageTime);
+            return time == 0L ? null : time;
+        }
+    }
+
     // Detections
 
-    public final DetectionExecutor getDetection(String detection) {
+    public final CheckDetection getDetection(String detection) {
         return detection == null
                 ? this.getDetection()
                 : this.detections.get(detection);
     }
 
-    public final DetectionExecutor getDetection() {
+    public final CheckDetection getDetection() {
         if (this.detections.isEmpty()) {
-            new ImplementedDetectionExecutor(this, null, false);
+            new ImplementedProbabilityDetection(this, null, false);
         }
         return this.detections.values().iterator().next();
     }
 
-    public final Collection<DetectionExecutor> getDetections() {
+    public final Collection<CheckDetection> getDetections() {
         return this.detections.values();
     }
 
@@ -134,17 +176,36 @@ public abstract class CheckExecutor extends CheckDetection {
 
     // Causes
 
-    public final CancelCause getDisableCause() {
-        if (disableCause == null || disableCause.hasExpired()) {
+    private CheckCancellation getLastCause(Collection<CheckCancellation> collection) {
+        CheckCancellation lastCause = null;
+        Iterator<CheckCancellation> iterator = collection.iterator();
+
+        while (iterator.hasNext()) {
+            CheckCancellation cause = iterator.next();
+
+            if (cause.hasExpired()) {
+                iterator.remove();
+            } else {
+                lastCause = cause;
+                break;
+            }
+        }
+        return lastCause;
+    }
+
+    public final CheckCancellation getDisableCause() {
+        CheckCancellation disableCause = this.getLastCause(this.disableCauses);
+
+        if (disableCause == null) {
             if (this.protocol() != null) {
                 return MythicMobs.is(this.protocol())
-                        ? new CancelCause(Compatibility.CompatibilityType.MYTHIC_MOBS)
+                        ? new CheckCancellation(Compatibility.CompatibilityType.MYTHIC_MOBS)
                         : ItemsAdder.is(this.protocol())
-                        ? new CancelCause(Compatibility.CompatibilityType.ITEMS_ADDER)
+                        ? new CheckCancellation(Compatibility.CompatibilityType.ITEMS_ADDER)
                         : CustomEnchantsPlus.has(this.protocol())
-                        ? new CancelCause(Compatibility.CompatibilityType.CUSTOM_ENCHANTS_PLUS)
+                        ? new CheckCancellation(Compatibility.CompatibilityType.CUSTOM_ENCHANTS_PLUS)
                         : EcoEnchants.has(this.protocol())
-                        ? new CancelCause(Compatibility.CompatibilityType.ECO_ENCHANTS)
+                        ? new CheckCancellation(Compatibility.CompatibilityType.ECO_ENCHANTS)
                         : null;
             } else {
                 return null;
@@ -154,37 +215,30 @@ public abstract class CheckExecutor extends CheckDetection {
         }
     }
 
-    public final CancelCause getSilentCause() {
-        return silentCause != null && silentCause.hasExpired() ? null : silentCause;
+    public final CheckCancellation getSilentCause() {
+        return this.getLastCause(this.silentCauses);
     }
 
     public final void addDisableCause(String reason, String pointer, int ticks) {
         if (reason == null) {
             reason = this.hackType.getCheck().getName();
         }
-        if (disableCause != null) {
-            disableCause.merge(new CancelCause(reason, pointer, ticks));
-        } else {
-            disableCause = new CancelCause(reason, pointer, ticks);
-        }
+        this.disableCauses.add(new CheckCancellation(reason, pointer, ticks));
         if (this.protocol() != null) {
             InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
         }
     }
 
     public final void addSilentCause(String reason, String pointer, int ticks) {
-        if (silentCause != null) {
-            silentCause.merge(new CancelCause(reason, pointer, ticks));
-        } else {
-            silentCause = new CancelCause(reason, pointer, ticks);
-        }
+        this.silentCauses.add(new CheckCancellation(reason, pointer, ticks));
+
         if (this.protocol() != null) {
             InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
         }
     }
 
     public final void removeDisableCause() {
-        this.disableCause = null;
+        this.disableCauses.clear();
 
         if (this.protocol() != null) {
             InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
@@ -192,7 +246,7 @@ public abstract class CheckExecutor extends CheckDetection {
     }
 
     public final void removeSilentCause() {
-        this.silentCause = null;
+        this.silentCauses.clear();
 
         if (this.protocol() != null) {
             InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
@@ -268,6 +322,80 @@ public abstract class CheckExecutor extends CheckDetection {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {
             return AlgebraUtils.integerCeil(TPS.maximum);
+        }
+    }
+
+    // Sync
+
+    public final void trackTime(Check.DataType dataType, long time, long count) {
+        synchronized (this.continuity) {
+            this.continuity.computeIfAbsent(
+                    dataType,
+                    k -> new TreeMap<>()
+            ).put(time, count);
+        }
+    }
+
+    final boolean wasOnline(Check.DataType dataType, long current, long previous) {
+        SpartanProtocol protocol = this.protocol();
+
+        if (protocol != null
+                && current >= protocol.creationTime
+                && previous >= protocol.creationTime) {
+            return true;
+        } else {
+            synchronized (this.continuity) {
+                Map<Long, Long> data = this.continuity.get(dataType);
+
+                if (data != null) {
+                    for (Map.Entry<Long, Long> entry : data.entrySet()) {
+                        long connectedTime = entry.getValue();
+
+                        if (connectedTime > 0L) {
+                            long disconnectedMoment = entry.getKey();
+
+                            if (previous >= (disconnectedMoment - connectedTime)
+                                    && current <= disconnectedMoment) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    final long getOnlineTime(Check.DataType dataType) {
+        synchronized (this.continuity) {
+            Map<Long, Long> data = this.continuity.get(dataType);
+
+            if (data != null) {
+                long sum = 0L;
+
+                for (long value : data.values()) {
+                    sum += value;
+                }
+                SpartanProtocol protocol = this.protocol();
+                return protocol == null
+                        ? sum
+                        : Math.max(protocol.getTimePlayed() + sum, 0L);
+            } else {
+                SpartanProtocol protocol = this.protocol();
+                return protocol == null
+                        ? 0L
+                        : protocol.getTimePlayed();
+            }
+        }
+    }
+
+    final boolean hasOnlineTime(Check.DataType dataType) {
+        if (this.protocol() != null) {
+            return true;
+        } else {
+            synchronized (this.continuity) {
+                return this.continuity.containsKey(dataType);
+            }
         }
     }
 

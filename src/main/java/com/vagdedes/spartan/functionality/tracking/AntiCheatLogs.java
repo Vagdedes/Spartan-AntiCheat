@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.check.PlayerViolation;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -52,28 +51,21 @@ public class AntiCheatLogs {
 
     // Separator
 
-    public static void logInfo(SpartanProtocol p,
-                               String notification,
-                               String information,
-                               boolean console,
-                               Material material,
-                               Enums.HackType hackType,
-                               PlayerViolation playerViolation,
-                               boolean unlikely) {
+    public static void rawLogInfo(long time, String information, boolean console, boolean store, boolean sql) {
         if (console && Config.settings.getBoolean("Logs.log_console")) {
             Bukkit.getConsoleSender().sendMessage(information);
         }
         if (Config.settings.getBoolean("Logs.log_file")) {
-            Timestamp now = new Timestamp(System.currentTimeMillis());
+            Timestamp now = new Timestamp(time);
 
-            if (time.getDay() != now.getDay()) {
+            if (AntiCheatLogs.time.getDay() != now.getDay()) {
                 if (fileConfiguration != null) {
                     save();
                 }
-                time = now;
-                savedFile = createFile(time);
+                AntiCheatLogs.time = now;
+                savedFile = createFile(AntiCheatLogs.time);
                 fileConfiguration = YamlConfiguration.loadConfiguration(savedFile);
-            } else if (fileConfiguration != null && !unlikely) {
+            } else if (store && fileConfiguration != null) {
                 SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
                     fileConfiguration.set(
                             DateTimeFormatter.ofPattern(dateFormat).format(LocalDateTime.now()),
@@ -83,7 +75,21 @@ public class AntiCheatLogs {
                 });
             }
         }
-        Config.sql.logInfo(p, notification, information, material, hackType, playerViolation);
+        if (sql) {
+            Config.sql.logInfo(null, null, information, null, null, System.currentTimeMillis());
+        }
+    }
+
+    public static void logInfo(SpartanProtocol p,
+                               String notification,
+                               String information,
+                               boolean console,
+                               Material material,
+                               Enums.HackType hackType,
+                               long time,
+                               boolean unlikely) {
+        rawLogInfo(time, information, console, !unlikely, false);
+        Config.sql.logInfo(p, notification, information, material, hackType, time);
     }
 
     public static void logMining(SpartanProtocol protocol, Block block, boolean cancelled) {
@@ -96,7 +102,7 @@ public class AntiCheatLogs {
                 World.Environment environment = location.world.getEnvironment();
                 int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
                 String key = ore.toString(),
-                        log = protocol.bukkit.getName() + " found " + amount + " " + key
+                        log = protocol.bukkit.getName() + MiningHistory.found + amount + " " + key
                                 + " on " + x + ", " + y + ", " + z + ", " + BlockUtils.environmentToString(environment);
 
                 // API Event
@@ -118,7 +124,7 @@ public class AntiCheatLogs {
                             false,
                             block.getType(),
                             null,
-                            null,
+                            System.currentTimeMillis(),
                             false
                     );
                     MiningHistory miningHistory = protocol.getProfile().getMiningHistory(ore);
@@ -126,7 +132,7 @@ public class AntiCheatLogs {
                     if (miningHistory != null) {
                         String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
                         miningHistory.increaseMines(environment, amount);
-                        protocol.spartan.getExecutor(Enums.HackType.XRay).handle(
+                        protocol.spartan.getRunner(Enums.HackType.XRay).handle(
                                 cancelled,
                                 new Object[]{environment, miningHistory, ore, pluralKey});
                     }

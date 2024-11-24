@@ -29,8 +29,8 @@ public class Event_Teleport implements Listener {
             p.resetCrucialData();
 
             // Detections
-            p.getExecutor(Enums.HackType.MorePackets).handle(false, MorePackets.TELEPORT);
-            p.getExecutor(Enums.HackType.IrregularMovements).handle(false, null);
+            p.getRunner(Enums.HackType.MorePackets).handle(false, MorePackets.TELEPORT);
+            p.getRunner(Enums.HackType.IrregularMovements).handle(false, null);
         }
     }
 

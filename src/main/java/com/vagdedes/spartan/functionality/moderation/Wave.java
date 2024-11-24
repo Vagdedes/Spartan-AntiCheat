@@ -9,7 +9,6 @@ import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -35,14 +34,13 @@ public class Wave {
                 int size = commands.size();
 
                 if (size > 0) {
-                    ConsoleCommandSender sender = Bukkit.getConsoleSender();
                     Iterator<Map.Entry<UUID, String>> iterator = commands.entrySet().iterator();
 
                     while (iterator.hasNext()) {
                         Map.Entry<UUID, String> entry = iterator.next();
                         iterator.remove();
                         remove(entry.getKey());
-                        Bukkit.dispatchCommand(sender, entry.getValue());
+                        SpartanBukkit.runCommand(entry.getValue());
                     }
                     end(Config.settings.getBoolean("Punishments.broadcast_on_punishment"), size);
                 }

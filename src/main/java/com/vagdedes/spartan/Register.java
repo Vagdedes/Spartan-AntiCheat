@@ -68,6 +68,8 @@ public class Register extends JavaPlugin {
         enable(new Event_World());
         enable(new Event_Damaged());
 
+        //enable(new GhostBlockTest());
+
         if (NPCManager.supported) {
             enable(new NPCManager());
         }

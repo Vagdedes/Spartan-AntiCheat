@@ -20,9 +20,9 @@ public class Event_Bow implements Listener {
             SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartan;
 
             // Detections
-            p.getExecutor(Enums.HackType.FastBow).handle(e.isCancelled(), e);
+            p.getRunner(Enums.HackType.FastBow).handle(e.isCancelled(), e);
 
-            if (p.getExecutor(Enums.HackType.FastBow).prevent()) {
+            if (p.getRunner(Enums.HackType.FastBow).prevent()) {
                 e.setCancelled(true);
             }
         }

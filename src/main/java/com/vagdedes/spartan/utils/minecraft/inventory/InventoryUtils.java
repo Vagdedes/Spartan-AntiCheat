@@ -15,9 +15,9 @@ import java.util.List;
 
 public class InventoryUtils {
 
-    private static final boolean bukkitProfile = ReflectionUtils.classExists(
-            "org.bukkit.profile.PlayerProfile"
-    );
+    private static final boolean bukkitProfile =
+            MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                    && ReflectionUtils.classExists("org.bukkit.profile.PlayerProfile");
 
     public static void prepareDescription(List<String> array, String title) {
         array.clear();
@@ -56,13 +56,15 @@ public class InventoryUtils {
     }
 
     public static ItemStack getHead() {
-        return new ItemStack(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
-                ? Material.PLAYER_HEAD
-                : Material.getMaterial("SKULL_ITEM"), 1, (short) SkullType.PLAYER.ordinal());
+        return new ItemStack(
+                MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)
+                        ? Material.PLAYER_HEAD
+                        : Material.getMaterial("SKULL_ITEM"), 1, (short) SkullType.PLAYER.ordinal()
+        );
     }
 
     public static ItemStack getSkull(OfflinePlayer offlinePlayer, String backupName, boolean create) {
-        if (bukkitProfile && MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
+        if (bukkitProfile) {
             return BackgroundInventoryUtils.getSkull_v1_13(offlinePlayer, backupName, create);
         } else {
             ItemStack skull = new ItemStack(

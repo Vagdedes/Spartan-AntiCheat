@@ -25,9 +25,9 @@ public class Event_Inventory implements Listener {
         SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
 
         // Detections
-        p.getExecutor(Enums.HackType.ItemDrops).run(e.isCancelled());
+        p.getRunner(Enums.HackType.ItemDrops).run(e.isCancelled());
 
-        if (p.getExecutor(Enums.HackType.ItemDrops).prevent()) {
+        if (p.getRunner(Enums.HackType.ItemDrops).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -45,12 +45,12 @@ public class Event_Inventory implements Listener {
             int slot = e.getSlot();
 
             // Detections
-            p.spartan.getExecutor(Enums.HackType.ImpossibleInventory).handle(cancelled, e);
-            p.spartan.getExecutor(Enums.HackType.InventoryClicks).handle(cancelled, e);
+            p.spartan.getRunner(Enums.HackType.ImpossibleInventory).handle(cancelled, e);
+            p.spartan.getRunner(Enums.HackType.InventoryClicks).handle(cancelled, e);
 
             // GUIs
-            if (p.spartan.getExecutor(Enums.HackType.ImpossibleInventory).prevent()
-                    | p.spartan.getExecutor(Enums.HackType.InventoryClicks).prevent()) {
+            if (p.spartan.getRunner(Enums.HackType.ImpossibleInventory).prevent()
+                    | p.spartan.getRunner(Enums.HackType.InventoryClicks).prevent()) {
                 e.setCancelled(true);
             } else if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
                 for (InventoryMenu menu : InteractiveInventory.menus) {

@@ -6,7 +6,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 
-public class HackPrevention {
+public class CheckPrevention {
 
     boolean canPrevent;
     private final SpartanLocation location;
@@ -14,7 +14,7 @@ public class HackPrevention {
     private final double damage;
     private final long expiration;
 
-    HackPrevention() {
+    CheckPrevention() {
         this.canPrevent = false;
         this.location = null;
         this.groundTeleport = false;
@@ -22,7 +22,7 @@ public class HackPrevention {
         this.expiration = 0L;
     }
 
-    HackPrevention(SpartanLocation location, int cancelTicks, boolean groundTeleport, double damage) {
+    CheckPrevention(SpartanLocation location, int cancelTicks, boolean groundTeleport, double damage) {
         this.canPrevent = false;
         this.location = location;
         this.groundTeleport = groundTeleport;

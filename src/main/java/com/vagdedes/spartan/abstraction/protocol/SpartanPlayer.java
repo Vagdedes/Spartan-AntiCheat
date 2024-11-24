@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.protocol;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.CheckExecutor;
+import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
@@ -41,6 +41,7 @@ public class SpartanPlayer {
     public final PlayerPunishments punishments;
     public final PlayerTrackers trackers;
     public final PlayerClicks clicks;
+    private long lastInteraction, afk;
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
@@ -51,10 +52,11 @@ public class SpartanPlayer {
                     if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
                         protocol.spartan.setStoredPotionEffects();
                     }
-                    protocol.spartan.getExecutor(Enums.HackType.AutoRespawn).run(false);
-                    protocol.spartan.getExecutor(Enums.HackType.MorePackets).run(false);
-                    protocol.spartan.getExecutor(Enums.HackType.Exploits).run(false);
+                    protocol.spartan.getRunner(Enums.HackType.AutoRespawn).run(false);
+                    protocol.spartan.getRunner(Enums.HackType.MorePackets).run(false);
+                    protocol.spartan.getRunner(Enums.HackType.Exploits).run(false);
                     protocol.spartan.movement.schedulerFrom = protocol.spartan.movement.getLocation();
+                    protocol.spartan.checkForAFK();
                 }
             }
         }, 1L, 1L);
@@ -75,6 +77,29 @@ public class SpartanPlayer {
         this.clicks = new PlayerClicks();
         this.movement = new PlayerMovement(this);
         this.punishments = new PlayerPunishments(this);
+
+        this.lastInteraction = System.currentTimeMillis();
+        this.afk = -1L;
+    }
+
+    public void setLastInteraction() {
+        this.checkForAFK();
+        this.lastInteraction = System.currentTimeMillis();
+    }
+
+    private void checkForAFK() {
+        if (System.currentTimeMillis() - protocol.spartan.lastInteraction >= 60_000L) {
+            if (protocol.spartan.afk == -1L) {
+                protocol.spartan.afk = protocol.spartan.lastInteraction;
+            }
+        } else if (protocol.spartan.afk != -1L) {
+            protocol.getProfile().setAFKFor(
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis() - protocol.spartan.afk,
+                    true
+            );
+            protocol.spartan.afk = -1L;
+        }
     }
 
     public boolean isBedrockPlayer() {
@@ -136,8 +161,8 @@ public class SpartanPlayer {
 
     // Separator
 
-    public CheckExecutor getExecutor(Enums.HackType hackType) {
-        return this.protocol.getProfile().getExecutor(hackType);
+    public CheckRunner getRunner(Enums.HackType hackType) {
+        return this.protocol.getProfile().getRunner(hackType);
     }
 
     public void resetCrucialData() {
@@ -156,7 +181,7 @@ public class SpartanPlayer {
     public void calculateClicks(boolean run) {
         if (run) {
             clicks.calculate();
-            this.getExecutor(Enums.HackType.FastClicks).run(false);
+            this.getRunner(Enums.HackType.FastClicks).run(false);
             InteractiveInventory.playerInfo.refresh(this.protocol.bukkit.getName());
         }
     }

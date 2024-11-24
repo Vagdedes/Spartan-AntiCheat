@@ -20,16 +20,18 @@ public class Event_Velocity implements Listener {
     public static void event(PlayerVelocityEvent e, boolean packets) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
         protocol.claimedVelocity = e;
-        protocol.claimedVeloGravity = e;
+        protocol.claimedVeloGravity.add(e);
+        if (protocol.claimedVeloGravity.size() > 2)
+            protocol.claimedVeloGravity.remove(0);
 
         if (protocol.packetsEnabled() == packets) {
             SpartanPlayer p = protocol.spartan;
 
             // Detections
             boolean cancelled = e.isCancelled();
-            p.getExecutor(Enums.HackType.Speed).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.Velocity).handle(cancelled, e);
-            p.getExecutor(Enums.HackType.Simulation).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Speed).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Velocity).handle(cancelled, e);
+            p.getRunner(Enums.HackType.Simulation).handle(cancelled, e);
         }
     }
     public static void claim(CPlayerVelocityEvent e) {

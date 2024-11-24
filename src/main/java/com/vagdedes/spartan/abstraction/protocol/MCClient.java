@@ -131,7 +131,7 @@ public class MCClient {
         for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
             for (int y = location.getBlockY() - 1; y <= location.getBlockY() + 1; y++) {
                 for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
-                    SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z).getBlock();
 
                     if (block.getType().isSolid() || ignore(block.getType())) {
                         return true;
@@ -148,7 +148,7 @@ public class MCClient {
         for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
             for (int y = location.getBlockY() - 1; y <= location.getBlockY() + 1; y++) {
                 for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
-                    SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z).getBlock();
 
                     if (ignore(block.getType())) {
                         return true;
@@ -173,7 +173,7 @@ public class MCClient {
         for (double x = startX; x <= endX; x += increment) {
             for (double y = startY; y <= endY; y += 1) {
                 for (double z = startZ; z <= endZ; z += increment) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
                     if (block.getType().isSolid() || ignore(block.getType())) {
                         return true;

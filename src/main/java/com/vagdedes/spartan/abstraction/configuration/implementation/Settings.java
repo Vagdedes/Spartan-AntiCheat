@@ -5,7 +5,6 @@ import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 
-import java.io.File;
 import java.util.List;
 
 public class Settings extends ConfigurationBuilder {
@@ -17,13 +16,7 @@ public class Settings extends ConfigurationBuilder {
     public static final String crossServerNotificationsName = "Important.server_name";
 
     @Override
-    public void clear() {
-        internalClear();
-    }
-
-    @Override
     public void create() {
-        file = new File(directory);
         clear();
 
         addOption("Punishments.broadcast_on_punishment", true);
@@ -41,7 +34,7 @@ public class Settings extends ConfigurationBuilder {
         addOption("Important.bedrock_client_permission", false);
         addOption("Important.bedrock_player_prefix", ".");
         addOption("Important.enable_developer_api", true);
-        addOption("Important.enable_npc", true);
+        addOption("Important.enable_npc", false);
         addOption("Important.enable_watermark", true);
 
         addOption("Detections.ground_teleport_on_detection", true);

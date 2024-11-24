@@ -12,13 +12,11 @@ public class PlayerViolationEvent extends Event implements Cancellable {
     private final Player p;
     private final HackType h;
     private final String m;
-    private final double v;
     private boolean cancelled;
 
-    public PlayerViolationEvent(Player player, HackType HackType, double violation, String message) {
+    public PlayerViolationEvent(Player player, HackType HackType, String message) {
         p = player;
         h = HackType;
-        v = violation;
         m = message;
         cancelled = false;
     }
@@ -40,8 +38,9 @@ public class PlayerViolationEvent extends Event implements Cancellable {
         return 0;
     }
 
+    @Deprecated
     public double getViolationIncrease() {
-        return v;
+        return 0;
     }
 
     @Deprecated

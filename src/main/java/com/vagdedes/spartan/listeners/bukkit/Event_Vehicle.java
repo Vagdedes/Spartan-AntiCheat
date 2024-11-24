@@ -38,6 +38,7 @@ public class Event_Vehicle implements Listener {
 
     public static void exit(SpartanPlayer player) {
         player.trackers.add(PlayerTrackers.TrackerType.VEHICLE, "exit", 5);
+        player.trackers.add(PlayerTrackers.TrackerType.VEHICLE, "exit_tp", 1);
     }
 
 }

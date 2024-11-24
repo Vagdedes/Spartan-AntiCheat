@@ -2,10 +2,8 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Messages;
-import com.vagdedes.spartan.abstraction.configuration.implementation.SQLFeature;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
+import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
+import com.vagdedes.spartan.abstraction.configuration.implementation.*;
 import com.vagdedes.spartan.functionality.moderation.Wave;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
@@ -16,10 +14,18 @@ import org.bukkit.command.CommandSender;
 
 public class Config {
 
-    public static Settings settings = new Settings();
-    public static SQLFeature sql = new SQLFeature();
-    public static Messages messages = new Messages();
-    public static Compatibility compatibility = new Compatibility();
+    public static final Advanced advanced = new Advanced();
+    public static final Settings settings = new Settings();
+    public static final SQLFeature sql = new SQLFeature();
+    public static final Messages messages = new Messages();
+    public static final Compatibility compatibility = new Compatibility();
+
+    public static final ConfigurationBuilder[] configurations = {
+            advanced,
+            settings,
+            sql,
+            messages
+    };
 
     // Separator
 
@@ -37,16 +43,6 @@ public class Config {
 
     // Separator
 
-    public static void createConfigurations() {
-        settings.create(); // Always Second (Research Engine File Logs)
-        sql.create(); // Always Third (Research Engine SQL Logs)
-        messages.create();
-        Compatibility.create();
-        Wave.create();
-    }
-
-    // Separator
-
     public static void create() {
         boolean enabledPlugin = Register.isPluginEnabled();
 
@@ -54,20 +50,18 @@ public class Config {
             hackType.resetCheck();
         }
         if (enabledPlugin) {
-            // Configuration
-            createConfigurations(); // Always First
-
-            // System
+            for (ConfigurationBuilder configuration : configurations) {
+                configuration.create();
+            }
+            Compatibility.create();
+            Wave.create();
             AwarenessNotifications.refresh();
         } else {
-            // Configuration
-            settings.clear();
-            sql.refreshConfiguration();
-            messages.clear();
+            for (ConfigurationBuilder configuration : configurations) {
+                configuration.clear();
+            }
             compatibility.clearCache();
             Wave.clearCache();
-
-            // System
             AwarenessNotifications.clear();
         }
 

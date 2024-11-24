@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MiningHistory {
 
+    public static final String found = " found ";
+
     public static MiningHistory.MiningOre getMiningOre(Material material) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)) {
             if (material == Material.ANCIENT_DEBRIS) {

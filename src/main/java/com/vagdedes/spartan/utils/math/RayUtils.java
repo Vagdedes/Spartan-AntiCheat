@@ -12,7 +12,6 @@ import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.util.Vector;
 
@@ -94,7 +93,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
                     for (Set<Material> set : sets) {
                         if (set.contains(block.getType())) {
@@ -116,7 +115,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
                     if (set.contains(block.getType())) {
                         return true;
@@ -136,7 +135,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
                     if (block.getType() == material) {
                         return true;
@@ -156,9 +155,9 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
-                    if (block.getType().isSolid() || BlockUtils.isSemiSolid(block.getType())) {
+                    if (BlockUtils.isSolid(block.getType())) {
                         return true;
                     }
                 }
@@ -176,9 +175,9 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
-                    if (block.getType().isSolid()) {
+                    if (BlockUtils.isSolid(block.getType())) {
                         return true;
                     }
                 }
@@ -196,7 +195,7 @@ public class RayUtils {
         for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
             for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                 for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-                    SpartanBlock block = new SpartanLocation(world, x, y, z, 0.0f, 0.0f).getBlock();
+                    SpartanBlock block = new SpartanLocation(world, x, y, z).getBlock();
 
                     if (BlockUtils.isSolid(block.getType())) {
                         return true;
@@ -264,6 +263,23 @@ public class RayUtils {
         );
         // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
         intersection = isIntersection(protocol, location, intersection, boundingBox);
+        exempt = target.isInsideVehicle();
+        return intersection || exempt;
+    }
+
+    public static boolean inHitboxFrom(SpartanProtocol protocol, Location locationIn, Entity target, float size) {
+        boolean intersection = false;
+        boolean exempt;
+        double targetX = locationIn.getX();
+        double targetY = locationIn.getY();
+        double targetZ = locationIn.getZ();
+
+        AxisAlignedBB boundingBox = new AxisAlignedBB(
+                targetX - size, targetY - 0.1F, targetZ - size,
+                targetX + size, targetY + 1.9F, targetZ + size
+        );
+        // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
+        intersection = isIntersection(protocol, protocol.spartan.movement.getPastTickRotation().bukkit(), intersection, boundingBox);
         exempt = target.isInsideVehicle();
         return intersection || exempt;
     }
@@ -434,7 +450,7 @@ public class RayUtils {
             double newX = player.getX() + ray.x * d;
             double newY = player.getY() + eyeHeight - 1;
             double newZ = player.getZ() + ray.z * d;
-            Location newLocation = new Location(instance.getWorld(), newX, newY, newZ);
+            Location newLocation = new Location(ProtocolLib.getWorld(instance), newX, newY, newZ);
             if (onBound(newLocation, target, size, 2, size)) {
                 return d;
             }
@@ -470,9 +486,9 @@ public class RayUtils {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    Block block = getBlockAsync(
-                            new Location(player.getWorld(), x + (dx * 0.3), y + (dy * 0.3), z + (dz * 0.3)));
-                    Material material = block != null ? block.getType() : null;
+                    Material material = new SpartanLocation(
+                            new Location(ProtocolLib.getWorld(player), x + (dx * 0.3), y + (dy * 0.3), z + (dz * 0.3))
+                    ).getBlock().getTypeOrNull();
                     if (material == null) continue;
                     if (!BlockUtils.areAir(material)) {
                         return false;
@@ -483,13 +499,6 @@ public class RayUtils {
         return true;
     }
 
-    public static Block getBlockAsync(final Location location) {
-        if (location.getWorld().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4)) {
-            return location.getWorld().getBlockAt(location);
-        } else {
-            return null;
-        }
-    }
     public static boolean ifRayBound(SpartanProtocol protocol, AxisAlignedBB boundingBox, double dist) {
 
         boolean intersection = false;

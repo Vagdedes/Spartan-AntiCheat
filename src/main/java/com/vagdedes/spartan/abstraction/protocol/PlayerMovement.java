@@ -275,6 +275,13 @@ public class PlayerMovement {
         return eventFrom;
     }
 
+    public SpartanLocation getPastTickRotation() {
+        Location l = this.location.bukkit().clone();
+        l.setYaw(eventFrom.getYaw());
+        l.setPitch(eventFrom.getPitch());
+        return new SpartanLocation(l);
+    }
+
     // Separator
 
     public List<SpartanLocation> getLocations() {
