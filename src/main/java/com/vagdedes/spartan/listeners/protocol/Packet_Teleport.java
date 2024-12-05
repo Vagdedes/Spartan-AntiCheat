@@ -46,8 +46,7 @@ public class Packet_Teleport extends PacketAdapter {
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
-        if (protocol.spartan.isBedrockPlayer()
-                || protocol.isLoading()) {
+        if (protocol.spartan.isBedrockPlayer()) {
             return;
         }
         PacketType packetType = event.getPacket().getType();

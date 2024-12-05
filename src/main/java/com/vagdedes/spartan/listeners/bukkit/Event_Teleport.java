@@ -43,11 +43,8 @@ public class Event_Teleport implements Listener {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
 
         if (protocol.packetsEnabled() == packets) {
-            SpartanPlayer p = protocol.spartan;
-
             // Objects
-            p.resetCrucialData();
-            p.movement.setDetectionLocation();
+            protocol.spartan.resetCrucialData();
         }
     }
 

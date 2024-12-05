@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.abstraction.configuration.implementation;
+package com.vagdedes.spartan.compatibility;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;

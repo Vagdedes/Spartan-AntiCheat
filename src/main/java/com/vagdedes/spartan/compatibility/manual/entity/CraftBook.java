@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.entity;
 
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;

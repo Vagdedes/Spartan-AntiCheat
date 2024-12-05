@@ -207,7 +207,12 @@ public class RayUtils {
     }
 
     private static float[] getRotation(Player player1, Entity entity2) {
-        Vector direction = ProtocolLib.getLocation(entity2).toVector().subtract(ProtocolLib.getLocation(player1).toVector());
+        Location entityLoc = ProtocolLib.getLocationOrNull(entity2);
+
+        if (entityLoc == null) {
+            return null;
+        }
+        Vector direction = entityLoc.toVector().subtract(SpartanBukkit.getProtocol(player1).getLocation().toVector());
         float yaw = (float) Math.toDegrees(Math.atan2(direction.getX(), direction.getZ())),
                 pitch = (float) Math.toDegrees(Math.asin(-direction.getY()));
         return new float[]{castTo360(yaw), pitch};
@@ -220,7 +225,11 @@ public class RayUtils {
         boolean exempt;
 
         if (target instanceof Player) {
-            Location playerLocation = ProtocolLib.getLocation((Player) target);
+            Location playerLocation = ProtocolLib.getLocationOrNull((Player) target);
+
+            if (playerLocation == null) {
+                return false;
+            }
             double targetX = playerLocation.getX();
             double targetY = playerLocation.getY();
             double targetZ = playerLocation.getZ();
@@ -243,7 +252,7 @@ public class RayUtils {
             );
             // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
             intersection = isIntersection(protocol, location, intersection, boundingBox);
-            intersection2 = isIntersection(protocol, protocol.spartan.movement.getEventFromLocation().bukkit(), intersection2, boundingBox);
+            intersection2 = isIntersection(protocol, protocol.getFromLocation(), intersection2, boundingBox);
             exempt = target.isInsideVehicle() || !(target instanceof Villager || target instanceof Zombie || target instanceof Skeleton || target instanceof Creeper);
         }
         return intersection || intersection2 || exempt;
@@ -279,7 +288,7 @@ public class RayUtils {
                 targetX + size, targetY + 1.9F, targetZ + size
         );
         // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
-        intersection = isIntersection(protocol, protocol.spartan.movement.getPastTickRotation().bukkit(), intersection, boundingBox);
+        intersection = isIntersection(protocol, protocol.getPastTickRotation().bukkit(), intersection, boundingBox);
         exempt = target.isInsideVehicle();
         return intersection || exempt;
     }
@@ -513,7 +522,7 @@ public class RayUtils {
         boolean intersection2 = false;
         // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
         intersection = isIntersection(protocol, protocol.getLocation(), intersection, boundingBox, dist);
-        intersection2 = isIntersection(protocol, protocol.spartan.movement.getEventFromLocation().bukkit(), intersection, boundingBox, dist);
+        intersection2 = isIntersection(protocol, protocol.getFromLocation(), intersection, boundingBox, dist);
         return intersection || intersection2;
     }
 }

@@ -3,7 +3,6 @@ package com.vagdedes.spartan.functionality.tracking;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.java.TimeUtils;
@@ -98,9 +97,8 @@ public class AntiCheatLogs {
             MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
 
             if (ore != null) {
-                SpartanLocation location = protocol.spartan.movement.getLocation();
-                World.Environment environment = location.world.getEnvironment();
-                int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ(), amount = 1;
+                World.Environment environment = block.getWorld().getEnvironment();
+                int x = block.getX(), y = block.getY(), z = block.getZ(), amount = 1;
                 String key = ore.toString(),
                         log = protocol.bukkit.getName() + MiningHistory.found + amount + " " + key
                                 + " on " + x + ", " + y + ", " + z + ", " + BlockUtils.environmentToString(environment);
@@ -109,7 +107,7 @@ public class AntiCheatLogs {
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(protocol.bukkit, log, location.bukkit(), block.getType());
+                    event = new PlayerFoundOreEvent(protocol.bukkit, log, block.getLocation(), block.getType());
                     Register.manager.callEvent(event);
                 } else {
                     event = null;

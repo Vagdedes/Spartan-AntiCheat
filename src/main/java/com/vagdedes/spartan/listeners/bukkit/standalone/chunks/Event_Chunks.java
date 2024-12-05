@@ -5,12 +5,9 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.standalone.Event_World;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,13 +15,16 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Event_Chunks implements Listener {
 
-    private static final Map<Long, Boolean> loaded = new LinkedHashMap<>();
+    private static final long enabledPastTime = 60_000L;
+    private static long enabled = 0L;
+    private static final Map<Long, Long> loaded = new LinkedHashMap<>();
     static final Map<World, Map<Long, ChunkData>> map = new LinkedHashMap<>();
     public static final boolean heightSupport = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
 
@@ -32,23 +32,30 @@ public class Event_Chunks implements Listener {
 
     static final class ChunkData {
 
-        private long creation;
+        private long creation, lastAccess;
         private boolean queued;
         ChunkSnapshot snapshot;
 
         private ChunkData() {
+        }
 
+        void tick() {
+            this.lastAccess = System.currentTimeMillis();
         }
 
         private boolean refresh(Chunk chunk) {
-            synchronized (this) {
-                if (!this.queued
-                        && System.currentTimeMillis() - this.creation > 500L) {
+            if (!this.queued) {
+                synchronized (this) {
                     this.queued = true;
-                    this.creation = System.currentTimeMillis();
-                    this.snapshot = chunk.getChunkSnapshot();
-                    this.queued = false;
-                    return true;
+
+                    if (System.currentTimeMillis() - this.creation >= 500L) {
+                        this.snapshot = chunk.getChunkSnapshot();
+                        this.creation = System.currentTimeMillis();
+                        this.queued = false;
+                        return true;
+                    } else {
+                        this.queued = false;
+                    }
                 }
             }
             return false;
@@ -67,27 +74,42 @@ public class Event_Chunks implements Listener {
     static {
         SpartanBukkit.runRepeatingTask(() -> {
             if (SpartanBukkit.packetsEnabled()
-                    && SpartanBukkit.hasPlayerCount()
-                    && isEmptyQueue()) {
-                for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
-                    SpartanLocation location = protocol.spartan.movement.getLocation();
+                    && SpartanBukkit.hasPlayerCount()) {
+                if (isEnabled() && isEmptyQueue()) {
+                    for (SpartanProtocol protocol : SpartanBukkit.getProtocols()) {
+                        Location location = protocol.getLocation();
 
-                    if (isLoaded(location.world, location.getChunkX(), location.getChunkZ())
-                            && cache(location.bukkit().getChunk(), true)) {
-                        break;
+                        if (isLoaded(
+                                location.getWorld(),
+                                SpartanLocation.getChunkPos(location.getBlockX()),
+                                SpartanLocation.getChunkPos(location.getBlockZ())
+                        )
+                                && rawCache(location.getChunk(), true)) {
+                            break;
+                        }
                     }
                 }
+            } else {
+                enabled = 0L;
             }
         }, 1L, 1L);
     }
 
     // Separator
 
+    static void enable() {
+        enabled = System.currentTimeMillis();
+    }
+
+    private static boolean isEnabled() {
+        return System.currentTimeMillis() - enabled <= enabledPastTime;
+    }
+
     public static long hashCoordinates(int x, int z) {
         return (31L * x) + z;
     }
 
-    public static long hash(World world, int x, int z) {
+    private static long hash(World world, int x, int z) {
         return (hashCoordinates(x, z) * 31L) + world.getName().hashCode();
     }
 
@@ -95,22 +117,33 @@ public class Event_Chunks implements Listener {
 
     public static void clear() {
         map.clear();
+        enabled = 0L;
     }
 
     public static boolean isLoaded(World world, int x, int z) {
-        if (loaded.containsKey(hash(world, x, z))) {
-            return true;
+        long hash = hash(world, x, z);
+        Long time = loaded.get(hash);
+
+        if (time != null) {
+            if (time == -1L) {
+                return true;
+            } else if (time > System.currentTimeMillis()) {
+                return false;
+            }
         }
         for (Chunk chunk : world.getLoadedChunks()) {
             if (chunk.getX() == x && chunk.getZ() == z) {
-                loaded.put(hash(chunk.getWorld(), chunk.getX(), chunk.getZ()), true);
+                loaded.put(hash, -1L);
                 return true;
             }
         }
+        loaded.put(hash, System.currentTimeMillis() + enabledPastTime);
         return false;
     }
 
     public static Material getBlockType(World world, int x, int y, int z) {
+        Event_Chunks.enable();
+
         if (y < (heightSupport ? world.getMinHeight() : 0)
                 || y >= (heightSupport ? world.getMaxHeight() : PlayerUtils.height)) {
             return null;
@@ -122,7 +155,12 @@ public class Event_Chunks implements Listener {
         }
         ChunkData data = subMap.get(hashCoordinates(SpartanLocation.getChunkPos(x), SpartanLocation.getChunkPos(z)));
 
-        if (data == null || data.snapshot == null) {
+        if (data == null) {
+            return null;
+        }
+        data.tick();
+
+        if (data.snapshot == null) {
             return null;
         }
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_10)) {
@@ -134,14 +172,15 @@ public class Event_Chunks implements Listener {
     }
 
     private static boolean hasPlayers(World world, int x, int z) {
-        Map<Long, List<Entity>> perChunk = Event_World.getEntities(world);
+        List<SpartanProtocol> players = SpartanBukkit.getProtocols();
 
-        if (perChunk != null) {
-            List<Entity> list = perChunk.get(Event_Chunks.hashCoordinates(x, z));
+        if (!players.isEmpty()) {
+            for (SpartanProtocol protocol : players) {
+                if (protocol.spartan.getWorld().equals(world)) {
+                    Location location = protocol.getLocation();
 
-            if (list != null) {
-                for (Entity entity : list) {
-                    if (entity instanceof Player) {
+                    if (SpartanLocation.getChunkPos(location.getBlockX()) == x
+                            && SpartanLocation.getChunkPos(location.getBlockZ()) == z) {
                         return true;
                     }
                 }
@@ -150,7 +189,7 @@ public class Event_Chunks implements Listener {
         return false;
     }
 
-    public static boolean cache(Chunk chunk, boolean force) {
+    private static boolean rawCache(Chunk chunk, boolean force) {
         World world = chunk.getWorld();
 
         if (!force && !hasPlayers(world, chunk.getX(), chunk.getZ())) {
@@ -160,18 +199,34 @@ public class Event_Chunks implements Listener {
                 world,
                 k -> new LinkedHashMap<>()
         );
-        return subMap.computeIfAbsent(
+        ChunkData data = subMap.computeIfAbsent(
                 hashCoordinates(chunk.getX(), chunk.getZ()),
                 k -> new ChunkData()
-        ).refresh(chunk);
+        );
+        data.tick();
+        return data.refresh(chunk);
+    }
+
+    public static boolean cache(Chunk chunk, boolean force) {
+        if (isEnabled()) {
+            return rawCache(chunk, force);
+        } else {
+            return false;
+        }
     }
 
     private static boolean isEmptyQueue() {
         if (!map.isEmpty()) {
             for (Map<Long, ChunkData> subMap : map.values()) {
-                for (ChunkData data : subMap.values()) {
+                Iterator<ChunkData> iterator = subMap.values().iterator();
+
+                while (iterator.hasNext()) {
+                    ChunkData data = iterator.next();
+
                     if (data.isQueued()) {
                         return false;
+                    } else if (System.currentTimeMillis() - data.lastAccess >= enabledPastTime) {
+                        iterator.remove();
                     }
                 }
             }
@@ -184,7 +239,7 @@ public class Event_Chunks implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void ChunkLoad(ChunkLoadEvent e) {
         Chunk chunk = e.getChunk();
-        loaded.put(hash(chunk.getWorld(), chunk.getX(), chunk.getZ()), true);
+        loaded.put(hash(chunk.getWorld(), chunk.getX(), chunk.getZ()), -1L);
 
         if (SpartanBukkit.packetsEnabled()) {
             cache(chunk, false);
@@ -228,11 +283,11 @@ public class Event_Chunks implements Listener {
         }
     }
 
-    private static Block getBlockAsync(final Location location) {
+    public static Block getBlockAsync(Location location) {
         if (Event_Chunks.isLoaded(
-                        location.getWorld(),
-                        location.getBlockX() >> 4,
-                        location.getBlockZ() >> 4
+                location.getWorld(),
+                location.getBlockX() >> 4,
+                location.getBlockZ() >> 4
         )) {
             return location.getWorld().getBlockAt(location);
         } else {

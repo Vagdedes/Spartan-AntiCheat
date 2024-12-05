@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -25,8 +25,7 @@ public class MineTinker implements Listener {
                             Enums.HackType.KillAura,
                             Enums.HackType.FastClicks,
                             Enums.HackType.HitReach,
-                            Enums.HackType.FastPlace,
-                            Enums.HackType.Speed
+                            Enums.HackType.FastPlace
                     },
                     40
             );

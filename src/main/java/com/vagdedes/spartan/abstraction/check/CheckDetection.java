@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
@@ -20,6 +19,7 @@ import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.api.PlayerViolationCommandEvent;
 import me.vagdedes.spartan.api.PlayerViolationEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Location;
 
 import java.util.Collection;
 import java.util.List;
@@ -156,7 +156,7 @@ public abstract class CheckDetection extends CheckProcess {
                 hackType
         );
 
-        SpartanLocation location = this.protocol().spartan.movement.getLocation();
+        Location location = this.protocol().getLocation();
         information = this.protocol().bukkit.getName() + failed + hackType
                 + " (" + javaPlayerIdentifier + " " + (!this.protocol().spartan.isBedrockPlayer()) + ")" + ", "
                 + "(" + detectionIdentifier + " " + this.name + ")" + ", "
@@ -167,7 +167,7 @@ public abstract class CheckDetection extends CheckProcess {
                 + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName()) + "), "
                 + "(Packets: " + this.protocol().packetsEnabled() + "), "
                 + "(Ping: " + this.protocol().getPing() + "ms), "
-                + "(W-XYZ: " + location.world.getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ() + "), "
+                + "(W-XYZ: " + location.getWorld().getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ() + "), "
                 + "[Information: " + information + "]";
         AntiCheatLogs.logInfo(
                 this.protocol(),
@@ -261,13 +261,13 @@ public abstract class CheckDetection extends CheckProcess {
                             if (SpartanBukkit.isSynchronised()) {
                                 runnable.run();
                             } else {
-                                SpartanBukkit.transferTask(this.protocol().spartan, runnable);
+                                SpartanBukkit.transferTask(this.protocol(), runnable);
                             }
                         } else {
                             SpartanBukkit.runCommand(modifiedCommand);
                         }
                     }
-                    SpartanLocation location = this.protocol().spartan.movement.getLocation();
+                    Location location = this.protocol().getLocation();
                     CloudConnections.executeDiscordWebhook(
                             "punishments",
                             this.protocol().getUUID(),
@@ -285,7 +285,7 @@ public abstract class CheckDetection extends CheckProcess {
 
     // Prevention
 
-    public final void cancel(String information, SpartanLocation location,
+    public final void cancel(String information, Location location,
                              int cancelTicks, boolean groundTeleport, double damage) {
         if (!this.isEnabled()) {
             return;
@@ -343,22 +343,22 @@ public abstract class CheckDetection extends CheckProcess {
             if (!event || SpartanBukkit.isSynchronised()) {
                 runnable.run();
             } else {
-                SpartanBukkit.transferTask(this.protocol().spartan, runnable);
+                SpartanBukkit.transferTask(this.protocol(), runnable);
             }
         }
     }
 
-    public final void cancel(String information, SpartanLocation location,
+    public final void cancel(String information, Location location,
                              int cancelTicks, boolean groundTeleport) {
         cancel(information, location, cancelTicks, groundTeleport, 0.0);
     }
 
-    public final void cancel(String information, SpartanLocation location,
+    public final void cancel(String information, Location location,
                              int cancelTicks) {
         cancel(information, location, cancelTicks, false, 0.0);
     }
 
-    public final void cancel(String information, SpartanLocation location) {
+    public final void cancel(String information, Location location) {
         cancel(information, location, 0, false, 0.0);
     }
 

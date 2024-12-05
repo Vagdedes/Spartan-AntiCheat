@@ -1,18 +1,16 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
+import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -39,11 +37,7 @@ public class PlayerMovement {
             artificialSwimming,
             lastLiquidTicks;
     private Material lastLiquidMaterial;
-    private SpartanLocation
-            location,
-            eventFrom,
-            detectionLocation;
-    SpartanLocation schedulerFrom;
+    Location schedulerFrom;
     private Vector clampVector;
     public double motionY;
 
@@ -51,16 +45,12 @@ public class PlayerMovement {
         this.parent = parent;
         this.lastLiquidMaterial = Material.AIR;
 
-        SpartanLocation location = new SpartanLocation(
-                ProtocolLib.getLocation(parent.protocol.bukkit)
-        );
+        Location bukkit = ProtocolTools.getLoadLocation(this.parent.protocol.bukkit);
+        SpartanLocation location = new SpartanLocation(bukkit);
         this.locations = Collections.synchronizedMap(new LinkedHashMap<>());
         this.locations.put(System.currentTimeMillis(), location);
 
-        this.location = location;
-        this.eventFrom = location;
-        this.schedulerFrom = location;
-        this.detectionLocation = location;
+        this.schedulerFrom = bukkit;
 
         this.clampVector = new Vector();
         this.motionY = 0;
@@ -204,7 +194,7 @@ public class PlayerMovement {
     // Separator
 
     public double getAirAcceleration() {
-        return this.location.isChunkLoaded()
+        return new SpartanLocation(this.parent.protocol.getLocationOrVehicle()).isChunkLoaded()
                 ? PlayerUtils.airAcceleration
                 : PlayerUtils.airAccelerationUnloaded;
     }
@@ -267,22 +257,9 @@ public class PlayerMovement {
 
     // Separator
 
-    public SpartanLocation getSchedulerFromLocation() {
+    public Location getSchedulerFromLocation() {
         return schedulerFrom;
     }
-
-    public SpartanLocation getEventFromLocation() {
-        return eventFrom;
-    }
-
-    public SpartanLocation getPastTickRotation() {
-        Location l = this.location.bukkit().clone();
-        l.setYaw(eventFrom.getYaw());
-        l.setPitch(eventFrom.getPitch());
-        return new SpartanLocation(l);
-    }
-
-    // Separator
 
     public List<SpartanLocation> getLocations() {
         return new ArrayList<>(this.locations.values());
@@ -296,54 +273,14 @@ public class PlayerMovement {
 
     // Separator
 
-    public SpartanLocation getDetectionLocation() {
-        return detectionLocation;
-    }
-
-    public void setDetectionLocation() {
-        this.setDetectionLocation(this.getLocation(), true);
-    }
-
-    private void setDetectionLocation(SpartanLocation location, boolean force) {
-        if (force
-                || !location.world.equals(this.detectionLocation.world)
-                || location.distance(this.detectionLocation) > 4.0) {
-            this.detectionLocation = location;
-        }
-    }
-
-    // Separator
-
-    public SpartanLocation getVehicleLocation() {
-        Entity vehicle = this.parent.getVehicle();
-
-        if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
-            return new SpartanLocation(
-                    ProtocolLib.getLocation(vehicle)
-            );
-        }
-        return null;
-    }
-
-    public SpartanLocation getLocation() {
-        SpartanLocation vehicleLocation = getVehicleLocation();
-        this.refreshLocation(this.parent.protocol.getLocation());
-
-        if (vehicleLocation == null) {
-            return this.location;
-        } else {
-            return vehicleLocation;
-        }
-    }
-
-    // Separator
-
     public Location refreshLocation(Location location) {
-        if (this.location.getX() != location.getX()
-                || this.location.getY() != location.getY()
-                || this.location.getZ() != location.getZ()
-                || this.location.getYaw() != location.getYaw()
-                || this.location.getPitch() != location.getPitch()) {
+        Location known = this.parent.protocol.getLocation();
+
+        if (known.getX() != location.getX()
+                || known.getY() != location.getY()
+                || known.getZ() != location.getZ()
+                || known.getYaw() != location.getYaw()
+                || known.getPitch() != location.getPitch()) {
             SpartanLocation spartanLocation = new SpartanLocation(location);
 
             synchronized (this.locations) {
@@ -354,19 +291,18 @@ public class PlayerMovement {
                 }
                 this.locations.put(System.currentTimeMillis(), spartanLocation);
             }
-            this.location = spartanLocation;
-            this.setDetectionLocation(spartanLocation, false);
         }
         return location;
     }
 
     // Separator
 
-    public boolean processLastMoveEvent(Location originalTo, SpartanLocation vehicle,
-                                        SpartanLocation to, SpartanLocation from,
+    public boolean processLastMoveEvent(Location originalTo, Location vehicle,
+                                        Location to, Location from,
                                         double distance, double horizontal,
                                         double vertical, double xDiff, double zDiff,
-                                        double box) {
+                                        double box,
+                                        boolean packets) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             double x = clampMin(to.getX(), -3.0E7D, 3.0E7D),
                     y = clampMin(to.getY(), -2.0E7D, 2.0E7D),
@@ -382,7 +318,9 @@ public class PlayerMovement {
         if (vehicle == null) {
             this.refreshLocation(originalTo);
         }
-        this.eventFrom = from;
+        if (!packets) {
+            this.parent.protocol.setFromLocation(from);
+        }
         this.eventDistance = distance;
         this.eventPreviousHorizontal = this.eventHorizontal;
         this.eventHorizontal = horizontal;
@@ -427,9 +365,10 @@ public class PlayerMovement {
     // Separator
 
     public boolean isInVoid() {
+        Location loc = this.parent.protocol.getLocationOrVehicle();
         return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)
-                ? this.location.getY() < this.location.world.getMinHeight()
-                : this.location.getY() < 0;
+                ? loc.getY() < loc.getWorld().getMinHeight()
+                : loc.getY() < 0;
     }
 
 }

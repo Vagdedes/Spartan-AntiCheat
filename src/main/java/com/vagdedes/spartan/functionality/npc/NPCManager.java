@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.functionality.npc;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -8,6 +7,7 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -39,7 +39,7 @@ public class NPCManager implements Listener {
                         boolean animate = false;
 
                         for (SpartanProtocol player : staff) {
-                            if (npc.location.distance(player.spartan.movement.getLocation()) <= PlayerUtils.chunk) {
+                            if (SpartanLocation.distance(npc.location, player.getLocationOrVehicle()) <= PlayerUtils.chunk) {
                                 animate = true;
                                 break;
                             }
@@ -83,15 +83,15 @@ public class NPCManager implements Listener {
         }
     }
 
-    public static void create(SpartanPlayer player) {
+    public static void create(SpartanProtocol protocol) {
         if (supported) {
-            SpartanLocation location = player.movement.getLocation();
+            Location location = protocol.getLocationOrVehicle();
 
             if (!list.isEmpty()) {
                 synchronized (list) {
                     for (SpartanNPC npc : list) {
-                        if (npc.location.distance(location) <= PlayerUtils.chunk) {
-                            player.teleport(npc.location);
+                        if (SpartanLocation.distance(npc.location, location) <= PlayerUtils.chunk) {
+                            protocol.teleport(npc.location);
                             return;
                         }
                     }

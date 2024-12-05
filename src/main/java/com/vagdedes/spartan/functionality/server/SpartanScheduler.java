@@ -1,14 +1,12 @@
 package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 
 class SpartanScheduler {
 
@@ -22,7 +20,7 @@ class SpartanScheduler {
         }
     }
 
-    static void run(Player player, Runnable runnable, boolean sync) {
+    static void run(SpartanProtocol protocol, Runnable runnable, boolean sync) {
         if (!MultiVersion.folia) {
             if (sync && !Bukkit.isPrimaryThread()) {
                 if (Register.isPluginEnabled()) {
@@ -32,39 +30,14 @@ class SpartanScheduler {
                 runnable.run();
             }
         } else {
-            if (player != null) {
-                if (Register.isPluginEnabled()
-                        && !ProtocolLib.isTemporary(player)) {
-                    Location location = player.getLocation();
+            if (protocol != null) {
+                if (Register.isPluginEnabled()) {
+                    Location location = protocol.getLocation();
                     Bukkit.getRegionScheduler()
                             .execute(Register.plugin,
-                                    player.getWorld(),
+                                    location.getWorld(),
                                     SpartanLocation.getChunkPos(location.getBlockX()),
                                     SpartanLocation.getChunkPos(location.getBlockZ()),
-                                    runnable);
-                }
-            } else {
-                runnable.run();
-            }
-        }
-    }
-
-    static void run(SpartanPlayer player, Runnable runnable, boolean sync) {
-        if (!MultiVersion.folia) {
-            if (sync && !Bukkit.isPrimaryThread()) {
-                if (Register.isPluginEnabled()) {
-                    Bukkit.getScheduler().runTask(Register.plugin, runnable);
-                }
-            } else {
-                runnable.run();
-            }
-        } else {
-            if (player != null) {
-                if (Register.isPluginEnabled()) {
-                    SpartanLocation location = player.movement.getLocation();
-                    Bukkit.getRegionScheduler()
-                            .execute(Register.plugin,
-                                    player.getWorld(), location.getChunkX(), location.getChunkZ(),
                                     runnable);
                 }
             } else {
@@ -90,7 +63,7 @@ class SpartanScheduler {
         }
     }
 
-    static Object schedule(SpartanPlayer player, Runnable runnable, long start, long repetition) {
+    static Object schedule(SpartanProtocol protocol, Runnable runnable, long start, long repetition) {
         if (Register.isPluginEnabled()) {
             if (!MultiVersion.folia) {
                 if (repetition == -1L) {
@@ -102,22 +75,26 @@ class SpartanScheduler {
                 }
             } else {
                 if (repetition == -1L) {
-                    if (player != null) {
-                        SpartanLocation location = player.movement.getLocation();
+                    if (protocol != null) {
+                        Location location = protocol.getLocation();
                         return Bukkit.getRegionScheduler()
                                 .runDelayed(Register.plugin,
-                                        player.getWorld(), location.getChunkX(), location.getChunkZ(),
+                                        location.getWorld(),
+                                        SpartanLocation.getChunkPos(location.getBlockX()),
+                                        SpartanLocation.getChunkPos(location.getBlockZ()),
                                         consumer -> runnable.run(), start);
                     } else {
                         return Bukkit.getGlobalRegionScheduler()
                                 .runDelayed(Register.plugin, consumer -> runnable.run(), start);
                     }
                 } else {
-                    if (player != null) {
-                        SpartanLocation location = player.movement.getLocation();
+                    if (protocol != null) {
+                        Location location = protocol.getLocation();
                         return Bukkit.getRegionScheduler()
                                 .runAtFixedRate(Register.plugin,
-                                        player.getWorld(), location.getChunkX(), location.getChunkZ(),
+                                        location.getWorld(),
+                                        SpartanLocation.getChunkPos(location.getBlockX()),
+                                        SpartanLocation.getChunkPos(location.getBlockZ()),
                                         consumer -> runnable.run(), start, repetition);
                     } else {
                         return Bukkit.getGlobalRegionScheduler()

@@ -27,9 +27,9 @@ public class Event_Death implements Listener {
             // Detections
             p.getRunner(Enums.HackType.AutoRespawn).handle(false, null);
             p.getRunner(Enums.HackType.ImpossibleInventory).handle(false, null);
+
             // Objects
             p.resetCrucialData();
-            p.movement.setDetectionLocation();
         }
     }
 

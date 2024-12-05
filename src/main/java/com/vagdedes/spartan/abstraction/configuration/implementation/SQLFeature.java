@@ -2,7 +2,6 @@ package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -12,6 +11,7 @@ import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Location;
 import org.bukkit.Material;
 
 import java.sql.*;
@@ -329,7 +329,7 @@ public class SQLFeature extends ConfigurationBuilder {
             boolean hasPlayer = p != null,
                     hasCheck = hackType != null,
                     hasMaterial = material != null;
-            SpartanLocation location = hasPlayer ? p.spartan.movement.getLocation() : null;
+            Location location = hasPlayer ? p.getLocationOrVehicle() : null;
             update(
                     "INSERT INTO " + table
                             + " (creation_date"

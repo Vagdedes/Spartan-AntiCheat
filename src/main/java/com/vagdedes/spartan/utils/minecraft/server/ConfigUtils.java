@@ -3,7 +3,6 @@ package com.vagdedes.spartan.utils.minecraft.server;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
@@ -13,6 +12,7 @@ import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -53,7 +53,7 @@ public class ConfigUtils {
     }
 
     public static String replaceWithSyntax(SpartanProtocol p, String message, HackType hackType) {
-        SpartanLocation loc = p.spartan.movement.getLocation();
+        Location loc = p.getLocationOrVehicle();
         String worldName = p.spartan.getWorld().getName();
         message = replace(message, "{player}", p.bukkit.getName());
         message = replace(message, "{player:type}", p.spartan.dataType.toString().toLowerCase());

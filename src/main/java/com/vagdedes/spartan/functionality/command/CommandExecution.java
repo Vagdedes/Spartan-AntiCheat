@@ -312,7 +312,7 @@ public class CommandExecution implements CommandExecutor {
                 if (isPlayer) {
                     if (NPCManager.supported && Permissions.isStaff(protocol.bukkit)) {
                         if (Config.settings.getBoolean("Important.enable_npc")) {
-                            NPCManager.create(protocol.spartan);
+                            NPCManager.create(protocol);
                         } else {
                             InteractiveInventory.mainMenu.open(protocol, false);
                         }

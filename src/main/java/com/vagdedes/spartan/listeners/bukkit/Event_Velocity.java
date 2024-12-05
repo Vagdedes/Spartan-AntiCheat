@@ -29,7 +29,7 @@ public class Event_Velocity implements Listener {
 
             // Detections
             boolean cancelled = e.isCancelled();
-            p.getRunner(Enums.HackType.Speed).handle(cancelled, e);
+            p.getRunner(Enums.HackType.IrregularMovements).handle(cancelled, e);
             p.getRunner(Enums.HackType.Velocity).handle(cancelled, e);
             p.getRunner(Enums.HackType.Simulation).handle(cancelled, e);
         }

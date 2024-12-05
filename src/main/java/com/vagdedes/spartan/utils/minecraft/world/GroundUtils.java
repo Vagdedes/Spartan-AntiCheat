@@ -7,6 +7,7 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -185,7 +186,7 @@ public class GroundUtils {
 
     // Method
 
-    public static boolean isOnGround(SpartanProtocol p, SpartanLocation loc,
+    public static boolean isOnGround(SpartanProtocol p, Location loc,
                                      boolean defaultOnGround,
                                      boolean checkEntities) {
         if (checkEntities
@@ -199,7 +200,7 @@ public class GroundUtils {
 
             if (defaultOnGround
                     && blockHeightExists(box)) {
-                SpartanBlock block = loc.getBlock();
+                SpartanBlock block = new SpartanLocation(loc).getBlock();
 
                 if (block.isLiquidOrWaterLogged(true)
                         || BlockUtils.canClimb(block.getType(), false)) {
@@ -218,7 +219,7 @@ public class GroundUtils {
                 distribution = boundingBox;
             }
             for (double position : new double[]{-(box + minBoundingBox), 0.0, -maxPlayerStep}) {
-                for (SpartanLocation loopLocation : loc.getSurroundingLocations(
+                for (SpartanLocation loopLocation : new SpartanLocation(loc).getSurroundingLocations(
                         distribution,
                         position,
                         distribution

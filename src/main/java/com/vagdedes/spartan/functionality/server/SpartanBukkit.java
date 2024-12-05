@@ -2,8 +2,7 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Threads;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
@@ -162,12 +161,12 @@ public class SpartanBukkit {
 
     // Separator
 
-    public static Object runDelayedTask(SpartanPlayer player, Runnable runnable, long start) {
-        return SpartanScheduler.schedule(player, runnable, start, -1L);
+    public static Object runDelayedTask(SpartanProtocol protocol, Runnable runnable, long start) {
+        return SpartanScheduler.schedule(protocol, runnable, start, -1L);
     }
 
-    public static Object runRepeatingTask(SpartanPlayer player, Runnable runnable, long start, long repetition) {
-        return SpartanScheduler.schedule(player, runnable, start, repetition);
+    public static Object runRepeatingTask(SpartanProtocol protocol, Runnable runnable, long start, long repetition) {
+        return SpartanScheduler.schedule(protocol, runnable, start, repetition);
     }
 
     public static Object runDelayedTask(Runnable runnable, long start) {
@@ -178,24 +177,16 @@ public class SpartanBukkit {
         return SpartanScheduler.schedule(null, runnable, start, repetition);
     }
 
-    public static void runTask(Player player, Runnable runnable) {
-        SpartanScheduler.run(player, runnable, false);
-    }
-
-    public static void runTask(SpartanPlayer player, Runnable runnable) {
-        SpartanScheduler.run(player, runnable, false);
+    public static void runTask(SpartanProtocol protocol, Runnable runnable) {
+        SpartanScheduler.run(protocol, runnable, false);
     }
 
     public static void runTask(World world, int x, int z, Runnable runnable) {
         SpartanScheduler.run(world, x, z, runnable, false);
     }
 
-    public static void transferTask(SpartanPlayer player, Runnable runnable) {
-        SpartanScheduler.run(player, runnable, true);
-    }
-
-    public static void transferTask(Player player, Runnable runnable) {
-        SpartanScheduler.run(player, runnable, true);
+    public static void transferTask(SpartanProtocol protocol, Runnable runnable) {
+        SpartanScheduler.run(protocol, runnable, true);
     }
 
     public static void transferTask(World world, int x, int z, Runnable runnable) {

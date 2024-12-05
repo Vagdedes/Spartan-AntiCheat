@@ -11,9 +11,7 @@ import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.java.TimeUtils;
@@ -587,32 +585,6 @@ public class ResearchEngine {
                 }
             }
             violationFired.clear();
-        }
-        if (SpartanBukkit.packetsEnabled()) {
-            for (Enums.HackType hackType : Enums.HackType.values()) {
-                Check check = hackType.getCheck();
-
-                if (check.isEnabled(null, null)
-                        && !check.isSilent(null, null)) {
-                    String message = AwarenessNotifications.getOptionalNotification(
-                            "Spartan does not support Java full player preventions when running on the packet level."
-                                    + " This is due to problems risen from trying to implement this functionality with packets."
-                    );
-
-                    if (message != null) {
-                        List<SpartanProtocol> protocols = Permissions.getStaff();
-
-                        if (!protocols.isEmpty()) {
-                            for (SpartanProtocol p : protocols) {
-                                if (AwarenessNotifications.canSend(p.getUUID(), "packet-preventions", 60 * 60)) {
-                                    p.bukkit.sendMessage(message);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
         }
     }
 

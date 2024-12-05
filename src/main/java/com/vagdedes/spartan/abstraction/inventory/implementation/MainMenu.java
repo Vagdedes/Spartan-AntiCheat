@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.inventory.implementation;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
@@ -40,7 +40,7 @@ public class MainMenu extends InventoryMenu {
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
-                SpartanBukkit.transferTask(protocol.spartan, () -> {
+                SpartanBukkit.transferTask(protocol, () -> {
                     String title = protocol.bukkit.getOpenInventory().getTitle();
 
                     if (title.startsWith(name)) {

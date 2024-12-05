@@ -53,7 +53,7 @@ public class PlayerPunishments {
             }
 
             SpartanBukkit.transferTask(
-                    this.parent,
+                    this.parent.protocol,
                     () -> target.kickPlayer(kick)
             );
             return true;

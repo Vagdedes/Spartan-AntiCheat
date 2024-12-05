@@ -9,6 +9,7 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.MathHelper;
 import com.vagdedes.spartan.utils.math.RayUtils;
+import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
 import com.vagdedes.spartan.utils.minecraft.vector.SpartanVector2F;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -148,9 +149,12 @@ public class MCClient {
         for (int x = location.getBlockX() - 1; x <= location.getBlockX() + 1; x++) {
             for (int y = location.getBlockY() - 1; y <= location.getBlockY() + 1; y++) {
                 for (int z = location.getBlockZ() - 1; z <= location.getBlockZ() + 1; z++) {
-                    SpartanBlock block = new SpartanLocation(location.getWorld(), x, y, z).getBlock();
+                    Material material = new SpartanLocation(location.getWorld(), x, y, z).getBlock().getTypeOrNull();
 
-                    if (ignore(block.getType())) {
+                    if (material == null) {
+                        continue;
+                    }
+                    if (ignore(material)) {
                         return true;
                     }
                 }
@@ -442,12 +446,7 @@ public class MCClient {
 
     public void jump() {
         float f = this.getJumpUpwardsMotion();
-        ExtendedPotionEffect jumpEffect = null;
-        if (PotionEffectType.getByName("JUMP_BOOST") != null) {
-            jumpEffect = this.p().spartan.getPotionEffect(PotionEffectType.getByName("JUMP_BOOST"), 1L);
-        } else {
-            jumpEffect = this.p().spartan.getPotionEffect(PotionEffectType.getByName("JUMP"), 1L);
-        }
+        ExtendedPotionEffect jumpEffect = this.p().spartan.getPotionEffect(PotionEffectUtils.JUMP, 1L);
 
         if (jumpEffect != null) {
             f += 0.1F * (float) (jumpEffect.bukkitEffect.getAmplifier() + 1);

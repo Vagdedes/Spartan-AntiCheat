@@ -89,7 +89,7 @@ public abstract class InventoryMenu {
             inventory = protocol.spartan.createInventory(size, title);
             if (internalOpen(protocol, permissionMessage, object)) {
                 SpartanBukkit.transferTask(
-                        protocol.bukkit,
+                        protocol,
                         () -> protocol.bukkit.openInventory(inventory)
                 );
                 return true;

@@ -30,7 +30,7 @@ public class Event_Join implements Listener {
             n.sendMessage("");
         }
 
-        SpartanBukkit.runDelayedTask(protocol.spartan, () -> {
+        SpartanBukkit.runDelayedTask(protocol, () -> {
             Config.settings.runOnLogin(protocol);
             CloudBase.announce(protocol);
         }, 10L);

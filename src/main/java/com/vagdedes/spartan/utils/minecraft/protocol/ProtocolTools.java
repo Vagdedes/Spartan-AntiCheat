@@ -3,8 +3,9 @@ package com.vagdedes.spartan.utils.minecraft.protocol;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.protocol.Packet_Movement;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -25,12 +26,15 @@ public class ProtocolTools {
                     packet.getDoubles().read(2)
             );
         } else {
-            return SpartanLocation.bukkitDefault.clone();
+            return null;
         }
     }
-    public static boolean isFlying(PacketEvent event) {
+    public static boolean isFlying(PacketEvent event, Location to, Location from) {
         PacketType p = event.getPacket().getType();
-        return
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+        if (p.equals(PacketType.Play.Client.POSITION) && to.toVector().equals(from.toVector()))
+            return true;
+        else return
         (
         p.equals(
         PacketType.Play.Client.FLYING)
@@ -48,7 +52,7 @@ public class ProtocolTools {
 
     public static Set<Packet_Movement.tpFlags> getTeleportFlags(PacketEvent event) {
         String s = event.getPacket().getStructures().getValues().get(0).toString();
-        Set<Packet_Movement.tpFlags> flags = new HashSet<>();
+        Set<Packet_Movement.tpFlags> flags = new HashSet<>(3);
         s = s.replace("X_ROT", "").replace("Y_ROT", "");
         if (s.contains("X")) flags.add(Packet_Movement.tpFlags.X);
         if (s.contains("Y")) flags.add(Packet_Movement.tpFlags.Y);

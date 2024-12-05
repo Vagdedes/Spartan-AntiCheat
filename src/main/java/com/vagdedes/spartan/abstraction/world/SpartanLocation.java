@@ -5,7 +5,6 @@ import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks_v1_13;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
-import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -26,6 +25,37 @@ public class SpartanLocation implements Cloneable {
         return pos >> 4;
     }
 
+    public static Location getBlockLocation(Location location) {
+        return new Location(
+                location.getWorld(),
+                location.getBlockX(),
+                location.getBlockY(),
+                location.getBlockZ()
+        );
+    }
+
+    public static double distance(Location loc1, Location loc2) {
+        return AlgebraUtils.getDistance(
+                loc1.getX(),
+                loc2.getX(),
+                loc1.getY(),
+                loc2.getY(),
+                loc1.getZ(),
+                loc2.getZ()
+        );
+    }
+
+    public static double distanceSquared(Location loc1, Location loc2) {
+        return AlgebraUtils.getSquaredDistance(
+                loc1.getX(),
+                loc2.getX(),
+                loc1.getY(),
+                loc2.getY(),
+                loc1.getZ(),
+                loc2.getZ()
+        );
+    }
+
     private static int locationIdentifier(int x, int y, int z) {
         x = (SpartanBukkit.hashCodeMultiplier * x) + y;
         return (SpartanBukkit.hashCodeMultiplier * x) + z;
@@ -37,7 +67,6 @@ public class SpartanLocation implements Cloneable {
     public final World world;
     private double x, y, z;
     private float yaw, pitch;
-    private Vector vector;
 
     // Base
 
@@ -101,16 +130,10 @@ public class SpartanLocation implements Cloneable {
 
     public void setYaw(float yaw) {
         this.yaw = yaw;
-        this.vector = null;
     }
 
     public void setPitch(float pitch) {
         this.pitch = pitch;
-        this.vector = null;
-    }
-
-    public void setDirection(Vector vector) {
-        this.vector = vector;
     }
 
     public int getBlockX() {
@@ -155,12 +178,6 @@ public class SpartanLocation implements Cloneable {
 
     public int getLocalZ() {
         return getBlockZ() & 15;
-    }
-
-    public Vector getDirection() {
-        return this.vector == null
-                ? this.vector = CombatUtils.getDirection(this.yaw, this.pitch)
-                : this.vector;
     }
 
     public Vector toVector() {

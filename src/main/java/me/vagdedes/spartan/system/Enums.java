@@ -165,15 +165,6 @@ public class Enums {
                         "blocks irregularly fast."
                 }
         ),
-        Speed( // todo remove
-                HackCategoryType.MOVEMENT,
-                com.vagdedes.spartan.abstraction.check.implementation.movement.Speed.class,
-                new String[]{
-                        "This check will prevent client modules",
-                        "that allow a player to travel faster",
-                        "than what is physically allowed."
-                }
-        ),
         FastPlace(
                 HackCategoryType.WORLD,
                 com.vagdedes.spartan.abstraction.check.implementation.world.FastPlace.class,

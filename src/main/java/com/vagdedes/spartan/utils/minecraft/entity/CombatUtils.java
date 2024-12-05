@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.utils.minecraft.entity;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
@@ -158,11 +157,16 @@ public class CombatUtils {
         return e.getType().toString().toLowerCase().replace("_", "-");
     }
 
-    public static boolean hasBlockBehind(SpartanPlayer p, LivingEntity entity) {
-        SpartanLocation location = p.movement.getLocation().clone();
+    public static boolean hasBlockBehind(SpartanProtocol p, LivingEntity entity) {
+        Location entityLoc = ProtocolLib.getLocationOrNull(entity);
+
+        if (entityLoc == null) {
+            return false;
+        }
+        Location location = p.getLocationOrVehicle().clone();
         location.setPitch(0.0f);
         SpartanLocation multipliedLocation = new SpartanLocation(
-                ProtocolLib.getLocation(entity).clone().add(location.getDirection().multiply(1.0))
+                entityLoc.clone().add(location.getDirection().multiply(1.0))
         );
 
         if (BlockUtils.isSolid(multipliedLocation.getBlock().getType())) {

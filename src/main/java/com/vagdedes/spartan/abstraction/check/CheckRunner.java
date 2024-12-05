@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
@@ -10,6 +10,7 @@ import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.enchants.CustomEnchantsPlus;
 import com.vagdedes.spartan.compatibility.manual.enchants.EcoEnchants;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.*;
@@ -166,10 +167,10 @@ public abstract class CheckRunner extends CheckProcess {
         return this.protocol() != null
                 && (System.currentTimeMillis() - this.creation) > TPS.maximum * TPS.tickTime
                 && (!cancelled || hackType.getCheck().handleCancelledEvents)
-                && !this.protocol().isLoading()
                 && (!v1_8 || this.protocol().bukkit.getGameMode() != GameMode.SPECTATOR)
                 && hackType.getCheck().isEnabled(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName())
                 && Attributes.getAmount(this.protocol(), Attributes.GENERIC_SCALE) == 0.0
+                && !ProtocolLib.isTemporary(this.protocol().bukkit)
                 && canRun()
                 && !Permissions.isBypassing(this.protocol().bukkit, hackType);
     }
@@ -278,7 +279,7 @@ public abstract class CheckRunner extends CheckProcess {
                 Thread thread = Thread.currentThread();
                 Boolean[] cancelled = new Boolean[1];
 
-                SpartanBukkit.transferTask(this.protocol().spartan, () -> {
+                SpartanBukkit.transferTask(this.protocol(), () -> {
                     CheckCancelEvent checkCancelEvent = new CheckCancelEvent(this.protocol().bukkit, hackType);
                     Register.manager.callEvent(checkCancelEvent);
                     cancelled[0] = checkCancelEvent.isCancelled();
@@ -318,7 +319,7 @@ public abstract class CheckRunner extends CheckProcess {
         } else if (detected != null
                 && (detected.bukkit.equals(this.protocol().bukkit)
                 || detected.spartan.getWorld().equals(this.protocol().spartan.getWorld())
-                && detected.spartan.movement.getLocation().distance(this.protocol().spartan.movement.getLocation()) <= PlayerUtils.chunk)) {
+                && detected.getLocation().distance(this.protocol().getLocation()) <= PlayerUtils.chunk)) {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {
             return AlgebraUtils.integerCeil(TPS.maximum);

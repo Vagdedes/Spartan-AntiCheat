@@ -3,6 +3,7 @@ package com.vagdedes.spartan.utils.minecraft.inventory;
 import com.vagdedes.spartan.abstraction.protocol.ExtendedPotionEffect;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
+import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
@@ -254,7 +255,7 @@ public class MaterialUtils {
             if (protocol.spartan.movement.isSwimming()) {
                 water = true;
             } else {
-                SpartanBlock block = protocol.spartan.movement.getLocation().clone().add(0, protocol.bukkit.getEyeHeight(), 0).getBlock();
+                SpartanBlock block = new SpartanLocation(protocol.getLocation()).add(0, protocol.bukkit.getEyeHeight(), 0).getBlock();
                 water = block.isWaterLogged() || block.getType() == MaterialUtils.get("water");
             }
             if (water) {

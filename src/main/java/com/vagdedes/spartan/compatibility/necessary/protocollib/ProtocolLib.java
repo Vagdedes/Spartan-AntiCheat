@@ -2,7 +2,6 @@ package com.vagdedes.spartan.compatibility.necessary.protocollib;
 
 import com.comphenix.protocol.injector.temporary.TemporaryPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
@@ -89,17 +88,17 @@ public class ProtocolLib {
         }
     }
 
-    public static Location getLocation(Entity entity) {
+    public static Location getLocationOrNull(Entity entity) {
         if (entity instanceof Player) {
-            return getLocation((Player) entity);
+            return getLocationOrNull((Player) entity);
         } else {
             return entity.getLocation();
         }
     }
 
-    public static Location getLocation(Player player) {
+    public static Location getLocationOrNull(Player player) {
         if (ProtocolLib.isTemporary(player)) {
-            return SpartanLocation.bukkitDefault.clone();
+            return null;
         } else {
             return player.getLocation();
         }

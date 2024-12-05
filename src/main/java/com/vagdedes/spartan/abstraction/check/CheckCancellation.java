@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.configuration.implementation.Compatibility;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.TPS;
 
 public class CheckCancellation {
