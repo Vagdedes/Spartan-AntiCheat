@@ -1,4 +1,6 @@
-## Using the Right Notifications
+# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
+
+## Different Notification Types
 
 ### Suspicion Notifications:
 Notifications which are not frequent and compressed to contain only what truly matters. These notifications will periodically send a message letting you know some players are hacking and will attach their names so you can easily find them.
