@@ -18,7 +18,6 @@ Same applies for most plugins that don't use the standard &#123456 or #123456
 
 ### Server:
 ```{online} Amount of server players currently online
-{staff} Amount of staff players online defined by Spartan permissions
 {server:name} Server’s name gathered from Spartan’s configuration
 {server:version} Server’s version gathered from the server itself
 {motd} Server list description gathered from the your server’s server.properties file
