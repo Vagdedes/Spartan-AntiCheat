@@ -2,8 +2,8 @@ package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Threads;
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
@@ -77,7 +77,7 @@ public class SpartanBukkit {
         return Compatibility.CompatibilityType.PROTOCOL_LIB.isFunctional();
     }
 
-    public static SpartanProtocol getProtocol(Player player) {
+    public static SpartanProtocol getProtocol(Player player, boolean updateLastInteraction) {
         if (ProtocolLib.isTemporary(player)) {
             return new SpartanProtocol(player);
         } else {
@@ -87,9 +87,15 @@ public class SpartanBukkit {
                 protocol = new SpartanProtocol(player);
                 playerProtocol.put(player.getUniqueId(), protocol);
             }
-            protocol.spartan.setLastInteraction();
+            if (updateLastInteraction) {
+                protocol.spartan.setLastInteraction();
+            }
             return protocol;
         }
+    }
+
+    public static SpartanProtocol getProtocol(Player player) {
+        return getProtocol(player, false);
     }
 
     public static SpartanProtocol getProtocol(String name) {
@@ -147,11 +153,10 @@ public class SpartanBukkit {
         } else {
             SpartanProtocol protocol = playerProtocol.remove(player.getUniqueId());
 
-            if (protocol != null) {
-                protocol.spartan.setLastInteraction();
-                protocol.getProfile().setOnlineFor(
+            if (protocol != null && !protocol.spartan.isAFK()) {
+                protocol.profile().getContinuity().setActiveTime(
                         System.currentTimeMillis(),
-                        protocol.getTimePlayed(),
+                        protocol.getActiveTimePlayed(),
                         true
                 );
             }
@@ -213,6 +218,18 @@ public class SpartanBukkit {
     // Separator
 
     public static void disable() {
+        if (!playerProtocol.isEmpty()) {
+            for (SpartanProtocol protocol : playerProtocol.values()) {
+                if (protocol != null && !protocol.spartan.isAFK()) {
+                    protocol.profile().getContinuity().setActiveTime(
+                            System.currentTimeMillis(),
+                            protocol.getActiveTimePlayed(),
+                            true
+                    );
+                }
+            }
+        }
+
         playerProtocol.clear();
         Threads.disable();
         NPCManager.clear();

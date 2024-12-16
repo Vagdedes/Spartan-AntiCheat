@@ -389,7 +389,7 @@ public class Pattern {
     public void learn(SpartanProtocol protocol, int[] situation, Number pattern) {
         if (this.loaded) {
             long time = System.currentTimeMillis();
-            PlayerProfile profile = protocol.getProfile();
+            PlayerProfile profile = protocol.profile();
             Integer frequency = DetectionNotifications.getFrequency(protocol);
             boolean notifications = frequency != null,
                     found = false,

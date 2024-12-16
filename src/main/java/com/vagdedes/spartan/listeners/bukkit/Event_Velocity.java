@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
-import com.vagdedes.spartan.abstraction.event.CPlayerVelocityEvent;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -23,6 +22,9 @@ public class Event_Velocity implements Listener {
         protocol.claimedVeloGravity.add(e);
         if (protocol.claimedVeloGravity.size() > 2)
             protocol.claimedVeloGravity.remove(0);
+        protocol.claimedVeloSpeed.add(e);
+        if (protocol.claimedVeloSpeed.size() > 2)
+            protocol.claimedVeloSpeed.remove(0);
 
         if (protocol.packetsEnabled() == packets) {
             SpartanPlayer p = protocol.spartan;
@@ -33,9 +35,6 @@ public class Event_Velocity implements Listener {
             p.getRunner(Enums.HackType.Velocity).handle(cancelled, e);
             p.getRunner(Enums.HackType.Simulation).handle(cancelled, e);
         }
-    }
-    public static void claim(CPlayerVelocityEvent e) {
-        // gravity
     }
 
 }

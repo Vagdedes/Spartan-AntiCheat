@@ -8,7 +8,7 @@ import java.util.*;
 public class StringUtils {
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
-    public static final int idealDescriptionLimit = 40;
+    private static final int idealDescriptionLimit = 40;
 
     public static String newStringUtf8(byte[] var) {
         return new String(var, UTF_8);

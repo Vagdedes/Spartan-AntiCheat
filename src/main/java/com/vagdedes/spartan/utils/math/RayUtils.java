@@ -258,7 +258,7 @@ public class RayUtils {
         return intersection || intersection2 || exempt;
     }
 
-    public static boolean inHitbox(SpartanProtocol protocol, Location locationIn, Entity target, float size) {
+    public static boolean inHitbox(SpartanProtocol protocol, Location locationIn, Entity target, float size, float dist) {
         Location location = protocol.getLocation();
         boolean intersection = false;
         boolean exempt;
@@ -271,7 +271,7 @@ public class RayUtils {
                 targetX + size, targetY + 1.9F, targetZ + size
         );
         // boundingBox = boundingBox.expand(0.04, 0.03, 0.04);
-        intersection = isIntersection(protocol, location, intersection, boundingBox);
+        intersection = isIntersection(protocol, location, intersection, boundingBox, dist);
         exempt = target.isInsideVehicle();
         return intersection || exempt;
     }
@@ -374,10 +374,10 @@ public class RayUtils {
 
 
     private static Vec3 getVectorForRotation(final float pitch, final float yaw) {
-        float f = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI),
-                f1 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI),
-                f2 = -MathHelper.cos(-pitch * 0.017453292F),
-                f3 = MathHelper.sin(-pitch * 0.017453292F);
+        float f = (float) Math.cos(-yaw * 0.017453292F - (float) Math.PI),
+                f1 = (float) Math.sin(-yaw * 0.017453292F - (float) Math.PI),
+                f2 = (float) -Math.cos(-pitch * 0.017453292F),
+                f3 = (float) Math.sin(-pitch * 0.017453292F);
         return new Vec3(f1 * f2, f3, f * f2);
     }
 
@@ -436,7 +436,7 @@ public class RayUtils {
         boolean checked = false;
 
         for (int i = 0; i < 100; i++) {
-            if (inHitbox(protocol, location, target, bruteForceStart)) {
+            if (inHitbox(protocol, location, target, bruteForceStart, 3.0F)) {
                 bruteForce = bruteForceStart;
                 checked = true;
             } else {

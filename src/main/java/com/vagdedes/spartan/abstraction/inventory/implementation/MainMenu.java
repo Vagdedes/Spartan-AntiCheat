@@ -2,9 +2,9 @@ package com.vagdedes.spartan.abstraction.inventory.implementation;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
@@ -159,7 +159,7 @@ public class MainMenu extends InventoryMenu {
             } else if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
                 Player n = protocol.bukkit;
 
-                if (n != null && n.hasPermission("filegui.modify")) {
+                if (n.hasPermission("filegui.modify")) {
                     FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                 } else {
                     protocol.bukkit.closeInventory();

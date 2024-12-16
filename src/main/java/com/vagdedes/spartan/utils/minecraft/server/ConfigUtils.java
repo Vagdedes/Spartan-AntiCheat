@@ -5,7 +5,6 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.api.API;
@@ -31,7 +30,6 @@ public class ConfigUtils {
     public static String replaceWithSyntax(String message, HackType hackType) {
         message = replace(message, "{space}", " ");
         message = replace(message, "{online}", String.valueOf(SpartanBukkit.getPlayerCount()));
-        message = replace(message, "{staff}", String.valueOf(Permissions.getStaff().size()));
         message = replace(message, "{motd}", Bukkit.getMotd());
         message = replace(message, "{server:name}", CrossServerNotifications.getServerName());
         message = replace(message, "{plugin:version}", API.getVersion());

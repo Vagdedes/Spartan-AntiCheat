@@ -35,13 +35,11 @@ public class CloudBase {
     private static final long refreshTime = 60_000L;
 
     // Parameters
-    static String identification = "", token = null;
+    static String identification = identification(), token = null;
     static final String version = calculateVersion();
     static final String separator = ">@#&!%<;=";
 
     static {
-        clear(false);
-
         SpartanBukkit.runRepeatingTask(() -> SpartanBukkit.connectionThread.execute(CloudBase::refresh), 1L, refreshTime);
     }
 
@@ -116,12 +114,10 @@ public class CloudBase {
 
         if (connectionFailedCooldown >= ms) {
             connectionFailedCooldown = ms + refreshTime;
-
-            if (AwarenessNotifications.areEnabled()) {
-                AwarenessNotifications.forcefullySend("(" + function + ") Failed to connect to the Game Cloud.");
-                AwarenessNotifications.forcefullySend("Error: " + object.getMessage());
-                AwarenessNotifications.forcefullySend("In Depth: " + object);
-            }
+            String message = "(" + function + ") Failed to connect to the Game Cloud."
+                    + "\nError: " + object.getMessage()
+                    + "\nIn Depth: " + object;
+            AwarenessNotifications.optionallySend(message);
         }
     }
 
@@ -129,8 +125,12 @@ public class CloudBase {
         if (cache) {
             disabledDetections.clear();
         } else {
-            identification = "identification=" + IDs.platform() + "|" + IDs.user() + "|" + IDs.file();
+            identification = identification();
         }
+    }
+
+    private static String identification() {
+        return "identification=" + IDs.platform() + "|" + IDs.user() + "|" + IDs.file();
     }
 
     public static void refresh() {

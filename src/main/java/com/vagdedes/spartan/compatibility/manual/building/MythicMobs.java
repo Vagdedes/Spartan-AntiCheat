@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import io.lumine.mythic.bukkit.BukkitAPIHelper;

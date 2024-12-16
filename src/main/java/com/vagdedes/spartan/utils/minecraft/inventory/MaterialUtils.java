@@ -9,6 +9,7 @@ import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -315,4 +316,14 @@ public class MaterialUtils {
         }
         return null;
     }
+
+    public static World.Environment findEnvironment(String string) {
+        for (World.Environment environment : World.Environment.values()) {
+            if (string.toString().equals(string)) {
+                return environment;
+            }
+        }
+        return null;
+    }
+
 }

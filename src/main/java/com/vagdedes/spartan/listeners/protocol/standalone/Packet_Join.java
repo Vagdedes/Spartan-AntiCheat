@@ -28,6 +28,7 @@ public class Packet_Join extends PacketAdapter {
             return;
         }
         Packet_LagCompensation.newPacket(protocol.spartan.getEntityId());
+        protocol.transactionBoot = true;
     }
 
 }

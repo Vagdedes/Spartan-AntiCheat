@@ -8,7 +8,7 @@ public class Latency {
 
     public static int ping(Player p) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            return p.getPing();
+            return p.isOnline() ? p.getPing() : 0;
         } else {
             try {
                 Object obj = SpartanBukkit.getCraftPlayerMethod(p, "ping");

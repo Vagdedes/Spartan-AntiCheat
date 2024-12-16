@@ -4,7 +4,6 @@ import com.comphenix.protocol.injector.temporary.TemporaryPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -39,7 +38,6 @@ public class ProtocolLib {
 
     public static void otherwise() {
         checkClass();
-        Event_Chunks.clear();
         bukkit = true;
         String message = AwarenessNotifications.getOptionalNotification(
                 "Anti-Cheat checks work significantly better with ProtocolLib installed "

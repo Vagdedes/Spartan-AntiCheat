@@ -26,32 +26,34 @@ public class NPCManager implements Listener {
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
-            List<SpartanProtocol> staff = Permissions.getStaff();
+            if (!list.isEmpty()) {
+                List<SpartanProtocol> staff = Permissions.getStaff();
 
-            if (staff.isEmpty()) {
-                clear();
-            } else {
-                synchronized (list) {
-                    Iterator<SpartanNPC> iterator = list.iterator();
+                if (staff.isEmpty()) {
+                    clear();
+                } else {
+                    synchronized (list) {
+                        Iterator<SpartanNPC> iterator = list.iterator();
 
-                    while (iterator.hasNext()) {
-                        SpartanNPC npc = iterator.next();
-                        boolean animate = false;
+                        while (iterator.hasNext()) {
+                            SpartanNPC npc = iterator.next();
+                            boolean animate = false;
 
-                        for (SpartanProtocol player : staff) {
-                            if (SpartanLocation.distance(npc.location, player.getLocationOrVehicle()) <= PlayerUtils.chunk) {
-                                animate = true;
-                                break;
+                            for (SpartanProtocol player : staff) {
+                                if (SpartanLocation.distance(npc.location, player.getLocationOrVehicle()) <= PlayerUtils.chunk) {
+                                    animate = true;
+                                    break;
+                                }
                             }
-                        }
 
-                        if (animate) {
-                            if (!npc.animate(staff)) {
+                            if (animate) {
+                                if (!npc.animate(staff)) {
+                                    iterator.remove();
+                                }
+                            } else {
+                                npc.remove();
                                 iterator.remove();
                             }
-                        } else {
-                            npc.remove();
-                            iterator.remove();
                         }
                     }
                 }

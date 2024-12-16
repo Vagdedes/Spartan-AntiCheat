@@ -20,14 +20,13 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
 
 import java.util.*;
 
 public class SpartanProtocol {
 
-    public final long creationTime;
+    private long activeCreationTime;
     public final Player bukkit;
     public final SpartanPlayer spartan;
     public final TimerBalancer timerBalancer;
@@ -45,9 +44,9 @@ public class SpartanProtocol {
     public List<Packet_Teleport.TeleportData> teleportEngine;
     public final MCClient mcClient;
     public byte simulationDelayPerTP, keepEntity;
-    public LinkedList<Location> positionHistory, positionHistoryLong;
+    public LinkedList<Location> positionHistory, positionHistoryLong, positionHistoryShort;
     public PlayerVelocityEvent claimedVelocity;
-    public List<PlayerVelocityEvent> claimedVeloGravity;
+    public List<PlayerVelocityEvent> claimedVeloGravity, claimedVeloSpeed;
     public long tickTime;
     public final MultiVersion.MCVersion version;
 
@@ -55,14 +54,18 @@ public class SpartanProtocol {
     private CheckBoundData checkBoundData;
     public PacketWorld packetWorld;
     public long placeTime, placeHash;
-    public BlockPlaceEvent oldBlockEvent;
+    public int transactionVl;
     public PlayerTickEvent lastTickEvent;
+
+    public short transactionId;
+    public long transactionTime, transactionLastTime, transactionPing, lagTick;
+    public boolean transactionBoot, transactionLocal, transactionSentKeep;
 
     private ComponentY componentY;
 
     public SpartanProtocol(Player player) {
         long time = System.currentTimeMillis();
-        this.creationTime = time;
+        this.activeCreationTime = time;
         this.bukkit = player;
         this.version = MultiVersion.get(player);
         this.packetWorld = new PacketWorld(player);
@@ -80,7 +83,7 @@ public class SpartanProtocol {
         this.teleport = null;
         this.teleportEngine = new LinkedList<>();
         this.simulationFlag = false;
-
+        this.transactionVl = 0;
         this.spartan = new SpartanPlayer(this);
         this.timerBalancer = new TimerBalancer();
         this.mcClient = new MCClient(player);
@@ -92,29 +95,57 @@ public class SpartanProtocol {
         this.tickTime = time;
 
         this.rightClickCounter = 0;
+        this.positionHistoryShort = new LinkedList<>();
         this.positionHistory = new LinkedList<>();
         this.positionHistoryLong = new LinkedList<>();
         this.hashPosBuffer = 0;
         this.claimedVelocity = null;
         this.claimedVeloGravity = new ArrayList<>();
+        this.claimedVeloSpeed = new ArrayList<>();
 
         this.axisMatrixCache = new HashSet<>();
         this.checkBoundData = null;
-        this.oldBlockEvent = null;
         this.pistonTick = false;
         this.lastTickEvent = null;
-
+        this.transactionId = (short) -1939;
+        this.transactionTime = System.currentTimeMillis();
+        this.transactionLastTime = System.currentTimeMillis();
+        this.transactionPing = 0;
+        this.transactionBoot = false;
+        this.transactionLocal = false;
+        this.transactionSentKeep = false;
+        this.lagTick = 0;
         this.componentY = new ComponentY();
 
         this.setProfile(ResearchEngine.getPlayerProfile(this, false));
     }
 
-    public long getTimePlayed() {
-        return System.currentTimeMillis() - this.creationTime;
+    public long getActiveCreationTime() {
+        return this.activeCreationTime;
+    }
+
+    void resetActiveCreationTime() {
+        this.activeCreationTime = System.currentTimeMillis();
+    }
+
+    public long getActiveTimePlayed() {
+        return System.currentTimeMillis() - this.activeCreationTime;
     }
 
     public boolean isUsingVersion(MultiVersion.MCVersion trialVersion) {
         return version.ordinal() == trialVersion.ordinal();
+    }
+
+    public boolean isDesync() {
+        return this.transactionSentKeep && (System.currentTimeMillis() - this.transactionTime > 55);
+    }
+
+    public boolean isBlatantDesync() {
+        return this.transactionSentKeep && (System.currentTimeMillis() - this.transactionTime > 150);
+    }
+
+    public boolean isSDesync() {
+        return this.transactionSentKeep && (System.currentTimeMillis() - this.transactionTime > 400);
     }
 
     public boolean isUsingVersionOrGreater(MultiVersion.MCVersion trialVersion) {
@@ -255,7 +286,7 @@ public class SpartanProtocol {
         this.simulationFlag = false;
     }
 
-    public PlayerProfile getProfile() {
+    public PlayerProfile profile() {
         return this.profile;
     }
 
@@ -281,8 +312,12 @@ public class SpartanProtocol {
     public void addRawLocation(Location location) {
         this.positionHistory.addLast(location.clone());
         this.positionHistoryLong.addLast(location.clone());
+        this.positionHistoryShort.addLast(location.clone());
         if (this.positionHistory.size() > 20) {
             this.positionHistory.removeFirst();
+        }
+        if (this.positionHistoryShort.size() > 5) {
+            this.positionHistoryShort.removeFirst();
         }
         if (this.positionHistoryLong.size() > 50) {
             this.positionHistoryLong.removeFirst();

@@ -97,9 +97,10 @@ public abstract class InventoryMenu {
                 return false;
             }
         } else {
-            protocol.spartan.sendInventoryCloseMessage(
-                    permissionMessage ? Config.messages.getColorfulString("no_permission") : null
-            );
+            if (permissionMessage) {
+                protocol.bukkit.sendMessage(Config.messages.getColorfulString("no_permission"));
+            }
+            SpartanBukkit.transferTask(protocol, protocol.bukkit::closeInventory);
             return false;
         }
     }

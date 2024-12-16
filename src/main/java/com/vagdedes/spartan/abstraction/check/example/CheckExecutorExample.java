@@ -14,8 +14,8 @@ public class CheckExecutorExample extends CheckRunner {
     private final CheckDetection detection3;
     private final CheckDetection detection4;
 
-    public CheckExecutorExample(Enums.HackType hackType, SpartanProtocol protocol) {
-        super(hackType, protocol);
+    public CheckExecutorExample(Enums.HackType hackType, SpartanProtocol protocol, String playerName) {
+        super(hackType, protocol, playerName);
 
         this.detection2 = new DetectionExecutorHardcodedExample(
                 this

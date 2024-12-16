@@ -3,8 +3,8 @@ package com.vagdedes.spartan.abstraction.protocol;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
@@ -40,7 +40,8 @@ public class SpartanPlayer {
     public final PlayerPunishments punishments;
     public final PlayerTrackers trackers;
     public final PlayerClicks clicks;
-    private long lastInteraction, afk;
+    private long lastInteraction;
+    private boolean afk;
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
@@ -78,27 +79,33 @@ public class SpartanPlayer {
         this.punishments = new PlayerPunishments(this);
 
         this.lastInteraction = System.currentTimeMillis();
-        this.afk = -1L;
+        this.afk = false;
     }
 
     public void setLastInteraction() {
-        this.checkForAFK();
         this.lastInteraction = System.currentTimeMillis();
     }
 
     private void checkForAFK() {
-        if (System.currentTimeMillis() - protocol.spartan.lastInteraction >= 60_000L) {
-            if (protocol.spartan.afk == -1L) {
-                protocol.spartan.afk = protocol.spartan.lastInteraction;
+        long lastInteraction = System.currentTimeMillis() - this.lastInteraction;
+
+        if (lastInteraction >= 30_000L) {
+            if (!afk) {
+                this.protocol.profile().getContinuity().setActiveTime(
+                        System.currentTimeMillis(),
+                        this.protocol.getActiveTimePlayed() - lastInteraction,
+                        true
+                );
+                this.afk = true;
             }
-        } else if (protocol.spartan.afk != -1L) {
-            protocol.getProfile().setAFKFor(
-                    System.currentTimeMillis(),
-                    System.currentTimeMillis() - protocol.spartan.afk,
-                    true
-            );
-            protocol.spartan.afk = -1L;
+        } else if (this.afk) {
+            this.protocol.resetActiveCreationTime();
+            this.afk = false;
         }
+    }
+
+    public boolean isAFK() {
+        return this.afk;
     }
 
     public boolean isBedrockPlayer() {
@@ -161,7 +168,7 @@ public class SpartanPlayer {
     // Separator
 
     public CheckRunner getRunner(Enums.HackType hackType) {
-        return this.protocol.getProfile().getRunner(hackType);
+        return this.protocol.profile().getRunner(hackType);
     }
 
     public void resetCrucialData() {
@@ -193,16 +200,9 @@ public class SpartanPlayer {
                         100;
     }
 
-    public void sendInventoryCloseMessage(String message) {
-        if (message != null) {
-            this.protocol.bukkit.sendMessage(message);
-        }
-        SpartanBukkit.transferTask(protocol, this.protocol.bukkit::closeInventory);
-    }
-
     public void sendImportantMessage(String message) {
         this.protocol.bukkit.sendMessage("");
-        this.sendInventoryCloseMessage(message);
+        this.protocol.bukkit.sendMessage(message);
         this.protocol.bukkit.sendMessage("");
     }
 

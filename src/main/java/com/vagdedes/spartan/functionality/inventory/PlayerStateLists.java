@@ -121,32 +121,25 @@ public class PlayerStateLists {
                     Collection<Enums.HackType> evidenceDetails = selectedProfiles.get(profile);
 
                     if (!evidenceDetails.isEmpty()) {
-                        boolean missingData = false;
                         lore.clear();
                         lore.add("§7Suspected for§8:");
 
                         for (Enums.HackType hackType : evidenceDetails) {
-                            boolean sufficientData = profile.getRunner(hackType).hasSufficientData(profile.getLastDataType());
-                            Long remainingTime = sufficientData
-                                    ? null
+                            boolean sufficientData = profile.getRunner(hackType).hasSufficientData(
+                                    profile.getLastDataType(),
+                                    PlayerEvidence.dataRatio
+                            );
+                            long remainingTime = sufficientData
+                                    ? 0L
                                     : profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType());
                             String description = "§4" + hackType.getCheck().getName();
 
-                            if (remainingTime != null) {
+                            if (remainingTime > 0L) {
                                 description += " §8(§7Data pending: " + TimeUtils.convertMilliseconds(remainingTime) + "§8)";
                             } else if (!sufficientData) {
                                 description += " §8(§7Data pending§8)";
                             }
                             lore.add(description);
-
-                            if (!sufficientData) {
-                                missingData = true;
-                            }
-                        }
-                        if (missingData) {
-                            lore.add("");
-                            lore.add("§eSome detections are still collecting data");
-                            lore.add("§eand will fully enable in the future.");
                         }
                         fill(inventory, profile, lore, freeSlots[slotPosition]);
                         slotPosition++;

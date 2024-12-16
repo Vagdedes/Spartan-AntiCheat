@@ -48,7 +48,7 @@ public class SuspicionNotifications {
         int size = 0, commaLength = comma.length();
 
         for (SpartanProtocol protocol : online) {
-            PlayerProfile profile = protocol.getProfile();
+            PlayerProfile profile = protocol.profile();
             Collection<Enums.HackType> list = profile.getEvidenceList(
                     PlayerEvidence.notificationProbability
             );
@@ -58,9 +58,12 @@ public class SuspicionNotifications {
 
                 for (Enums.HackType hackType : list) {
                     CheckRunner runner = protocol.spartan.getRunner(hackType);
-                    boolean sufficientData = runner.hasSufficientData(protocol.spartan.dataType);
-                    Long remainingTime = sufficientData
-                            ? null
+                    boolean sufficientData = runner.hasSufficientData(
+                            protocol.spartan.dataType,
+                            PlayerEvidence.dataRatio
+                    );
+                    long remainingTime = sufficientData
+                            ? 0L
                             : profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType());
                     evidence.append(
                             hackType.getCheck().getName()
@@ -69,7 +72,7 @@ public class SuspicionNotifications {
                                     PlayerEvidence.probabilityToCertainty(
                                             runner.getExtremeProbability(protocol.spartan.dataType)
                                     ) * 100.0) + "%)"
-                                    : remainingTime != null
+                                    : remainingTime > 0L
                                     ? " (Data pending: " + TimeUtils.convertMilliseconds(remainingTime) + ")"
                                     : " [Unlikely (Data pending)]")
                     ).append(

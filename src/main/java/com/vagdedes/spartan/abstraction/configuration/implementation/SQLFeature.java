@@ -15,10 +15,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 import java.sql.*;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 public class SQLFeature extends ConfigurationBuilder {
 
@@ -337,9 +333,7 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", type, notification, information"
                             + ", player_uuid, player_name, player_latency, player_x, player_y, player_z"
                             + ", functionality) "
-                            + "VALUES (" + syntaxForColumn(DateTimeFormatter.ofPattern(AntiCheatLogs.dateFormat).format(
-                            LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault())
-                    ))
+                            + "VALUES (" + syntaxForColumn(AntiCheatLogs.getDate(AntiCheatLogs.dateFormat, time))
                             + ", " + syntaxForColumn(CrossServerNotifications.getServerName())
                             + ", " + syntaxForColumn(API.getVersion())
                             + ", " + syntaxForColumn(MultiVersion.serverVersion.toString())

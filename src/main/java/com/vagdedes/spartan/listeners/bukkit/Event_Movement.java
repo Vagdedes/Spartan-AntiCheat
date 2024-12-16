@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit;
 
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
+import com.vagdedes.spartan.abstraction.event.PlayerTransactionEvent;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
@@ -20,14 +21,14 @@ public class Event_Movement implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void MoveEvent(PlayerMoveEvent e) {
         event(e, false);
-        SpartanBukkit.getProtocol(e.getPlayer()).spartan.getRunner(
+        SpartanBukkit.getProtocol(e.getPlayer(), true).spartan.getRunner(
                 Enums.HackType.MorePackets
         ).handle(e.isCancelled(), null);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WorldEvent(PlayerChangedWorldEvent e) {
-        SpartanBukkit.getProtocol(e.getPlayer()).spartan.resetCrucialData();
+        SpartanBukkit.getProtocol(e.getPlayer(), true).spartan.resetCrucialData();
     }
 
     public static void event(PlayerMoveEvent e, boolean packets) {
@@ -97,6 +98,13 @@ public class Event_Movement implements Listener {
         protocol.packetWorld.tick(tickEvent);
         SpartanPlayer p = protocol.spartan;
         p.getRunner(Enums.HackType.MorePackets).handle(false, tickEvent);
+    }
+
+    public static void transaction(PlayerTransactionEvent event) {
+        SpartanProtocol protocol = event.protocol;
+        protocol.spartan.getRunner(Enums.HackType.Velocity).handle(false, event);
+        //protocol.bukkit.sendMessage("delay: " + event.delay);
+        // stub
     }
 
 }

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.enchants;
 
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import me.darrionat.CustomEnchantsAPI;
 import org.bukkit.enchantments.Enchantment;

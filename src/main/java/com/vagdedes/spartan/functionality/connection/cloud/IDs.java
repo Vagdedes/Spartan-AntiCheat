@@ -18,12 +18,6 @@ public class IDs {
 
     private static int platform = 0;
 
-    static {
-        if (!file.startsWith("%%__") && !AlgebraUtils.validInteger(file)) {
-            file = String.valueOf(Objects.hash(file));
-        }
-    }
-
     // Setters
 
     static void set(int user, int nonce) {
@@ -43,7 +37,14 @@ public class IDs {
     }
 
     public static String file() {
-        return !IDs.enabled ? (CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()) : user) : file;
+        if (IDs.enabled) {
+            if (!file.startsWith("%%__") && !AlgebraUtils.validInteger(file)) {
+                file = String.valueOf(Objects.hash(file));
+            }
+            return file;
+        } else {
+            return CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()): user;
+        }
     }
 
     static String platform() {

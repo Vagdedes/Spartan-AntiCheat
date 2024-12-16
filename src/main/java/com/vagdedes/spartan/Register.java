@@ -10,7 +10,6 @@ import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.*;
 import com.vagdedes.spartan.listeners.bukkit.standalone.*;
-import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ProxyUtils;
 import org.bukkit.Bukkit;
@@ -68,7 +67,7 @@ public class Register extends JavaPlugin {
         enable(new Event_World());
         enable(new Event_Damaged());
 
-       // enable(new GhostBlockTest());
+        //enable(new GhostBlockTest());
 
         if (NPCManager.supported) {
             enable(new NPCManager());

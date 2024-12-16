@@ -7,6 +7,7 @@ public class PlayerEvidence {
     public static final boolean POSITIVE = false;
     public static final int factorRequirement = 9;
     public static final double
+            dataRatio = 0.5,
             notificationProbability = createProbability(0.4),
             preventionProbability = createProbability(0.25),
             punishmentProbability = createProbability(0.05),

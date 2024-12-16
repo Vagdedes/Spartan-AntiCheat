@@ -1308,6 +1308,9 @@ public class BlockUtils {
     public static boolean isWaterLogged(Block block) {
         return blockDataExists && isWaterLogged(block.getBlockData());
     }
+    public static boolean isWaterLogged(SpartanBlock block) {
+        return blockDataExists && isWaterLogged(block.getType().createBlockData());
+    }
 
     public static boolean isLiquidOrWaterLogged(Object block, boolean lava) {
         return block instanceof Block

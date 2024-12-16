@@ -20,7 +20,7 @@ public class Event_Teleport implements Listener {
     }
 
     public static void teleport(Player player, boolean packets) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(player, true);
 
         if (protocol.packetsEnabled() == packets) {
             SpartanPlayer p = protocol.spartan;
@@ -40,7 +40,7 @@ public class Event_Teleport implements Listener {
     }
 
     public static void respawn(Player player, boolean packets) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(player, true);
 
         if (protocol.packetsEnabled() == packets) {
             // Objects

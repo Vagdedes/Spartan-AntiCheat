@@ -1,8 +1,18 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
+import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
+import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
+import me.vagdedes.spartan.api.PlayerFoundOreEvent;
+import me.vagdedes.spartan.system.Enums;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -13,7 +23,60 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MiningHistory {
 
-    public static final String found = " found ";
+    public static final String
+            environmentIdentifier = "Environment: ",
+            amountIdentifier = "Amount: ",
+            oreIdentifier = "Ore: ";
+
+    public static void log(SpartanProtocol protocol, Block block, boolean cancelled) {
+        if (protocol.bukkit.getGameMode() == GameMode.SURVIVAL
+                && PlayerUtils.isPickaxeItem(protocol.spartan.getItemInHand().getType())) {
+            MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
+
+            if (ore != null) {
+                World.Environment environment = block.getWorld().getEnvironment();
+                int x = block.getX(), y = block.getY(), z = block.getZ(), amount = 1;
+                String key = ore.toString(),
+                        log = "(" + AntiCheatLogs.playerIdentifier + protocol.bukkit.getName() + "), "
+                                + "(" + amountIdentifier + amount + "), "
+                                + "(" + oreIdentifier + key + "), "
+                                + "(" + environmentIdentifier + BlockUtils.environmentToString(environment) + "), "
+                                + "(W-XYZ: " + block.getWorld().getName() + " " + x + " " + y + " " + z + ")";
+
+                // API Event
+                PlayerFoundOreEvent event;
+
+                if (Config.settings.getBoolean("Important.enable_developer_api")) {
+                    event = new PlayerFoundOreEvent(protocol.bukkit, log, block.getLocation(), block.getType());
+                    Register.manager.callEvent(event);
+                } else {
+                    event = null;
+                }
+
+                if ((event == null || !event.isCancelled())
+                        && Enums.HackType.XRay.getCheck().isEnabled(protocol.spartan.dataType, protocol.spartan.getWorld().getName())) {
+                    AntiCheatLogs.logInfo(
+                            protocol,
+                            null,
+                            log,
+                            false,
+                            block.getType(),
+                            null,
+                            System.currentTimeMillis()
+                    );
+                    MiningHistory miningHistory = protocol.profile().getMiningHistory(ore);
+
+                    if (miningHistory != null) {
+                        String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
+                        miningHistory.increaseMines(environment, amount);
+                        protocol.spartan.getRunner(Enums.HackType.XRay).handle(
+                                cancelled,
+                                new Object[]{environment, miningHistory, ore, pluralKey});
+                    }
+                }
+            }
+        }
+    }
 
     public static MiningHistory.MiningOre getMiningOre(Material material) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)) {

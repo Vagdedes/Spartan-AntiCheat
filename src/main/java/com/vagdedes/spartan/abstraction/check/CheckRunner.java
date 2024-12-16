@@ -2,9 +2,9 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
 import com.vagdedes.spartan.compatibility.manual.enchants.CustomEnchantsPlus;
@@ -34,29 +34,41 @@ public abstract class CheckRunner extends CheckProcess {
     CheckPrevention prevention;
     private boolean cancelled;
     protected final Map<String, CheckDetection> detections;
-    final Map<Check.DataType, Map<Long, Long>> continuity;
 
-    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
-        super(hackType, protocol);
+    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol, String playerName) {
+        super(hackType, protocol, playerName);
         this.creation = System.currentTimeMillis();
         this.prevention = new CheckPrevention();
         this.detections = new ConcurrentHashMap<>(2);
         this.disableCauses = Collections.synchronizedList(new ArrayList<>(1));
         this.silentCauses = Collections.synchronizedList(new ArrayList<>(1));
-        this.continuity = Collections.synchronizedMap(
-                new LinkedHashMap<>(Check.DataType.values().length)
-        );
     }
 
     // Probability
 
-    public final boolean hasSufficientData(Check.DataType dataType) {
-        for (CheckDetection detectionExecutor : this.detections.values()) {
-            if (detectionExecutor.hasSufficientData(dataType)) {
-                return true;
+    public final boolean hasSufficientData(Check.DataType dataType, double ratio) {
+        if (ratio > 0.0) {
+            int count = 0,
+                    total = this.detections.size();
+
+            for (CheckDetection detectionExecutor : this.detections.values()) {
+                if (detectionExecutor.hasSufficientData(dataType)) {
+                    count++;
+
+                    if (count / (double) total >= ratio) {
+                        return true;
+                    }
+                }
             }
+            return false;
+        } else {
+            for (CheckDetection detectionExecutor : this.detections.values()) {
+                if (detectionExecutor.hasSufficientData(dataType)) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return false;
     }
 
     public final double getExtremeProbability(Check.DataType dataType) {
@@ -72,11 +84,11 @@ public abstract class CheckRunner extends CheckProcess {
         return num;
     }
 
-    public final Long getRemainingCompletionTime(Check.DataType dataType) {
+    public final long getRemainingCompletionTime(Check.DataType dataType) {
         List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
         if (playerProfiles.isEmpty()) {
-            return null;
+            return 0L;
         } else {
             double averageTime = 0.0,
                     averageCompletion = 0.0;
@@ -101,12 +113,14 @@ public abstract class CheckRunner extends CheckProcess {
             }
 
             if (size == 0) {
-                return null;
+                return 0L;
             }
             averageTime = Math.sqrt(averageTime / size);
             averageCompletion = Math.sqrt(averageCompletion / size);
             long time = (long) ((1.0 - averageCompletion) * averageTime);
-            return time == 0L ? null : time;
+            return time < 1_000L // Less than a second is quite irrelevant
+                    ? 0L
+                    : time;
         }
     }
 
@@ -323,80 +337,6 @@ public abstract class CheckRunner extends CheckProcess {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {
             return AlgebraUtils.integerCeil(TPS.maximum);
-        }
-    }
-
-    // Sync
-
-    public final void trackTime(Check.DataType dataType, long time, long count) {
-        synchronized (this.continuity) {
-            this.continuity.computeIfAbsent(
-                    dataType,
-                    k -> new TreeMap<>()
-            ).put(time, count);
-        }
-    }
-
-    final boolean wasOnline(Check.DataType dataType, long current, long previous) {
-        SpartanProtocol protocol = this.protocol();
-
-        if (protocol != null
-                && current >= protocol.creationTime
-                && previous >= protocol.creationTime) {
-            return true;
-        } else {
-            synchronized (this.continuity) {
-                Map<Long, Long> data = this.continuity.get(dataType);
-
-                if (data != null) {
-                    for (Map.Entry<Long, Long> entry : data.entrySet()) {
-                        long connectedTime = entry.getValue();
-
-                        if (connectedTime > 0L) {
-                            long disconnectedMoment = entry.getKey();
-
-                            if (previous >= (disconnectedMoment - connectedTime)
-                                    && current <= disconnectedMoment) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-    }
-
-    final long getOnlineTime(Check.DataType dataType) {
-        synchronized (this.continuity) {
-            Map<Long, Long> data = this.continuity.get(dataType);
-
-            if (data != null) {
-                long sum = 0L;
-
-                for (long value : data.values()) {
-                    sum += value;
-                }
-                SpartanProtocol protocol = this.protocol();
-                return protocol == null
-                        ? sum
-                        : Math.max(protocol.getTimePlayed() + sum, 0L);
-            } else {
-                SpartanProtocol protocol = this.protocol();
-                return protocol == null
-                        ? 0L
-                        : protocol.getTimePlayed();
-            }
-        }
-    }
-
-    final boolean hasOnlineTime(Check.DataType dataType) {
-        if (this.protocol() != null) {
-            return true;
-        } else {
-            synchronized (this.continuity) {
-                return this.continuity.containsKey(dataType);
-            }
         }
     }
 

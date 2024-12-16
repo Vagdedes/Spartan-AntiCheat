@@ -39,7 +39,7 @@ public class Event_Combat implements Listener {
                 entityAttack = e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK;
         if (damagerIsPlayer) {
             Player player = (Player) damager;
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+            SpartanProtocol protocol = SpartanBukkit.getProtocol(player, true);
 
             if (protocol.packetsEnabled() == packets) {
                 // Detections
@@ -70,7 +70,7 @@ public class Event_Combat implements Listener {
 
         if (entityIsPlayer) {
             Player player = (Player) entity;
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+            SpartanProtocol protocol = SpartanBukkit.getProtocol(player, true);
 
             if (protocol.packetsEnabled() == packets) {
                 // Objects
@@ -93,7 +93,7 @@ public class Event_Combat implements Listener {
     }
 
     public static void use(PlayerUseEvent e) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer(), true);
         PlayerAttackEvent attackEvent = new PlayerAttackEvent(e.getPlayer(), e.getTarget(), false);
         protocol.spartan.getRunner(Enums.HackType.HitReach).handle(false, attackEvent);
     }

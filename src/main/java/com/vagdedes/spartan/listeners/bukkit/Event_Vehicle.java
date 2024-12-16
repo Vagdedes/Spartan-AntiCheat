@@ -19,7 +19,7 @@ public class Event_Vehicle implements Listener {
             Entity entity = e.getEntered();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartan;
+                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity, true).spartan;
                 p.trackers.add(PlayerTrackers.TrackerType.VEHICLE, "enter", 5);
             }
         }
@@ -31,7 +31,7 @@ public class Event_Vehicle implements Listener {
             Entity en = e.getExited();
 
             if (en instanceof Player) {
-                exit(SpartanBukkit.getProtocol((Player) en).spartan);
+                exit(SpartanBukkit.getProtocol((Player) en, true).spartan);
             }
         }
     }

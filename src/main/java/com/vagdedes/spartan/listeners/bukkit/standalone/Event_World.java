@@ -1,12 +1,11 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
+import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.functionality.tracking.Piston;
-import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
 import com.vagdedes.spartan.utils.minecraft.entity.CombatUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.block.Block;
@@ -24,9 +23,8 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void BlockBreak(BlockBreakEvent e) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer(), true);
         Block nb = e.getBlock();
-        Event_Chunks.cache(nb.getChunk(), false);
         boolean cancelled = e.isCancelled();
         protocol.spartan.movement.judgeGround();
 
@@ -39,7 +37,7 @@ public class Event_World implements Listener {
         }
         protocol.spartan.getRunner(Enums.HackType.Exploits).handle(cancelled, e);
         protocol.spartan.getRunner(Enums.HackType.FastClicks).handle(cancelled, null);
-        AntiCheatLogs.logMining(protocol, nb, cancelled);
+        MiningHistory.log(protocol, nb, cancelled);
 
         if (protocol.spartan.getRunner(Enums.HackType.NoSwing).prevent()
                 || protocol.spartan.getRunner(Enums.HackType.BlockReach).prevent()
@@ -52,7 +50,7 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Sign(SignChangeEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer(), true).spartan;
 
         // Detections
         p.getRunner(Enums.HackType.Exploits).handle(e.isCancelled(), e.getLines());
@@ -64,7 +62,7 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Animation(PlayerAnimationEvent e) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer(), true);
 
         // Detections
         protocol.spartan.getRunner(Enums.HackType.NoSwing).handle(e.isCancelled(), e);
@@ -72,7 +70,7 @@ public class Event_World implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Interact(PlayerInteractEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
+        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer(), true).spartan;
         Block nb = e.getClickedBlock();
         Action action = e.getAction();
         boolean notNull = nb != null,

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import de.flo56958.minetinker.events.MTPlayerInteractEvent;

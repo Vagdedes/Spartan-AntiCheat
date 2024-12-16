@@ -17,7 +17,7 @@ public class Event_Damaged implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) entity);
+            SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) entity, true);
 
             protocol.spartan.handleReceivedDamage();
         } else {

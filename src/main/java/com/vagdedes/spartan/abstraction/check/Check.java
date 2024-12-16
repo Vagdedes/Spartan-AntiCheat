@@ -296,7 +296,7 @@ public class Check {
 
             if (event == null || !event.isCancelled()) {
                 this.enabled[type.ordinal()] = b;
-                ResearchEngine.queueToCache(this.hackType);
+                ResearchEngine.queueToCache(this.hackType, type);
                 setOption("enabled." + type.toString().toLowerCase(), b);
 
                 synchronized (options) {

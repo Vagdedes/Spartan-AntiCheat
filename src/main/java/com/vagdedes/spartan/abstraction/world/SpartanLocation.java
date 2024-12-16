@@ -2,8 +2,7 @@ package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks;
-import com.vagdedes.spartan.listeners.bukkit.standalone.chunks.Event_Chunks_v1_13;
+import com.vagdedes.spartan.listeners.bukkit.standalone.Event_Chunks;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.Bukkit;
@@ -221,15 +220,9 @@ public class SpartanLocation implements Cloneable {
     }
 
     private SpartanBlock setAsyncBlock() {
-        if (SpartanLocation.v_1_13) {
-            return new SpartanBlock(
-                    Event_Chunks_v1_13.getBlockData(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ())
-            );
-        } else {
-            return new SpartanBlock(
-                    Event_Chunks.getBlockType(this.world, this.getBlockX(), this.getBlockY(), this.getBlockZ())
-            );
-        }
+        return new SpartanBlock(
+                Event_Chunks.getBlockAsync(this.bukkit())
+        );
     }
 
     public SpartanBlock getBlock() {
@@ -253,27 +246,7 @@ public class SpartanLocation implements Cloneable {
                 if (isChunkLoaded(x, z)) {
                     return setBlock();
                 } else {
-                    SpartanBlock[] block = new SpartanBlock[1];
-                    Thread thread = Thread.currentThread();
-
-                    SpartanBukkit.transferTask(this.world, x, z, () -> {
-                        block[0] = setBlock();
-
-                        synchronized (thread) {
-                            thread.notifyAll();
-                        }
-                    });
-                    synchronized (thread) {
-                        if (block[0] == null) {
-                            try {
-                                thread.wait();
-                            } catch (Exception ex) {
-                                block[0] = new SpartanBlock(Material.AIR);
-                                SpartanBukkit.transferTask(this.world, x, z, () -> block[0] = setBlock());
-                            }
-                        }
-                    }
-                    return block[0];
+                    return new SpartanBlock(null);
                 }
             }
         } else {

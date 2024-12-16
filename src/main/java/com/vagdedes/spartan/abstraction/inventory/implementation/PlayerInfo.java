@@ -38,7 +38,7 @@ public class PlayerInfo extends InventoryMenu {
     );
     private static final String
             menu = ("§0Player Info: ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0),
-            documentationURL = "https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/documentation/dealing_with_detections.md";
+            documentationURL = "https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/documentation/player_info_menu.md";
     private static final int[] slots = new int[]{
             20, 21, 22, 23, 24
     };
@@ -53,7 +53,7 @@ public class PlayerInfo extends InventoryMenu {
         SpartanProtocol target = SpartanBukkit.getAnyCaseProtocol(object.toString());
         boolean isOnline = target != null;
         PlayerProfile profile = isOnline
-                ? target.getProfile()
+                ? target.profile()
                 : ResearchEngine.getAnyCasePlayerProfile(object.toString());
 
         if (profile == null) {
@@ -79,6 +79,13 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartan.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
                 lore.add("§7Edition§8:§c " + target.spartan.dataType);
+            }
+            long time = profile.getContinuity().getOnlineTime();
+
+            if (time > 0L) {
+                lore.add("§7Total Active Time§8:§c " + TimeUtils.convertMilliseconds(time));
+                lore.add("");
+            } else if (isOnline) {
                 lore.add("");
             }
             lore.add("§cClick to delete the player's stored data.");
@@ -104,10 +111,9 @@ public class PlayerInfo extends InventoryMenu {
                            List<String> lore,
                            Enums.HackCategoryType checkType,
                            Set<Map.Entry<HackType, Double>> evidenceDetails) {
-        Map<Double, HackType> map = PlayerEvidence.POSITIVE
+        Map<Double, Collection<HackType>> map = PlayerEvidence.POSITIVE
                 ? new TreeMap<>(Collections.reverseOrder())
                 : new TreeMap<>();
-        Set<HackType> missingData = new HashSet<>();
         lore.clear();
 
         // Separator
@@ -119,19 +125,10 @@ public class PlayerInfo extends InventoryMenu {
         if (!evidenceDetails.isEmpty()) {
             for (Map.Entry<HackType, Double> entry : evidenceDetails) {
                 if (entry.getKey().category == checkType) {
-                    map.put(
+                    map.computeIfAbsent(
                             entry.getValue(),
-                            entry.getKey()
-                    );
-
-                    if (!missingData.contains(entry.getKey())
-                            && !profile.getRunner(
-                            entry.getKey()
-                    ).hasSufficientData(
-                            profile.getLastDataType()
-                    )) {
-                        missingData.add(entry.getKey());
-                    }
+                            k -> new ArrayList<>()
+                    ).add(entry.getKey());
                 }
             }
         }
@@ -166,70 +163,72 @@ public class PlayerInfo extends InventoryMenu {
             lore.add("");
             lore.add("§7Certainty of cheating§8:");
 
-            for (Map.Entry<Double, HackType> entry : map.entrySet()) {
-                HackType hackType = entry.getValue();
-                double probability = entry.getKey();
-                Long remainingTime = missingData.contains(hackType)
-                        ? profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType())
-                        : null;
-                String remainingDataPrompt = "";
+            for (Map.Entry<Double, Collection<HackType>> entry : map.entrySet()) {
+                for (HackType hackType : entry.getValue()) {
+                    double probability = entry.getKey();
+                    boolean sufficientData = profile.getRunner(
+                            hackType
+                    ).hasSufficientData(
+                            profile.getLastDataType(),
+                            PlayerEvidence.dataRatio
+                    );
+                    long remainingTime = sufficientData
+                            ? 0L
+                            : profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType());
+                    String remainingDataPrompt = "";
 
-                if (remainingTime != null) {
-                    remainingDataPrompt = " §8(§7Data pending: " + TimeUtils.convertMilliseconds(remainingTime) + "§8)";
-                } else if (missingData.contains(hackType)) {
-                    remainingDataPrompt = " §8(§7Data pending§8)";
-                }
-                if (PlayerEvidence.surpassedProbability(
-                        probability,
-                        PlayerEvidence.punishmentProbability
-                )) {
-                    probability = PlayerEvidence.probabilityToCertainty(probability);
-                    lore.add(
-                            "§4" + hackType.getCheck().getName()
-                                    + "§8: §c" + AlgebraUtils.integerRound(probability * 100.0) + "%"
-                                    + remainingDataPrompt
-                    );
-                } else if (PlayerEvidence.surpassedProbability(
-                        probability,
-                        PlayerEvidence.preventionProbability
-                )) {
-                    probability = PlayerEvidence.probabilityToCertainty(probability);
-                    lore.add(
-                            "§6" + hackType.getCheck().getName()
-                                    + "§8: §e" + AlgebraUtils.integerRound(probability * 100.0) + "%"
-                                    + remainingDataPrompt
-                    );
-                } else if (PlayerEvidence.surpassedProbability(
-                        probability,
-                        PlayerEvidence.notificationProbability
-                )) {
-                    probability = PlayerEvidence.probabilityToCertainty(probability);
-                    lore.add(
-                            "§2" + hackType.getCheck().getName()
-                                    + "§8: §a" + AlgebraUtils.integerRound(probability * 100.0) + "%"
-                                    + remainingDataPrompt
-                    );
-                } else {
-                    probability = PlayerEvidence.probabilityToCertainty(probability);
-                    int showProbability = AlgebraUtils.integerRound(probability * 100.0);
-
-                    if (showProbability > 0) {
+                    if (remainingTime > 0L) {
+                        remainingDataPrompt = " §8(§7Data pending: " + TimeUtils.convertMilliseconds(remainingTime) + "§8)";
+                    } else if (!sufficientData) {
+                        remainingDataPrompt = " §8(§7Data pending§8)";
+                    }
+                    if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.punishmentProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
                         lore.add(
-                                "§3" + hackType.getCheck().getName() + "§8: §b" + showProbability + "%"
+                                "§4" + hackType.getCheck().getName()
+                                        + "§8: §c" + AlgebraUtils.integerRound(probability * 100.0) + "%"
+                                        + remainingDataPrompt
+                        );
+                    } else if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.preventionProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
+                        lore.add(
+                                "§6" + hackType.getCheck().getName()
+                                        + "§8: §e" + AlgebraUtils.integerRound(probability * 100.0) + "%"
+                                        + remainingDataPrompt
+                        );
+                    } else if (PlayerEvidence.surpassedProbability(
+                            probability,
+                            PlayerEvidence.notificationProbability
+                    )) {
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
+                        lore.add(
+                                "§2" + hackType.getCheck().getName()
+                                        + "§8: §a" + AlgebraUtils.integerRound(probability * 100.0) + "%"
                                         + remainingDataPrompt
                         );
                     } else {
-                        lore.add(
-                                "§3" + hackType.getCheck().getName() + "§8: §b1%"
-                                        + remainingDataPrompt
-                        );
+                        probability = PlayerEvidence.probabilityToCertainty(probability);
+                        int showProbability = AlgebraUtils.integerRound(probability * 100.0);
+
+                        if (showProbability > 0) {
+                            lore.add(
+                                    "§3" + hackType.getCheck().getName() + "§8: §b" + showProbability + "%"
+                                            + remainingDataPrompt
+                            );
+                        } else {
+                            lore.add(
+                                    "§3" + hackType.getCheck().getName() + "§8: §b1%"
+                                            + remainingDataPrompt
+                            );
+                        }
                     }
                 }
-            }
-            if (!missingData.isEmpty()) {
-                lore.add("");
-                lore.add("§eSome detections are still collecting data");
-                lore.add("§eand will fully enable in the future.");
             }
         }
 

@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import be.anybody.api.advancedabilities.ability.event.AbilityCallEvent;
-import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import me.vagdedes.spartan.system.Enums;

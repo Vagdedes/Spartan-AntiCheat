@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.functionality.notifications;
 
+import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.configuration.implementation.Settings;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -47,7 +48,10 @@ public class CrossServerNotifications {
                                             if (hackType.toString().equals(functionality)) {
                                                 String notification = rs.getString("notification"),
                                                         serverName = rs.getString("server_name"),
-                                                        detection = ResearchEngine.getDetectionInformation(rs.getString("information"));
+                                                        detection = ResearchEngine.findInformation(
+                                                                rs.getString("information"),
+                                                                CheckDetection.detectionIdentifier
+                                                        );
                                                 notification = "§l[" + serverName + "]§r " + notification;
 
                                                 for (SpartanProtocol protocol : protocols) {

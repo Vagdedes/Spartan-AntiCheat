@@ -10,6 +10,7 @@ import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.event.PlayerUseEvent;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.Event_Combat;
 import com.vagdedes.spartan.utils.java.OverflowMap;
@@ -60,6 +61,14 @@ public class Packet_Combat extends PacketAdapter {
                             packet.getEntityUseActions().read(0).equals(EnumWrappers.EntityUseAction.ATTACK)
                             : packet.getEnumEntityUseActions().read(0).getAction().equals(
                             EnumWrappers.EntityUseAction.ATTACK)) {
+                if (protocol.isSDesync()) {
+                    Bukkit.getScheduler().runTask(Register.plugin,
+                                    () -> protocol.bukkit.teleport(protocol.getLocation()));
+                    AwarenessNotifications.optionallySend(protocol.bukkit.getName()
+                                    + " attack faster than the transaction response");
+                    event.setCancelled(true);
+                    return;
+                }
                 if (target != null) {
                     Event_Combat.use(
                                     new PlayerUseEvent(

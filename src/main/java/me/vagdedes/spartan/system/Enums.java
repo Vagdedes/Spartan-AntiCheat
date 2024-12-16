@@ -149,7 +149,7 @@ public class Enums {
         ),
         HitReach(
                 HackCategoryType.COMBAT,
-                com.vagdedes.spartan.abstraction.check.implementation.combat.HitReach.class,
+                com.vagdedes.spartan.abstraction.check.implementation.combat.hitreach.HitReach.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to hit entities",

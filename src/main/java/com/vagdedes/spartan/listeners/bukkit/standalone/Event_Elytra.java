@@ -16,7 +16,7 @@ public class Event_Elytra implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            Elytra.judge(SpartanBukkit.getProtocol((Player) entity));
+            Elytra.judge(SpartanBukkit.getProtocol((Player) entity, true));
         }
     }
 }

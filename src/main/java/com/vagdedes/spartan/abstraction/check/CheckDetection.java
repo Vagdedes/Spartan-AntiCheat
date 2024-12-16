@@ -30,8 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class CheckDetection extends CheckProcess {
 
     public static final String
-            failed = " failed ",
             javaPlayerIdentifier = "Java:",
+            checkIdentifier = "Check:",
             detectionIdentifier = "Detection:";
 
     public final CheckRunner executor;
@@ -41,7 +41,7 @@ public abstract class CheckDetection extends CheckProcess {
     protected long notifications;
 
     protected CheckDetection(CheckRunner executor, String name, boolean def) {
-        super(executor.hackType, executor.protocol());
+        super(executor.hackType, executor.protocol(), executor.playerName());
         this.executor = executor;
         this.name = name;
         this.def = def;
@@ -142,7 +142,7 @@ public abstract class CheckDetection extends CheckProcess {
         boolean hasSufficientData = this.hasSufficientData(this.protocol().spartan.dataType);
         double probability = this.getProbability(this.protocol().spartan.dataType),
                 certainty = PlayerEvidence.probabilityToCertainty(probability) * 100.0,
-                dataCompletion = hasSufficientData ? 100.0 : this.getDataCompletion(this.protocol.spartan.dataType) * 100.0;
+                dataCompletion = hasSufficientData ? 100.0 : this.getDataCompletion(this.protocol().spartan.dataType) * 100.0;
         int roundedCertainty = AlgebraUtils.integerRound(certainty);
         String notification = ConfigUtils.replaceWithSyntax(
                 this.protocol(),
@@ -157,18 +157,20 @@ public abstract class CheckDetection extends CheckProcess {
         );
 
         Location location = this.protocol().getLocation();
-        information = this.protocol().bukkit.getName() + failed + hackType
-                + " (" + javaPlayerIdentifier + " " + (!this.protocol().spartan.isBedrockPlayer()) + ")" + ", "
+        information = "(" + AntiCheatLogs.playerIdentifier + " " + this.protocol().bukkit.getName() + "), "
+                + "(" + checkIdentifier + " " + this.hackType + "), "
+                + "(" + javaPlayerIdentifier + " " + (!this.protocol().spartan.isBedrockPlayer()) + ")" + ", "
                 + "(" + detectionIdentifier + " " + this.name + ")" + ", "
                 + "(Certainty: " + AlgebraUtils.cut(certainty, 2) + "), "
                 + "(Data-Completion: " + AlgebraUtils.cut(dataCompletion, 2) + "), "
                 + "(Server-Version: " + MultiVersion.serverVersion.toString() + "), "
                 + "(Plugin-Version: " + API.getVersion() + "), "
                 + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName()) + "), "
+                + "(Punish: " + hackType.getCheck().canPunish(this.protocol().spartan.dataType) + "), "
                 + "(Packets: " + this.protocol().packetsEnabled() + "), "
                 + "(Ping: " + this.protocol().getPing() + "ms), "
                 + "(W-XYZ: " + location.getWorld().getName() + " " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ() + "), "
-                + "[Information: " + information + "]";
+                + "(Data: " + information + ")";
         AntiCheatLogs.logInfo(
                 this.protocol(),
                 notification,
@@ -180,8 +182,7 @@ public abstract class CheckDetection extends CheckProcess {
                 ),
                 null,
                 hackType,
-                time,
-                !hasSufficientData
+                time
         );
 
         // Local Notifications
@@ -219,7 +220,7 @@ public abstract class CheckDetection extends CheckProcess {
 
             if (!commands.isEmpty()
                     && this.hasSufficientData(this.protocol().spartan.dataType)) {
-                Collection<Enums.HackType> detectedHacks = this.protocol().getProfile().getEvidenceList(
+                Collection<Enums.HackType> detectedHacks = this.profile().getEvidenceList(
                         PlayerEvidence.punishmentProbability
                 );
                 detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish(this.protocol().spartan.dataType));
@@ -326,7 +327,7 @@ public abstract class CheckDetection extends CheckProcess {
                         this.protocol().spartan.dataType,
                         time
                 );
-                ResearchEngine.queueToCache(this.hackType);
+                ResearchEngine.queueToCache(this.hackType, this.protocol().spartan.dataType);
                 this.notify(time, information);
                 this.punish();
                 this.executor.prevention = newPrevention;

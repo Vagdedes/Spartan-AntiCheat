@@ -73,7 +73,7 @@ public class ProxyUtils {
                     player.sendPluginMessage(Register.plugin, name, b.toByteArray());
                     return true;
                 } catch (Exception ex) {
-                    AwarenessNotifications.forcefullySend(
+                    AwarenessNotifications.optionallySend(
                             name + " Command Failed: "
                                     + "\nPlayer: " + player.getName()
                                     + "\nCommand: " + command
@@ -81,14 +81,14 @@ public class ProxyUtils {
                     ex.printStackTrace();
                 }
             } else {
-                AwarenessNotifications.forcefullySend(
+                AwarenessNotifications.optionallySend(
                         name + " Command Failed: "
                                 + "\nPlayer: NULL"
                                 + "\nCommand: " + command
                 );
             }
         } else {
-            AwarenessNotifications.forcefullySend(
+            AwarenessNotifications.optionallySend(
                     name + " Command Failed: "
                             + "\nServer: Not-Proxy-Supported"
                             + "\nCommand: " + command

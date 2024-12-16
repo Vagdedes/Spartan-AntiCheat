@@ -27,11 +27,12 @@ public abstract class ProbabilityDetection extends CheckDetection {
     @Override
     protected final boolean hasData(Check.DataType dataType) {
         synchronized (this.data) {
-            if (this.data.containsKey(dataType)) {
-                return this.executor.hasOnlineTime(dataType);
-            }
+            return this.hasData(this.data.get(dataType));
         }
-        return false;
+    }
+
+    private boolean hasData(Collection<Long> data) {
+        return data != null && data.size() > 1;
     }
 
     @Override
@@ -82,48 +83,46 @@ public abstract class ProbabilityDetection extends CheckDetection {
 
     @Override
     public final Double getData(Check.DataType dataType) {
-        double violationCount, averageViolationSpread;
-
         synchronized (this.data) {
             Collection<Long> data = this.data.get(dataType);
 
-            if (data == null || data.size() == 1) {
+            if (!this.hasData(data)) {
                 return null;
             } else {
-                long squareSum = 0;
+                double averageViolationVelocity,
+                        violationCount = data.size(),
+                        comparisonCount = 0.0;
+                long violationVelocitySquareSum = 0;
                 Iterator<Long> iterator = data.iterator();
                 long previous = iterator.next();
-                violationCount = 0.0;
 
                 while (iterator.hasNext()) {
-                    Long current = iterator.next();
+                    long current = iterator.next();
 
-                    if (this.executor.wasOnline(dataType, current, previous)) {
-                        violationCount++;
+                    if (this.profile().getContinuity().wasOnline(current, previous)) {
+                        comparisonCount++;
                         long difference = current - previous;
                         previous = current;
-                        squareSum += difference * difference;
-                    } else {
-                        iterator.remove();
+                        violationVelocitySquareSum += difference * difference;
                     }
                 }
-                if (violationCount == 0.0) {
-                    averageViolationSpread = Double.MAX_VALUE;
-                } else {
-                    averageViolationSpread = Math.sqrt(squareSum / violationCount);
-                    long onlineTime = this.executor.getOnlineTime(dataType);
+                long onlineTime = this.profile().getContinuity().getOnlineTime();
 
-                    if (onlineTime != 0L) {
-                        violationCount = (violationCount + 1.0) / (double) onlineTime;
-                    } else {
-                        violationCount++;
-                    }
+                if (onlineTime > 0L) {
+                    onlineTime /= 1_000L; // Convert to seconds
+                    violationCount /= (double) onlineTime;
                 }
+                if (comparisonCount == 0.0) {
+                    averageViolationVelocity = Float.MAX_VALUE;
+                } else {
+                    averageViolationVelocity = Math.sqrt(violationVelocitySquareSum / comparisonCount);
+                }
+                double result = averageViolationVelocity / violationCount;
+                return result == Double.POSITIVE_INFINITY || result == Double.NEGATIVE_INFINITY
+                        ? null
+                        : result;
             }
         }
-        return violationCount == 0.0
-                ? null
-                : averageViolationSpread / violationCount;
     }
 
     @Override
@@ -183,7 +182,7 @@ public abstract class ProbabilityDetection extends CheckDetection {
                 || time - this.notifications >= 5_000L
                 || (protocol != null
                 ? protocol.spartan.equals(this.protocol().spartan)
-                : this.protocol.bukkit.getName().equals(detected.toString())))) {
+                : this.protocol().bukkit.getName().equals(detected.toString())))) {
             int ticks = this.executor.getNotificationTicksCooldown(protocol);
 
             if (ticks > 0) {
