@@ -1,6 +1,6 @@
 # <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">Get Java & Bedrock Edition in one jar</a>
 
-## settings.yml:
+## settings.yml File:
 ```
 Punishments: 
   broadcast_on_punishment: true # Let everyone know when someone is punished via the chat
