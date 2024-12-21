@@ -29,5 +29,6 @@ Speed: Check Category
   disabled_worlds: exampleDisabledWorld1, exampleDisabledWorld2 # List of worlds the check will not work
   silent_worlds: exampleSilentWorld1, exampleSilentWorld2 # List of worlds the check will not cancel, teleport, prevent, e.t.c on violations
 ```
+(There are more options available, the above is an example of the configuration)
 ## Canceled Server Events
 When a Minecraft server’s events are canceled, it is unlikely our Minecraft plugins will measure this event until it’s allowed again. For example, when the PlayerMoveEvent is canceled on Bukkit-based servers, a player cannot move on the server, leading to the Spartan anti-cheat to ignore checking the player for hack modules.
