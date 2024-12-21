@@ -9,7 +9,7 @@ Compatibility: # The name of the compatibility
 (There are more options available, the above is an example of the configuration)
 
 ## Compatibilities
-Item Attributes: 1.9+ Minecraft built-in feature<br>
+Item Attributes: 1.9+ Minecraft built-in feature <b>(PARTIAL)</b><br>
 FileGUI: http://www.spigotmc.org/resources/73893/<br>
 CustomEnchantPlus: http://www.spigotmc.org/resources/72678/<br>
 CraftBook: http://www.spigotmc.org/resources/2083/<br>
@@ -30,7 +30,7 @@ OldCombatMechanics: http://www.spigotmc.org/resources/19510/<br>
 Floodgate: https://geysermc.org/<br>
 WildTools: http://www.spigotmc.org/resources/60649/<br>
 KnockbackMaster: http://www.spigotmc.org/resources/42721/<br>
-ItemsAdder: http://www.spigotmc.org/resources/73355/ (PARTIAL)<br>
+ItemsAdder: http://www.spigotmc.org/resources/73355/ <b>(PARTIAL)</b><br>
 EcoEnchants: http://www.spigotmc.org/resources/79573/<br>
 mcMMO: Classic / Overhaul<br>
 AureliumSkills: http://www.spigotmc.org/resources/81069/<br>
@@ -45,12 +45,12 @@ LuckPerms: https://luckperms.net/<br>
 Oraxen: https://www.spigotmc.org/resources/72448/<br>
 ShopGUI+/ShopGUIPlus: https://www.spigotmc.org/resources/6515/<br>
 DeluxeMenu / DeluxeMenus: https://www.spigotmc.org/resources/11734/<br>
-MinigameMaker: http://www.spigotmc.org/resources/54505/ (THIRD-PARTY)<br>
-RunesEnchant: http://www.spigotmc.org/resources/19363/ (THIRD-PARTY)<br>
-CrazyEnchantments: http://www.spigotmc.org/resources/16470/ (THIRD-PARTY)<br>
-DeluxeCombat: http://www.spigotmc.org/resources/63970/ (THIRD-PARTY)<br>
-AntiCheat Replay: https://www.spigotmc.org/resources/97845/ (THIRD-PARTY)<br>
-AdvancedEnchantments: https://www.spigotmc.org/resources/43058/ (THIRD-PARTY)
+MinigameMaker: http://www.spigotmc.org/resources/54505/ <b>(THIRD-PARTY)</b><br>
+RunesEnchant: http://www.spigotmc.org/resources/19363/ <b>(THIRD-PARTY)</b><br>
+CrazyEnchantments: http://www.spigotmc.org/resources/16470/ <b>(THIRD-PARTY)</b><br>
+DeluxeCombat: http://www.spigotmc.org/resources/63970/ <b>(THIRD-PARTY)</b><br>
+AntiCheat Replay: https://www.spigotmc.org/resources/97845/ <b>(THIRD-PARTY)</b><br>
+AdvancedEnchantments: https://www.spigotmc.org/resources/43058/ <b>(THIRD-PARTY)</b>
 
 ### Incompatibilities
 Using server forks other than Spigot, Paper, Purpur, Airplane & Folia. (Ask the development team for specifics)<br>
