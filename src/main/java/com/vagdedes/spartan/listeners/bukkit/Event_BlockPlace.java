@@ -29,7 +29,7 @@ public class Event_BlockPlace implements Listener {
     ) {
         protocol.spartan.movement.judgeGround();
 
-        if (protocol.spartan.getWorld() != block.getWorld()) {
+        if (protocol.getWorld() != block.getWorld()) {
             return false;
         }
 

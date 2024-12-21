@@ -79,15 +79,15 @@ public class PlayerInfo extends InventoryMenu {
                 lore.add("§7CPS (Clicks Per Second)§8:§c " + target.spartan.clicks.getCount());
                 lore.add("§7Latency§8:§c " + target.getPing() + "ms");
                 lore.add("§7Edition§8:§c " + target.spartan.dataType);
+            } else {
+                lore.add("§7Last Known Edition§8:§c " + profile.getLastDataType());
             }
             long time = profile.getContinuity().getOnlineTime();
 
             if (time > 0L) {
                 lore.add("§7Total Active Time§8:§c " + TimeUtils.convertMilliseconds(time));
-                lore.add("");
-            } else if (isOnline) {
-                lore.add("");
             }
+            lore.add("");
             lore.add("§cClick to delete the player's stored data.");
             add(
                     "§c" + profile.name,
@@ -247,7 +247,7 @@ public class PlayerInfo extends InventoryMenu {
         if (!SpartanEdition.hasDetectionsPurchased(dataType)) {
             return "Detection is missing";
         }
-        String worldName = protocol.spartan.getWorld().getName();
+        String worldName = protocol.getWorld().getName();
         Check check = hackType.getCheck();
 
         if (!check.isEnabled(dataType, worldName)) { // Do not put player because we calculate it below

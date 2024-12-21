@@ -2,8 +2,6 @@ package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
 import com.vagdedes.spartan.abstraction.event.ServerBlockChange;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.standalone.Event_Chunks;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
@@ -49,15 +47,13 @@ public class PacketWorld {
     }
 
     public Material getBlock(Location location) {
-        SpartanProtocol p = SpartanBukkit.getProtocol(this.player);
-
         synchronized (this.query) {
             for (ServerBlockChange change : this.query) {
                 Location lL = change.getPosition().toLocation(this.player.getWorld());
 
-                if (Math.abs(lL.getX() - location.getX()) <= 1.0 &&
-                                Math.abs(lL.getY() - location.getY()) <= 1.0 &&
-                                Math.abs(lL.getZ() - location.getZ()) <= 1.0) {
+                if (Math.abs(lL.getX() - location.getX()) <= 1.3 &&
+                                Math.abs(lL.getY() - location.getY()) <= 1.3 &&
+                                Math.abs(lL.getZ() - location.getZ()) <= 1.3) {
                     return change.getData();
                 }
             }

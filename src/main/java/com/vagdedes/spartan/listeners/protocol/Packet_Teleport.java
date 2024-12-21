@@ -69,17 +69,13 @@ public class Packet_Teleport extends PacketAdapter {
             }
              */
 
-        } else if (packetType.equals(PacketType.Play.Server.RESPAWN)
-                || packetType.equals(PacketType.Play.Server.MOUNT)) {
+        } else if (packetType.equals(PacketType.Play.Server.RESPAWN)) {
             /*
             protocol.setLocation(new Location(protocol.getLocation().getWorld(), 0, 0, 0));
             protocol.mutateTeleport = true;
              */
             protocol.teleported = true;
-
-            if (packetType.equals(PacketType.Play.Server.RESPAWN)) {
-                Event_Teleport.respawn(player, true);
-            }
+            Event_Teleport.respawn(player, true);
         }
     }
 

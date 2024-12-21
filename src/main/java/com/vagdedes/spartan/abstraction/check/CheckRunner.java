@@ -35,8 +35,8 @@ public abstract class CheckRunner extends CheckProcess {
     private boolean cancelled;
     protected final Map<String, CheckDetection> detections;
 
-    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol, String playerName) {
-        super(hackType, protocol, playerName);
+    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
+        super(hackType, protocol);
         this.creation = System.currentTimeMillis();
         this.prevention = new CheckPrevention();
         this.detections = new ConcurrentHashMap<>(2);
@@ -49,25 +49,35 @@ public abstract class CheckRunner extends CheckProcess {
     public final boolean hasSufficientData(Check.DataType dataType, double ratio) {
         if (ratio > 0.0) {
             int count = 0,
-                    total = this.detections.size();
+                    total = 0;
 
             for (CheckDetection detectionExecutor : this.detections.values()) {
-                if (detectionExecutor.hasSufficientData(dataType)) {
-                    count++;
+                if (detectionExecutor instanceof ProbabilityDetection) {
+                    total++;
 
-                    if (count / (double) total >= ratio) {
+                    if (detectionExecutor.hasSufficientData(dataType)) {
+                        count++;
+
+                        if (count / (double) total >= ratio) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return total == 0;
+        } else {
+            boolean found = false;
+
+            for (CheckDetection detectionExecutor : this.detections.values()) {
+                if (detectionExecutor instanceof ProbabilityDetection) {
+                    found = true;
+
+                    if (detectionExecutor.hasSufficientData(dataType)) {
                         return true;
                     }
                 }
             }
-            return false;
-        } else {
-            for (CheckDetection detectionExecutor : this.detections.values()) {
-                if (detectionExecutor.hasSufficientData(dataType)) {
-                    return true;
-                }
-            }
-            return false;
+            return !found;
         }
     }
 
@@ -75,10 +85,12 @@ public abstract class CheckRunner extends CheckProcess {
         double num = PlayerEvidence.emptyProbability;
 
         for (CheckDetection detectionExecutor : this.detections.values()) {
-            if (PlayerEvidence.POSITIVE) {
-                num = Math.max(num, detectionExecutor.getProbability(dataType));
-            } else {
-                num = Math.min(num, detectionExecutor.getProbability(dataType));
+            if (detectionExecutor.hasSufficientData(dataType)) {
+                if (PlayerEvidence.POSITIVE) {
+                    num = Math.max(num, detectionExecutor.getProbability(dataType));
+                } else {
+                    num = Math.min(num, detectionExecutor.getProbability(dataType));
+                }
             }
         }
         return num;
@@ -182,7 +194,7 @@ public abstract class CheckRunner extends CheckProcess {
                 && (System.currentTimeMillis() - this.creation) > TPS.maximum * TPS.tickTime
                 && (!cancelled || hackType.getCheck().handleCancelledEvents)
                 && (!v1_8 || this.protocol().bukkit.getGameMode() != GameMode.SPECTATOR)
-                && hackType.getCheck().isEnabled(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName())
+                && hackType.getCheck().isEnabled(this.protocol().spartan.dataType, this.protocol().getWorld().getName())
                 && Attributes.getAmount(this.protocol(), Attributes.GENERIC_SCALE) == 0.0
                 && !ProtocolLib.isTemporary(this.protocol().bukkit)
                 && canRun()
@@ -332,7 +344,7 @@ public abstract class CheckRunner extends CheckProcess {
             return frequency;
         } else if (detected != null
                 && (detected.bukkit.equals(this.protocol().bukkit)
-                || detected.spartan.getWorld().equals(this.protocol().spartan.getWorld())
+                || detected.getWorld().equals(this.protocol().getWorld())
                 && detected.getLocation().distance(this.protocol().getLocation()) <= PlayerUtils.chunk)) {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {

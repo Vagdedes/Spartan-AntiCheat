@@ -85,7 +85,7 @@ public class PlayerStateLists {
 
             for (PlayerProfile playerProfile : profiles) {
                 Collection<Enums.HackType> evidenceDetails = playerProfile.getEvidenceList(
-                        PlayerEvidence.preventionProbability
+                        PlayerEvidence.slightestProbability
                 );
 
                 if (!evidenceDetails.isEmpty()) {
@@ -122,7 +122,7 @@ public class PlayerStateLists {
 
                     if (!evidenceDetails.isEmpty()) {
                         lore.clear();
-                        lore.add("§7Suspected for§8:");
+                        lore.add("§7Has data for§8:");
 
                         for (Enums.HackType hackType : evidenceDetails) {
                             boolean sufficientData = profile.getRunner(hackType).hasSufficientData(

@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
+import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.component.ComponentXZ;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.irregularmovements.component.ComponentY;
 import com.vagdedes.spartan.abstraction.check.implementation.movement.morepackets.TimerBalancer;
 import com.vagdedes.spartan.abstraction.data.CheckBoundData;
@@ -16,6 +17,7 @@ import com.vagdedes.spartan.listeners.protocol.Packet_Teleport;
 import com.vagdedes.spartan.utils.minecraft.entity.AxisAlignedBB;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -40,7 +42,6 @@ public class SpartanProtocol {
     private Location location, from, teleport;
     public String fromWorld;
     public Location simulationStartPoint;
-    private PlayerProfile profile;
     public List<Packet_Teleport.TeleportData> teleportEngine;
     public final MCClient mcClient;
     public byte simulationDelayPerTP, keepEntity;
@@ -52,16 +53,18 @@ public class SpartanProtocol {
 
     private Set<AxisAlignedBB> axisMatrixCache;
     private CheckBoundData checkBoundData;
-    public PacketWorld packetWorld;
+    public final PacketWorld packetWorld;
     public long placeTime, placeHash;
-    public int transactionVl;
+    public int transactionVl, flyingTicks;
     public PlayerTickEvent lastTickEvent;
 
     public short transactionId;
     public long transactionTime, transactionLastTime, transactionPing, lagTick;
     public boolean transactionBoot, transactionLocal, transactionSentKeep;
+    public boolean entityHandle;
 
     private ComponentY componentY;
+    private ComponentXZ componentXZ;
 
     public SpartanProtocol(Player player) {
         long time = System.currentTimeMillis();
@@ -92,6 +95,7 @@ public class SpartanProtocol {
         this.teleported = false;
         this.vehicleStatus = true;
         this.keepEntity = 0;
+        this.flyingTicks = 0;
         this.tickTime = time;
 
         this.rightClickCounter = 0;
@@ -102,6 +106,7 @@ public class SpartanProtocol {
         this.claimedVelocity = null;
         this.claimedVeloGravity = new ArrayList<>();
         this.claimedVeloSpeed = new ArrayList<>();
+        this.entityHandle = false;
 
         this.axisMatrixCache = new HashSet<>();
         this.checkBoundData = null;
@@ -116,8 +121,8 @@ public class SpartanProtocol {
         this.transactionSentKeep = false;
         this.lagTick = 0;
         this.componentY = new ComponentY();
-
-        this.setProfile(ResearchEngine.getPlayerProfile(this, false));
+        this.componentXZ = new ComponentXZ();
+        this.profile().update(this);
     }
 
     public long getActiveCreationTime() {
@@ -189,26 +194,25 @@ public class SpartanProtocol {
     }
 
     public Location getLocation() {
-        if (packetsEnabled()) {
-            return this.location;
-        } else {
-            Location loc = ProtocolLib.getLocationOrNull(this.bukkit);
-            return loc != null
-                    ? loc
-                    : SpartanLocation.bukkitDefault.clone();
-        }
+        Location loc = this.packetsEnabled()
+                ? this.location
+                : ProtocolLib.getLocationOrNull(this.bukkit);
+        return loc != null
+                ? loc
+                : SpartanLocation.bukkitDefault.clone();
     }
 
     public Location getFromLocation() {
-        return this.from;
+        return this.from != null
+                ? this.from
+                : this.getLocation();
     }
 
     public Location getVehicleLocation() {
         Entity vehicle = this.spartan.getVehicle();
 
         if (vehicle instanceof LivingEntity || vehicle instanceof Vehicle) {
-            Location vehicleLoc = ProtocolLib.getLocationOrNull(vehicle);
-            return vehicleLoc;
+            return ProtocolLib.getLocationOrNull(vehicle);
         } else {
             return null;
         }
@@ -218,21 +222,21 @@ public class SpartanProtocol {
         Location vehicleLocation = getVehicleLocation();
 
         if (vehicleLocation == null) {
-            return this.location;
+            return this.getLocation();
         } else {
             return vehicleLocation;
         }
     }
 
     public SpartanLocation getPastTickRotation() {
-        Location l = this.location.clone();
+        Location l = this.getLocation().clone();
         l.setYaw(this.from.getYaw());
         l.setPitch(this.from.getPitch());
         return new SpartanLocation(l);
     }
 
     public boolean teleport(Location location) {
-        if (this.spartan.getWorld().equals(location.getWorld())) {
+        if (this.getWorld().equals(location.getWorld())) {
             if (SpartanBukkit.isSynchronised()) {
                 this.bukkit.leaveVehicle();
             }
@@ -275,6 +279,10 @@ public class SpartanProtocol {
         return this.componentY;
     }
 
+    public ComponentXZ getComponentXZ() {
+        return this.componentXZ;
+    }
+
     public void startSimulationFlag() {
         this.teleport(this.getFromLocation());
         this.simulationStartPoint = this.getFromLocation().clone();
@@ -287,7 +295,7 @@ public class SpartanProtocol {
     }
 
     public PlayerProfile profile() {
-        return this.profile;
+        return ResearchEngine.getPlayerProfile(this);
     }
 
     // Separator
@@ -324,9 +332,8 @@ public class SpartanProtocol {
         }
     }
 
-    public void setProfile(PlayerProfile profile) {
-        this.profile = profile;
-        this.profile.update(this);
+    public World getWorld() {
+        return this.getLocation().getWorld();
     }
 
     public boolean packetsEnabled() {

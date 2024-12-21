@@ -71,19 +71,14 @@ public class ResearchEngine {
         return new ArrayList<>(playerProfiles.values());
     }
 
-    public static PlayerProfile getPlayerProfile(String name, boolean create) {
+    public static PlayerProfile getPlayerProfile(String name) {
         PlayerProfile playerProfile = playerProfiles.get(name);
 
-        if (playerProfile != null) {
-            return playerProfile;
-        }
-        if (create) {
+        if (playerProfile == null) {
             playerProfile = new PlayerProfile(name);
             playerProfiles.put(name, playerProfile);
-            return playerProfile;
-        } else {
-            return null;
         }
+        return playerProfile;
     }
 
     public static PlayerProfile getAnyCasePlayerProfile(String name) {
@@ -97,19 +92,20 @@ public class ResearchEngine {
         return null;
     }
 
-    public static PlayerProfile getPlayerProfile(SpartanProtocol protocol, boolean force) {
-        PlayerProfile playerProfile;
+    public static PlayerProfile getPlayerProfile(SpartanProtocol protocol) {
+        PlayerProfile playerProfile = playerProfiles.get(protocol.bukkit.getName());
 
-        if (!force) {
-            playerProfile = playerProfiles.get(protocol.bukkit.getName());
-
-            if (playerProfile != null) {
-                return playerProfile;
-            }
+        if (playerProfile == null) {
+            playerProfile = new PlayerProfile(protocol);
+            playerProfiles.put(protocol.bukkit.getName(), playerProfile);
         }
-        playerProfile = new PlayerProfile(protocol);
-        playerProfiles.put(protocol.bukkit.getName(), playerProfile);
         return playerProfile;
+    }
+
+    private static void createPlayerProfile(SpartanProtocol protocol) {
+        PlayerProfile profile = new PlayerProfile(protocol);
+        profile.update(protocol);
+        playerProfiles.put(protocol.bukkit.getName(), new PlayerProfile(protocol));
     }
 
     // Separator
@@ -186,7 +182,7 @@ public class ResearchEngine {
                     if (player == null) {
                         playerProfiles.remove(playerName);
                     } else {
-                        player.setProfile(getPlayerProfile(player, true));
+                        createPlayerProfile(player);
                     }
                     if (Config.sql.isEnabled()) {
                         Config.sql.update("DELETE FROM " + Config.sql.getTable() + " WHERE information LIKE '%" + playerName + "%';");
@@ -214,7 +210,7 @@ public class ResearchEngine {
             } else if (player == null) {
                 playerProfiles.remove(playerName);
             } else {
-                player.setProfile(getPlayerProfile(player, true));
+                createPlayerProfile(player);
             }
             MainMenu.refresh();
             InteractiveInventory.playerInfo.refresh(playerName);
@@ -381,58 +377,66 @@ public class ResearchEngine {
 
             if (!logs.isEmpty()) {
                 for (Map.Entry<String, String> entry : logs.entrySet()) {
-                    try {
-                        String fullDate = entry.getKey(),
-                                partialDate = fullDate.substring(0, 10),
-                                data = entry.getValue();
-                        String detection = findInformation(
+                    String fullDate = entry.getKey(),
+                            data = entry.getValue();
+                    String detection = findInformation(
+                            data,
+                            CheckDetection.detectionIdentifier
+                    );
+
+                    if (detection != null) {
+                        String hackTypeString = findInformation(
                                 data,
-                                CheckDetection.detectionIdentifier
+                                CheckDetection.checkIdentifier
                         );
 
-                        if (detection != null) {
-                            String hackTypeString = findInformation(
+                        if (hackTypeString != null) {
+                            String player = findInformation(
                                     data,
-                                    CheckDetection.checkIdentifier
+                                    AntiCheatLogs.playerIdentifier
                             );
 
-                            if (hackTypeString != null) {
-                                String player = findInformation(
-                                        data,
-                                        AntiCheatLogs.playerIdentifier
-                                );
+                            if (player != null) {
+                                for (Enums.HackType hackType : Enums.HackType.values()) {
+                                    if (hackTypeString.equals(hackType.toString())) {
+                                        CheckDetection detectionExecutor = getPlayerProfile(
+                                                player
+                                        ).getRunner(
+                                                hackType
+                                        ).getDetection(
+                                                detection
+                                        );
 
-                                if (player != null) {
-                                    for (Enums.HackType hackType : Enums.HackType.values()) {
-                                        if (hackTypeString.equals(hackType.toString())) {
-                                            CheckDetection detectionExecutor = getPlayerProfile(
-                                                    player,
-                                                    true
-                                            ).getRunner(
-                                                    hackType
-                                            ).getDetection(
-                                                    detection
-                                            );
+                                        if (detectionExecutor != null) {
+                                            SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
 
-                                            if (detectionExecutor != null) {
-                                                SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+                                            try {
                                                 detectionExecutor.store(
                                                         findDataType(data),
                                                         sdf.parse(fullDate).getTime()
                                                 );
+                                            } catch (Exception ignored) {
                                             }
-                                            break;
                                         }
+                                        break;
                                     }
                                 }
                             }
-                        } else {
-                            String oreString = findInformation(
+                        }
+                    } else {
+                        String oreString = findInformation(
+                                data,
+                                MiningHistory.oreIdentifier
+                        );
+
+                        if (oreString != null) {
+                            String amount = findInformation(
                                     data,
-                                    MiningHistory.oreIdentifier
+                                    MiningHistory.amountIdentifier
                             );
 
-                            if (oreString != null) {
+                            if (amount != null
+                                    && AlgebraUtils.validInteger(amount)) {
                                 String player = findInformation(
                                         data,
                                         AntiCheatLogs.playerIdentifier
@@ -459,41 +463,37 @@ public class ResearchEngine {
 
                                                 if (environment != null) {
                                                     getPlayerProfile(
-                                                            player,
-                                                            true
+                                                            player
                                                     ).getMiningHistory(
                                                             ore
                                                     ).increaseMines(
                                                             environment,
-                                                            1,
-                                                            partialDate
+                                                            Integer.parseInt(amount)
                                                     );
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            } else {
-                                int index = data.indexOf(PlayerProfile.activeFor);
+                            }
+                        } else {
+                            int index = data.indexOf(PlayerProfile.activeFor);
 
-                                if (index != -1) {
-                                    SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
+                            if (index != -1) {
+                                SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
 
-                                    try {
-                                        ResearchEngine.getPlayerProfile(
-                                                data.split(" ", 2)[0],
-                                                true
-                                        ).getContinuity().setActiveTime(
-                                                sdf.parse(fullDate).getTime(),
-                                                Long.parseLong(data.substring(index + PlayerProfile.activeFor.length())),
-                                                false
-                                        );
-                                    } catch (Exception ignored) {
-                                    }
+                                try {
+                                    ResearchEngine.getPlayerProfile(
+                                            data.split(" ", 2)[0]
+                                    ).getContinuity().setActiveTime(
+                                            sdf.parse(fullDate).getTime(),
+                                            Long.parseLong(data.substring(index + PlayerProfile.activeFor.length())),
+                                            false
+                                    );
+                                } catch (Exception ignored) {
                                 }
                             }
                         }
-                    } catch (Exception ignored) {
                     }
                 }
             }
@@ -533,7 +533,7 @@ public class ResearchEngine {
                     if (hackType.getCheck().isEnabled(dataType, null)) {
                         for (PlayerProfile profile : profiles) {
                             for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                Double data = detectionExecutor.getData(dataType);
+                                Double data = detectionExecutor.getData(profile, dataType);
 
                                 if (data != null) {
                                     wave.computeIfAbsent(

@@ -1555,9 +1555,9 @@ public class BlockUtils {
 
     // Separator
 
-    public static boolean isSlime(SpartanPlayer p, SpartanLocation loc, int blocks) {
+    public static boolean isSlime(SpartanProtocol p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
-            if (p.isOnGround(false)) {
+            if (p.spartan.isOnGround(false)) {
                 return loc.getBlock().getType() == Material.SLIME_BLOCK;
             } else {
                 SpartanLocation loopLocation = loc.clone();
@@ -1586,9 +1586,9 @@ public class BlockUtils {
         return false;
     }
 
-    public static boolean isBed(SpartanPlayer p, SpartanLocation loc, int blocks) {
+    public static boolean isBed(SpartanProtocol p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_12)) {
-            if (p.isOnGround(false)) {
+            if (p.spartan.isOnGround(false)) {
                 return areBeds(loc.getBlock().getType());
             } else {
                 SpartanLocation loopLocation = loc.clone();
@@ -1611,7 +1611,7 @@ public class BlockUtils {
         return false;
     }
 
-    public static boolean isBouncingBlock(SpartanPlayer p, SpartanLocation loc, int blocks) {
+    public static boolean isBouncingBlock(SpartanProtocol p, SpartanLocation loc, int blocks) {
         return isSlime(p, loc, blocks) || isBed(p, loc, blocks);
     }
 

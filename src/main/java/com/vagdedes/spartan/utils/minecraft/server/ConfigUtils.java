@@ -52,7 +52,7 @@ public class ConfigUtils {
 
     public static String replaceWithSyntax(SpartanProtocol p, String message, HackType hackType) {
         Location loc = p.getLocationOrVehicle();
-        String worldName = p.spartan.getWorld().getName();
+        String worldName = p.getWorld().getName();
         message = replace(message, "{player}", p.bukkit.getName());
         message = replace(message, "{player:type}", p.spartan.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", p.getUUID().toString());

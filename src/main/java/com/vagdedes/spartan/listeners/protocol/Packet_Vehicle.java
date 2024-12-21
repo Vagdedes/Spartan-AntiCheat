@@ -8,9 +8,7 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.Event_Vehicle;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
+import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 
@@ -23,50 +21,29 @@ public class Packet_Vehicle extends PacketAdapter {
                 PacketType.Play.Client.STEER_VEHICLE,
                 PacketType.Play.Client.POSITION,
                 PacketType.Play.Client.POSITION_LOOK,
-                PacketType.Play.Client.LOOK,
-                PacketType.Play.Server.MOUNT
+                PacketType.Play.Client.LOOK
         );
     }
 
     @Override
     public void onPacketReceiving(PacketEvent event) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
-
-        if (event.getPacketType() == PacketType.Play.Client.STEER_VEHICLE) {
-            if (event.getPacket().getBooleans().size() > 0) {
-                boolean dismount = event.getPacket().getBooleans().read(1);
-
-                if (protocol.spartan.isBedrockPlayer()) {
-                    return;
-                }
-
-                protocol.keepEntity = 0;
-                protocol.vehicleStatus = dismount;
-            }
-        } else {
-            if (protocol.keepEntity < 10) protocol.keepEntity++;
+        if (protocol.spartan.isBedrockPlayer()) {
+            return;
         }
-    }
-
-    @Override
-    public void onPacketSending(PacketEvent event) {
-        if (event.getPacketType().equals(PacketType.Play.Server.MOUNT)) {
-            Player player = event.getPlayer();
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        if (protocol.spartan.getNearbyEntities(4).size() < 2) return;
+        if (ProtocolTools.hasPosition(event.getPacket().getType()) && protocol.entityHandle) {
             protocol.timerBalancer.addBalance(50);
-            Entity entity = protocol.spartan.getVehicle();
-
-            if (entity instanceof Vehicle) {
-                if (protocol.vehicleStatus && protocol.keepEntity != 0) {
-                    VehicleEnterEvent bukkitEvent = new VehicleEnterEvent((Vehicle) entity, player);
-                    bukkitEvent.setCancelled(event.isCancelled());
-                    Event_Vehicle.enter(bukkitEvent);
-                } else {
-                    VehicleExitEvent bukkitEvent = new VehicleExitEvent((Vehicle) entity, player);
-                    bukkitEvent.setCancelled(event.isCancelled());
-                    Event_Vehicle.exit(bukkitEvent);
-                }
-            }
+            VehicleExitEvent bukkitEvent = new VehicleExitEvent(null, protocol.bukkit);
+            bukkitEvent.setCancelled(event.isCancelled());
+            Event_Vehicle.exit(bukkitEvent);
+            protocol.entityHandle = false;
+        } else if (event.getPacket().getType().equals(PacketType.Play.Client.STEER_VEHICLE) && !protocol.entityHandle) {
+            protocol.timerBalancer.addBalance(50);
+            VehicleEnterEvent bukkitEvent = new VehicleEnterEvent(null, protocol.bukkit);
+            bukkitEvent.setCancelled(event.isCancelled());
+            Event_Vehicle.enter(bukkitEvent);
+            protocol.entityHandle = true;
         }
     }
 

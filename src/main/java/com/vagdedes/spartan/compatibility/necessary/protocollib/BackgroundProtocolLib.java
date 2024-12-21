@@ -18,9 +18,9 @@ public class BackgroundProtocolLib {
         p.addPacketListener(new Packet_Join());
         p.addPacketListener(new Packet_EntityAction());
         p.addPacketListener(new Packet_Velocity());
+
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
             p.addPacketListener(new Packet_Combat());
-            //p.addPacketListener(new Packet_Movement());
         } else {
             p.addPacketListener(new Packet_Combat_Legacy());
         }
@@ -34,8 +34,8 @@ public class BackgroundProtocolLib {
         p.addPacketListener(new Packet_PistonHandle());
         p.addPacketListener(new Packet_ExplosionHandle());
         p.addPacketListener(new Packet_ServerBlockHandle());
-        p.addPacketListener(new LatencyHandler());
-//        p.addPacketListener(new Packet_Debug());
+        p.addPacketListener(new Packet_LatencyHandler());
+        p.addPacketListener(new Packet_Abilities());
 
         if (PlayerUtils.trident) {
             p.addPacketListener(new Packet_Trident());

@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.Register;
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
@@ -41,7 +42,7 @@ public abstract class CheckDetection extends CheckProcess {
     protected long notifications;
 
     protected CheckDetection(CheckRunner executor, String name, boolean def) {
-        super(executor.hackType, executor.protocol(), executor.playerName());
+        super(executor.hackType, executor.protocol());
         this.executor = executor;
         this.name = name;
         this.def = def;
@@ -87,18 +88,15 @@ public abstract class CheckDetection extends CheckProcess {
         return true;
     }
 
-    protected boolean hasSufficientData(Check.DataType dataType) {
-        return true;
-    }
+    abstract protected boolean hasSufficientData(Check.DataType dataType);
 
     public void clearData(Check.DataType dataType) {
-
     }
 
     public void store(Check.DataType dataType, long time) {
     }
 
-    public Double getData(Check.DataType dataType) {
+    public Double getData(PlayerProfile profile, Check.DataType dataType) {
         return null;
     }
 
@@ -110,9 +108,7 @@ public abstract class CheckDetection extends CheckProcess {
         return null;
     }
 
-    double getDataCompletion(Check.DataType dataType) {
-        return 1.0;
-    }
+    abstract double getDataCompletion(Check.DataType dataType);
 
     // Probability
 
@@ -165,7 +161,7 @@ public abstract class CheckDetection extends CheckProcess {
                 + "(Data-Completion: " + AlgebraUtils.cut(dataCompletion, 2) + "), "
                 + "(Server-Version: " + MultiVersion.serverVersion.toString() + "), "
                 + "(Plugin-Version: " + API.getVersion() + "), "
-                + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName()) + "), "
+                + "(Silent: " + hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().getWorld().getName()) + "), "
                 + "(Punish: " + hackType.getCheck().canPunish(this.protocol().spartan.dataType) + "), "
                 + "(Packets: " + this.protocol().packetsEnabled() + "), "
                 + "(Ping: " + this.protocol().getPing() + "ms), "
@@ -220,7 +216,7 @@ public abstract class CheckDetection extends CheckProcess {
 
             if (!commands.isEmpty()
                     && this.hasSufficientData(this.protocol().spartan.dataType)) {
-                Collection<Enums.HackType> detectedHacks = this.profile().getEvidenceList(
+                Collection<Enums.HackType> detectedHacks = this.protocol().profile().getEvidenceList(
                         PlayerEvidence.punishmentProbability
                 );
                 detectedHacks.removeIf(loopHackType -> !loopHackType.getCheck().canPunish(this.protocol().spartan.dataType));
@@ -332,7 +328,7 @@ public abstract class CheckDetection extends CheckProcess {
                 this.punish();
                 this.executor.prevention = newPrevention;
                 this.executor.prevention.canPrevent =
-                        !hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().spartan.getWorld().getName())
+                        !hackType.getCheck().isSilent(this.protocol().spartan.dataType, this.protocol().getWorld().getName())
                                 && (silentCause == null
                                 || silentCause.hasExpired()
                                 || !silentCause.pointerMatches(information))

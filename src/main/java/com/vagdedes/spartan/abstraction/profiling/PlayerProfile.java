@@ -37,7 +37,7 @@ public class PlayerProfile {
         this.continuity = new ProfileContinuity(this);
 
         for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
-            this.miningHistory[ore.ordinal()] = new MiningHistory(ore);
+            this.miningHistory[ore.ordinal()] = new MiningHistory(this, ore);
         }
 
         // Separator
@@ -63,7 +63,7 @@ public class PlayerProfile {
         this.continuity = new ProfileContinuity(this);
 
         for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
-            this.miningHistory[ore.ordinal()] = new MiningHistory(ore);
+            this.miningHistory[ore.ordinal()] = new MiningHistory(this, ore);
         }
         this.registerChecks(protocol);
     }
@@ -107,8 +107,8 @@ public class PlayerProfile {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             try {
                 CheckRunner executor = (CheckRunner) hackType.executor
-                        .getConstructor(hackType.getClass(), SpartanProtocol.class, String.class)
-                        .newInstance(hackType, protocol, this.name);
+                        .getConstructor(hackType.getClass(), SpartanProtocol.class)
+                        .newInstance(hackType, protocol);
                 this.runners[hackType.ordinal()] = executor;
             } catch (Exception ex) {
                 ex.printStackTrace();

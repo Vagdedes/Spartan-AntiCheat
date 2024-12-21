@@ -27,9 +27,8 @@ public class Packet_BlockPlace extends PacketAdapter {
 
     public Packet_BlockPlace() {
         super(Register.plugin, ListenerPriority.HIGHEST,
-                PacketType.Play.Client.USE_ITEM,
-                via21blockPlace()
-        );
+                via8blockPlace(),
+                via21blockPlace());
         // Method: Event_BlockPlace.event()
     }
 
@@ -38,6 +37,8 @@ public class Packet_BlockPlace extends PacketAdapter {
         Player player = event.getPlayer();
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
         PacketContainer packet = event.getPacket();
+        if (event.getPacket().getType().equals(PacketType.Play.Client.BLOCK_DIG))
+            return;
         if (isPlacingBlock(packet)) {
             if (packet.getBlockPositionModifier().getValues().isEmpty() && packet.getMovingBlockPositions().getValues().isEmpty()) {
                 // stub for debug
@@ -59,7 +60,7 @@ public class Packet_BlockPlace extends PacketAdapter {
                 }
 
                 Location l = new Location(
-                        protocol.spartan.getWorld(),
+                        protocol.getWorld(),
                         blockPosition.toVector().getBlockX(),
                         blockPosition.toVector().getBlockY(),
                         blockPosition.toVector().getBlockZ()
@@ -154,10 +155,16 @@ public class Packet_BlockPlace extends PacketAdapter {
         return direction;
     }
 
-    public static PacketType via21blockPlace() {
-        return MultiVersion.isOrGreater(
-                MultiVersion.MCVersion.V1_21) ? PacketType.Play.Client.USE_ITEM_ON
+    private static PacketType via21blockPlace() {
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_21)
+                ? PacketType.Play.Client.USE_ITEM_ON
                 : PacketType.Play.Client.BLOCK_PLACE;
+    }
+
+    private static PacketType via8blockPlace() {
+        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
+                ? PacketType.Play.Client.USE_ITEM
+                : PacketType.Play.Client.BLOCK_DIG;
     }
 
 

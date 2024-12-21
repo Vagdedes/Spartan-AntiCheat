@@ -42,6 +42,17 @@ public class Event_Movement implements Listener {
                 p.movement.judgeGround();
                 return;
             }
+
+            /*
+            int sens = Sensitivity.calculateSensitivity(
+                            Math.abs(Math.abs(e.getTo().getYaw())
+                                            - Math.abs(e.getFrom().getYaw())));
+            e.getPlayer().sendMessage("s: " + sens + " "
+                            + Math.abs(Math.abs(e.getTo().getYaw())
+                            - Math.abs(e.getFrom().getYaw())));
+
+             */
+
             Location vehicle = protocol.getVehicleLocation(),
                     nfrom = e.getFrom();
             SpartanLocation
@@ -98,6 +109,7 @@ public class Event_Movement implements Listener {
         protocol.packetWorld.tick(tickEvent);
         SpartanPlayer p = protocol.spartan;
         p.getRunner(Enums.HackType.MorePackets).handle(false, tickEvent);
+        p.getRunner(Enums.HackType.IrregularMovements).handle(false, tickEvent);
     }
 
     public static void transaction(PlayerTransactionEvent event) {

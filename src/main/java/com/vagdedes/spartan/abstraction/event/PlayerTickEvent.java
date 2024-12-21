@@ -7,12 +7,14 @@ public class PlayerTickEvent {
     public final SpartanProtocol protocol;
     public final long time;
     public final boolean legacy;
+    public final boolean onGround;
     private long delay;
 
-    public PlayerTickEvent(SpartanProtocol protocol, boolean legacy) {
+    public PlayerTickEvent(SpartanProtocol protocol, boolean legacy, boolean onGround) {
         this.time = System.currentTimeMillis();
         this.protocol = protocol;
         this.delay = -1;
+        this.onGround = onGround;
         this.legacy = legacy;
     }
 

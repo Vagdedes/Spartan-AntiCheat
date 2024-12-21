@@ -65,7 +65,7 @@ public class Packet_Combat extends PacketAdapter {
                     Bukkit.getScheduler().runTask(Register.plugin,
                                     () -> protocol.bukkit.teleport(protocol.getLocation()));
                     AwarenessNotifications.optionallySend(protocol.bukkit.getName()
-                                    + " attack faster than the transaction response");
+                                    + " attack faster than the transaction response.");
                     event.setCancelled(true);
                     return;
                 }
@@ -100,7 +100,7 @@ public class Packet_Combat extends PacketAdapter {
                 if (pendingEntityId == entityId) {
                     Player attacker = plugin.getServer().getPlayer(playerUUID);
                     Entity target = ProtocolLibrary.getProtocolManager().
-                                    getEntityFromID(protocol.spartan.getWorld(), entityId);
+                                    getEntityFromID(protocol.getWorld(), entityId);
                     if (attacker != null && target != null) {
                         Event_Combat.event(
                                         new EntityDamageByEntityEvent(

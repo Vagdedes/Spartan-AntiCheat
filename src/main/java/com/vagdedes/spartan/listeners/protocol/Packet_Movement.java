@@ -10,40 +10,34 @@ import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
 import com.vagdedes.spartan.abstraction.event.SuperPositionPacketEvent;
 import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
-import com.vagdedes.spartan.utils.math.MathHelper;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 public class Packet_Movement extends PacketAdapter {
     public Packet_Movement() {
         super(
-                        Register.plugin,
-                        ListenerPriority.LOWEST,
-                        PacketType.Play.Server.POSITION,
-                        PacketType.Play.Client.POSITION,
-                        PacketType.Play.Client.POSITION_LOOK,
-                        PacketType.Play.Client.LOOK,
-                        (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17))
-                                        ? PacketType.Play.Client.GROUND
-                                        : PacketType.Play.Client.FLYING
+                Register.plugin,
+                ListenerPriority.LOWEST,
+                PacketType.Play.Server.POSITION,
+                PacketType.Play.Client.POSITION,
+                PacketType.Play.Client.POSITION_LOOK,
+                PacketType.Play.Client.LOOK,
+                (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17))
+                        ? PacketType.Play.Client.GROUND
+                        : PacketType.Play.Client.FLYING
         );
     }
 
@@ -103,12 +97,12 @@ public class Packet_Movement extends PacketAdapter {
         for (Double check : v) {
             if (check.isNaN() || check.isInfinite() || Math.abs(check) > 3E8) {
                 SpartanBukkit.getProtocol(player)
-                                .spartan.punishments.kick(Bukkit.getConsoleSender(), "Invalid packet");
+                        .spartan.punishments.kick(Bukkit.getConsoleSender(), "Invalid packet");
                 return;
             }
         }
         boolean legacy = ProtocolTools.isFlying(event, l, r);
-        PlayerTickEvent tickEvent = new PlayerTickEvent(p, legacy).build();
+        PlayerTickEvent tickEvent = new PlayerTickEvent(p, legacy, onGround).build();
         Event_Movement.tick(tickEvent);
         if (tickEvent.getDelay() > 65) {
             p.lagTick = tickEvent.getDelay();
@@ -119,11 +113,11 @@ public class Packet_Movement extends PacketAdapter {
             p.transactionVl += (p.isBlatantDesync() ? 2 : 1);
             if (p.transactionVl > 40) {
                 Bukkit.getScheduler().runTask(Register.plugin,
-                                () -> player.teleport(p.getLocation()));
+                        () -> player.teleport(p.getLocation()));
                 AwarenessNotifications.optionallySend(player.getName()
-                                + " moves faster than the transaction response ("
-                                + tickEvent.getDelay() + "ms > "
-                                + (System.currentTimeMillis() - p.transactionTime) + "ms)");
+                        + " moves faster than the transaction response ("
+                        + tickEvent.getDelay() + "ms > "
+                        + (System.currentTimeMillis() - p.transactionTime) + "ms).");
                 event.setCancelled(true);
                 return;
             }
@@ -131,7 +125,7 @@ public class Packet_Movement extends PacketAdapter {
             p.transactionVl -= 2;
 
         if (p.transactionBoot)
-            LatencyHandler.startChecking(p);
+            Packet_LatencyHandler.startChecking(p);
 
         if (!ProtocolLib.getWorld(player).getName().equals(p.fromWorld)) {
             p.fromWorld = ProtocolLib.getWorld(player).getName();
@@ -159,7 +153,7 @@ public class Packet_Movement extends PacketAdapter {
                             p.setTeleport(null);
                         } else {
                             if (p.spartan.trackers.has(PlayerTrackers.TrackerType.VEHICLE, "enter")) return;
-                            for (Entity entity : getEntitiesAroundPoint(p.getLocation(), 5))
+                            for (Entity entity : p.spartan.getNearbyEntities(5))
                                 if (entity instanceof Boat) return;
 
                             // Force packet stop if your packet are shit
@@ -187,12 +181,13 @@ public class Packet_Movement extends PacketAdapter {
             }
 
             PlayerMoveEvent moveEvent = new PlayerMoveEvent(
-                            player,
-                            p.getFromLocation(),
-                            p.getLocation()
+                    player,
+                    p.getFromLocation(),
+                    p.getLocation()
             );
             moveEvent.setCancelled(event.isCancelled());
             Event_Movement.event(moveEvent, true);
+            if (p.flyingTicks > 0) p.flyingTicks--;
 
             //player.sendMessage("event: " + moveEvent.getTo().toVector());
         } else {
@@ -205,26 +200,8 @@ public class Packet_Movement extends PacketAdapter {
         packet.protocol.spartan.getRunner(Enums.HackType.Exploits).handle(cancelled, packet);
         packet.protocol.spartan.getRunner(Enums.HackType.IrregularMovements).handle(cancelled, packet);
     }
-    private static List<Entity> getEntitiesAroundPoint(Location location, double radius) {
-        List<Entity> entities = new ArrayList<>();
-        World world = location.getWorld();
-        int smallX = MathHelper.floor_double((location.getX() - radius) / 16.0D);
-        int bigX = MathHelper.floor_double((location.getX() + radius) / 16.0D);
-        int smallZ = MathHelper.floor_double((location.getZ() - radius) / 16.0D);
-        int bigZ = MathHelper.floor_double((location.getZ() + radius) / 16.0D);
-
-        for (int x = smallX; x <= bigX; x++) {
-            for (int z = smallZ; z <= bigZ; z++) {
-                if (world.isChunkLoaded(x, z)) {
-                    entities.addAll(Arrays.asList(world.getChunkAt(x, z).getEntities())); // Add all entities from this chunk to the list
-                }
-            }
-        }
-        entities.removeIf(entity -> SpartanLocation.distanceSquared(entity.getLocation(), location) > radius * radius);
-        return entities;
-    }
 
     public enum tpFlags {
-         X, Y, Z
+        X, Y, Z
     }
 }

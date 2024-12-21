@@ -15,9 +15,9 @@ import com.vagdedes.spartan.listeners.bukkit.Event_Movement;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-public class LatencyHandler extends PacketAdapter {
+public class Packet_LatencyHandler extends PacketAdapter {
 
-    public LatencyHandler() {
+    public Packet_LatencyHandler() {
         super(
                 Register.plugin,
                 ListenerPriority.MONITOR,

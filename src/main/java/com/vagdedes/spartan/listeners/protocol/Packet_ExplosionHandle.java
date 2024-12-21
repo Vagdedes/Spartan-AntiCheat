@@ -33,6 +33,7 @@ public class Packet_ExplosionHandle extends PacketAdapter {
 
             if (SpartanLocation.distanceSquared(l, protocol.getLocation()) < 10) {
                 protocol.getComponentY().explosionTick = true;
+                protocol.getComponentXZ().explosionTick = true;
             }
         }
     }

@@ -14,11 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MiningHistory {
@@ -54,7 +50,7 @@ public class MiningHistory {
                 }
 
                 if ((event == null || !event.isCancelled())
-                        && Enums.HackType.XRay.getCheck().isEnabled(protocol.spartan.dataType, protocol.spartan.getWorld().getName())) {
+                        && Enums.HackType.XRay.getCheck().isEnabled(protocol.spartan.dataType, protocol.getWorld().getName())) {
                     AntiCheatLogs.logInfo(
                             protocol,
                             null,
@@ -124,52 +120,38 @@ public class MiningHistory {
         }
     }
 
+    private final PlayerProfile profile;
     public final MiningOre ore;
-    private final Map<Integer, Map<String, Integer>> count;
+    private final Map<Integer, Integer> count;
 
-    MiningHistory(MiningOre ore) {
+    MiningHistory(PlayerProfile profile, MiningOre ore) {
         World.Environment[] environments = World.Environment.values();
+        this.profile = profile;
         this.ore = ore;
         this.count = new ConcurrentHashMap<>(environments.length + 1, 1.0f);
     }
 
-    public Set<Map.Entry<String, Integer>> getMinesEntry(World.Environment environment) {
-        return new HashSet<>(
-                count.getOrDefault(
-                        environment.ordinal(),
-                        new HashMap<>(0)
-                ).entrySet()
-        );
-    }
+    public double getMinesToTimeRatio(World.Environment environment) {
+        Integer mines = count.get(environment.ordinal());
 
-    public double getMinesDeviation(World.Environment environment) {
-        Map<String, Integer> map = count.get(environment.ordinal());
-
-        if (map == null || map.isEmpty()) {
+        if (mines == null) {
             return 0.0;
         } else {
-            int mines = 0;
+            long onlineTime = this.profile.getContinuity().getOnlineTime();
 
-            for (int count : map.values()) {
-                mines += count * count;
+            if (onlineTime > 0L) {
+                onlineTime /= 1_000L; // Convert to seconds
+                return mines / ((double) onlineTime);
+            } else {
+                return 0.0;
             }
-            return Math.sqrt(mines / ((double) map.size()));
         }
     }
 
-    public void increaseMines(World.Environment environment, int amount, String date) {
-        Map<String, Integer> map = count.computeIfAbsent(
-                environment.ordinal(),
-                k -> new ConcurrentHashMap<>()
-        );
-        map.put(date, map.getOrDefault(date, 0) + amount);
-    }
-
     public void increaseMines(World.Environment environment, int amount) {
-        increaseMines(
-                environment,
-                amount,
-                new Timestamp(System.currentTimeMillis()).toString().substring(0, 10)
+        count.put(
+                environment.ordinal(),
+                count.getOrDefault(environment.ordinal(), 0) + amount
         );
     }
 

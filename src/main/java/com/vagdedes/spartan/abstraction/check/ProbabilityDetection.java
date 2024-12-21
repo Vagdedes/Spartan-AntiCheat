@@ -27,12 +27,8 @@ public abstract class ProbabilityDetection extends CheckDetection {
     @Override
     protected final boolean hasData(Check.DataType dataType) {
         synchronized (this.data) {
-            return this.hasData(this.data.get(dataType));
+            return this.data.containsKey(dataType);
         }
-    }
-
-    private boolean hasData(Collection<Long> data) {
-        return data != null && data.size() > 1;
     }
 
     @Override
@@ -82,11 +78,11 @@ public abstract class ProbabilityDetection extends CheckDetection {
     }
 
     @Override
-    public final Double getData(Check.DataType dataType) {
+    public final Double getData(PlayerProfile profile, Check.DataType dataType) {
         synchronized (this.data) {
             Collection<Long> data = this.data.get(dataType);
 
-            if (!this.hasData(data)) {
+            if (data == null) {
                 return null;
             } else {
                 double averageViolationVelocity,
@@ -94,19 +90,22 @@ public abstract class ProbabilityDetection extends CheckDetection {
                         comparisonCount = 0.0;
                 long violationVelocitySquareSum = 0;
                 Iterator<Long> iterator = data.iterator();
-                long previous = iterator.next();
 
-                while (iterator.hasNext()) {
-                    long current = iterator.next();
+                if (iterator.hasNext()) {
+                    long previous = iterator.next();
 
-                    if (this.profile().getContinuity().wasOnline(current, previous)) {
-                        comparisonCount++;
-                        long difference = current - previous;
-                        previous = current;
-                        violationVelocitySquareSum += difference * difference;
+                    while (iterator.hasNext()) {
+                        long current = iterator.next();
+
+                        if (profile.getContinuity().wasOnline(current, previous)) {
+                            comparisonCount++;
+                            long difference = current - previous;
+                            previous = current;
+                            violationVelocitySquareSum += difference * difference;
+                        }
                     }
                 }
-                long onlineTime = this.profile().getContinuity().getOnlineTime();
+                long onlineTime = profile.getContinuity().getOnlineTime();
 
                 if (onlineTime > 0L) {
                     onlineTime /= 1_000L; // Convert to seconds

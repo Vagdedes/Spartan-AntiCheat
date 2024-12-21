@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Event_Chunks implements Listener {
 
-    private static final long enabledPastTime = 60_000L;
     private static final Map<Long, Long> loaded = new ConcurrentHashMap<>();
     public static final boolean heightSupport = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17);
 
@@ -43,7 +42,7 @@ public class Event_Chunks implements Listener {
                 return true;
             }
         }
-        loaded.put(hash, System.currentTimeMillis() + enabledPastTime);
+        loaded.put(hash, System.currentTimeMillis() + 10_000L);
         return false;
     }
 

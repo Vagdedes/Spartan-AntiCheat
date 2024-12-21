@@ -40,10 +40,10 @@ public class Event_World implements Listener {
         MiningHistory.log(protocol, nb, cancelled);
 
         if (protocol.spartan.getRunner(Enums.HackType.NoSwing).prevent()
-                || protocol.spartan.getRunner(Enums.HackType.BlockReach).prevent()
-                || protocol.spartan.getRunner(Enums.HackType.FastBreak).prevent()
-                || protocol.spartan.getRunner(Enums.HackType.GhostHand).prevent()
-                || protocol.spartan.getRunner(Enums.HackType.XRay).prevent()) {
+                        || protocol.spartan.getRunner(Enums.HackType.BlockReach).prevent()
+                        || protocol.spartan.getRunner(Enums.HackType.FastBreak).prevent()
+                        || protocol.spartan.getRunner(Enums.HackType.GhostHand).prevent()
+                        || protocol.spartan.getRunner(Enums.HackType.XRay).prevent()) {
             e.setCancelled(true);
         }
     }
@@ -74,16 +74,16 @@ public class Event_World implements Listener {
         Block nb = e.getClickedBlock();
         Action action = e.getAction();
         boolean notNull = nb != null,
-                customBlock = notNull && ItemsAdder.is(nb);
+                        customBlock = notNull && ItemsAdder.is(nb);
 
         // Object
         p.calculateClicks(
-                action == Action.LEFT_CLICK_AIR
-                        && !p.getNearbyEntities(
-                        CombatUtils.maxHitDistance,
-                        CombatUtils.maxHitDistance,
-                        CombatUtils.maxHitDistance
-                ).isEmpty()
+                        action == Action.LEFT_CLICK_AIR
+                                        && !p.getNearbyEntities(
+                                        CombatUtils.maxHitDistance,
+                                        CombatUtils.maxHitDistance,
+                                        CombatUtils.maxHitDistance
+                        ).isEmpty()
         );
 
         if (notNull) {
@@ -109,7 +109,7 @@ public class Event_World implements Listener {
         p.getRunner(Enums.HackType.FastBow).handle(false, e);
 
         if (p.getRunner(Enums.HackType.GhostHand).prevent()
-                || p.getRunner(Enums.HackType.FastClicks).prevent()) {
+                        || p.getRunner(Enums.HackType.FastClicks).prevent()) {
             e.setCancelled(true);
         }
     }

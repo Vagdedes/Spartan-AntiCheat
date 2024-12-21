@@ -12,6 +12,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
+import com.vagdedes.spartan.listeners.bukkit.standalone.Event_Chunks;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.MathHelper;
@@ -195,6 +196,7 @@ public class SpartanPlayer {
     public int getMaxChatLength() {
         return this.isBedrockPlayer() ? 512 :
                 MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_11)
+                        || this.protocol.isUsingVersionOrGreater(MultiVersion.MCVersion.V1_11)
                         || PluginUtils.exists("viaversion")
                         || Compatibility.CompatibilityType.PROTOCOL_SUPPORT.isFunctional() ? 256 :
                         100;
@@ -349,42 +351,65 @@ public class SpartanPlayer {
 
     // Separator
 
-    public List<Entity> getNearbyEntities(Location location, double x, double y, double z) {
-        List<Entity> entities = new ArrayList<>();
-        World world = location.getWorld();
-        int smallX = MathHelper.floor_double((location.getX() - x) / PlayerUtils.chunk);
-        int bigX = MathHelper.floor_double((location.getX() + x) / PlayerUtils.chunk);
-        int smallZ = MathHelper.floor_double((location.getZ() - z) / PlayerUtils.chunk);
-        int bigZ = MathHelper.floor_double((location.getZ() + z) / PlayerUtils.chunk);
+    public List<Entity> getNearbyEntities(double radius) {
+        if (SpartanBukkit.isSynchronised()) {
+            return this.protocol.bukkit.getNearbyEntities(radius, radius, radius);
+        } else {
+            List<Entity> entities = new ArrayList<>();
+            Location location = protocol.getLocation();
+            World world = location.getWorld();
+            int smallX = MathHelper.floor_double((location.getX() - radius) / PlayerUtils.chunk);
+            int bigX = MathHelper.floor_double((location.getX() + radius) / PlayerUtils.chunk);
+            int smallZ = MathHelper.floor_double((location.getZ() - radius) / PlayerUtils.chunk);
+            int bigZ = MathHelper.floor_double((location.getZ() + radius) / PlayerUtils.chunk);
+            double radiusSquared = radius * radius;
 
-        for (int xx = smallX; xx <= bigX; xx++) {
-            for (int zz = smallZ; zz <= bigZ; zz++) {
-                if (world.isChunkLoaded(xx, zz)) {
-                    entities.addAll(Arrays.asList(world.getChunkAt(xx, zz).getEntities())); // Add all entities from this chunk to the list
+            for (int xx = smallX; xx <= bigX; xx++) {
+                for (int zz = smallZ; zz <= bigZ; zz++) {
+                    if (Event_Chunks.isLoaded(world, xx, zz)) {
+                        for (Entity entity : world.getChunkAt(xx, zz).getEntities()) {
+                            if (SpartanLocation.distanceSquared(
+                                    entity.getLocation(),
+                                    location
+                            ) <= radiusSquared) {
+                                entities.add(entity);
+                            }
+                        }
+                    }
                 }
             }
+            return entities;
         }
-        if (!entities.isEmpty()) {
-            Iterator<Entity> iterator = entities.iterator();
-
-            while (iterator.hasNext()) {
-                Location eLoc = iterator.next().getLocation();
-
-                if (Math.abs(eLoc.getX() - location.getX()) > x
-                        || Math.abs(eLoc.getY() - location.getY()) > y
-                        || Math.abs(eLoc.getZ() - location.getZ()) > z) {
-                    iterator.remove();
-                }
-            }
-        }
-        return entities;
     }
 
     public List<Entity> getNearbyEntities(double x, double y, double z) {
         if (SpartanBukkit.isSynchronised()) {
             return this.protocol.bukkit.getNearbyEntities(x, y, z);
         } else {
-            return this.getNearbyEntities(this.protocol.getLocation(), x, y, z);
+            List<Entity> entities = new ArrayList<>();
+            Location location = protocol.getLocation();
+            World world = location.getWorld();
+            int smallX = MathHelper.floor_double((location.getX() - x) / PlayerUtils.chunk);
+            int bigX = MathHelper.floor_double((location.getX() + x) / PlayerUtils.chunk);
+            int smallZ = MathHelper.floor_double((location.getZ() - z) / PlayerUtils.chunk);
+            int bigZ = MathHelper.floor_double((location.getZ() + z) / PlayerUtils.chunk);
+
+            for (int xx = smallX; xx <= bigX; xx++) {
+                for (int zz = smallZ; zz <= bigZ; zz++) {
+                    if (Event_Chunks.isLoaded(world, xx, zz)) {
+                        for (Entity entity : world.getChunkAt(xx, zz).getEntities()) {
+                            Location eLoc = entity.getLocation();
+
+                            if (Math.abs(eLoc.getX() - location.getX()) <= x
+                                    && Math.abs(eLoc.getY() - location.getY()) <= y
+                                    && Math.abs(eLoc.getZ() - location.getZ()) <= z) {
+                                entities.add(entity);
+                            }
+                        }
+                    }
+                }
+            }
+            return entities;
         }
     }
 
@@ -406,7 +431,7 @@ public class SpartanPlayer {
                 || BlockUtils.canClimb(locationP1.getBlock().getType(), false))) {
             return;
         }
-        World world = getWorld();
+        World world = this.protocol.getWorld();
         double startY = Math.min(BlockUtils.getMaxHeight(world), location.getY()),
                 box = startY - Math.floor(startY);
         int iterations = 0;
@@ -459,13 +484,9 @@ public class SpartanPlayer {
 
     // Separator
 
-    public World getWorld() {
-        return protocol.getLocation().getWorld();
-    }
-
     public boolean isOutsideOfTheBorder(double deviation) {
         Location loc = protocol.getLocation();
-        WorldBorder border = getWorld().getWorldBorder();
+        WorldBorder border = this.protocol.getWorld().getWorldBorder();
         double size = (border.getSize() / 2.0) + deviation;
         Location center = border.getCenter();
         return Math.abs(loc.getX() - center.getX()) > size

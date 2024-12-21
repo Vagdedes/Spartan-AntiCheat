@@ -18,7 +18,6 @@ import java.util.*;
 public class SpartanLocation implements Cloneable {
 
     public static final Location bukkitDefault = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
-    private static final boolean v_1_13 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13);
 
     public static int getChunkPos(int pos) {
         return pos >> 4;

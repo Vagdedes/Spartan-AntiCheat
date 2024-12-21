@@ -70,11 +70,11 @@ public class MovementProcessing {
     private static void calculateBouncing(SpartanProtocol protocol, SpartanLocation location,
                                           double vertical) {
         if (v1_8 && vertical != 0.0) {
-            if (BlockUtils.isSlime(protocol.spartan, location, 4)) {
+            if (BlockUtils.isSlime(protocol, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
                 protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
                 protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "slime", time);
-            } else if (BlockUtils.isBed(protocol.spartan, location, 4)) {
+            } else if (BlockUtils.isBed(protocol, location, 4)) {
                 int time = (int) (TPS.maximum * 2);
                 protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, time);
                 protocol.spartan.trackers.add(PlayerTrackers.TrackerType.BOUNCING_BLOCKS, "bed", time);
@@ -121,7 +121,7 @@ public class MovementProcessing {
 
     private static void calculateBubbleWater(SpartanProtocol protocol, SpartanLocation location) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-            int blockY = location.getBlockY(), minY = BlockUtils.getMinHeight(protocol.spartan.getWorld());
+            int blockY = location.getBlockY(), minY = BlockUtils.getMinHeight(protocol.getWorld());
 
             if (blockY > minY) {
                 SpartanLocation locationModified = location.clone();

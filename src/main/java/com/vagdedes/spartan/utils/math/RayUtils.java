@@ -85,7 +85,7 @@ public class RayUtils {
 
     @SafeVarargs
     public static boolean onBlock(SpartanProtocol protocol, Location location, Set<Material>... sets) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -107,7 +107,7 @@ public class RayUtils {
     }
 
     public static boolean onBlock(SpartanProtocol protocol, Location location, Set<Material> set) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -127,7 +127,7 @@ public class RayUtils {
     }
 
     public static boolean onBlock(SpartanProtocol protocol, Location location, Material material) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -147,7 +147,7 @@ public class RayUtils {
     }
 
     public static boolean onSolidBlock(SpartanProtocol protocol, Location location) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -167,7 +167,7 @@ public class RayUtils {
     }
 
     public static boolean isSolidBlock(SpartanProtocol protocol, Location location) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.3, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.3, 0.3));
@@ -187,7 +187,7 @@ public class RayUtils {
     }
 
     public static boolean inBlock(SpartanProtocol protocol, Location location) {
-        World world = protocol.spartan.getWorld();
+        World world = protocol.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, 0.0, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.5, 0.3));
