@@ -6,6 +6,7 @@ Compatibility: # The name of the compatibility
   enabled: true # Enabled judges whether a compatibility will become functional if detected to exist or forced
   force: false # Force will attempt to make a compatibility functional regardless if it exists (potential errors)
 ```
+(There are more options available, the above is an example of the configuration)
 
 ## Compatibilities
 Item Attributes: 1.9+ Minecraft built-in feature<br>
