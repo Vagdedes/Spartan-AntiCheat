@@ -6,6 +6,7 @@ config_reload: '&8[&2{prefix}&8]&e Config successfully reloaded.'
 no_permission: '&cYou don''t have permission to interact with this.'
 player_not_found_message: '&cPlayer not found.'
 ```
+(There are more options available, the above is an example of the configuration)
 
 ## HEX Colors
 ```
