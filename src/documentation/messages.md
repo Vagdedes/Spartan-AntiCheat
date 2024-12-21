@@ -48,7 +48,7 @@ Messages:
 ### Player:
 ```
 {player} Player’s original name
-{player:type} Player’s type (Example: java, bedrock)
+{player:type} Player’s client type (Example: java, bedrock)
 {uuid} Player’s unique identifier text
 {ping} Player’s ping in non-decimal form
 {world} Player’s current world name
@@ -60,15 +60,19 @@ Messages:
 {yaw} Player’s Yaw coordinate in non-decimal form
 {pitch} Player’s Pitch coordinate in non-decimal form
 {cps} Player’s amount of recent clicks per second
-Detection Notifications:
-{detections} List of detections with their custom names
+```
+### Detections:
+```
 {detection} A check’s custom name gathered from Spartan’s configuration
-{detection:real} A check’s real name set by Spartan’s developer/s
+{detection:real} A check’s real name set by the Spartan’s developer/s
 {detection:silent} True/False depending if a check is silent, thus allowing it to prevent player interactions
 {detection:punish} True/False depending if a check can and is configured to punish with commands
 ```
-### Detection:
+### Detection Notifications:
 ```
-{detection:violations} Player’s amount of violations on a given check.
 {detection:percentage} The percentage determining the certainty of a check's detection that a given player is hacking.
+```
+### Detection Punishments:
+```
+{detections} List of detections with their custom names
 ```
