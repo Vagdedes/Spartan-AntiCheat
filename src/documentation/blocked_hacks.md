@@ -17,11 +17,9 @@ AutoClicker
 ## Movement
 ```
 Flight
-Entity Flight
 Glide
 FastFall
 Speed
-Entity Speed
 All Jumps
 Clip
 Teleport
