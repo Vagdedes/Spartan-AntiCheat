@@ -7,6 +7,7 @@ import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
+import lombok.SneakyThrows;
 import me.vagdedes.spartan.api.API;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.Bukkit;
@@ -53,13 +54,13 @@ public class ConfigUtils {
     public static String replaceWithSyntax(SpartanProtocol p, String message, HackType hackType) {
         Location loc = p.getLocationOrVehicle();
         String worldName = p.getWorld().getName();
-        message = replace(message, "{player}", p.bukkit.getName());
+        message = replace(message, "{player}", p.bukkit().getName());
         message = replace(message, "{player:type}", p.spartan.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", p.getUUID().toString());
         message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{world}", worldName);
         message = replace(message, "{health}", String.valueOf(p.spartan.getHealth()));
-        message = replace(message, "{gamemode}", p.bukkit.getGameMode().toString().toLowerCase());
+        message = replace(message, "{gamemode}", p.bukkit().getGameMode().toString().toLowerCase());
         message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
         message = replace(message, "{y}", String.valueOf(loc.getBlockY()));
         message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
@@ -97,15 +98,11 @@ public class ConfigUtils {
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }
 
+    @SneakyThrows
     public static void add(File file, String path, Object value) {
         YamlConfiguration filea = YamlConfiguration.loadConfiguration(file);
 
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (Exception ignored) {
-            }
-        }
+        if (!file.exists()) file.createNewFile();
         if (!filea.contains(path)) {
             set(file, path, value);
         }

@@ -30,7 +30,7 @@ import java.util.List;
 public class ManageChecks extends InventoryMenu {
 
     public ManageChecks() {
-        super("§0Manage Checks".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0), 54, Permission.MANAGE);
+        super("Manage Checks", 54, Permission.MANAGE);
     }
 
     @Override
@@ -89,9 +89,9 @@ public class ManageChecks extends InventoryMenu {
 
                 if (check != null) {
                     ResearchEngine.resetData(check.hackType);
-                    protocol.bukkit.closeInventory();
+                    protocol.bukkit().closeInventory();
                     ClickableMessage.sendURL(
-                            protocol.bukkit,
+                            protocol.bukkit(),
                             Config.messages.getColorfulString("check_stored_data_delete_message"),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
@@ -113,7 +113,7 @@ public class ManageChecks extends InventoryMenu {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null),
                 silent = check.isSilent(null, null),
-                bypassing = Permissions.isBypassing(protocol.bukkit, hackType),
+                bypassing = Permissions.isBypassing(protocol.bukkit(), hackType),
                 punish = check.canPunish(null);
         String[] disabledDetections = CloudBase.getShownDisabledDetections(hackType);
         String enabledOption, silentOption, punishOption, colour, secondColour;
@@ -172,7 +172,7 @@ public class ManageChecks extends InventoryMenu {
 
         for (Check.DataType dataType : Check.DataType.values()) {
             if (SpartanEdition.hasDetectionsPurchased(dataType)
-                    && !protocol.spartan.getRunner(hackType).hasSufficientData(
+                    && !protocol.profile().getRunner(hackType).hasSufficientData(
                     dataType,
                     PlayerEvidence.dataRatio
             )) {

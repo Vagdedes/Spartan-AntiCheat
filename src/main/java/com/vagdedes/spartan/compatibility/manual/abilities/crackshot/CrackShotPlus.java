@@ -31,7 +31,7 @@ public class CrackShotPlus implements Listener {
 
             if (!e.isCancelled()) {
                 Config.compatibility.evadeFalsePositives(
-                        protocol.spartan,
+                        protocol,
                         Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -61,7 +61,7 @@ public class CrackShotPlus implements Listener {
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p.spartan,
+                            p,
                             Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,
@@ -84,7 +84,7 @@ public class CrackShotPlus implements Listener {
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p.spartan,
+                            p,
                             Compatibility.CompatibilityType.CRACK_SHOT_PLUS,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,

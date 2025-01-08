@@ -12,7 +12,7 @@ public class CustomEnchantsPlus {
 
     public static boolean has(SpartanProtocol protocol) {
         if (Compatibility.CompatibilityType.CUSTOM_ENCHANTS_PLUS.isFunctional()) {
-            PlayerInventory inventory = protocol.bukkit.getInventory();
+            PlayerInventory inventory = protocol.bukkit().getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
                 if (armor != null && has(armor)) {

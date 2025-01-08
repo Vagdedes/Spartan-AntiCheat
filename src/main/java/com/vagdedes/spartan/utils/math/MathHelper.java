@@ -327,8 +327,8 @@ public class MathHelper {
         int var3 = (p_180188_1_ & 16711680) >> 16;
         int var4 = (p_180188_0_ & 65280) >> 8;
         int var5 = (p_180188_1_ & 65280) >> 8;
-        int var6 = (p_180188_0_ & 255) >> 0;
-        int var7 = (p_180188_1_ & 255) >> 0;
+        int var6 = (p_180188_0_ & 255);
+        int var7 = (p_180188_1_ & 255);
         int var8 = (int) ((float) var2 * (float) var3 / 255.0F);
         int var9 = (int) ((float) var4 * (float) var5 / 255.0F);
         int var10 = (int) ((float) var6 * (float) var7 / 255.0F);
@@ -336,7 +336,7 @@ public class MathHelper {
     }
 
     public static long func_180187_c(int x, int y, int z) {
-        long var3 = (long) (x * 3129871) ^ (long) z * 116129781L ^ (long) y;
+        long var3 = (long) (x * 3129871L) ^ (long) z * 116129781L ^ (long) y;
         var3 = var3 * var3 * 42317861L + var3 * 11L;
         return var3;
     }

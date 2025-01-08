@@ -11,6 +11,7 @@ import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class SpartanEdition {
@@ -20,7 +21,7 @@ public class SpartanEdition {
             || IDs.resource.equals("25638")
             || IDs.resource.equals("11196")
             || IDs.resource.equals("350")
-            || Bukkit.getMotd().contains(Register.plugin.getName())
+            || Bukkit.getMotd().contains("Spartan")
             ? Check.DataType.JAVA
             : Check.DataType.BEDROCK,
             alternativeType = currentType == Check.DataType.JAVA
@@ -36,10 +37,10 @@ public class SpartanEdition {
             versionNotificationMessage = "\n§cHey, just a heads up!"
                     + " You have " + type + " players which cannot be checked by the anti-cheat due to missing " + type + " detections.",
             noVersionNotificationMessage = "\n§cHey, just a heads up!"
-                    + " Your owned editions of Spartan could not be verified."
+                    + " Your owned editions of " + Register.pluginName + " could not be verified."
                     + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.",
             hasAccountNotificationMessage = "\n§cHey, just a heads up!"
-                    + " You do not seem to have an account paired with your Spartan AntiCheat license."
+                    + " You do not seem to have an account paired with your " + Register.pluginName + " AntiCheat license."
                     + " Visit §n" + DiscordMemberCount.discordURL + "§r§c §lfix this§r§c.";
     private static boolean
             hasAccount = true,
@@ -53,9 +54,9 @@ public class SpartanEdition {
     public static void refresh() {
         if (firstLoad) {
             firstLoad = false;
-            currentVersion = !CloudBase.hasToken();
+            currentVersion = !IDs.hasToken();
         }
-        SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
+        SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
             if (!currentVersion
                     && CloudConnections.ownsProduct(
                     getProductID(currentType)
@@ -73,7 +74,7 @@ public class SpartanEdition {
                     && !CloudConnections.ownsProduct("26")) {
                 alternativeVersion = false;
             }
-            hasAccount = !CloudBase.hasToken() || CloudConnections.hasAccount();
+            hasAccount = !IDs.hasToken() || CloudConnections.hasAccount();
         });
     }
 
@@ -113,7 +114,7 @@ public class SpartanEdition {
                 color = false;
             }
         }
-        return "Spartan" + (currentVersion && alternativeVersion ? " One" : "") + ": §a"
+        return Register.pluginName + (currentVersion && alternativeVersion ? " One" : "") + ": §a"
                 + (currentVersion ? "§a" : "§c") + currentType
                 + "§8/"
                 + (alternativeVersion ? "§a" : "§c") + alternativeType
@@ -157,7 +158,7 @@ public class SpartanEdition {
                     attemptVersionNotification(protocol, missingDetections[0]);
                     return;
                 }
-                List<SpartanProtocol> players = SpartanBukkit.getProtocols();
+                Collection<SpartanProtocol> players = SpartanBukkit.getProtocols();
                 players.remove(protocol);
                 int size = players.size();
                 List<PlayerProfile> checkedProfiles;
@@ -180,7 +181,7 @@ public class SpartanEdition {
 
                 // Separator
 
-                List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+                Collection<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
                 if (!playerProfiles.isEmpty()) {
                     playerProfiles.remove(protocol.profile());

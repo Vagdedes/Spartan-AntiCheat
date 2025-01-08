@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.inventory.implementation;
 
 import com.vagdedes.filegui.api.FileGUIAPI;
+import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
@@ -24,24 +25,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 public class MainMenu extends InventoryMenu {
 
-    private static final String name = "§0Spartan AntiCheat (Page ".substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0);
+    private static final String name = Register.pluginName + " AntiCheat (Page ";
 
     public MainMenu() {
         super(name, 54, new Permission[]{Permission.MANAGE, Permission.INFO});
     }
 
     public static void refresh() {
-        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
                 SpartanBukkit.transferTask(protocol, () -> {
-                    String title = protocol.bukkit.getOpenInventory().getTitle();
+                    String title = protocol.bukkit().getOpenInventory().getTitle();
 
                     if (title.startsWith(name)) {
                         DiscordMemberCount.ignore();
@@ -148,23 +150,23 @@ public class MainMenu extends InventoryMenu {
             protocol.spartan.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
 
         } else if (item.equals("Compatibilities")) {
-            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
-                protocol.bukkit.closeInventory();
+            if (!Permissions.has(protocol.bukkit(), Permission.MANAGE)) {
+                protocol.bukkit().closeInventory();
                 ClickableMessage.sendURL(
-                        protocol.bukkit,
+                        protocol.bukkit(),
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL
                 );
             } else if (Compatibility.CompatibilityType.FILE_GUI.isFunctional()) {
-                Player n = protocol.bukkit;
+                Player n = protocol.bukkit();
 
                 if (n.hasPermission("filegui.modify")) {
                     FileGUIAPI.openMenu(n, Config.compatibility.getFile().getPath(), 1);
                 } else {
-                    protocol.bukkit.closeInventory();
+                    protocol.bukkit().closeInventory();
                     ClickableMessage.sendURL(
-                            protocol.bukkit,
+                            protocol.bukkit(),
                             Config.messages.getColorfulString("no_permission"),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
@@ -173,10 +175,10 @@ public class MainMenu extends InventoryMenu {
             }
 
         } else if (item.equals("Management")) {
-            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
-                protocol.bukkit.closeInventory();
+            if (!Permissions.has(protocol.bukkit(), Permission.MANAGE)) {
+                protocol.bukkit().closeInventory();
                 ClickableMessage.sendURL(
-                        protocol.bukkit,
+                        protocol.bukkit(),
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL

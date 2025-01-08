@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -45,17 +44,17 @@ public class PlayerProfile {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(name);
 
         if (protocol != null) {
-            this.offlinePlayer = protocol.bukkit;
-            this.registerChecks(protocol);
+            this.offlinePlayer = protocol.bukkit();
+            this.registerRunners(protocol);
         } else {
             this.offlinePlayer = null;
-            this.registerChecks(null);
+            this.registerRunners(null);
         }
     }
 
     public PlayerProfile(SpartanProtocol protocol) {
-        this.name = protocol.bukkit.getName();
-        this.offlinePlayer = protocol.bukkit; // Attention
+        this.name = protocol.bukkit().getName();
+        this.offlinePlayer = protocol.bukkit(); // Attention
         this.skull = null;
         this.runners = new CheckRunner[Enums.HackType.values().length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
@@ -65,7 +64,7 @@ public class PlayerProfile {
         for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
             this.miningHistory[ore.ordinal()] = new MiningHistory(this, ore);
         }
-        this.registerChecks(protocol);
+        this.registerRunners(protocol);
     }
 
     // Separator
@@ -75,20 +74,18 @@ public class PlayerProfile {
     }
 
     public void update(SpartanProtocol protocol) {
-        this.offlinePlayer = protocol.bukkit;
+        this.offlinePlayer = protocol.bukkit();
         this.lastDataType = protocol.spartan.dataType;
-
-        for (CheckRunner executor : this.getRunners()) {
-            executor.setProtocol(protocol);
-
-            for (CheckDetection detectionExecutor : executor.getDetections()) {
-                detectionExecutor.setProtocol(protocol);
-            }
-        }
+        this.registerRunners(protocol);
     }
 
     SpartanProtocol protocol() {
-        return this.runners[0].protocol();
+        return this.runners[0].protocol;
+    }
+
+    public boolean isOnline() {
+        SpartanProtocol protocol = this.protocol();
+        return protocol != null && SpartanBukkit.isOnline(protocol);
     }
 
     public ProfileContinuity getContinuity() {
@@ -103,7 +100,7 @@ public class PlayerProfile {
         return this.runners;
     }
 
-    private void registerChecks(SpartanProtocol protocol) {
+    private void registerRunners(SpartanProtocol protocol) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             try {
                 CheckRunner executor = (CheckRunner) hackType.executor

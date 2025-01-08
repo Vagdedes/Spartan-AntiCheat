@@ -121,7 +121,7 @@ public class NPCManager implements Listener {
                             e.setCancelled(true);
                             npc.updateHead();
                             SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
-                            InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit));
+                            InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
                             break;
                         }
                     }
@@ -147,7 +147,7 @@ public class NPCManager implements Listener {
 
                             if (damager instanceof Player) {
                                 SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) damager);
-                                InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit));
+                                InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
                             }
                             break;
                         }

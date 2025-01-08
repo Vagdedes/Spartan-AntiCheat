@@ -16,17 +16,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CloudBase {
 
-    // URLs
-    static final String
-            website = "aHR0cHM6Ly93d3cudmFnZGVkZXMuY29tL21pbmVjcmFmdC9jbG91ZC8=",
-            accountWebsite = "aHR0cHM6Ly93d3cuaWRlYWxpc3RpYy5haS9hcGkvdjEvcHJvZHVjdC92ZXJpZnlEb3dubG9hZC8=";
-
     // Cache
     private static final Map<Enums.HackType, String[]>
-            disabledDetections = new LinkedHashMap<>(Enums.HackType.values().length);
+            disabledDetections = new ConcurrentHashMap<>(Enums.HackType.values().length);
 
     // Functionality
     private static long
@@ -35,37 +31,14 @@ public class CloudBase {
     private static final long refreshTime = 60_000L;
 
     // Parameters
-    static String identification = identification(), token = null;
-    static final String version = calculateVersion();
     static final String separator = ">@#&!%<;=";
 
     static {
-        SpartanBukkit.runRepeatingTask(() -> SpartanBukkit.connectionThread.execute(CloudBase::refresh), 1L, refreshTime);
-    }
-
-    // Separator
-
-    private static String calculateVersion() {
-        String[] verstionString = Register.plugin.getDescription().getVersion().split(" ");
-
-        for (String s : verstionString) {
-            if (AlgebraUtils.validInteger(s) || AlgebraUtils.validDecimal(s)) {
-                return s;
-            }
-        }
-        return "0";
-    }
-
-    public static boolean hasToken() {
-        return token != null && !IDs.hasUserIDByDefault;
-    }
-
-    public static String getToken() {
-        return IDs.hasUserIDByDefault ? null : token;
-    }
-
-    public static String getRawToken() {
-        return token;
+        SpartanBukkit.runRepeatingTask(
+                () -> SpartanBukkit.connectionThread.execute(CloudBase::refresh),
+                1L,
+                refreshTime
+        );
     }
 
     // Separator
@@ -88,7 +61,7 @@ public class CloudBase {
     }
 
     public static void announce(SpartanProtocol protocol) {
-        if (Permissions.isStaff(protocol.bukkit)) {
+        if (Permissions.isStaff(protocol.bukkit())) {
             SpartanBukkit.connectionThread.execute(() -> {
                 String[][] announcements = CloudConnections.getStaffAnnouncements();
 
@@ -99,7 +72,7 @@ public class CloudBase {
                                 "staff-announcement-" + announcement[0],
                                 Integer.parseInt(announcement[2])
                         )) {
-                            protocol.bukkit.sendMessage(AwarenessNotifications.getNotification(announcement[1]));
+                            protocol.bukkit().sendMessage(AwarenessNotifications.getNotification(announcement[1]));
                         }
                     }
                 }
@@ -121,15 +94,11 @@ public class CloudBase {
         }
     }
 
-    public static void clear(boolean cache) {
-        if (cache) {
-            disabledDetections.clear();
-        } else {
-            identification = identification();
-        }
+    public static void clear() {
+        disabledDetections.clear();
     }
 
-    private static String identification() {
+    public static String identification() {
         return "identification=" + IDs.platform() + "|" + IDs.user() + "|" + IDs.file();
     }
 
@@ -140,13 +109,13 @@ public class CloudBase {
             connectionRefreshCooldown = ms + refreshTime;
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfSyncElseHere(SpartanEdition::refresh);
+            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(SpartanEdition::refresh);
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
+            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
                 try {
-                    String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
-                            + "&action=get&data=automaticConfigurationChanges&version=" + version);
+                    String[] results = RequestUtils.get(StringUtils.decodeBase64(JarVerification.website) + "?" + identification()
+                            + "&action=get&data=automaticConfigurationChanges&version=" + Register.plugin.getDescription().getVersion());
 
                     if (results.length > 0) {
                         boolean changed = false;
@@ -210,10 +179,10 @@ public class CloudBase {
             // Separator
             Map<Enums.HackType, String[]> disabledDetections = new LinkedHashMap<>();
 
-            SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
+            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
                 try {
-                    String[] results = RequestUtils.get(StringUtils.decodeBase64(website) + "?" + identification
-                            + "&action=get&data=disabledDetections&version=" + version + "&value="
+                    String[] results = RequestUtils.get(StringUtils.decodeBase64(JarVerification.website) + "?" + identification()
+                            + "&action=get&data=disabledDetections&version=" + Register.plugin.getDescription().getVersion() + "&value="
                             + MultiVersion.serverVersion.toString());
 
                     if (results.length > 0) {
@@ -253,7 +222,7 @@ public class CloudBase {
             });
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfSyncElseHere(() -> {
+            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
                 List<SpartanProtocol> protocols = Permissions.getStaff();
 
                 if (!protocols.isEmpty()) {
@@ -267,7 +236,7 @@ public class CloudBase {
                                         "staff-announcement-" + announcement[0],
                                         Integer.parseInt(announcement[2])
                                 )) {
-                                    p.bukkit.sendMessage(AwarenessNotifications.getNotification(announcement[1]));
+                                    p.bukkit().sendMessage(AwarenessNotifications.getNotification(announcement[1]));
                                 }
                             }
                         }

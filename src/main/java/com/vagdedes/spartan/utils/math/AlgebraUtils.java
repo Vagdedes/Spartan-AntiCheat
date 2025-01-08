@@ -1,12 +1,14 @@
 package com.vagdedes.spartan.utils.math;
 
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Location;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
 
+@UtilityClass
 public class AlgebraUtils {
 
     public static final double SQUARE_ROOT_2 = Math.sqrt(2.0);

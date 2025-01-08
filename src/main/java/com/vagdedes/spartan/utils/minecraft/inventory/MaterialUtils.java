@@ -256,7 +256,7 @@ public class MaterialUtils {
             if (protocol.spartan.movement.isSwimming()) {
                 water = true;
             } else {
-                SpartanBlock block = new SpartanLocation(protocol.getLocation()).add(0, protocol.bukkit.getEyeHeight(), 0).getBlock();
+                SpartanBlock block = new SpartanLocation(protocol.getLocation()).add(0, protocol.bukkit().getEyeHeight(), 0).getBlock();
                 water = block.isWaterLogged() || block.getType() == MaterialUtils.get("water");
             }
             if (water) {
@@ -265,7 +265,7 @@ public class MaterialUtils {
                 if (itemStack.getEnchantmentLevel(EnchantmentUtils.WATER_WORKER) > 0) {
                     aquaInfinity = true;
                 } else {
-                    PlayerInventory inventory = protocol.bukkit.getInventory();
+                    PlayerInventory inventory = protocol.bukkit().getInventory();
                     List<ItemStack> items = new ArrayList<>(4 + 1);
                     items.addAll(Arrays.asList(inventory.getArmorContents()));
                     items.add(inventory.getItemInHand());

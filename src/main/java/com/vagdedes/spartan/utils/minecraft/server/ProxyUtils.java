@@ -53,11 +53,11 @@ public class ProxyUtils {
                     for (Map.Entry<UUID, SpartanProtocol> entry : entries) {
                         SpartanProtocol protocol = entry.getValue();
 
-                        if (protocol.bukkit.isOp()) {
-                            player = protocol.bukkit;
+                        if (protocol.bukkit().isOp()) {
+                            player = protocol.bukkit();
                             break;
-                        } else if (Permissions.isStaff(protocol.bukkit)) {
-                            player = protocol.bukkit;
+                        } else if (Permissions.isStaff(protocol.bukkit())) {
+                            player = protocol.bukkit();
                         }
                     }
                 }

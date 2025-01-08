@@ -5,7 +5,7 @@ import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 
-import java.util.List;
+import java.util.Collection;
 
 public class Settings extends ConfigurationBuilder {
 
@@ -17,10 +17,6 @@ public class Settings extends ConfigurationBuilder {
 
     @Override
     public void create() {
-        clear();
-
-        addOption("Punishments.broadcast_on_punishment", true);
-
         addOption("Logs.log_file", true);
         addOption("Logs.log_console", true);
 
@@ -42,7 +38,6 @@ public class Settings extends ConfigurationBuilder {
 
         addOption("Discord.webhook_hex_color", "4caf50");
         addOption("Discord.checks_webhook_url", "");
-        addOption("Discord.punishments_webhook_url", "");
     }
 
     public void runOnLogin(SpartanProtocol p) {
@@ -54,7 +49,7 @@ public class Settings extends ConfigurationBuilder {
     }
 
     public void runOnLogin() {
-        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {

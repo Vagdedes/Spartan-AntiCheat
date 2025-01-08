@@ -10,8 +10,6 @@ public class Advanced extends ConfigurationBuilder {
 
     @Override
     public void create() {
-        clear();
-
         //addOption("path.to.option", true);
     }
 

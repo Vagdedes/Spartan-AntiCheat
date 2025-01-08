@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.manual.abilities.*;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShot;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShotPlus;
@@ -422,44 +422,45 @@ public class Compatibility {
         return active;
     }
 
-    public void evadeFalsePositives(SpartanPlayer player,
+    public void evadeFalsePositives(SpartanProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackType[] hackTypes,
                                     int ticks) {
         for (Enums.HackType hackType : hackTypes) {
-            player.getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+            protocol.profile().getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
         }
     }
 
-    public void evadeFalsePositives(SpartanPlayer player,
+    public void evadeFalsePositives(SpartanProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackType hackType,
                                     int ticks) {
-        player.getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+        protocol.profile().getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
     }
 
-    public void evadeFalsePositives(SpartanPlayer player,
+    public void evadeFalsePositives(SpartanProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackCategoryType[] types,
                                     int ticks) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             for (Enums.HackCategoryType type : types) {
                 if (hackType.category == type) {
-                    player.getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+                    protocol.profile().getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
                     break;
                 }
             }
         }
     }
 
-    public void evadeFalsePositives(SpartanPlayer player,
+    public void evadeFalsePositives(SpartanProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackCategoryType type,
                                     int ticks) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             if (hackType.category == type) {
-                player.getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
+                protocol.profile().getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
             }
         }
     }
+
 }

@@ -43,7 +43,7 @@ public class PlayerStateLists {
         item.setItemMeta(meta);
         inventory.setItem(slot, item);
 
-        SpartanBukkit.dataThread.executeWithPriority(() -> {
+        SpartanBukkit.headThread.executeWithPriority(() -> {
             ItemStack itemNew = profile.getSkull();
             ItemMeta metaNew = itemNew.getItemMeta();
             metaNew.setDisplayName(meta.getDisplayName());
@@ -78,7 +78,7 @@ public class PlayerStateLists {
     }
 
     private static Map<PlayerProfile, Collection<Enums.HackType>> getProfiles() {
-        List<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
+        Collection<PlayerProfile> profiles = ResearchEngine.getPlayerProfiles();
 
         if (!profiles.isEmpty()) {
             Map<PlayerProfile, Collection<Enums.HackType>> map = new LinkedHashMap<>();
@@ -166,32 +166,18 @@ public class PlayerStateLists {
     }
 
     private static Integer[] getFreeSlots(Inventory inventory) {
-        int slot = 0, maxSize = 45;
-        List<Integer> array = new ArrayList<>(Math.min(inventory.getSize(), maxSize));
+        List<Integer> freeSlots = new ArrayList<>();
+        int maxSize = Math.min(inventory.getSize(), 45);
 
-        for (ItemStack itemStack : inventory.getContents()) {
-            if (itemStack != null) {
-                slot++;
-            } else {
-                boolean add = true;
-
-                for (int ignoredSlot : ignoredSlots) {
-                    if (ignoredSlot == slot) {
-                        add = false;
-                        break;
-                    }
-                }
-
-                if (add) {
-                    array.add(slot);
-                }
-                if (slot == maxSize) {
-                    break;
-                }
-                slot++;
+        for (int slot = 0; slot < maxSize; slot++) {
+            int finalSlot = slot;
+            if (inventory.getItem(slot) == null
+                            && Arrays.stream(ignoredSlots)
+                            .noneMatch(s -> s == finalSlot)) {
+                freeSlots.add(slot);
             }
         }
-        return array.toArray(new Integer[0]);
+        return freeSlots.toArray(new Integer[0]);
     }
 
     private static <E> List<E> subList(List<E> list, int startIndex, int toIndex) {

@@ -755,7 +755,6 @@ public class BlockUtils {
         // Separator
 
         builder.clear();
-        helper.clear();
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
             if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_14)) {
                 if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_16)) {
@@ -1613,6 +1612,20 @@ public class BlockUtils {
 
     public static boolean isBouncingBlock(SpartanProtocol p, SpartanLocation loc, int blocks) {
         return isSlime(p, loc, blocks) || isBed(p, loc, blocks);
+    }
+
+    // Separator
+
+    public static float getSlipperiness(SpartanBlock block) {
+        if (areSlimeBlocks(block.getType())) {
+            return 0.8F;
+        } else if (areRegularIceBlocks(block.getType())) {
+            return 0.98F;
+        } else if (areBlueIceBlocks(block.getType())) {
+            return 0.989F;
+        } else {
+            return 0.6F;
+        }
     }
 
 }

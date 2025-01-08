@@ -50,8 +50,8 @@ public class PlayerClicks {
         if (!this.clicks.isEmpty()) {
             synchronized (this.clicks) {
                 this.remove();
+                return new ArrayList<>(this.clicks);
             }
-            return new ArrayList<>(this.clicks);
         } else {
             return new ArrayList<>(0);
         }

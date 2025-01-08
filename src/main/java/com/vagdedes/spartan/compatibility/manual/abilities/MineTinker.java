@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -14,12 +13,11 @@ public class MineTinker implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(MTPlayerInteractEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.MINE_TINKER;
 
         if (compatibilityType.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    p,
+                    SpartanBukkit.getProtocol(e.getPlayer()),
                     compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,

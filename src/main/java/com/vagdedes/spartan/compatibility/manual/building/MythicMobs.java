@@ -56,7 +56,7 @@ public class MythicMobs {
 
     public static boolean is(SpartanProtocol protocol) {
         if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()) {
-            PlayerInventory inventory = protocol.bukkit.getInventory();
+            PlayerInventory inventory = protocol.bukkit().getInventory();
 
             for (ItemStack armor : inventory.getArmorContents()) {
                 if (armor != null && is(armor)) {

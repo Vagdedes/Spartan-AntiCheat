@@ -66,7 +66,7 @@ public class PlayerUtils {
     private static final Map<Byte, List<Double>> jumpsValues = new LinkedHashMap<>();
     private static final Map<Integer, Integer> fallTicks = new OverflowMap<>(
             new ConcurrentHashMap<>(),
-            1024
+            1_024
     );
     private static final Map<PotionEffectType, Long> handledPotionEffects = new LinkedHashMap<>();
 

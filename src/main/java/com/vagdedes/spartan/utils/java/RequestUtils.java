@@ -1,7 +1,8 @@
 package com.vagdedes.spartan.utils.java;
 
-import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
+import com.vagdedes.spartan.functionality.connection.cloud.IDs;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
+import lombok.experimental.UtilityClass;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -11,17 +12,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+@UtilityClass
 public class RequestUtils {
 
-    public static final int
-            defaultTimeOut = 30_000,
-            minimumTimeOut = defaultTimeOut / 10;
+    public static final int defaultTimeOut = 30_000;
 
     public static String[] get(String link, String method, String message, int timeOut) throws Exception {
         boolean isPost = method.equals("POST");
         String[] split = link.split(" ");
 
-        String token = CloudBase.getToken();
+        String token = IDs.getToken();
         URL url = new URL(split[0]);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.addRequestProperty("User-Agent",

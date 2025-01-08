@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.damage;
 
 import com.evill4mer.RealDualWield.Api.PlayerOffhandAnimationEvent;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -14,12 +13,11 @@ public class RealDualWield implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Event(PlayerOffhandAnimationEvent e) {
-        SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.REAL_DUAL_WIELD;
 
         if (compatibilityType.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    p,
+                    SpartanBukkit.getProtocol(e.getPlayer()),
                     compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,

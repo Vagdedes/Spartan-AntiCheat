@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.utils.java;
 
+import lombok.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,8 +101,7 @@ public class OverflowMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public V computeIfAbsent(K key,
-                             Function<? super K, ? extends V> mappingFunction) {
+    public V computeIfAbsent(K key, @NonNull Function<? super K, ? extends V> mappingFunction) {
         Objects.requireNonNull(mappingFunction);
         V v;
         if ((v = get(key)) == null) {
@@ -117,7 +117,7 @@ public class OverflowMap<K, V> implements Map<K, V> {
 
     @Override
     public V computeIfPresent(K key,
-                              BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+                             @NonNull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue;
         if ((oldValue = get(key)) != null) {
@@ -135,42 +135,33 @@ public class OverflowMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public V compute(K key,
-                     BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public V compute(K key, @NonNull BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         V oldValue = get(key);
-
         V newValue = remappingFunction.apply(key, oldValue);
-        if (newValue == null) {
-            // delete mapping
-            if (oldValue != null || containsKey(key)) {
-                // something to remove
-                remove(key);
-                return null;
-            } else {
-                // nothing to do. Leave things as they were.
-                return null;
-            }
-        } else {
-            // add or replace old mapping
-            put(key, newValue);
-            return newValue;
-        }
+
+        if (newValue == null)
+            removeIfExists(key, oldValue);
+        else put(key, newValue);
+
+        return newValue;
+    }
+
+    public void removeIfExists(K key, V oldValue) {
+        if (oldValue != null || containsKey(key)) remove(key);
     }
 
     @Override
-    public V merge(K key, V value,
-                   BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public V merge(K key, @NonNull V value,
+                   @NonNull BiFunction<? super V, ? super V,
+                   ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
         Objects.requireNonNull(value);
         V oldValue = get(key);
         V newValue = (oldValue == null) ? value :
                 remappingFunction.apply(oldValue, value);
-        if (newValue == null) {
-            remove(key);
-        } else {
-            put(key, newValue);
-        }
+        if (newValue == null) remove(key);
+        else put(key, newValue);
         return newValue;
     }
 

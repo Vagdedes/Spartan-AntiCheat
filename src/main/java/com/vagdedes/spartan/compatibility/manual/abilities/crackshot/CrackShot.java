@@ -5,7 +5,6 @@ import com.shampaggon.crackshot.events.WeaponPreShootEvent;
 import com.shampaggon.crackshot.events.WeaponScopeEvent;
 import com.shampaggon.crackshot.events.WeaponShootEvent;
 import com.vagdedes.spartan.abstraction.data.Buffer;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -35,7 +34,7 @@ public class CrackShot implements Listener {
 
             if (!e.isCancelled()) {
                 Config.compatibility.evadeFalsePositives(
-                        protocol.spartan,
+                        protocol,
                         Compatibility.CompatibilityType.CRACK_SHOT,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -58,9 +57,8 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponPreShoot(WeaponPreShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
             Config.compatibility.evadeFalsePositives(
-                    p,
+                    SpartanBukkit.getProtocol(e.getPlayer()),
                     Compatibility.CompatibilityType.CRACK_SHOT,
                     new Enums.HackCategoryType[]{
                             Enums.HackCategoryType.MOVEMENT,
@@ -74,10 +72,8 @@ public class CrackShot implements Listener {
     @EventHandler
     private void WeaponShoot(WeaponShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
-
             Config.compatibility.evadeFalsePositives(
-                    p,
+                    SpartanBukkit.getProtocol(e.getPlayer()),
                     Compatibility.CompatibilityType.CRACK_SHOT,
                     new Enums.HackCategoryType[]{
                             Enums.HackCategoryType.MOVEMENT,
@@ -94,10 +90,8 @@ public class CrackShot implements Listener {
             Entity entity = e.getVictim();
 
             if (entity instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) entity).spartan;
-
                 Config.compatibility.evadeFalsePositives(
-                        p,
+                        SpartanBukkit.getProtocol((Player) entity),
                         Compatibility.CompatibilityType.CRACK_SHOT,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -119,7 +113,7 @@ public class CrackShot implements Listener {
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p.spartan,
+                            p,
                             Compatibility.CompatibilityType.CRACK_SHOT,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,
@@ -142,7 +136,7 @@ public class CrackShot implements Listener {
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
-                            p.spartan,
+                            p,
                             Compatibility.CompatibilityType.CRACK_SHOT,
                             new Enums.HackCategoryType[]{
                                     Enums.HackCategoryType.MOVEMENT,

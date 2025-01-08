@@ -7,6 +7,7 @@ import java.util.Objects;
 
 public class IDs {
 
+    static String token = null;
     public static final String resource = "%%__RESOURCE__%%";
     public static final boolean enabled = AlgebraUtils.validInteger(resource);
     private static String
@@ -23,7 +24,6 @@ public class IDs {
     static void set(int user, int nonce) {
         IDs.user = Integer.toString(user);
         IDs.file = Integer.toString(nonce);
-        CloudBase.clear(false);
     }
 
     public static void setPlatform(int id) {
@@ -43,7 +43,7 @@ public class IDs {
             }
             return file;
         } else {
-            return CloudBase.hasToken() ? Integer.toString(CloudBase.getRawToken().hashCode()): user;
+            return hasToken() ? Integer.toString(token.hashCode()) : user;
         }
     }
 
@@ -73,6 +73,16 @@ public class IDs {
         } catch (Exception ex) {
             return "0";
         }
+    }
+
+    // Token
+
+    public static boolean hasToken() {
+        return token != null && !IDs.hasUserIDByDefault;
+    }
+
+    public static String getToken() {
+        return IDs.hasUserIDByDefault ? null : token;
     }
 
 }

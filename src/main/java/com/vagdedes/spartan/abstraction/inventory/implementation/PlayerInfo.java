@@ -12,7 +12,6 @@ import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
@@ -37,7 +36,7 @@ public class PlayerInfo extends InventoryMenu {
             new OverflowMap<>(new ConcurrentHashMap<>(), 512)
     );
     private static final String
-            menu = ("§0Player Info: ").substring(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? 2 : 0),
+            menu = ("Player Info: "),
             documentationURL = "https://github.com/Vagdedes/Spartan-AntiCheat/blob/main/src/documentation/player_info_menu.md";
     private static final int[] slots = new int[]{
             20, 21, 22, 23, 24
@@ -57,16 +56,16 @@ public class PlayerInfo extends InventoryMenu {
                 : ResearchEngine.getAnyCasePlayerProfile(object.toString());
 
         if (profile == null) {
-            protocol.bukkit.closeInventory();
+            protocol.bukkit().closeInventory();
             ClickableMessage.sendURL(
-                    protocol.bukkit,
+                    protocol.bukkit(),
                     Config.messages.getColorfulString("player_not_found_message"),
                     CommandExecution.support,
                     DiscordMemberCount.discordURL
             );
             return false;
         } else {
-            setTitle(protocol, menu + (isOnline ? target.bukkit.getName() : profile.name));
+            setTitle(protocol, menu + (isOnline ? target.bukkit().getName() : profile.name));
             List<String> lore = new ArrayList<>();
             lore.add("");
 
@@ -253,8 +252,8 @@ public class PlayerInfo extends InventoryMenu {
         if (!check.isEnabled(dataType, worldName)) { // Do not put player because we calculate it below
             return "Check is disabled";
         }
-        CheckCancellation disabledCause = protocol.spartan.getRunner(hackType).getDisableCause();
-        return Permissions.isBypassing(protocol.bukkit, hackType)
+        CheckCancellation disabledCause = protocol.profile().getRunner(hackType).getDisableCause();
+        return Permissions.isBypassing(protocol.bukkit(), hackType)
                 ? "Player has permission bypass"
                 : disabledCause != null
                 ? "Custom: " + disabledCause.getReason()
@@ -262,11 +261,11 @@ public class PlayerInfo extends InventoryMenu {
     }
 
     public void refresh(String targetName) {
-        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
         if (!protocols.isEmpty()) {
             for (SpartanProtocol protocol : protocols) {
-                InventoryView inventoryView = protocol.bukkit.getOpenInventory();
+                InventoryView inventoryView = protocol.bukkit().getOpenInventory();
 
                 if (inventoryView.getTitle().equals(PlayerInfo.menu + targetName)
                         && cooldowns.canDo("player-info=" + protocol.getUUID())) {
@@ -284,10 +283,10 @@ public class PlayerInfo extends InventoryMenu {
         String playerName = title.substring(menu.length());
 
         if (item.equalsIgnoreCase(playerName)) {
-            if (!Permissions.has(protocol.bukkit, Permission.MANAGE)) {
-                protocol.bukkit.closeInventory();
+            if (!Permissions.has(protocol.bukkit(), Permission.MANAGE)) {
+                protocol.bukkit().closeInventory();
                 ClickableMessage.sendURL(
-                        protocol.bukkit,
+                        protocol.bukkit(),
                         Config.messages.getColorfulString("no_permission"),
                         CommandExecution.support,
                         DiscordMemberCount.discordURL
@@ -297,19 +296,19 @@ public class PlayerInfo extends InventoryMenu {
 
                 if (name == null) {
                     ClickableMessage.sendURL(
-                            protocol.bukkit,
+                            protocol.bukkit(),
                             Config.messages.getColorfulString("player_not_found_message"),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
                     );
                 } else {
                     ResearchEngine.resetData(name);
-                    protocol.bukkit.sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
+                    protocol.bukkit().sendMessage(Config.messages.getColorfulString("player_stored_data_delete_message").replace("{player}", name));
                 }
-                protocol.bukkit.closeInventory();
+                protocol.bukkit().closeInventory();
             }
         } else if (item.equals("Close")) {
-            protocol.bukkit.closeInventory();
+            protocol.bukkit().closeInventory();
         } else if (item.equals("Back")) {
             InteractiveInventory.mainMenu.open(protocol);
         } else {

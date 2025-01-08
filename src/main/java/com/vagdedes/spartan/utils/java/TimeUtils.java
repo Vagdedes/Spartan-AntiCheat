@@ -1,5 +1,8 @@
 package com.vagdedes.spartan.utils.java;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class TimeUtils {
 
     public static String convertMilliseconds(long milliseconds) {

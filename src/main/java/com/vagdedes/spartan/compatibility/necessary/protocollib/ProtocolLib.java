@@ -51,7 +51,7 @@ public class ProtocolLib {
             if (!players.isEmpty()) {
                 for (SpartanProtocol p : players) {
                     if (AwarenessNotifications.canSend(p.getUUID(), "protocol-lib", 0)) {
-                        p.bukkit.sendMessage(message);
+                        p.bukkit().sendMessage(message);
                     }
                 }
             }

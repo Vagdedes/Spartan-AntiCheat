@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
+import java.util.Collection;
 import java.util.List;
 
 public class Piston {
@@ -20,7 +21,7 @@ public class Piston {
             verticalDistance = 2.0;
 
     public static void run(Block block, List<Block> blocks) {
-        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
         if (!protocols.isEmpty()) {
             boolean runBlocks = !blocks.isEmpty();

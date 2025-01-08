@@ -43,7 +43,7 @@ public class DetectionNotifications {
     }
 
     public static boolean hasPermission(SpartanProtocol p) {
-        return Permissions.has(p.bukkit, Enums.Permission.NOTIFICATIONS);
+        return Permissions.has(p.bukkit(), Enums.Permission.NOTIFICATIONS);
     }
 
     public static Integer getFrequency(SpartanProtocol p) {
@@ -58,12 +58,12 @@ public class DetectionNotifications {
         Integer frequency = notifications.put(p.getUUID(), i);
 
         if (frequency == null) {
-            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_enable"));
+            p.bukkit().sendMessage(Config.messages.getColorfulString("notifications_enable"));
         } else if (frequency != i) {
-            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_modified"));
+            p.bukkit().sendMessage(Config.messages.getColorfulString("notifications_modified"));
         } else {
             notifications.remove(p.getUUID());
-            p.bukkit.sendMessage(Config.messages.getColorfulString("notifications_disable"));
+            p.bukkit().sendMessage(Config.messages.getColorfulString("notifications_disable"));
         }
     }
 

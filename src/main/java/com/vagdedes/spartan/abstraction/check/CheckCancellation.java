@@ -2,9 +2,11 @@ package com.vagdedes.spartan.abstraction.check;
 
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.TPS;
+import lombok.Getter;
 
 public class CheckCancellation {
 
+    @Getter
     private final String reason, pointer;
     private final long expiration;
 
@@ -24,10 +26,6 @@ public class CheckCancellation {
 
     boolean hasExpired() {
         return expiration < System.currentTimeMillis();
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     boolean pointerMatches(String info) {

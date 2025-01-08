@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
@@ -13,13 +12,17 @@ import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.server.*;
+import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import me.vagdedes.spartan.api.CheckCancelEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 
 import java.util.*;
@@ -29,11 +32,11 @@ public abstract class CheckRunner extends CheckProcess {
 
     private static final boolean v1_8 = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
 
-    private final long creation;
+    final long creation;
     private final Collection<CheckCancellation> disableCauses, silentCauses;
     CheckPrevention prevention;
     private boolean cancelled;
-    protected final Map<String, CheckDetection> detections;
+    private final Map<String, CheckDetection> detections;
 
     public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
         super(hackType, protocol);
@@ -47,11 +50,13 @@ public abstract class CheckRunner extends CheckProcess {
     // Probability
 
     public final boolean hasSufficientData(Check.DataType dataType, double ratio) {
-        if (ratio > 0.0) {
+        if (this.detections.isEmpty()) {
+            return false;
+        } else if (ratio > 0.0) {
             int count = 0,
                     total = 0;
 
-            for (CheckDetection detectionExecutor : this.detections.values()) {
+            for (CheckDetection detectionExecutor : new TreeMap<>(this.detections).values()) {
                 if (detectionExecutor instanceof ProbabilityDetection) {
                     total++;
 
@@ -68,7 +73,7 @@ public abstract class CheckRunner extends CheckProcess {
         } else {
             boolean found = false;
 
-            for (CheckDetection detectionExecutor : this.detections.values()) {
+            for (CheckDetection detectionExecutor : this.getDetections()) {
                 if (detectionExecutor instanceof ProbabilityDetection) {
                     found = true;
 
@@ -84,7 +89,7 @@ public abstract class CheckRunner extends CheckProcess {
     public final double getExtremeProbability(Check.DataType dataType) {
         double num = PlayerEvidence.emptyProbability;
 
-        for (CheckDetection detectionExecutor : this.detections.values()) {
+        for (CheckDetection detectionExecutor : this.getDetections()) {
             if (detectionExecutor.hasSufficientData(dataType)) {
                 if (PlayerEvidence.POSITIVE) {
                     num = Math.max(num, detectionExecutor.getProbability(dataType));
@@ -97,7 +102,7 @@ public abstract class CheckRunner extends CheckProcess {
     }
 
     public final long getRemainingCompletionTime(Check.DataType dataType) {
-        List<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
+        Collection<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
         if (playerProfiles.isEmpty()) {
             return 0L;
@@ -108,12 +113,12 @@ public abstract class CheckRunner extends CheckProcess {
 
             for (PlayerProfile profile : playerProfiles) {
                 for (CheckDetection detection : profile.getRunner(this.hackType).getDetections()) {
-                    Long firstTime = detection.getFirstTime(dataType);
+                    long firstTime = detection.getFirstTime(dataType);
 
-                    if (firstTime != null) {
-                        Long lastTime = detection.getLastTime(dataType);
+                    if (firstTime != -1L) {
+                        long lastTime = detection.getLastTime(dataType);
 
-                        if (lastTime != null) {
+                        if (lastTime != -1L) {
                             double completion = detection.getDataCompletion(dataType);
                             averageCompletion += completion * completion;
                             lastTime -= firstTime;
@@ -139,26 +144,28 @@ public abstract class CheckRunner extends CheckProcess {
     // Detections
 
     public final CheckDetection getDetection(String detection) {
-        return detection == null
-                ? this.getDetection()
-                : this.detections.get(detection);
-    }
-
-    public final CheckDetection getDetection() {
-        if (this.detections.isEmpty()) {
-            new ImplementedProbabilityDetection(this, null, false);
+        if (detection == null) {
+            if (this.detections.isEmpty()) {
+                new ImplementedProbabilityDetection(this, null, false);
+            }
+            return this.detections.values().iterator().next();
+        } else {
+            return this.detections.get(detection);
         }
-        return this.detections.values().iterator().next();
     }
 
     public final Collection<CheckDetection> getDetections() {
         return this.detections.values();
     }
 
+    protected final CheckDetection addDetection(String name, CheckDetection detection) {
+        return this.detections.putIfAbsent(name, detection);
+    }
+
     // Run
 
     public final void run(boolean cancelled) {
-        if (this.protocol() != null) {
+        if (this.protocol != null) {
             this.cancelled = cancelled;
             this.runInternal(cancelled);
         }
@@ -171,7 +178,7 @@ public abstract class CheckRunner extends CheckProcess {
     // Handle
 
     public final void handle(boolean cancelled, Object object) {
-        if (this.protocol() != null) {
+        if (this.protocol != null) {
             this.cancelled = cancelled;
             this.handleInternal(cancelled, object);
         }
@@ -190,15 +197,12 @@ public abstract class CheckRunner extends CheckProcess {
     // Separator
 
     final boolean canFunction() {
-        return this.protocol() != null
+        return this.protocol != null
                 && (System.currentTimeMillis() - this.creation) > TPS.maximum * TPS.tickTime
                 && (!cancelled || hackType.getCheck().handleCancelledEvents)
-                && (!v1_8 || this.protocol().bukkit.getGameMode() != GameMode.SPECTATOR)
-                && hackType.getCheck().isEnabled(this.protocol().spartan.dataType, this.protocol().getWorld().getName())
-                && Attributes.getAmount(this.protocol(), Attributes.GENERIC_SCALE) == 0.0
-                && !ProtocolLib.isTemporary(this.protocol().bukkit)
-                && canRun()
-                && !Permissions.isBypassing(this.protocol().bukkit, hackType);
+                && (!v1_8 || this.protocol.bukkit().getGameMode() != GameMode.SPECTATOR)
+                && Attributes.getAmount(this.protocol, Attributes.GENERIC_SCALE) == 0.0
+                && !ProtocolLib.isTemporary(this.protocol.bukkit());
     }
 
     // Causes
@@ -224,14 +228,14 @@ public abstract class CheckRunner extends CheckProcess {
         CheckCancellation disableCause = this.getLastCause(this.disableCauses);
 
         if (disableCause == null) {
-            if (this.protocol() != null) {
-                return MythicMobs.is(this.protocol())
+            if (this.protocol != null) {
+                return MythicMobs.is(this.protocol)
                         ? new CheckCancellation(Compatibility.CompatibilityType.MYTHIC_MOBS)
-                        : ItemsAdder.is(this.protocol())
+                        : ItemsAdder.is(this.protocol)
                         ? new CheckCancellation(Compatibility.CompatibilityType.ITEMS_ADDER)
-                        : CustomEnchantsPlus.has(this.protocol())
+                        : CustomEnchantsPlus.has(this.protocol)
                         ? new CheckCancellation(Compatibility.CompatibilityType.CUSTOM_ENCHANTS_PLUS)
-                        : EcoEnchants.has(this.protocol())
+                        : EcoEnchants.has(this.protocol)
                         ? new CheckCancellation(Compatibility.CompatibilityType.ECO_ENCHANTS)
                         : null;
             } else {
@@ -251,32 +255,32 @@ public abstract class CheckRunner extends CheckProcess {
             reason = this.hackType.getCheck().getName();
         }
         this.disableCauses.add(new CheckCancellation(reason, pointer, ticks));
-        if (this.protocol() != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
+        if (this.protocol != null) {
+            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
     public final void addSilentCause(String reason, String pointer, int ticks) {
         this.silentCauses.add(new CheckCancellation(reason, pointer, ticks));
 
-        if (this.protocol() != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
+        if (this.protocol != null) {
+            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
     public final void removeDisableCause() {
         this.disableCauses.clear();
 
-        if (this.protocol() != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
+        if (this.protocol != null) {
+            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
     public final void removeSilentCause() {
         this.silentCauses.clear();
 
-        if (this.protocol() != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol().bukkit.getName());
+        if (this.protocol != null) {
+            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
@@ -285,49 +289,23 @@ public abstract class CheckRunner extends CheckProcess {
     public final boolean prevent() {
         if (this.prevention.complete()) {
             if (SpartanBukkit.isSynchronised()) {
-                CheckCancelEvent checkCancelEvent;
-
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    checkCancelEvent = new CheckCancelEvent(this.protocol().bukkit, hackType);
-                    Register.manager.callEvent(checkCancelEvent);
-                } else {
-                    checkCancelEvent = null;
-                }
+                    CheckCancelEvent checkCancelEvent = new CheckCancelEvent(this.protocol.bukkit(), hackType);
+                    Bukkit.getPluginManager().callEvent(checkCancelEvent);
 
-                if (checkCancelEvent == null
-                        || !checkCancelEvent.isCancelled()) {
-                    this.prevention.handle(this.protocol());
-                    return true;
+                    if (checkCancelEvent.isCancelled()) {
+                        return false;
+                    } else {
+                        this.prevention.handle(this.protocol);
+                        return true;
+                    }
                 } else {
-                    return false;
+                    this.prevention.handle(this.protocol);
+                    return true;
                 }
             } else {
-                Thread thread = Thread.currentThread();
-                Boolean[] cancelled = new Boolean[1];
-
-                SpartanBukkit.transferTask(this.protocol(), () -> {
-                    CheckCancelEvent checkCancelEvent = new CheckCancelEvent(this.protocol().bukkit, hackType);
-                    Register.manager.callEvent(checkCancelEvent);
-                    cancelled[0] = checkCancelEvent.isCancelled();
-
-                    synchronized (thread) {
-                        thread.notifyAll();
-                    }
-                });
-                synchronized (thread) {
-                    if (cancelled[0] == null) {
-                        try {
-                            thread.wait();
-                        } catch (Exception ex) {
-                        }
-                    }
-                }
-                if (!cancelled[0]) {
-                    this.prevention.handle(this.protocol());
-                    return true;
-                } else {
-                    return false;
-                }
+                this.prevention.handle(this.protocol);
+                return true;
             }
         } else {
             return false;
@@ -337,18 +315,18 @@ public abstract class CheckRunner extends CheckProcess {
     // Notification
 
     final int getNotificationTicksCooldown(SpartanProtocol detected) {
-        Integer frequency = DetectionNotifications.getFrequency(this.protocol());
+        Integer frequency = DetectionNotifications.getFrequency(this.protocol);
 
         if (frequency != null
                 && frequency != DetectionNotifications.defaultFrequency) {
             return frequency;
         } else if (detected != null
-                && (detected.bukkit.equals(this.protocol().bukkit)
-                || detected.getWorld().equals(this.protocol().getWorld())
-                && detected.getLocation().distance(this.protocol().getLocation()) <= PlayerUtils.chunk)) {
+                && (detected.equals(this.protocol)
+                || detected.getWorld().equals(this.protocol.getWorld())
+                && detected.getLocation().distance(this.protocol.getLocation()) <= PlayerUtils.chunk)) {
             return AlgebraUtils.integerRound(Math.sqrt(TPS.maximum));
         } else {
-            return AlgebraUtils.integerCeil(TPS.maximum);
+            return AlgebraUtils.integerRound(TPS.maximum);
         }
     }
 

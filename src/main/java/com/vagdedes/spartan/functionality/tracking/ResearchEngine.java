@@ -5,10 +5,10 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.pattern.Pattern;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.functionality.concurrent.Threads;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.Config;
@@ -35,6 +35,7 @@ public class ResearchEngine {
     public static Map<Enums.HackType, Collection<Check.DataType>> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
     private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
+    private static final Threads.ThreadPool statisticsThread = new Threads.ThreadPool(1L);
 
     static {
         SpartanBukkit.runRepeatingTask(() -> {
@@ -45,7 +46,7 @@ public class ResearchEngine {
                     if (Config.sql.isEnabled()) {
                         refresh(Register.isPluginEnabled());
                     } else {
-                        SpartanBukkit.analysisThread.executeIfFree(() -> {
+                        statisticsThread.executeIfFree(() -> {
                             updateCache(false);
                             MainMenu.refresh();
                         });
@@ -53,7 +54,7 @@ public class ResearchEngine {
                 } else {
                     schedulerTicks -= 1;
 
-                    SpartanBukkit.analysisThread.executeIfFree(() -> {
+                    statisticsThread.executeIfFree(() -> {
                         updateCache(false);
 
                         if (schedulerTicks % TPS.maximum == 0) {
@@ -67,8 +68,8 @@ public class ResearchEngine {
 
     // Separator
 
-    public static List<PlayerProfile> getPlayerProfiles() {
-        return new ArrayList<>(playerProfiles.values());
+    public static Collection<PlayerProfile> getPlayerProfiles() {
+        return playerProfiles.values();
     }
 
     public static PlayerProfile getPlayerProfile(String name) {
@@ -93,11 +94,11 @@ public class ResearchEngine {
     }
 
     public static PlayerProfile getPlayerProfile(SpartanProtocol protocol) {
-        PlayerProfile playerProfile = playerProfiles.get(protocol.bukkit.getName());
+        PlayerProfile playerProfile = playerProfiles.get(protocol.bukkit().getName());
 
         if (playerProfile == null) {
             playerProfile = new PlayerProfile(protocol);
-            playerProfiles.put(protocol.bukkit.getName(), playerProfile);
+            playerProfiles.put(protocol.bukkit().getName(), playerProfile);
         }
         return playerProfile;
     }
@@ -105,14 +106,14 @@ public class ResearchEngine {
     private static void createPlayerProfile(SpartanProtocol protocol) {
         PlayerProfile profile = new PlayerProfile(protocol);
         profile.update(protocol);
-        playerProfiles.put(protocol.bukkit.getName(), new PlayerProfile(protocol));
+        playerProfiles.put(protocol.bukkit().getName(), new PlayerProfile(protocol));
     }
 
     // Separator
 
     public static void resetData(Enums.HackType hackType) {
         if (firstLoad) {
-            SpartanBukkit.analysisThread.execute(() -> {
+            statisticsThread.execute(() -> {
                 String hackTypeString = hackType.toString();
 
                 // Separator
@@ -125,6 +126,7 @@ public class ResearchEngine {
                                 detectionExecutor.clearData(dataType);
                             }
                         }
+                        playerProfile.getContinuity().clear();
                     }
                     updateCache(true);
                 }
@@ -166,19 +168,11 @@ public class ResearchEngine {
     public static void resetData(String playerName) {
         if (firstLoad) {
             // Clear Violations
-            PlayerProfile profile;
             SpartanProtocol player = SpartanBukkit.getProtocol(playerName);
-
-            if (player == null) {
-                profile = getAnyCasePlayerProfile(playerName);
-            } else {
-                profile = player.profile();
-            }
-            Pattern.deleteFromFile(profile);
 
             if (isStorageMode()) {
                 // Clear Files/Database
-                SpartanBukkit.analysisThread.execute(() -> {
+                statisticsThread.execute(() -> {
                     if (player == null) {
                         playerProfiles.remove(playerName);
                     } else {
@@ -355,18 +349,16 @@ public class ResearchEngine {
 
             if (enabledPlugin) {
                 buildCache();
-                Pattern.reload();
                 CloudBase.refresh();
             } else {
-                CloudBase.clear(true);
-                Pattern.clear();
+                CloudBase.clear();
             }
         };
 
         if (firstLoad) {
-            SpartanBukkit.analysisThread.executeIfFree(runnable);
+            statisticsThread.executeIfFree(runnable);
         } else {
-            SpartanBukkit.analysisThread.execute(runnable);
+            statisticsThread.execute(runnable);
             firstLoad = true;
         }
     }
@@ -498,6 +490,13 @@ public class ResearchEngine {
                 }
             }
         }
+        for (PlayerProfile profile : playerProfiles.values()) {
+            for (CheckRunner runner : profile.getRunners()) {
+                for (CheckDetection detection : runner.getDetections()) {
+                    detection.sort();
+                }
+            }
+        }
         updateCache(true);
         MainMenu.refresh();
     }
@@ -533,17 +532,13 @@ public class ResearchEngine {
                     if (hackType.getCheck().isEnabled(dataType, null)) {
                         for (PlayerProfile profile : profiles) {
                             for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                Double data = detectionExecutor.getData(profile, dataType);
-
-                                if (data != null) {
-                                    wave.computeIfAbsent(
-                                            detectionExecutor.name,
-                                            k -> new LinkedHashMap<>()
-                                    ).put(
-                                            detectionExecutor,
-                                            data
-                                    );
-                                }
+                                wave.computeIfAbsent(
+                                        detectionExecutor.name,
+                                        k -> new LinkedHashMap<>()
+                                ).put(
+                                        detectionExecutor,
+                                        detectionExecutor.getData(profile, dataType)
+                                );
                             }
                         }
                     }

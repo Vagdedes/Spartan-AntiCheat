@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -9,6 +8,7 @@ import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import me.vagdedes.spartan.api.PlayerFoundOreEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -25,7 +25,7 @@ public class MiningHistory {
             oreIdentifier = "Ore: ";
 
     public static void log(SpartanProtocol protocol, Block block, boolean cancelled) {
-        if (protocol.bukkit.getGameMode() == GameMode.SURVIVAL
+        if (protocol.bukkit().getGameMode() == GameMode.SURVIVAL
                 && PlayerUtils.isPickaxeItem(protocol.spartan.getItemInHand().getType())) {
             MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
 
@@ -33,7 +33,7 @@ public class MiningHistory {
                 World.Environment environment = block.getWorld().getEnvironment();
                 int x = block.getX(), y = block.getY(), z = block.getZ(), amount = 1;
                 String key = ore.toString(),
-                        log = "(" + AntiCheatLogs.playerIdentifier + protocol.bukkit.getName() + "), "
+                        log = "(" + AntiCheatLogs.playerIdentifier + protocol.bukkit().getName() + "), "
                                 + "(" + amountIdentifier + amount + "), "
                                 + "(" + oreIdentifier + key + "), "
                                 + "(" + environmentIdentifier + BlockUtils.environmentToString(environment) + "), "
@@ -43,8 +43,8 @@ public class MiningHistory {
                 PlayerFoundOreEvent event;
 
                 if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    event = new PlayerFoundOreEvent(protocol.bukkit, log, block.getLocation(), block.getType());
-                    Register.manager.callEvent(event);
+                    event = new PlayerFoundOreEvent(protocol.bukkit(), log, block.getLocation(), block.getType());
+                    Bukkit.getPluginManager().callEvent(event);
                 } else {
                     event = null;
                 }
@@ -65,7 +65,7 @@ public class MiningHistory {
                     if (miningHistory != null) {
                         String pluralKey = key.endsWith("s") ? (key + "es") : (key + "s");
                         miningHistory.increaseMines(environment, amount);
-                        protocol.spartan.getRunner(Enums.HackType.XRay).handle(
+                        protocol.profile().getRunner(Enums.HackType.XRay).handle(
                                 cancelled,
                                 new Object[]{environment, miningHistory, ore, pluralKey});
                     }

@@ -77,7 +77,7 @@ public abstract class InventoryMenu {
             boolean check = false;
 
             for (Enums.Permission permission : permissions) {
-                if (Permissions.has(protocol.bukkit, permission)) {
+                if (Permissions.has(protocol.bukkit(), permission)) {
                     check = true;
                     break;
                 }
@@ -90,7 +90,7 @@ public abstract class InventoryMenu {
             if (internalOpen(protocol, permissionMessage, object)) {
                 SpartanBukkit.transferTask(
                         protocol,
-                        () -> protocol.bukkit.openInventory(inventory)
+                        () -> protocol.bukkit().openInventory(inventory)
                 );
                 return true;
             } else {
@@ -98,9 +98,9 @@ public abstract class InventoryMenu {
             }
         } else {
             if (permissionMessage) {
-                protocol.bukkit.sendMessage(Config.messages.getColorfulString("no_permission"));
+                protocol.bukkit().sendMessage(Config.messages.getColorfulString("no_permission"));
             }
-            SpartanBukkit.transferTask(protocol, protocol.bukkit::closeInventory);
+            SpartanBukkit.transferTask(protocol, protocol.bukkit()::closeInventory);
             return false;
         }
     }
@@ -117,7 +117,7 @@ public abstract class InventoryMenu {
                 boolean check = false;
 
                 for (Enums.Permission permission : permissions) {
-                    if (Permissions.has(protocol.bukkit, permission)) {
+                    if (Permissions.has(protocol.bukkit(), permission)) {
                         check = true;
                         break;
                     }
@@ -125,7 +125,7 @@ public abstract class InventoryMenu {
                 access = check;
 
                 if (!access) {
-                    protocol.bukkit.closeInventory();
+                    protocol.bukkit().closeInventory();
                 }
             }
 

@@ -14,6 +14,7 @@ import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import me.vagdedes.spartan.api.SpartanReloadEvent;
 import me.vagdedes.spartan.system.Enums;
 import me.vagdedes.spartan.system.Enums.HackType;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 public class Config {
@@ -76,7 +77,7 @@ public class Config {
     public static void reload(CommandSender sender) {
         if (Config.settings.getBoolean("Important.enable_developer_api")) {
             SpartanReloadEvent event = new SpartanReloadEvent();
-            Register.manager.callEvent(event);
+            Bukkit.getPluginManager().callEvent(event);
 
             if (event.isCancelled()) {
                 return;

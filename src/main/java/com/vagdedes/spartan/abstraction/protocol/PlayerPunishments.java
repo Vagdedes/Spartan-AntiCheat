@@ -4,12 +4,11 @@ import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
+import java.util.Collection;
 
 public class PlayerPunishments {
 
@@ -23,7 +22,7 @@ public class PlayerPunishments {
     public boolean kick(CommandSender punisher, String reason) {
         if (kickCooldown < System.currentTimeMillis()) {
             kickCooldown = System.currentTimeMillis() + 1_000L;
-            Player target = this.parent.protocol.bukkit;
+            Player target = this.parent.protocol.bukkit();
             String punisherName = punisher instanceof ConsoleCommandSender
                     ? Config.messages.getColorfulString("console_name")
                     : punisher.getName(),
@@ -38,16 +37,12 @@ public class PlayerPunishments {
                                     .replace("{punisher}", punisherName),
                             null);
 
-            if (Config.settings.getBoolean("Punishments.broadcast_on_punishment")) {
-                Bukkit.broadcastMessage(announcement);
-            } else {
-                List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+            Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-                if (!protocols.isEmpty()) {
-                    for (SpartanProtocol protocol : protocols) {
-                        if (DetectionNotifications.hasPermission(protocol)) {
-                            protocol.bukkit.sendMessage(announcement);
-                        }
+            if (!protocols.isEmpty()) {
+                for (SpartanProtocol protocol : protocols) {
+                    if (DetectionNotifications.hasPermission(protocol)) {
+                        protocol.bukkit().sendMessage(announcement);
                     }
                 }
             }
@@ -65,7 +60,7 @@ public class PlayerPunishments {
     public boolean warn(CommandSender punisher, String reason) {
         if (warnCooldown < System.currentTimeMillis()) {
             warnCooldown = System.currentTimeMillis() + 1_000L;
-            Player target = this.parent.protocol.bukkit;
+            Player target = this.parent.protocol.bukkit();
             String punisherName = punisher instanceof ConsoleCommandSender
                     ? Config.messages.getColorfulString("console_name")
                     : punisher.getName(),

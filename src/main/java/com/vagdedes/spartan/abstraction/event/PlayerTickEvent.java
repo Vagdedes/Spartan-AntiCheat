@@ -1,6 +1,7 @@
 package com.vagdedes.spartan.abstraction.event;
 
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import lombok.Getter;
 
 public class PlayerTickEvent {
 
@@ -8,6 +9,7 @@ public class PlayerTickEvent {
     public final long time;
     public final boolean legacy;
     public final boolean onGround;
+    @Getter
     private long delay;
 
     public PlayerTickEvent(SpartanProtocol protocol, boolean legacy, boolean onGround) {
@@ -31,9 +33,5 @@ public class PlayerTickEvent {
         }
         this.protocol.tickTime = this.time;
         return this;
-    }
-
-    public long getDelay() {
-        return this.delay;
     }
 }

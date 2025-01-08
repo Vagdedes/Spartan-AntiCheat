@@ -67,11 +67,7 @@ public class InventoryUtils {
         if (bukkitProfile) {
             return BackgroundInventoryUtils.getSkull_v1_13(offlinePlayer, backupName, create);
         } else {
-            ItemStack skull = new ItemStack(
-                    Material.getMaterial("SKULL_ITEM"),
-                    1,
-                    (short) SkullType.PLAYER.ordinal()
-            );
+            ItemStack skull = getHead();
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
             String name = null;
 

@@ -1,13 +1,16 @@
 package com.vagdedes.spartan.utils.java;
 
+import lombok.experimental.UtilityClass;
 import org.bukkit.ChatColor;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@UtilityClass
 public class StringUtils {
 
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
+    private static final Charset UTF_8 = StandardCharsets.UTF_8;
     private static final int idealDescriptionLimit = 40;
 
     public static String newStringUtf8(byte[] var) {
@@ -60,7 +63,7 @@ public class StringUtils {
         final StringBuilder s = new StringBuilder();
 
         for (int i = start; i < args.length; i++) {
-            s.append(args[i] + " ");
+            s.append(args[i]).append(" ");
         }
         return s.substring(0, s.length() - 1);
     }

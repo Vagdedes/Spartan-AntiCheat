@@ -9,6 +9,7 @@ import com.vagdedes.spartan.utils.minecraft.entity.AxisAlignedBB;
 import com.vagdedes.spartan.utils.minecraft.entity.MovingObjectPosition;
 import com.vagdedes.spartan.utils.minecraft.vector.Vec3;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,6 +18,7 @@ import org.bukkit.util.Vector;
 
 import java.util.Set;
 
+@UtilityClass
 public class RayUtils {
 
     private static final boolean[] BOOLEANS = {true, false};
@@ -384,7 +386,7 @@ public class RayUtils {
     public static float getEyeHeight(final boolean sneak, SpartanProtocol protocol) {
         float f2 = 1.62F;
 
-        if (protocol.bukkit.isSleeping()) {
+        if (protocol.bukkit().isSleeping()) {
             f2 = 0.2F;
         }
         if (sneak) {

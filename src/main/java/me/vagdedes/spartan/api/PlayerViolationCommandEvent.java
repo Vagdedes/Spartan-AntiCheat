@@ -12,14 +12,12 @@ public class PlayerViolationCommandEvent extends Event implements Cancellable {
 
     private final Player p;
     private final HackType h;
-    private final HackType[] hs;
     private final String c;
     private boolean cancelled;
 
-    public PlayerViolationCommandEvent(Player player, HackType HackType, Collection<HackType> HackTypes, String command) {
+    public PlayerViolationCommandEvent(Player player, HackType HackType, String command) {
         p = player;
         h = HackType;
-        hs = HackTypes.toArray(new HackType[0]);
         c = command;
         cancelled = false;
     }
@@ -32,8 +30,9 @@ public class PlayerViolationCommandEvent extends Event implements Cancellable {
         return h;
     }
 
+    @Deprecated
     public HackType[] getHackTypes() {
-        return hs;
+        return null;
     }
 
     public String getCommand() {

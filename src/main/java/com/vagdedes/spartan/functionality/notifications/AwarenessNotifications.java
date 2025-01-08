@@ -74,10 +74,10 @@ public class AwarenessNotifications {
         message = getNotification(message);
 
         if (protocol != null) {
-            protocol.bukkit.sendMessage(message);
+            protocol.bukkit().sendMessage(message);
 
             if (console) {
-                Bukkit.getConsoleSender().sendMessage("(" + protocol.bukkit.getName() + ") " + message);
+                Bukkit.getConsoleSender().sendMessage("(" + protocol.bukkit().getName() + ") " + message);
             }
         } else if (console) {
             Bukkit.getConsoleSender().sendMessage(message);

@@ -80,9 +80,7 @@ public class CombatUtils {
             case WITCH:
                 return new double[]{0.6, 1.95};
             case MAGMA_CUBE:
-                int size = ((MagmaCube) entity).getSize();
-
-                switch (size) {
+                switch (((MagmaCube) entity).getSize()) {
                     case 3:
                         return new double[]{2.04, 2.04};
                     case 2:
@@ -91,9 +89,7 @@ public class CombatUtils {
                         return new double[]{0.51, 0.51};
                 }
             case SLIME:
-                size = ((Slime) entity).getSize();
-
-                switch (size) {
+                switch (((Slime) entity).getSize()) {
                     case 3:
                         return new double[]{2.04, 2.04};
                     case 2:
@@ -193,7 +189,7 @@ public class CombatUtils {
                 && Attributes.getAmount(protocol, Attributes.GENERIC_ATTACK_SPEED) == 0.0
                 && Attributes.getAmount(protocol, Attributes.GENERIC_KNOCKBACK_RESISTANCE) == 0.0
                 && Attributes.getAmount(protocol, Attributes.PLAYER_ENTITY_INTERACTION_RANGE) == 0.0) {
-            GameMode gameMode = protocol.bukkit.getGameMode();
+            GameMode gameMode = protocol.bukkit().getGameMode();
             return gameMode == GameMode.SURVIVAL
                     || gameMode == GameMode.ADVENTURE
                     || gameMode == GameMode.CREATIVE;
@@ -203,7 +199,7 @@ public class CombatUtils {
     }
 
     public static boolean canCheck(SpartanProtocol protocol, LivingEntity entity) {
-        return !protocol.bukkit.getName().equals(entity.getName())
+        return !protocol.bukkit().getName().equals(entity.getName())
                 && !MythicMobs.is(entity)
                 && !ItemsAdder.is(entity);
     }

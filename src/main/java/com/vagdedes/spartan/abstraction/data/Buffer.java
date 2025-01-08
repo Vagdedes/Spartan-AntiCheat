@@ -118,14 +118,8 @@ public class Buffer {
     public double ratio(String name, int minimumTicks, int maxTicks) {
         IndividualBuffer obj = storage.computeIfAbsent(name, k -> new IndividualBuffer());
         double ticksPassed = obj.ticksPassed();
-        int count;
-
-        if (ticksPassed > maxTicks) {
-            obj.reset();
-            count = obj.increase(1);
-        } else {
-            count = obj.increase(1);
-        }
+        if (ticksPassed > maxTicks) obj.reset();
+        int count = obj.increase(1);
         return count >= minimumTicks ? count / ticksPassed : 0.0;
     }
 

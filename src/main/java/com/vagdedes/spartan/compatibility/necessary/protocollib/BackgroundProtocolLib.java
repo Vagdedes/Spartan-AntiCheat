@@ -4,44 +4,46 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.listeners.protocol.*;
-import com.vagdedes.spartan.listeners.protocol.combat.Packet_Combat;
-import com.vagdedes.spartan.listeners.protocol.combat.Packet_Combat_Legacy;
-import com.vagdedes.spartan.listeners.protocol.standalone.Packet_BlockPlaceP;
-import com.vagdedes.spartan.listeners.protocol.standalone.Packet_EntityAction;
-import com.vagdedes.spartan.listeners.protocol.standalone.Packet_Join;
+import com.vagdedes.spartan.listeners.protocol.combat.CombatListener;
+import com.vagdedes.spartan.listeners.protocol.combat.LegacyCombatListener;
+import com.vagdedes.spartan.listeners.protocol.standalone.BlockPlaceBalancerListener;
+import com.vagdedes.spartan.listeners.protocol.standalone.EntityActionListener;
+import com.vagdedes.spartan.listeners.protocol.standalone.JoinListener;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 
 public class BackgroundProtocolLib {
 
     static void run() {
         ProtocolManager p = ProtocolLibrary.getProtocolManager();
-        p.addPacketListener(new Packet_Join());
-        p.addPacketListener(new Packet_EntityAction());
-        p.addPacketListener(new Packet_Velocity());
+        p.addPacketListener(new JoinListener());
+        p.addPacketListener(new EntityActionListener());
+        p.addPacketListener(new VelocityListener());
 
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            p.addPacketListener(new Packet_Combat());
+            p.addPacketListener(new CombatListener());
         } else {
-            p.addPacketListener(new Packet_Combat_Legacy());
+            p.addPacketListener(new LegacyCombatListener());
         }
-        p.addPacketListener(new Packet_Movement());
-        p.addPacketListener(new Packet_Teleport());
-        p.addPacketListener(new Packet_Vehicle());
-        p.addPacketListener(new Packet_Death());
-        p.addPacketListener(new Packet_BlockPlaceP());
-        p.addPacketListener(new Packet_BlockPlace());
-        p.addPacketListener(new Packet_Clicks());
-        p.addPacketListener(new Packet_PistonHandle());
-        p.addPacketListener(new Packet_ExplosionHandle());
-        p.addPacketListener(new Packet_ServerBlockHandle());
-        p.addPacketListener(new Packet_LatencyHandler());
-        p.addPacketListener(new Packet_Abilities());
+        p.addPacketListener(new MovementListener());
+        p.addPacketListener(new TeleportListener());
+        p.addPacketListener(new VehicleHandle());
+        p.addPacketListener(new DeathListener());
+        p.addPacketListener(new BlockPlaceBalancerListener());
+        p.addPacketListener(new BlockPlaceListener());
+        p.addPacketListener(new ClicksListener());
+        p.addPacketListener(new PacketPistonHandle());
+        p.addPacketListener(new ExplosionListener());
+        p.addPacketListener(new PacketServerBlockHandle());
+        p.addPacketListener(new PacketLatencyHandler());
+        p.addPacketListener(new AbilitiesListener());
+        p.addPacketListener(new UseItemStatusHandle());
+        p.addPacketListener(new UseEntityListener());
 
         if (PlayerUtils.trident) {
-            p.addPacketListener(new Packet_Trident());
+            p.addPacketListener(new TridentListener());
         }
         if (false) {
-            p.addPacketListener(new Packet_Debug());
+            p.addPacketListener(new PacketDebug());
         }
     }
 

@@ -10,11 +10,13 @@ import me.vagdedes.spartan.api.CheckPunishmentToggleEvent;
 import me.vagdedes.spartan.api.CheckSilentToggleEvent;
 import me.vagdedes.spartan.api.CheckToggleEvent;
 import me.vagdedes.spartan.system.Enums;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Check {
 
@@ -76,7 +78,7 @@ public class Check {
     // Object Methods
 
     public Check(Enums.HackType hackType) {
-        this.options = Collections.synchronizedMap(new LinkedHashMap<>());
+        this.options = new ConcurrentHashMap<>();
         this.hackType = hackType;
 
         // Separator
@@ -289,7 +291,7 @@ public class Check {
 
             if (Config.settings.getBoolean("Important.enable_developer_api")) {
                 event = new CheckToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
-                Register.manager.callEvent(event);
+                Bukkit.getPluginManager().callEvent(event);
             } else {
                 event = null;
             }
@@ -298,10 +300,7 @@ public class Check {
                 this.enabled[type.ordinal()] = b;
                 ResearchEngine.queueToCache(this.hackType, type);
                 setOption("enabled." + type.toString().toLowerCase(), b);
-
-                synchronized (options) {
-                    options.clear();
-                }
+                options.clear();
             }
         }
     }
@@ -351,12 +350,10 @@ public class Check {
 
     public Object getOption(String option, Object def, boolean cache) {
         if (cache) {
-            synchronized (options) {
-                Object cached = options.get(option);
+            Object cached = options.get(option);
 
-                if (cached != null) {
-                    return cached;
-                }
+            if (cached != null) {
+                return cached;
             }
         }
         try {
@@ -365,25 +362,23 @@ public class Check {
             YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
             if (cache) {
-                synchronized (options) {
-                    if (configuration.contains(key)) {
-                        Object value = configuration.get(key, def);
+                if (configuration.contains(key)) {
+                    Object value = configuration.get(key, def);
 
-                        if (!isDefaultNull) {
-                            options.put(option, value);
-                        }
-                        return value;
-                    }
                     if (!isDefaultNull) {
-                        configuration.set(key, def);
+                        options.put(option, value);
+                    }
+                    return value;
+                }
+                if (!isDefaultNull) {
+                    configuration.set(key, def);
 
-                        try {
-                            configuration.save(file);
-                            options.put(option, def);
-                        } catch (Exception ex) {
-                            AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
-                            ex.printStackTrace();
-                        }
+                    try {
+                        configuration.save(file);
+                        options.put(option, def);
+                    } catch (Exception ex) {
+                        AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
+                        ex.printStackTrace();
                     }
                 }
             } else {
@@ -494,13 +489,8 @@ public class Check {
                     break;
                 }
             }
-            if (!enabled) {
-                return false;
-            }
-        } else if (!this.silent[dataType.ordinal()]) {
-            return false;
-        }
-        return true;
+            return enabled;
+        } else return this.silent[dataType.ordinal()];
     }
 
     public void setSilent(Check.DataType dataType, boolean b) {
@@ -527,7 +517,7 @@ public class Check {
 
             if (Config.settings.getBoolean("Important.enable_developer_api")) {
                 event = new CheckSilentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
-                Register.manager.callEvent(event);
+                Bukkit.getPluginManager().callEvent(event);
             } else {
                 event = null;
             }
@@ -535,10 +525,7 @@ public class Check {
             if (event == null || !event.isCancelled()) {
                 this.silent[type.ordinal()] = b;
                 setOption("silent." + type.toString().toLowerCase(), b);
-
-                synchronized (options) {
-                    options.clear();
-                }
+                options.clear();
             }
         }
     }
@@ -571,7 +558,7 @@ public class Check {
 
             if (Config.settings.getBoolean("Important.enable_developer_api")) {
                 event = new CheckPunishmentToggleEvent(this.hackType, b ? Enums.ToggleAction.ENABLE : Enums.ToggleAction.DISABLE);
-                Register.manager.callEvent(event);
+                Bukkit.getPluginManager().callEvent(event);
             } else {
                 event = null;
             }
@@ -579,10 +566,7 @@ public class Check {
             if (event == null || !event.isCancelled()) {
                 this.punish[type.ordinal()] = b;
                 setOption("punishments.enabled" + type.toString().toLowerCase(), b);
-
-                synchronized (options) {
-                    options.clear();
-                }
+                options.clear();
             }
         }
     }

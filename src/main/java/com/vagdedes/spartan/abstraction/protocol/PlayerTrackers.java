@@ -16,7 +16,7 @@ public class PlayerTrackers {
     public enum TrackerType {
         BOUNCING_BLOCKS(TrackerFamily.VELOCITY), PISTON(TrackerFamily.VELOCITY),
         BUBBLE_WATER(TrackerFamily.VELOCITY), TRIDENT(TrackerFamily.VELOCITY),
-        DAMAGE(TrackerFamily.VELOCITY),
+        DAMAGE(TrackerFamily.VELOCITY), TELEPORT(TrackerFamily.VELOCITY),
 
         VEHICLE(TrackerFamily.MOTION);
 

@@ -26,18 +26,42 @@ public class AntiCheatLogs {
     private static File todayFile = getFile();
     private static YamlConfiguration fileConfiguration = YamlConfiguration.loadConfiguration(todayFile);
 
+    private static final Object synchronizer = new Object();
+    private static boolean saving = false;
+
     public static String getDate(String pattern, long time) {
         return DateTimeFormatter.ofPattern(pattern).format(
                 Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault())
         );
     }
 
+    private static String getFileName() {
+        return "log"
+                + ZonedDateTime.now().format(DateTimeFormatter.ofPattern(dateOnlyFormat))
+                + ".yml";
+    }
+
     private static File getFile() {
         return new File(
-                folderPath + "/log"
-                        + ZonedDateTime.now().format(DateTimeFormatter.ofPattern(dateOnlyFormat))
-                        + ".yml"
+                folderPath + "/" + getFileName()
         );
+    }
+
+    private static void rawSave() {
+        try {
+            fileConfiguration.save(todayFile);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void save() {
+        if (!saving) {
+            synchronized (synchronizer) {
+                saving = true;
+                rawSave();
+                saving = false;
+            }
+        }
     }
 
     // Separator
@@ -48,21 +72,19 @@ public class AntiCheatLogs {
         }
         if (Config.settings.getBoolean("Logs.log_file")) {
             if (store && fileConfiguration != null) {
-                SpartanBukkit.dataThread.executeIfSyncElseHere(() -> {
+                String fileName = getFileName();
+
+                if (!fileName.equals(todayFile.getName())) {
+                    rawSave();
+                    todayFile = getFile();
+                    fileConfiguration = YamlConfiguration.loadConfiguration(todayFile);
+                }
+                SpartanBukkit.dataThread.executeIfUnknownThreadElseHere(() -> {
                     fileConfiguration.set(
                             AntiCheatLogs.getDate(AntiCheatLogs.dateFormat, time),
                             information
                     );
-                    try {
-                        fileConfiguration.save(todayFile);
-                    } catch (Exception ignored) {
-                    }
-                    File file = getFile();
-
-                    if (!file.getName().equals(todayFile.getName())) {
-                        AntiCheatLogs.todayFile = file;
-                        fileConfiguration = YamlConfiguration.loadConfiguration(file);
-                    }
+                    AntiCheatLogs.save();
                 });
             }
         }

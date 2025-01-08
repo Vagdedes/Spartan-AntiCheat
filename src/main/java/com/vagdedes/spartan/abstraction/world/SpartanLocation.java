@@ -2,9 +2,10 @@ package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import com.vagdedes.spartan.listeners.bukkit.standalone.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.standalone.ChunksEvent;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
+import lombok.Data;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
+@Data
 public class SpartanLocation implements Cloneable {
 
     public static final Location bukkitDefault = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
@@ -102,38 +104,6 @@ public class SpartanLocation implements Cloneable {
         return System.currentTimeMillis() - this.time;
     }
 
-    public double getX() {
-        return this.x;
-    }
-
-    public double getY() {
-        return this.y;
-    }
-
-    public double getZ() {
-        return this.z;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
-    }
-
-    public void setZ(double z) {
-        this.z = z;
-    }
-
-    public void setYaw(float yaw) {
-        this.yaw = yaw;
-    }
-
-    public void setPitch(float pitch) {
-        this.pitch = pitch;
-    }
-
     public int getBlockX() {
         return AlgebraUtils.integerFloor(this.x);
     }
@@ -144,14 +114,6 @@ public class SpartanLocation implements Cloneable {
 
     public int getBlockZ() {
         return AlgebraUtils.integerFloor(this.z);
-    }
-
-    public float getYaw() {
-        return this.yaw;
-    }
-
-    public float getPitch() {
-        return this.pitch;
     }
 
     public int getChunkX() {
@@ -167,7 +129,7 @@ public class SpartanLocation implements Cloneable {
     }
 
     public int getLocalY() {
-        if (Event_Chunks.heightSupport) {
+        if (ChunksEvent.heightSupport) {
             return Math.max(this.world.getMinHeight(), Math.min(getBlockY(), this.world.getMaxHeight()));
         } else {
             return Math.max(0, Math.min(getBlockY(), PlayerUtils.height));
@@ -220,14 +182,14 @@ public class SpartanLocation implements Cloneable {
 
     private SpartanBlock setAsyncBlock() {
         return new SpartanBlock(
-                Event_Chunks.getBlockAsync(this.bukkit())
+                ChunksEvent.getBlockAsync(this.bukkit())
         );
     }
 
     public SpartanBlock getBlock() {
         int blockY = getBlockY();
 
-        if (Event_Chunks.heightSupport ?
+        if (ChunksEvent.heightSupport ?
                 blockY >= this.world.getMinHeight() && blockY <= this.world.getMaxHeight() :
                 blockY >= 0 && blockY <= PlayerUtils.height) {
             if (SpartanBukkit.packetsEnabled()) {
@@ -254,7 +216,7 @@ public class SpartanLocation implements Cloneable {
     }
 
     private boolean isChunkLoaded(int x, int z) {
-        return Event_Chunks.isLoaded(this.world, x, z);
+        return ChunksEvent.isLoaded(this.world, x, z);
     }
 
     public boolean isChunkLoaded() {

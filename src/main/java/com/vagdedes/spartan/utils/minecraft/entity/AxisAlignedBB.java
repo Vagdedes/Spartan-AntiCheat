@@ -2,9 +2,11 @@ package com.vagdedes.spartan.utils.minecraft.entity;
 
 import com.vagdedes.spartan.utils.minecraft.vector.Vec3;
 import com.vagdedes.spartan.utils.minecraft.world.EnumFacing;
+import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
+@Getter
 public class AxisAlignedBB {
 
     public double minX, minY, minZ, maxX, maxY, maxZ;
@@ -117,10 +119,8 @@ public class AxisAlignedBB {
                 }
             }
 
-            return p_72316_2_;
-        } else {
-            return p_72316_2_;
         }
+        return p_72316_2_;
     }
 
     public double calculateYOffset(AxisAlignedBB other, double p_72323_2_) {
@@ -141,10 +141,8 @@ public class AxisAlignedBB {
                 }
             }
 
-            return p_72323_2_;
-        } else {
-            return p_72323_2_;
         }
+        return p_72323_2_;
     }
 
     public double calculateZOffset(AxisAlignedBB other, double p_72322_2_) {
@@ -165,10 +163,8 @@ public class AxisAlignedBB {
                 }
             }
 
-            return p_72322_2_;
-        } else {
-            return p_72322_2_;
         }
+        return p_72322_2_;
     }
 
     public boolean intersectsWith(AxisAlignedBB other) {
@@ -330,30 +326,6 @@ public class AxisAlignedBB {
 
     public AxisAlignedBB clone() {
         return new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
-    }
-
-    public double getMinX() {
-        return this.minX;
-    }
-
-    public double getMinY() {
-        return this.minY;
-    }
-
-    public double getMinZ() {
-        return this.minZ;
-    }
-
-    public double getMaxX() {
-        return this.maxX;
-    }
-
-    public double getMaxY() {
-        return this.maxY;
-    }
-
-    public double getMaxZ() {
-        return this.maxZ;
     }
 
     public boolean isEqual(AxisAlignedBB bb) {

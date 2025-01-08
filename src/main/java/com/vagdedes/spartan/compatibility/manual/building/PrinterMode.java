@@ -8,6 +8,6 @@ public class PrinterMode {
 
     public static boolean isUsing(SpartanProtocol p) {
         return Compatibility.CompatibilityType.PRINTER_MODE.isFunctional()
-                && PrinterModeAPI.isInPrinterMode(p.bukkit);
+                && PrinterModeAPI.isInPrinterMode(p.bukkit());
     }
 }

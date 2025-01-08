@@ -61,7 +61,7 @@ public class Attributes {
         if (classExists && Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
             for (Attribute attribute : Attribute.values()) {
                 if (attribute.name().equals(attributeString)) {
-                    PlayerInventory inventory = p.bukkit.getInventory();
+                    PlayerInventory inventory = p.bukkit().getInventory();
                     int modifiersCount = 0;
                     double amount = 0.0;
 

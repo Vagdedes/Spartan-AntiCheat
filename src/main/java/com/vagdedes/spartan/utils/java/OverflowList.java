@@ -2,10 +2,7 @@ package com.vagdedes.spartan.utils.java;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class OverflowList<E> implements List<E> {
 
@@ -79,7 +76,7 @@ public class OverflowList<E> implements List<E> {
 
     @Override
     public boolean containsAll(@NotNull Collection<?> c) {
-        return this.list.containsAll(c);
+        return new HashSet<>(this.list).containsAll(c);
     }
 
     @Override

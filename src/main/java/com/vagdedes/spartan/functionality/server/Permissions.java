@@ -5,6 +5,7 @@ import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class Permissions {
@@ -79,14 +80,14 @@ public class Permissions {
     }
 
     public static List<SpartanProtocol> getStaff() {
-        List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
         int size = protocols.size();
 
         if (size > 0) {
             List<SpartanProtocol> array = new ArrayList<>(size);
 
             for (SpartanProtocol protocol : protocols) {
-                if (isStaff(protocol.bukkit)) {
+                if (isStaff(protocol.bukkit())) {
                     array.add(protocol);
                 }
             }

@@ -5,6 +5,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.vagdedes.spartan.utils.math.MathHelper;
 import com.vagdedes.spartan.utils.minecraft.vector.Vec3i;
+import lombok.Getter;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -20,7 +21,11 @@ public enum EnumFacing {
 
     /**
      * Ordering index for D-U-N-S-W-E
+     * -- GETTER --
+     *  Get the Index of this Facing (0-5). The order is D-U-N-S-W-E
+
      */
+    @Getter
     private final int index;
 
     /**
@@ -30,15 +35,30 @@ public enum EnumFacing {
 
     /**
      * Oredering index for the HORIZONTALS field (S-W-N-E)
+     * -- GETTER --
+     *  Get the index of this horizontal facing (0-3). The order is S-W-N-E
+
      */
+    @Getter
     private final int horizontalIndex;
+    @Getter
     private final String name;
+    @Getter
     private final Axis axis;
+    /**
+     * -- GETTER --
+     *  Get the AxisDirection of this Facing.
+     */
+    @Getter
     private final AxisDirection axisDirection;
 
     /**
      * Normalized Vector that points in the direction of this Facing
+     * -- GETTER --
+     *  Get a normalized Vector that points in the direction of this Facing.
+
      */
+    @Getter
     private final Vec3i directionVec;
 
     /**
@@ -63,27 +83,6 @@ public enum EnumFacing {
         this.axis = axisIn;
         this.axisDirection = axisDirectionIn;
         this.directionVec = directionVecIn;
-    }
-
-    /**
-     * Get the Index of this Facing (0-5). The order is D-U-N-S-W-E
-     */
-    public int getIndex() {
-        return this.index;
-    }
-
-    /**
-     * Get the index of this horizontal facing (0-3). The order is S-W-N-E
-     */
-    public int getHorizontalIndex() {
-        return this.horizontalIndex;
-    }
-
-    /**
-     * Get the AxisDirection of this Facing.
-     */
-    public AxisDirection getAxisDirection() {
-        return this.axisDirection;
     }
 
     /**
@@ -241,10 +240,6 @@ public enum EnumFacing {
         return this.name;
     }
 
-    public Axis getAxis() {
-        return this.axis;
-    }
-
     /**
      * Get the facing specified by the given name
      */
@@ -286,8 +281,7 @@ public enum EnumFacing {
         EnumFacing[] var5 = values();
         int var6 = var5.length;
 
-        for (int var7 = 0; var7 < var6; ++var7) {
-            EnumFacing var8 = var5[var7];
+        for (EnumFacing var8 : var5) {
             float var9 = p_176737_0_ * (float) var8.directionVec.getX() + p_176737_1_ * (float) var8.directionVec.getY() + p_176737_2_ * (float) var8.directionVec.getZ();
 
             if (var9 > var4) {
@@ -301,17 +295,6 @@ public enum EnumFacing {
 
     public String toString() {
         return this.name;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * Get a normalized Vector that points in the direction of this Facing.
-     */
-    public Vec3i getDirectionVec() {
-        return this.directionVec;
     }
 
     static {
@@ -330,6 +313,7 @@ public enum EnumFacing {
         }
     }
 
+    @Getter
     public static enum Axis implements Predicate {
         X("X", 0, "X", 0, "x", Plane.HORIZONTAL),
         Y("Y", 1, "Y", 1, "y", Plane.VERTICAL),
@@ -369,14 +353,6 @@ public enum EnumFacing {
 
         public boolean apply(EnumFacing facing) {
             return facing != null && facing.getAxis() == this;
-        }
-
-        public Plane getPlane() {
-            return this.plane;
-        }
-
-        public String getName() {
-            return this.name;
         }
 
         public boolean apply(Object p_apply_1_) {
@@ -465,13 +441,13 @@ public enum EnumFacing {
         static {
             try {
                 PLANE_LOOKUP[Plane.HORIZONTAL.ordinal()] = 1;
-            } catch (NoSuchFieldError var11) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 PLANE_LOOKUP[Plane.VERTICAL.ordinal()] = 2;
-            } catch (NoSuchFieldError var10) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
@@ -479,37 +455,37 @@ public enum EnumFacing {
 
             try {
                 FACING_LOOKUP[EnumFacing.NORTH.ordinal()] = 1;
-            } catch (NoSuchFieldError var9) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 FACING_LOOKUP[EnumFacing.EAST.ordinal()] = 2;
-            } catch (NoSuchFieldError var8) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 FACING_LOOKUP[EnumFacing.SOUTH.ordinal()] = 3;
-            } catch (NoSuchFieldError var7) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 FACING_LOOKUP[EnumFacing.WEST.ordinal()] = 4;
-            } catch (NoSuchFieldError var6) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 FACING_LOOKUP[EnumFacing.UP.ordinal()] = 5;
-            } catch (NoSuchFieldError var5) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 FACING_LOOKUP[EnumFacing.DOWN.ordinal()] = 6;
-            } catch (NoSuchFieldError var4) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
@@ -517,19 +493,19 @@ public enum EnumFacing {
 
             try {
                 AXIS_LOOKUP[Axis.X.ordinal()] = 1;
-            } catch (NoSuchFieldError var3) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 AXIS_LOOKUP[Axis.Y.ordinal()] = 2;
-            } catch (NoSuchFieldError var2) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
 
             try {
                 AXIS_LOOKUP[Axis.Z.ordinal()] = 3;
-            } catch (NoSuchFieldError var1) {
+            } catch (NoSuchFieldError ignored) {
                 ;
             }
         }

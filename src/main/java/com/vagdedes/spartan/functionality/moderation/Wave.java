@@ -42,7 +42,7 @@ public class Wave {
                         remove(entry.getKey());
                         SpartanBukkit.runCommand(entry.getValue());
                     }
-                    end(Config.settings.getBoolean("Punishments.broadcast_on_punishment"), size);
+                    end(size);
                 }
             }
         }, 1L, 1L);
@@ -126,20 +126,14 @@ public class Wave {
 
         if (uuids.length > 0) {
             synchronized (commands) {
-                boolean broadcast = Config.settings.getBoolean("Punishments.broadcast_on_punishment");
+                Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-                if (broadcast) {
-                    Bukkit.broadcastMessage(Config.messages.getColorfulString("wave_start_message"));
-                } else {
-                    List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+                if (!protocols.isEmpty()) {
+                    String message = Config.messages.getColorfulString("wave_start_message");
 
-                    if (!protocols.isEmpty()) {
-                        String message = Config.messages.getColorfulString("wave_start_message");
-
-                        for (SpartanProtocol protocol : protocols) {
-                            if (DetectionNotifications.hasPermission(protocol)) {
-                                protocol.bukkit.sendMessage(message);
-                            }
+                    for (SpartanProtocol protocol : protocols) {
+                        if (DetectionNotifications.hasPermission(protocol)) {
+                            protocol.bukkit().sendMessage(message);
                         }
                     }
                 }
@@ -163,21 +157,15 @@ public class Wave {
         }
     }
 
-    private static void end(boolean broadcast, int total) {
-        if (broadcast) {
-            Bukkit.broadcastMessage(
-                    Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total))
-            );
-        } else {
-            List<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+    private static void end(int total) {
+        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
 
-            if (!protocols.isEmpty()) {
-                String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
+        if (!protocols.isEmpty()) {
+            String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
 
-                for (SpartanProtocol protocol : protocols) {
-                    if (DetectionNotifications.hasPermission(protocol)) {
-                        protocol.bukkit.sendMessage(message);
-                    }
+            for (SpartanProtocol protocol : protocols) {
+                if (DetectionNotifications.hasPermission(protocol)) {
+                    protocol.bukkit().sendMessage(message);
                 }
             }
         }

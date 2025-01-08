@@ -56,15 +56,6 @@ public class Enums {
                         "in abnormal cases, such as when sleeping."
                 }
         ),
-        ItemDrops(
-                HackCategoryType.INVENTORY,
-                com.vagdedes.spartan.abstraction.check.implementation.inventory.ItemDrops.class,
-                new String[]{
-                        "This check will prevent client modules",
-                        "that allow a player to drop an amount",
-                        "of items in abnormally fast rates."
-                }
-        ),
         AutoRespawn(
                 HackCategoryType.PLAYER,
                 com.vagdedes.spartan.abstraction.check.implementation.player.AutoRespawn.class,
@@ -121,7 +112,7 @@ public class Enums {
         ),
         FastClicks(
                 HackCategoryType.COMBAT,
-                com.vagdedes.spartan.abstraction.check.implementation.combat.FastClicks.class,
+                com.vagdedes.spartan.abstraction.check.implementation.combat.fastclicks.FastClicks.class,
                 new String[]{
                         "This check will prevent client modules",
                         "that allow a player to click abnormally fast",
@@ -181,15 +172,6 @@ public class Enums {
                         "This check will prevent client modules",
                         "that allow a player to send abnormally",
                         "high amounts of movement packets."
-                }
-        ),
-        Simulation(
-                HackCategoryType.MOVEMENT,
-                com.vagdedes.spartan.abstraction.check.implementation.movement.simulation.Simulation.class,
-                new String[]{
-                        "This check will prevent client modules",
-                        "that allow a player to take advantage",
-                        "of any type of movement behavior."
                 }
         ),
         FastEat(
@@ -252,7 +234,7 @@ public class Enums {
         private final String key;
 
         Permission() {
-            key = Register.plugin.getName().toLowerCase() + "." + this.name().toLowerCase();
+            key = Register.command + "." + this.name().toLowerCase();
         }
 
         public String getKey() {

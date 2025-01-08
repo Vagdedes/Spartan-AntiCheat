@@ -7,8 +7,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class ConfigurationBuilder {
 
@@ -22,11 +22,11 @@ public abstract class ConfigurationBuilder {
 
     protected final File file;
     private final Map<String, Boolean>
-            bool = new LinkedHashMap<>(),
-            exists = new LinkedHashMap<>();
-    private final Map<String, Integer> ints = new LinkedHashMap<>();
-    private final Map<String, Double> dbls = new LinkedHashMap<>();
-    private final Map<String, String> str = new LinkedHashMap<>();
+            bool = new ConcurrentHashMap<>(),
+            exists = new ConcurrentHashMap<>();
+    private final Map<String, Integer> ints = new ConcurrentHashMap<>();
+    private final Map<String, Double> dbls = new ConcurrentHashMap<>();
+    private final Map<String, String> str = new ConcurrentHashMap<>();
 
     public ConfigurationBuilder(String fileName) {
         this.file = new File(getDirectory(fileName));
@@ -51,113 +51,91 @@ public abstract class ConfigurationBuilder {
     }
 
     public final boolean exists(String path) {
-        synchronized (this.exists) {
-            Boolean data = exists.get(path);
+        Boolean data = exists.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            boolean result = getPath().contains(path);
-            exists.put(path, result);
-            return result;
+        if (data != null) {
+            return data;
         }
+        boolean result = getPath().contains(path);
+        exists.put(path, result);
+        return result;
     }
 
     public final boolean getBoolean(String path) {
-        synchronized (this.bool) {
-            Boolean data = bool.get(path);
+        Boolean data = bool.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            boolean value = getPath().getBoolean(path);
-            bool.put(path, value);
-            return value;
+        if (data != null) {
+            return data;
         }
+        boolean value = getPath().getBoolean(path);
+        bool.put(path, value);
+        return value;
     }
 
     public final int getInteger(String path) {
-        synchronized (this.ints) {
-            Integer data = ints.get(path);
+        Integer data = ints.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            int value = getPath().getInt(path);
-            ints.put(path, value);
-            return value;
+        if (data != null) {
+            return data;
         }
+        int value = getPath().getInt(path);
+        ints.put(path, value);
+        return value;
     }
 
     public final double getDouble(String path) {
-        synchronized (this.dbls) {
-            Double data = dbls.get(path);
+        Double data = dbls.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            double value = getPath().getDouble(path);
-            dbls.put(path, value);
-            return value;
+        if (data != null) {
+            return data;
         }
+        double value = getPath().getDouble(path);
+        dbls.put(path, value);
+        return value;
     }
 
     public final String getString(String path) {
-        synchronized (this.str) {
-            String data = str.get(path);
+        String data = str.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            String value = getPath().getString(path);
-
-            if (value == null) {
-                return path;
-            }
-            str.put(path, value);
-            return value;
+        if (data != null) {
+            return data;
         }
+        String value = getPath().getString(path);
+
+        if (value == null) {
+            return path;
+        }
+        str.put(path, value);
+        return value;
     }
 
     public final String getColorfulString(String path) {
-        synchronized (this.str) {
-            String data = str.get(path);
+        String data = str.get(path);
 
-            if (data != null) {
-                return data;
-            }
-            if (!file.exists()) {
-                create();
-            }
-            String value = getPath().getString(path);
-
-            if (value == null) {
-                return path;
-            } else {
-                value = ChatColor.translateAlternateColorCodes('&', value);
-                value = value.replace(prefix, SpartanEdition.getProductName(value));
-            }
-            str.put(path, value);
-            return value;
+        if (data != null) {
+            return data;
         }
+        if (!file.exists()) {
+            create();
+        }
+        String value = getPath().getString(path);
+
+        if (value == null) {
+            return path;
+        } else {
+            value = ChatColor.translateAlternateColorCodes('&', value);
+            value = value.replace(prefix, SpartanEdition.getProductName(value));
+        }
+        str.put(path, value);
+        return value;
     }
 
     public final void clearOption(String name) {
-        synchronized (this.bool) {
-            bool.remove(name);
-        }
-        synchronized (this.exists) {
-            exists.remove(name);
-        }
-        synchronized (this.ints) {
-            ints.remove(name);
-        }
-        synchronized (this.dbls) {
-            dbls.remove(name);
-        }
-        synchronized (this.str) {
-            str.remove(name);
-        }
+        bool.remove(name);
+        exists.remove(name);
+        ints.remove(name);
+        dbls.remove(name);
+        str.remove(name);
     }
 
     public final void setOption(String name, Object value) {
@@ -165,7 +143,7 @@ public abstract class ConfigurationBuilder {
         clearOption(name);
     }
 
-    public final void addOption(String name, Object value) {
+    protected final void addOption(String name, Object value) {
         ConfigUtils.add(file, name, value);
         clearOption(name);
     }
@@ -179,8 +157,4 @@ public abstract class ConfigurationBuilder {
     }
 
     abstract public void create();
-
-    protected void addOption(String option, String value) {
-        ConfigUtils.add(file, option, value);
-    }
 }

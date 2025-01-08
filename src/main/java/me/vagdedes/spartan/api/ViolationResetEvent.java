@@ -6,27 +6,21 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+@Deprecated
 public class ViolationResetEvent extends Event implements Cancellable {
-
-    private final Player player;
-    private final Enums.HackType hackType;
-    private boolean cancelled;
 
     @Deprecated
     public ViolationResetEvent(Player player, Enums.HackType hackType) {
-        this.player = player;
-        this.hackType = hackType;
-        this.cancelled = false;
     }
 
     @Deprecated
     public Player getPlayer() {
-        return player;
+        return null;
     }
 
     @Deprecated
     public Enums.HackType getHackType() {
-        return hackType;
+        return null;
     }
 
     @Deprecated
@@ -36,12 +30,11 @@ public class ViolationResetEvent extends Event implements Cancellable {
 
     @Deprecated
     public boolean isCancelled() {
-        return cancelled;
+        return false;
     }
 
     @Deprecated
     public void setCancelled(boolean b) {
-        this.cancelled = b;
     }
 
     @Deprecated

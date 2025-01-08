@@ -2,7 +2,7 @@ package com.vagdedes.spartan.abstraction.data;
 
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
 import com.vagdedes.spartan.abstraction.event.ServerBlockChange;
-import com.vagdedes.spartan.listeners.bukkit.standalone.Event_Chunks;
+import com.vagdedes.spartan.listeners.bukkit.standalone.ChunksEvent;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -59,13 +59,13 @@ public class PacketWorld {
             }
         }
 
-        Block b = Event_Chunks.getBlockAsync(location);
+        Block b = ChunksEvent.getBlockAsync(location);
         return (b == null) ? null : b.getType();
     }
 
     public void worldChange(ServerBlockChange blockChange) {
         if (BlockUtils.areAir(blockChange.getData())) {
-            Block b = Event_Chunks.getBlockAsync(
+            Block b = ChunksEvent.getBlockAsync(
                             blockChange
                                             .getPosition()
                                             .toLocation(this.player.getWorld())

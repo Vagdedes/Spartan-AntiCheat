@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.snowgears.grapplinghook.api.HookAPI;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -18,10 +18,12 @@ import org.bukkit.inventory.ItemStack;
 
 public class GrapplingHook implements Listener {
 
+    private final static String name = "grapplinghook";
+
     private static boolean isItem(ItemStack i) {
         if (Compatibility.CompatibilityType.GRAPPLING_HOOK.isFunctional()) {
             try {
-                return PluginUtils.exists("grapplinghook") ? HookAPI.isGrapplingHook(i) : i.getType() == Material.FISHING_ROD;
+                return PluginUtils.exists(name) ? HookAPI.isGrapplingHook(i) : i.getType() == Material.FISHING_ROD;
             } catch (Exception ignored) {
             }
         }
@@ -34,11 +36,11 @@ public class GrapplingHook implements Listener {
             Entity caught = e.getCaught();
 
             if (caught instanceof Player) {
-                SpartanPlayer p = SpartanBukkit.getProtocol((Player) caught).spartan,
-                        t = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
+                SpartanProtocol p = SpartanBukkit.getProtocol((Player) caught),
+                        t = SpartanBukkit.getProtocol(e.getPlayer());
 
-                if (!p.equals(t) && isItem(t.getItemInHand())) {
-                    if (PluginUtils.exists("grapplinghook")) {
+                if (!p.equals(t) && isItem(t.spartan.getItemInHand())) {
+                    if (PluginUtils.exists(name)) {
                         Config.compatibility.evadeFalsePositives(
                                 p,
                                 Compatibility.CompatibilityType.GRAPPLING_HOOK,
