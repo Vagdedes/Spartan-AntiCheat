@@ -1,4 +1,4 @@
-# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">Get Java & Bedrock Edition in one jar</a>
+# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">SPARTAN ONE: Get Java & Bedrock Edition in one jar</a>
 ## CPU Requirements (Central Processing Unit)
 #### Good single core performance needed, meaning GHz (clock count) matters more than core/processor count.
 #### CPU is best to be released in the last 5 years, software improvement drives hardware improvement and viceversa.
