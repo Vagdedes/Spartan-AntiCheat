@@ -1,4 +1,4 @@
-# <a href="https://vagdedes.com/patreon">Get Java & Bedrock Edition in one jar</a>
+# <a href="https://vagdedes.com/patreon">SPARTAN ONE: Get Java & Bedrock Edition in one jar</a>
 
 ## Different Notification Types
 
