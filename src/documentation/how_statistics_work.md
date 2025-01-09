@@ -1,4 +1,4 @@
-# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">Get Java & Bedrock Edition in one jar</a>
+# <a href="https://www.paypal.com/ncp/payment/EVXKXBD6M5XPC">SPARTAN ONE: Get Java & Bedrock Edition in one jar</a>
 
 ## Unlikely notifications
 When using Spartan you will observe certain notifications mention "unlikely (% data complete)". This is normal behavior, it means a specific detection of the anti-cheat is learning and won't take any action yet but is notifying you so you are aware of this.
