@@ -20,6 +20,9 @@ Permission: spartan.reload
 ``/spartan notifications [ticks-frequency]`` toggles the notification system.<br>
 Permission: spartan.notifications
 
+``/spartan verbose`` toggles all notifications instead of just ones with high hacking probability.<br>
+Permission: spartan.notifications
+
 ``/spartan info [player]`` opens a GUI menu with a player's violations info.<br>
 Permission: spartan.info
 
