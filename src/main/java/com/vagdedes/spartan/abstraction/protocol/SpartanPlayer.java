@@ -34,6 +34,7 @@ public class SpartanPlayer {
     final SpartanProtocol protocol;
     private final Map<PotionEffectType, ExtendedPotionEffect> potionEffects;
     public final Check.DataType dataType;
+    public final Check.DetectionType detectionType;
     public final PlayerMovement movement;
     public final PlayerPunishments punishments;
     public final PlayerTrackers trackers;
@@ -66,6 +67,9 @@ public class SpartanPlayer {
         this.dataType = BedrockCompatibility.isPlayer(protocol.bukkit())
                 ? Check.DataType.BEDROCK
                 : Check.DataType.JAVA;
+        this.detectionType = this.packetsEnabled()
+                ? Check.DetectionType.PACKETS
+                : Check.DetectionType.BUKKIT;
         this.trackers = new PlayerTrackers();
 
         this.potionEffects = new ConcurrentHashMap<>(2);
@@ -102,11 +106,15 @@ public class SpartanPlayer {
     }
 
     public boolean isAFK() {
-        return this.afk;
+        return this.afk || this.protocol.npc;
     }
 
     public boolean isBedrockPlayer() {
         return this.dataType == Check.DataType.BEDROCK;
+    }
+
+    public boolean packetsEnabled() {
+        return SpartanBukkit.packetsEnabled() && !this.isBedrockPlayer();
     }
 
     @Override
@@ -250,7 +258,7 @@ public class SpartanPlayer {
             );
 
             if (BlockUtils.isFullSolid(location.getBlock().getType())) {
-                return location;
+                return location.getBlockLocation();
             }
         }
         return null;
@@ -460,7 +468,7 @@ public class SpartanPlayer {
                 } else {
                     loopLocation.setY(Math.floor(progressiveY) + Math.max(blockBox, box));
                 }
-                if (this.protocol.packetsEnabled()) {
+                if (this.packetsEnabled()) {
                     this.protocol.teleport(loopLocation.bukkit());
                 }
                 break;

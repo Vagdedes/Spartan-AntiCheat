@@ -10,6 +10,7 @@ import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.event.ServerBlockChange;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -24,12 +25,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BlockPlaceListener extends PacketAdapter {
 
     public BlockPlaceListener() {
-        super(Register.plugin, ListenerPriority.HIGHEST,
-                via8blockPlace(), PacketType.Play.Client.BLOCK_PLACE,
-                via21blockPlace());
+        super(Register.plugin, ListenerPriority.HIGHEST, init());
         // Method: Event_BlockPlace.event()
     }
 
@@ -39,8 +41,6 @@ public class BlockPlaceListener extends PacketAdapter {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
         PacketContainer packet = event.getPacket();
         SpartanScheduler.run(() -> {
-            if (event.getPacket().getType().equals(PacketType.Play.Client.BLOCK_DIG))
-                return;
             if (isPlacingBlock(packet)) {
                 if (packet.getBlockPositionModifier().getValues().isEmpty() && packet.getMovingBlockPositions().getValues().isEmpty()) {
                     // stub for debug
@@ -62,10 +62,10 @@ public class BlockPlaceListener extends PacketAdapter {
                     }
 
                     Location l = new Location(
-                                    protocol.getWorld(),
-                                    blockPosition.toVector().getBlockX(),
-                                    blockPosition.toVector().getBlockY(),
-                                    blockPosition.toVector().getBlockZ()
+                            protocol.getWorld(),
+                            blockPosition.toVector().getBlockX(),
+                            blockPosition.toVector().getBlockY(),
+                            blockPosition.toVector().getBlockZ()
                     );
                     if (direction == null) return;
                     l.add(getDirection(BlockFace.valueOf(direction.name())));
@@ -75,19 +75,19 @@ public class BlockPlaceListener extends PacketAdapter {
 
                     if (block == null) return;
                     boolean isMainHand = !MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                                    || event.getPacket().getHands().read(0) == EnumWrappers.Hand.MAIN_HAND;
+                            || event.getPacket().getHands().read(0) == EnumWrappers.Hand.MAIN_HAND;
 
                     ItemStack itemInHand = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                                    ? (isMainHand ? player.getInventory().getItemInMainHand()
-                                    : player.getInventory().getItemInOffHand()) : player.getItemInHand();
+                            ? (isMainHand ? player.getInventory().getItemInMainHand()
+                            : player.getInventory().getItemInOffHand()) : player.getItemInHand();
                     if (itemInHand.getType().isBlock()) {
                         if (!isInPlayer(protocol.getLocation(), block.getLocation())) {
                             Block blockAgainst = player.getLocation().getBlock();
                             Material material = itemInHand.getType();
                             protocol.packetWorld.worldChange(new ServerBlockChange(blockPosition, material));
                             protocol.packetWorld.worldChange(new ServerBlockChange(
-                                            new BlockPosition(blockPosition.getX(), blockPosition.getY() + 1, blockPosition.getZ()),
-                                            material
+                                    new BlockPosition(blockPosition.getX(), blockPosition.getY() + 1, blockPosition.getZ()),
+                                    material
                             ));
 
                             BlockPlaceEvent.event(protocol, block, blockAgainst, event.isCancelled());
@@ -119,8 +119,8 @@ public class BlockPlaceListener extends PacketAdapter {
             return (blockPosition.getY() != -1);
         } else {
             return ((packet.getType().equals(PacketType.Play.Client.USE_ITEM)
-                    ||packet.getType().equals(PacketType.Play.Client.USE_ITEM_ON)))
-                    && packet.getHands().read(0).equals(EnumWrappers.Hand.MAIN_HAND);
+                    || packet.getType().toString().contains("USE_ITEM_ON"))
+                    && packet.getHands().read(0).equals(EnumWrappers.Hand.MAIN_HAND));
         }
     }
 
@@ -157,20 +157,13 @@ public class BlockPlaceListener extends PacketAdapter {
         return direction;
     }
 
-    private static PacketType via21blockPlace() {
-        return PacketType.Play.Client.USE_ITEM_ON;
-        /*
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_21)
-                ? PacketType.Play.Client.USE_ITEM_ON
-                : PacketType.Play.Client.BLOCK_PLACE;
-         */
+    private static List<PacketType> init() {
+        List<PacketType> listeners = new ArrayList<>();
+        listeners.add(PacketType.Play.Client.BLOCK_PLACE);
+        if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9))
+            listeners.add(PacketType.Play.Client.USE_ITEM);
+        if (ProtocolLib.isPacketSupported("USE_ITEM_ON"))
+            listeners.add(PacketType.Play.Client.USE_ITEM_ON);
+        return listeners;
     }
-
-    private static PacketType via8blockPlace() {
-        return MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                ? PacketType.Play.Client.USE_ITEM
-                : PacketType.Play.Client.BLOCK_DIG;
-    }
-
-
 }

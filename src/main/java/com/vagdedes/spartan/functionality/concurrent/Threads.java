@@ -14,6 +14,7 @@ public class Threads {
 
     public static void disable() {
         enabled = false;
+        SpartanScheduler.shutdown();
     }
 
     public static boolean isKnown(Thread thread) {

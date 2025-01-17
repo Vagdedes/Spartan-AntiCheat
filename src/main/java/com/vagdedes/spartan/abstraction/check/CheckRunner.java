@@ -1,6 +1,5 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
@@ -37,6 +36,7 @@ public abstract class CheckRunner extends CheckProcess {
     CheckPrevention prevention;
     private boolean cancelled;
     private final Map<String, CheckDetection> detections;
+    private final boolean[] supportsDataType, supportsDetectionType;
 
     public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
         super(hackType, protocol);
@@ -45,11 +45,17 @@ public abstract class CheckRunner extends CheckProcess {
         this.detections = new ConcurrentHashMap<>(2);
         this.disableCauses = Collections.synchronizedList(new ArrayList<>(1));
         this.silentCauses = Collections.synchronizedList(new ArrayList<>(1));
+        this.supportsDataType = new boolean[Check.DataType.values().length];
+        this.supportsDetectionType = new boolean[Check.DetectionType.values().length];
     }
 
     // Probability
 
-    public final boolean hasSufficientData(Check.DataType dataType, double ratio) {
+    public final boolean hasSufficientData(
+            Check.DataType dataType,
+            Check.DetectionType detectionType,
+            double ratio
+    ) {
         if (this.detections.isEmpty()) {
             return false;
         } else if (ratio > 0.0) {
@@ -57,7 +63,9 @@ public abstract class CheckRunner extends CheckProcess {
                     total = 0;
 
             for (CheckDetection detectionExecutor : new TreeMap<>(this.detections).values()) {
-                if (detectionExecutor instanceof ProbabilityDetection) {
+                if (detectionExecutor instanceof ProbabilityDetection
+                        && detectionExecutor.supportsDataType(dataType)
+                        && detectionExecutor.supportsDetectionType(detectionType)) {
                     total++;
 
                     if (detectionExecutor.hasSufficientData(dataType)) {
@@ -74,7 +82,9 @@ public abstract class CheckRunner extends CheckProcess {
             boolean found = false;
 
             for (CheckDetection detectionExecutor : this.getDetections()) {
-                if (detectionExecutor instanceof ProbabilityDetection) {
+                if (detectionExecutor instanceof ProbabilityDetection
+                        && detectionExecutor.supportsDataType(dataType)
+                        && detectionExecutor.supportsDetectionType(detectionType)) {
                     found = true;
 
                     if (detectionExecutor.hasSufficientData(dataType)) {
@@ -86,11 +96,13 @@ public abstract class CheckRunner extends CheckProcess {
         }
     }
 
-    public final double getExtremeProbability(Check.DataType dataType) {
+    public final double getExtremeProbability(Check.DataType dataType, Check.DetectionType detectionType) {
         double num = PlayerEvidence.emptyProbability;
 
         for (CheckDetection detectionExecutor : this.getDetections()) {
-            if (detectionExecutor.hasSufficientData(dataType)) {
+            if (detectionExecutor.supportsDataType(dataType)
+                    && detectionExecutor.supportsDetectionType(detectionType)
+                    && detectionExecutor.hasSufficientData(dataType)) {
                 if (PlayerEvidence.POSITIVE) {
                     num = Math.max(num, detectionExecutor.getProbability(dataType));
                 } else {
@@ -101,7 +113,7 @@ public abstract class CheckRunner extends CheckProcess {
         return num;
     }
 
-    public final long getRemainingCompletionTime(Check.DataType dataType) {
+    public final long getRemainingCompletionTime(Check.DataType dataType, Check.DetectionType detectionType) {
         Collection<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
 
         if (playerProfiles.isEmpty()) {
@@ -113,17 +125,20 @@ public abstract class CheckRunner extends CheckProcess {
 
             for (PlayerProfile profile : playerProfiles) {
                 for (CheckDetection detection : profile.getRunner(this.hackType).getDetections()) {
-                    long firstTime = detection.getFirstTime(dataType);
+                    if (detection.supportsDataType(dataType)
+                            && detection.supportsDetectionType(detectionType)) {
+                        long firstTime = detection.getFirstTime(dataType);
 
-                    if (firstTime != -1L) {
-                        long lastTime = detection.getLastTime(dataType);
+                        if (firstTime != -1L) {
+                            long lastTime = detection.getLastTime(dataType);
 
-                        if (lastTime != -1L) {
-                            double completion = detection.getDataCompletion(dataType);
-                            averageCompletion += completion * completion;
-                            lastTime -= firstTime;
-                            averageTime += lastTime * lastTime;
-                            size++;
+                            if (lastTime != -1L) {
+                                double completion = detection.getDataCompletion(dataType);
+                                averageCompletion += completion * completion;
+                                lastTime -= firstTime;
+                                averageTime += lastTime * lastTime;
+                                size++;
+                            }
                         }
                     }
                 }
@@ -135,23 +150,15 @@ public abstract class CheckRunner extends CheckProcess {
             averageTime = Math.sqrt(averageTime / size);
             averageCompletion = Math.sqrt(averageCompletion / size);
             long time = (long) ((1.0 - averageCompletion) * averageTime);
-            return time < 1_000L // Less than a second is quite irrelevant
-                    ? 0L
-                    : time;
+            // Less than a second is quite irrelevant
+            return Math.max(time, 1_000L);
         }
     }
 
     // Detections
 
     public final CheckDetection getDetection(String detection) {
-        if (detection == null) {
-            if (this.detections.isEmpty()) {
-                new ImplementedProbabilityDetection(this, null, false);
-            }
-            return this.detections.values().iterator().next();
-        } else {
-            return this.detections.get(detection);
-        }
+        return this.detections.get(detection);
     }
 
     public final Collection<CheckDetection> getDetections() {
@@ -159,7 +166,42 @@ public abstract class CheckRunner extends CheckProcess {
     }
 
     protected final CheckDetection addDetection(String name, CheckDetection detection) {
-        return this.detections.putIfAbsent(name, detection);
+        CheckDetection result = this.detections.putIfAbsent(name, detection);
+
+        for (Check.DataType dataType : Check.DataType.values()) {
+            if (detection.supportsDataType(dataType)) {
+                this.supportsDataType[dataType.ordinal()] = true;
+            }
+        }
+        for (Check.DetectionType detectionType : Check.DetectionType.values()) {
+            if (detection.supportsDetectionType(detectionType)) {
+                this.supportsDetectionType[detectionType.ordinal()] = true;
+            }
+        }
+        return result;
+    }
+
+    public final void removeDetection(CheckDetection detection) {
+        this.detections.remove(detection.name);
+
+        for (Check.DataType dataType : Check.DataType.values()) {
+            this.supportsDataType[dataType.ordinal()] = false;
+        }
+        for (Check.DetectionType detectionType : Check.DetectionType.values()) {
+            this.supportsDetectionType[detectionType.ordinal()] = false;
+        }
+        for (CheckDetection other : this.getDetections()) {
+            for (Check.DataType dataType : Check.DataType.values()) {
+                if (other.supportsDataType(dataType)) {
+                    this.supportsDataType[dataType.ordinal()] = true;
+                }
+            }
+            for (Check.DetectionType detectionType : Check.DetectionType.values()) {
+                if (other.supportsDetectionType(detectionType)) {
+                    this.supportsDetectionType[detectionType.ordinal()] = true;
+                }
+            }
+        }
     }
 
     // Run
@@ -196,8 +238,19 @@ public abstract class CheckRunner extends CheckProcess {
 
     // Separator
 
+    final boolean supportsDataType(Check.DataType dataType) {
+        return this.supportsDataType[dataType.ordinal()];
+    }
+
+    final boolean supportsDetectionType(Check.DetectionType detectionType) {
+        return this.supportsDetectionType[detectionType.ordinal()];
+    }
+
     final boolean canFunction() {
         return this.protocol != null
+                && !this.protocol.npc
+                && this.supportsDataType[this.protocol.spartan.dataType.ordinal()]
+                && this.supportsDetectionType[this.protocol.spartan.detectionType.ordinal()]
                 && (System.currentTimeMillis() - this.creation) > TPS.maximum * TPS.tickTime
                 && (!cancelled || hackType.getCheck().handleCancelledEvents)
                 && (!v1_8 || this.protocol.bukkit().getGameMode() != GameMode.SPECTATOR)
@@ -255,6 +308,7 @@ public abstract class CheckRunner extends CheckProcess {
             reason = this.hackType.getCheck().getName();
         }
         this.disableCauses.add(new CheckCancellation(reason, pointer, ticks));
+
         if (this.protocol != null) {
             InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
         }

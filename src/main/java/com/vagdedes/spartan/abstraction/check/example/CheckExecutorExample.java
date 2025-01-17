@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.abstraction.check.example;
 
+import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedHardcodedDetection;
@@ -28,12 +29,16 @@ public class CheckExecutorExample extends CheckRunner {
 
         this.detection3 = new ImplementedHardcodedDetection(
                 this,
+                Check.DataType.JAVA,
+                Check.DetectionType.PACKETS,
                 "detection_option_name_in_checks_yml",
                 true // Enabled By Default Or Not
         );
 
         this.detection4 = new ImplementedProbabilityDetection(
                 this,
+                Check.DataType.BEDROCK,
+                Check.DetectionType.BUKKIT,
                 "detection_option_name_in_checks_yml",
                 true // Enabled By Default Or Not
         );

@@ -4,30 +4,33 @@ import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
+import com.vagdedes.spartan.utils.java.OverflowMap;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ProfileContinuity {
 
     private final PlayerProfile profile;
-    private final Map<Check.DataType, Map<Long, Long>> continuity;
+    private final Map<Long, Long>[] continuity;
     private final Map<Integer, Boolean> online;
 
     public ProfileContinuity(PlayerProfile profile) {
         this.profile = profile;
-        this.continuity = Collections.synchronizedMap(
-                new LinkedHashMap<>(Check.DataType.values().length)
+        this.continuity = new Map[Check.DataType.values().length];
+        this.online = new OverflowMap<>(
+                new ConcurrentHashMap<>(),
+                1_024
         );
-        this.online = new ConcurrentHashMap<>();
+
+        for (Check.DataType dataType : Check.DataType.values()) {
+            this.continuity[dataType.ordinal()] = new ConcurrentHashMap<>();
+        }
     }
 
     public void clear() {
-        synchronized (this.continuity) {
-            this.continuity.clear();
+        for (Map<Long, Long> map : this.continuity) {
+            map.clear();
         }
         this.online.clear();
     }
@@ -42,12 +45,7 @@ public class ProfileContinuity {
                     true
             );
         }
-        synchronized (this.continuity) {
-            this.continuity.computeIfAbsent(
-                    profile.getLastDataType(),
-                    k -> new TreeMap<>()
-            ).put(moment, length);
-        }
+        this.continuity[profile.getLastDataType().ordinal()].put(moment, length);
     }
 
     public boolean wasOnline(long current, long previous) {
@@ -64,23 +62,21 @@ public class ProfileContinuity {
                 && previous >= protocol.getActiveCreationTime()) {
             return !protocol.spartan.isAFK();
         } else {
-            synchronized (this.continuity) {
-                Map<Long, Long> data = this.continuity.get(
-                        protocol == null
-                                ? profile.getLastDataType()
-                                : protocol.spartan.dataType
-                );
+            Map<Long, Long> data = this.continuity[
+                    (protocol == null
+                            ? profile.getLastDataType()
+                            : protocol.spartan.dataType).ordinal()
+                    ];
 
-                if (data != null) {
-                    for (Map.Entry<Long, Long> entry : data.entrySet()) {
-                        long length = entry.getValue(),
-                                moment = entry.getKey();
+            if (!data.isEmpty()) {
+                for (Map.Entry<Long, Long> entry : data.entrySet()) {
+                    long length = entry.getValue(),
+                            moment = entry.getKey();
 
-                        if (previous >= (moment - length)
-                                && current <= moment) {
-                            this.online.put(hash, true);
-                            return true;
-                        }
+                    if (previous >= (moment - length)
+                            && current <= moment) {
+                        this.online.put(hash, true);
+                        return true;
                     }
                 }
             }
@@ -89,21 +85,28 @@ public class ProfileContinuity {
         }
     }
 
+    public boolean hasOnlineTime() {
+        SpartanProtocol protocol = this.profile.protocol();
+        return !this.continuity[
+                (protocol == null
+                        ? profile.getLastDataType()
+                        : protocol.spartan.dataType).ordinal()
+                ].isEmpty();
+    }
+
     public long getOnlineTime() {
         SpartanProtocol protocol = this.profile.protocol();
         long sum = 0L;
 
-        synchronized (this.continuity) {
-            Map<Long, Long> data = this.continuity.get(
-                    protocol == null
-                            ? profile.getLastDataType()
-                            : protocol.spartan.dataType
-            );
+        Map<Long, Long> data = this.continuity[
+                (protocol == null
+                        ? profile.getLastDataType()
+                        : protocol.spartan.dataType).ordinal()
+                ];
 
-            if (data != null) {
-                for (long value : data.values()) {
-                    sum += value;
-                }
+        if (!data.isEmpty()) {
+            for (long value : data.values()) {
+                sum += value;
             }
         }
         return protocol == null || protocol.spartan.isAFK()

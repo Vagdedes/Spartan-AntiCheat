@@ -48,6 +48,8 @@ public class Messages extends ConfigurationBuilder {
         addOption("warning_feedback_message", "&8[&2" + prefix + "&8]&7 You warned &c{player} &7for&8: &4{reason}");
 
         // Notifications
+        addOption("verbose_enable", "&8[&2" + prefix + "&8] &aYou enabled verbose.");
+        addOption("verbose_disable", "&8[&2" + prefix + "&8] &cYou disabled verbose.");
         addOption("notifications_enable", "&8[&2" + prefix + "&8] &aYou enabled notifications.");
         addOption("notifications_modified", "&8[&2" + prefix + "&8] &eYou modified notifications.");
         addOption("notifications_disable", "&8[&2" + prefix + "&8] &cYou disabled notifications.");

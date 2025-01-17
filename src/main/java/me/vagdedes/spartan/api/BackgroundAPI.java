@@ -45,9 +45,9 @@ public class BackgroundAPI {
         return null;
     }
 
-    @Deprecated
     static boolean hasVerboseEnabled(Player p) {
-        return hasNotificationsEnabled(p);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
+        return DetectionNotifications.isVerboseEnabled(protocol);
     }
 
     static boolean hasNotificationsEnabled(Player p) {
@@ -61,9 +61,14 @@ public class BackgroundAPI {
         return 0;
     }
 
-    @Deprecated
     static void setVerbose(Player p, boolean value) {
-        setNotifications(p, value);
+        SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
+
+        if (value) {
+            DetectionNotifications.addVerbose(protocol);
+        } else {
+            DetectionNotifications.removeVerbose(protocol);
+        }
     }
 
     static void setNotifications(Player p, boolean value) {
@@ -119,7 +124,10 @@ public class BackgroundAPI {
     static double getCertainty(Player p, HackType hackType) {
         SpartanProtocol protocol = SpartanBukkit.getProtocol(p);
         return PlayerEvidence.probabilityToCertainty(
-                protocol.profile().getRunner(hackType).getExtremeProbability(protocol.spartan.dataType)
+                protocol.profile().getRunner(hackType).getExtremeProbability(
+                        protocol.spartan.dataType,
+                        protocol.spartan.detectionType
+                )
         );
     }
 

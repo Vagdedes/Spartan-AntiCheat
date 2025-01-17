@@ -49,7 +49,7 @@ public class SuspicionNotifications {
         for (SpartanProtocol protocol : online) {
             PlayerProfile profile = protocol.profile();
             Collection<Enums.HackType> list = profile.getEvidenceList(
-                    PlayerEvidence.notificationProbability
+                    PlayerEvidence.preventionProbability
             );
 
             if (!list.isEmpty()) {
@@ -57,7 +57,10 @@ public class SuspicionNotifications {
 
                 for (Enums.HackType hackType : list) {
                     CheckRunner runner = protocol.profile().getRunner(hackType);
-                    double probability = runner.getExtremeProbability(protocol.spartan.dataType);
+                    double probability = runner.getExtremeProbability(
+                            protocol.spartan.dataType,
+                            protocol.spartan.detectionType
+                    );
 
                     if (probability != PlayerEvidence.emptyProbability) {
                         evidence
@@ -66,7 +69,10 @@ public class SuspicionNotifications {
                                 .append(
                                         AlgebraUtils.integerRound(
                                                 PlayerEvidence.probabilityToCertainty(
-                                                        runner.getExtremeProbability(protocol.spartan.dataType)
+                                                        runner.getExtremeProbability(
+                                                                protocol.spartan.dataType,
+                                                                protocol.spartan.detectionType
+                                                        )
                                                 ) * 100.0)
                                 )
                                 .append("%)")

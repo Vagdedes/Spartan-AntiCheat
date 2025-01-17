@@ -9,6 +9,7 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -43,18 +44,18 @@ public class UseItemStatusHandle extends PacketAdapter {
                     if (blockPosition.getY() != -1) return;
                 }
                 boolean isMainHand = !MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                                || event.getPacket().getHands().read(0) == EnumWrappers.Hand.MAIN_HAND;
+                        || event.getPacket().getHands().read(0) == EnumWrappers.Hand.MAIN_HAND;
                 ItemStack itemStack = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_9)
-                                ? (isMainHand ? player.getInventory().getItemInMainHand()
-                                : player.getInventory().getItemInOffHand()) : player.getItemInHand();
-                if (packet.getType().equals(PacketType.Play.Client.USE_ITEM_ON)) {
+                        ? (isMainHand ? player.getInventory().getItemInMainHand()
+                        : player.getInventory().getItemInOffHand()) : player.getItemInHand();
+                if (packet.getType().toString().contains("USE_ITEM_ON")) {
                     if (event.getPacket().getStructures().getValues().toString().contains("Serverbound"))
                         return;
                 }
                 if (itemStack.getType().toString().contains("SHIELD") ||
-                                (itemStack.getType().isEdible() && (player.getFoodLevel() != 20
-                                                || itemStack.getType().toString().contains("GOLDEN_APPLE") )
-                                                && !player.getGameMode().equals(GameMode.CREATIVE))) {
+                        (itemStack.getType().isEdible() && (player.getFoodLevel() != 20
+                                || itemStack.getType().toString().contains("GOLDEN_APPLE"))
+                                && !player.getGameMode().equals(GameMode.CREATIVE))) {
                     //player.sendMessage("use");
                     protocol.useItemPacket = true;
                 }
@@ -64,9 +65,23 @@ public class UseItemStatusHandle extends PacketAdapter {
 
     private static PacketType[] resolvePacketTypes() {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_17)) {
-            return new PacketType[]{ PacketType.Play.Client.USE_ITEM, PacketType.Play.Client.BLOCK_DIG };
+            return new PacketType[]{
+                    PacketType.Play.Client.USE_ITEM,
+                    PacketType.Play.Client.BLOCK_DIG
+            };
         } else {
-            return new PacketType[]{ PacketType.Play.Client.USE_ITEM_ON, PacketType.Play.Client.BLOCK_PLACE, PacketType.Play.Client.BLOCK_DIG };
+            if (ProtocolLib.isPacketSupported("USE_ITEM_ON")) {
+                return new PacketType[]{
+                        PacketType.Play.Client.USE_ITEM_ON,
+                        PacketType.Play.Client.BLOCK_PLACE,
+                        PacketType.Play.Client.BLOCK_DIG
+                };
+            } else {
+                return new PacketType[]{
+                        PacketType.Play.Client.BLOCK_PLACE,
+                        PacketType.Play.Client.BLOCK_DIG
+                };
+            }
         }
     }
 

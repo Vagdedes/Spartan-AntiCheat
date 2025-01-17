@@ -13,7 +13,6 @@ import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
-import com.vagdedes.spartan.functionality.concurrent.Threads;
 import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
@@ -30,8 +29,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import java.util.Set;
 
 public class MovementListener extends PacketAdapter {
-
-    private static final Threads.ThreadPool movementThread = new Threads.ThreadPool(1L);
 
     public MovementListener() {
         super(

@@ -92,7 +92,10 @@ public class ManageChecks extends InventoryMenu {
                     protocol.bukkit().closeInventory();
                     ClickableMessage.sendURL(
                             protocol.bukkit(),
-                            Config.messages.getColorfulString("check_stored_data_delete_message"),
+                            Config.messages.getColorfulString("check_stored_data_delete_message").replace(
+                                    "{check}",
+                                    check.getName()
+                            ),
                             CommandExecution.support,
                             DiscordMemberCount.discordURL
                     );
@@ -171,12 +174,22 @@ public class ManageChecks extends InventoryMenu {
         Check.DataType notEnoughData = null;
 
         for (Check.DataType dataType : Check.DataType.values()) {
-            if (SpartanEdition.hasDetectionsPurchased(dataType)
-                    && !protocol.profile().getRunner(hackType).hasSufficientData(
-                    dataType,
-                    PlayerEvidence.dataRatio
-            )) {
-                notEnoughData = dataType;
+            boolean broke = false;
+
+            for (Check.DetectionType detectionType : Check.DetectionType.values()) {
+                if (SpartanEdition.hasDetectionsPurchased(dataType)
+                        && !protocol.profile().getRunner(hackType).hasSufficientData(
+                        dataType,
+                        detectionType,
+                        PlayerEvidence.dataRatio
+                )) {
+                    notEnoughData = dataType;
+                    broke = true;
+                    break;
+                }
+            }
+
+            if (broke) {
                 break;
             }
         }
@@ -210,7 +223,10 @@ public class ManageChecks extends InventoryMenu {
         // Separator
 
         if (notEnoughData != null && (!silent || punish)) {
-            long remainingTime = protocol.profile().getRunner(hackType).getRemainingCompletionTime(notEnoughData);
+            long remainingTime = protocol.profile().getRunner(hackType).getRemainingCompletionTime(
+                    notEnoughData,
+                    null
+            );
             lore.add("");
 
             if (remainingTime > 0L) {

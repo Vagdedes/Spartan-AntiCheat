@@ -32,7 +32,6 @@ public class API {
         return BackgroundAPI.getCategory(p, hackType);
     }
 
-    @Deprecated
     public static boolean hasVerboseEnabled(Player p) {
         return BackgroundAPI.hasVerboseEnabled(p);
     }
@@ -46,7 +45,6 @@ public class API {
         return BackgroundAPI.getViolationResetTime();
     }
 
-    @Deprecated
     public static void setVerbose(Player p, boolean value) {
         BackgroundAPI.setVerbose(p, value);
     }

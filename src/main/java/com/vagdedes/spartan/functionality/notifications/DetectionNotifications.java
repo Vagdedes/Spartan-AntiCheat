@@ -21,6 +21,7 @@ public class DetectionNotifications {
     public static final int defaultFrequency = Integer.MIN_VALUE;
 
     private static final Map<UUID, Integer> notifications = new ConcurrentHashMap<>();
+    private static final Map<UUID, Boolean> verbose = new ConcurrentHashMap<>();
 
     public static List<SpartanProtocol> getPlayers() {
         if (!notifications.isEmpty()) {
@@ -42,6 +43,10 @@ public class DetectionNotifications {
         return notifications.containsKey(p.getUUID());
     }
 
+    public static boolean isVerboseEnabled(SpartanProtocol p) {
+        return verbose.containsKey(p.getUUID());
+    }
+
     public static boolean hasPermission(SpartanProtocol p) {
         return Permissions.has(p.bukkit(), Enums.Permission.NOTIFICATIONS);
     }
@@ -54,6 +59,15 @@ public class DetectionNotifications {
         notifications.remove(p.getUUID());
     }
 
+    public static void removeVerbose(SpartanProtocol p) {
+        UUID uuid = p.getUUID();
+
+        if (verbose.containsKey(uuid)) {
+            verbose.remove(uuid);
+            p.bukkit().sendMessage(Config.messages.getColorfulString("verbose_disable"));
+        }
+    }
+
     public static void set(SpartanProtocol p, int i) {
         Integer frequency = notifications.put(p.getUUID(), i);
 
@@ -64,6 +78,15 @@ public class DetectionNotifications {
         } else {
             notifications.remove(p.getUUID());
             p.bukkit().sendMessage(Config.messages.getColorfulString("notifications_disable"));
+        }
+    }
+
+    public static void addVerbose(SpartanProtocol p) {
+        UUID uuid = p.getUUID();
+
+        if (!verbose.containsKey(uuid)) {
+            verbose.put(uuid, true);
+            p.bukkit().sendMessage(Config.messages.getColorfulString("verbose_enable"));
         }
     }
 

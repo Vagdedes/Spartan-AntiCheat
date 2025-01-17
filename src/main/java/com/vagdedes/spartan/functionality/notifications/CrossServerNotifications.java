@@ -37,10 +37,10 @@ public class CrossServerNotifications {
     private static void result(List<SpartanProtocol> protocols) {
         @Cleanup
         ResultSet rs = Config.sql.query("SELECT "
-                        + "id, player_name, server_name, notification, information, functionality"
-                        + " FROM " + Config.sql.getTable()
-                        + " WHERE notification IS NOT NULL"
-                        + " ORDER BY id DESC LIMIT " + rowLimit + ";");
+                + "id, player_name, server_name, notification, information, functionality"
+                + " FROM " + Config.sql.getTable()
+                + " WHERE notification IS NOT NULL"
+                + " ORDER BY id DESC LIMIT " + rowLimit + ";");
 
         if (rs != null) {
             while (rs.next()) {
@@ -48,29 +48,35 @@ public class CrossServerNotifications {
 
                 if (!processed.containsKey(id)) {
                     String functionality = rs.getString("functionality"),
-                                    playerName = rs.getString("player_name");
+                            playerName = rs.getString("player_name");
 
                     if (playerName != null) {
                         for (Enums.HackType hackType : Enums.HackType.values()) {
                             if (hackType.toString().equals(functionality)) {
                                 String notification = rs.getString("notification"),
-                                                serverName = rs.getString("server_name"),
-                                                detection = ResearchEngine.findInformation(
-                                                                rs.getString("information"),
-                                                                CheckDetection.detectionIdentifier
-                                                ),
-                                                certaintyString = ResearchEngine.findInformation(
-                                                                rs.getString("information"),
-                                                                CheckDetection.certaintyIdentifier
-                                                );
+                                        serverName = rs.getString("server_name"),
+                                        detection = ResearchEngine.findInformation(
+                                                rs.getString("information"),
+                                                CheckDetection.detectionIdentifier
+                                        ),
+                                        certaintyString = ResearchEngine.findInformation(
+                                                rs.getString("information"),
+                                                CheckDetection.certaintyIdentifier
+                                        );
 
                                 notification = "§l[" + serverName + "]§r " + notification;
 
                                 for (SpartanProtocol protocol : protocols) {
-                                    if (protocol.profile().getRunner(hackType).getDetection(detection).canSendNotification(
-                                                    ResearchEngine.getPlayerProfile(playerName).getRunner(hackType).getDetection(detection),
-                                                    System.currentTimeMillis(),
-                                                    certaintyString == null ? -1.0 : Double.parseDouble(certaintyString)
+                                    CheckDetection
+                                            staffDetection = protocol.profile().getRunner(hackType).getDetection(detection),
+                                            playerDetection = ResearchEngine.getPlayerProfile(playerName).getRunner(hackType).getDetection(detection);
+
+                                    if (staffDetection != null
+                                            && playerDetection != null
+                                            && staffDetection.canSendNotification(
+                                            playerDetection,
+                                            System.currentTimeMillis(),
+                                            certaintyString == null ? -1.0 : Double.parseDouble(certaintyString)
                                     )) {
                                         protocol.bukkit().sendMessage(notification);
                                         processed.put(id, true);

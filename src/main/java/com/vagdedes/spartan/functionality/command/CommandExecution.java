@@ -207,6 +207,10 @@ public class CommandExecution implements CommandExecutor {
                                 sender,
                                 ChatColor.RED + "/" + Register.command + " notifications [ticks-frequency]",
                                 "This command can be used to receive chat messages whenever a player is suspected of using hack modules.", null);
+                        ClickableMessage.sendCommand(
+                                sender,
+                                ChatColor.RED + "/" + Register.command + " verbose",
+                                "This command can be used to enable all notifications to go through instead of only important ones when disabled.", null);
                     }
                     if (isPlayer && info) {
                         ClickableMessage.sendCommand(
@@ -335,9 +339,9 @@ public class CommandExecution implements CommandExecutor {
                         );
                         return true;
                     }
-                    Check.panic = !Check.panic;
+                    Check.setPanic(!Check.getPanic());
 
-                    if (Check.panic) {
+                    if (Check.getPanic()) {
                         ClickableMessage.sendURL(
                                 sender,
                                 Config.messages.getColorfulString("panic_mode_enable"),
@@ -393,6 +397,22 @@ public class CommandExecution implements CommandExecutor {
                         return true;
                     }
                     DetectionNotifications.set(protocol, DetectionNotifications.defaultFrequency);
+
+                } else if (isPlayer && args[0].equalsIgnoreCase("Verbose")) {
+                    if (!DetectionNotifications.hasPermission(protocol)) {
+                        ClickableMessage.sendURL(
+                                sender,
+                                Config.messages.getColorfulString("no_permission"),
+                                support,
+                                DiscordMemberCount.discordURL
+                        );
+                        return true;
+                    }
+                    if (DetectionNotifications.isVerboseEnabled(protocol)) {
+                        DetectionNotifications.removeVerbose(protocol);
+                    } else {
+                        DetectionNotifications.addVerbose(protocol);
+                    }
 
                 } else {
                     completeMessage(sender, "default");

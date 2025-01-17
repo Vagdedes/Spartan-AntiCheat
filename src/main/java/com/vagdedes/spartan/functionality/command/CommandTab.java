@@ -22,6 +22,7 @@ public class CommandTab implements TabCompleter {
         commands.put("rl", new Enums.Permission[]{Enums.Permission.RELOAD});
         commands.put("reload", new Enums.Permission[]{Enums.Permission.RELOAD});
         commands.put("notifications", new Enums.Permission[]{Enums.Permission.NOTIFICATIONS});
+        commands.put("verbose", new Enums.Permission[]{Enums.Permission.NOTIFICATIONS});
         commands.put("info", new Enums.Permission[]{Enums.Permission.INFO});
         commands.put("kick", new Enums.Permission[]{Enums.Permission.KICK});
         commands.put("warn", new Enums.Permission[]{Enums.Permission.WARN});

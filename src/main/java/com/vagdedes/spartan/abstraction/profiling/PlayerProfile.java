@@ -1,11 +1,14 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
 import com.vagdedes.spartan.abstraction.check.Check;
+import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
+import lombok.Getter;
+import lombok.Setter;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
@@ -21,8 +24,14 @@ public class PlayerProfile {
     private final MiningHistory[] miningHistory;
     private ItemStack skull;
     private OfflinePlayer offlinePlayer;
+    @Getter
     private final CheckRunner[] runners;
+    @Getter
+    @Setter
     private Check.DataType lastDataType;
+    @Getter
+    private Check.DetectionType lastDetectionType;
+    @Getter
     private final ProfileContinuity continuity;
 
     // Separator
@@ -33,6 +42,9 @@ public class PlayerProfile {
         this.runners = new CheckRunner[Enums.HackType.values().length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
         this.lastDataType = Check.DataType.JAVA;
+        this.lastDetectionType = SpartanBukkit.packetsEnabled()
+                ? Check.DetectionType.PACKETS
+                : Check.DetectionType.BUKKIT;
         this.continuity = new ProfileContinuity(this);
 
         for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
@@ -59,6 +71,9 @@ public class PlayerProfile {
         this.runners = new CheckRunner[Enums.HackType.values().length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
         this.lastDataType = protocol.spartan.dataType;
+        this.lastDetectionType = protocol.packetsEnabled()
+                ? Check.DetectionType.PACKETS
+                : Check.DetectionType.BUKKIT;
         this.continuity = new ProfileContinuity(this);
 
         for (MiningHistory.MiningOre ore : MiningHistory.MiningOre.values()) {
@@ -69,13 +84,12 @@ public class PlayerProfile {
 
     // Separator
 
-    public Check.DataType getLastDataType() {
-        return lastDataType;
-    }
-
     public void update(SpartanProtocol protocol) {
         this.offlinePlayer = protocol.bukkit();
         this.lastDataType = protocol.spartan.dataType;
+        this.lastDetectionType = protocol.packetsEnabled()
+                ? Check.DetectionType.PACKETS
+                : Check.DetectionType.BUKKIT;
         this.registerRunners(protocol);
     }
 
@@ -88,25 +102,34 @@ public class PlayerProfile {
         return protocol != null && SpartanBukkit.isOnline(protocol);
     }
 
-    public ProfileContinuity getContinuity() {
-        return this.continuity;
-    }
-
     public CheckRunner getRunner(Enums.HackType hackType) {
         return this.runners[hackType.ordinal()];
-    }
-
-    public CheckRunner[] getRunners() {
-        return this.runners;
     }
 
     private void registerRunners(SpartanProtocol protocol) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             try {
-                CheckRunner executor = (CheckRunner) hackType.executor
-                        .getConstructor(hackType.getClass(), SpartanProtocol.class)
-                        .newInstance(hackType, protocol);
-                this.runners[hackType.ordinal()] = executor;
+                CheckRunner
+                        oldRunner = this.runners[hackType.ordinal()],
+                        runner = (CheckRunner) hackType.executor
+                                .getConstructor(hackType.getClass(), SpartanProtocol.class)
+                                .newInstance(hackType, protocol);
+                this.runners[hackType.ordinal()] = runner;
+
+                if (oldRunner != null) {
+                    for (CheckDetection detection : oldRunner.getDetections()) {
+                        for (Check.DataType dataType : Check.DataType.values()) {
+                            CheckDetection newDetection = runner.getDetection(detection.name);
+
+                            if (newDetection != null) {
+                                newDetection.setProbability(
+                                        dataType,
+                                        detection.getProbability(dataType)
+                                );
+                            }
+                        }
+                    }
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -139,7 +162,10 @@ public class PlayerProfile {
         List<Enums.HackType> set = new ArrayList<>();
 
         for (CheckRunner executor : this.getRunners()) {
-            double probability = executor.getExtremeProbability(this.lastDataType);
+            double probability = executor.getExtremeProbability(
+                    this.lastDataType,
+                    this.lastDetectionType
+            );
 
             if (PlayerEvidence.surpassedProbability(probability, threshold)) {
                 set.add(executor.hackType);
@@ -152,7 +178,10 @@ public class PlayerProfile {
         Map<Enums.HackType, Double> set = new HashMap<>();
 
         for (CheckRunner executor : this.getRunners()) {
-            double probability = executor.getExtremeProbability(this.lastDataType);
+            double probability = executor.getExtremeProbability(
+                    this.lastDataType,
+                    this.lastDetectionType
+            );
 
             if (PlayerEvidence.surpassedProbability(probability, threshold)) {
                 set.put(executor.hackType, probability);

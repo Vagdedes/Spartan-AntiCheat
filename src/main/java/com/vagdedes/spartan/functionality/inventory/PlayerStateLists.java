@@ -127,11 +127,15 @@ public class PlayerStateLists {
                         for (Enums.HackType hackType : evidenceDetails) {
                             boolean sufficientData = profile.getRunner(hackType).hasSufficientData(
                                     profile.getLastDataType(),
+                                    profile.getLastDetectionType(),
                                     PlayerEvidence.dataRatio
                             );
                             long remainingTime = sufficientData
                                     ? 0L
-                                    : profile.getRunner(hackType).getRemainingCompletionTime(profile.getLastDataType());
+                                    : profile.getRunner(hackType).getRemainingCompletionTime(
+                                    profile.getLastDataType(),
+                                    profile.getLastDetectionType()
+                            );
                             String description = "§4" + hackType.getCheck().getName();
 
                             if (remainingTime > 0L) {
@@ -172,8 +176,8 @@ public class PlayerStateLists {
         for (int slot = 0; slot < maxSize; slot++) {
             int finalSlot = slot;
             if (inventory.getItem(slot) == null
-                            && Arrays.stream(ignoredSlots)
-                            .noneMatch(s -> s == finalSlot)) {
+                    && Arrays.stream(ignoredSlots)
+                    .noneMatch(s -> s == finalSlot)) {
                 freeSlots.add(slot);
             }
         }

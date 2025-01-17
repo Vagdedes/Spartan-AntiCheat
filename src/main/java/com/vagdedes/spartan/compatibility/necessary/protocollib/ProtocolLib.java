@@ -22,6 +22,10 @@ public class ProtocolLib {
             temporaryClass = false,
             bukkit = false;
 
+    public static boolean isPacketSupported(String packet) {
+        return BackgroundProtocolLib.isPacketSupported(packet);
+    }
+
     private static void checkClass() {
         temporaryClass = ReflectionUtils.classExists(
                 "com.comphenix.protocol.injector.temporary.TemporaryPlayer"
@@ -90,7 +94,9 @@ public class ProtocolLib {
         if (entity instanceof Player) {
             return getLocationOrNull((Player) entity);
         } else {
-            return entity.getLocation();
+            return entity == null
+                    ? null
+                    : entity.getLocation();
         }
     }
 
@@ -98,7 +104,9 @@ public class ProtocolLib {
         if (ProtocolLib.isTemporary(player)) {
             return null;
         } else {
-            return player.getLocation();
+            return player == null
+                    ? null
+                    : player.getLocation();
         }
     }
 

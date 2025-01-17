@@ -6,6 +6,7 @@ import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
+import lombok.Getter;
 import me.vagdedes.spartan.api.CheckPunishmentToggleEvent;
 import me.vagdedes.spartan.api.CheckSilentToggleEvent;
 import me.vagdedes.spartan.api.CheckToggleEvent;
@@ -47,13 +48,41 @@ public class Check {
         }
     }
 
-    public static boolean panic = false;
+    public enum DetectionType {
+        BUKKIT, PACKETS;
+
+        private final String string;
+
+        DetectionType() {
+            if (this.ordinal() == 0) {
+                this.string = "Bukkit";
+            } else {
+                this.string = "Packets";
+            }
+        }
+
+        @Override
+        public String toString() {
+            return string;
+        }
+    }
+
+    private static boolean panic = false;
     public static final int maxCommands = 10;
     private static final File file = new File(
             Register.plugin.getDataFolder() + "/checks.yml"
     );
 
     private static final List<String> defaultPunishments = new ArrayList<>(Check.maxCommands);
+
+    public static void setPanic(boolean panic) {
+        Check.panic = panic;
+        Config.create();
+    }
+
+    public static boolean getPanic() {
+        return Check.panic;
+    }
 
     static {
         defaultPunishments.add("spartan kick {player} {detections}");
@@ -66,6 +95,7 @@ public class Check {
     // Object
 
     public final Enums.HackType hackType;
+    @Getter
     private String name;
     private final Map<String, Object> options;
     public final boolean handleCancelledEvents;
@@ -129,6 +159,9 @@ public class Check {
         // Separator
 
         if (name != null) {
+            if (name.length() > 32) {
+                name = name.substring(0, 32);
+            }
             this.name = name;
         } else {
             this.name = hackType.toString();
@@ -307,16 +340,14 @@ public class Check {
 
     // Separator
 
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         if (name.length() > 32) {
             name = name.substring(0, 32);
         }
         for (Enums.HackType hackType : Enums.HackType.values()) {
-            if (!hackType.equals(this.hackType) && name.equalsIgnoreCase(hackType.toString())) {
+            if (!hackType.equals(this.hackType)
+                    && (name.equalsIgnoreCase(hackType.toString()))
+                    || name.equalsIgnoreCase(hackType.getCheck().getName())) {
                 return;
             }
         }
@@ -326,7 +357,7 @@ public class Check {
 
     // Separator
 
-    private boolean setOption(String option, Object value) {
+    private void setOption(String option, Object value) {
         try {
             String key = this.hackType + "." + option;
             YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
@@ -339,13 +370,12 @@ public class Check {
                 AwarenessNotifications.forcefullySend("Failed to store '" + key + "' option in '" + file.getName() + "' file.");
                 ex.printStackTrace();
             }
-            return true;
+            return;
         } catch (Exception ex) {
             AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
             ex.printStackTrace();
         }
         AwarenessNotifications.forcefullySend("Failed to find/create the '" + file.getName() + "' file.");
-        return false;
     }
 
     public Object getOption(String option, Object def, boolean cache) {
@@ -481,15 +511,12 @@ public class Check {
             return true;
         }
         if (dataType == null) {
-            boolean enabled = false;
-
             for (Check.DataType type : DataType.values()) {
                 if (this.silent[type.ordinal()]) {
-                    enabled = true;
-                    break;
+                    return true;
                 }
             }
-            return enabled;
+            return false;
         } else return this.silent[dataType.ordinal()];
     }
 
@@ -540,18 +567,7 @@ public class Check {
         if (dataType == null) {
             dataTypes = DataType.values();
         } else {
-            dataTypes = null;
-
-            for (Check.DataType type : DataType.values()) {
-                if (type == dataType) {
-                    dataTypes = new Check.DataType[]{dataType};
-                    break;
-                }
-            }
-
-            if (dataTypes == null) {
-                return;
-            }
+            dataTypes = new Check.DataType[]{dataType};
         }
         for (Check.DataType type : dataTypes) {
             CheckPunishmentToggleEvent event;
@@ -565,7 +581,7 @@ public class Check {
 
             if (event == null || !event.isCancelled()) {
                 this.punish[type.ordinal()] = b;
-                setOption("punishments.enabled" + type.toString().toLowerCase(), b);
+                setOption("punishments.enabled." + type.toString().toLowerCase(), b);
                 options.clear();
             }
         }

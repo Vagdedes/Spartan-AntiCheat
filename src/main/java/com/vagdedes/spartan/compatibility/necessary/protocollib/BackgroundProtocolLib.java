@@ -1,5 +1,6 @@
 package com.vagdedes.spartan.compatibility.necessary.protocollib;
 
+import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -11,9 +12,25 @@ import com.vagdedes.spartan.listeners.protocol.standalone.EntityActionListener;
 import com.vagdedes.spartan.listeners.protocol.standalone.JoinListener;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BackgroundProtocolLib {
 
+    private static final List<String> packets = new ArrayList<>();
+
+    static boolean isPacketSupported(String packet) {
+        return packets.contains(packet);
+    }
+
+    private static void handle() {
+        for (PacketType type : PacketType.Play.Client.getInstance()) {
+            packets.add(type.name());
+        }
+    }
+
     static void run() {
+        handle();
         ProtocolManager p = ProtocolLibrary.getProtocolManager();
         p.addPacketListener(new JoinListener());
         p.addPacketListener(new EntityActionListener());

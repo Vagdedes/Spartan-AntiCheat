@@ -391,9 +391,10 @@ public class ResearchEngine {
                             if (player != null) {
                                 for (Enums.HackType hackType : Enums.HackType.values()) {
                                     if (hackTypeString.equals(hackType.toString())) {
-                                        CheckDetection detectionExecutor = getPlayerProfile(
-                                                player
-                                        ).getRunner(
+                                        Check.DataType dataType = findDataType(data);
+                                        PlayerProfile profile = getPlayerProfile(player);
+                                        profile.setLastDataType(dataType);
+                                        CheckDetection detectionExecutor = profile.getRunner(
                                                 hackType
                                         ).getDetection(
                                                 detection
@@ -404,7 +405,7 @@ public class ResearchEngine {
 
                                             try {
                                                 detectionExecutor.store(
-                                                        findDataType(data),
+                                                        dataType,
                                                         sdf.parse(fullDate).getTime()
                                                 );
                                             } catch (Exception ignored) {
@@ -532,13 +533,23 @@ public class ResearchEngine {
                     if (hackType.getCheck().isEnabled(dataType, null)) {
                         for (PlayerProfile profile : profiles) {
                             for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                wave.computeIfAbsent(
-                                        detectionExecutor.name,
-                                        k -> new LinkedHashMap<>()
-                                ).put(
-                                        detectionExecutor,
-                                        detectionExecutor.getData(profile, dataType)
-                                );
+                                double data = detectionExecutor.getData(profile, dataType);
+
+                                if (data != -1.0) {
+                                    wave.computeIfAbsent(
+                                            detectionExecutor.name,
+                                            k -> new LinkedHashMap<>()
+                                    ).put(
+                                            detectionExecutor,
+                                            data
+                                    );
+                                }
+                            }
+                        }
+                    } else {
+                        for (PlayerProfile profile : profiles) {
+                            for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
+                                detectionExecutor.clearProbability(dataType);
                             }
                         }
                     }
@@ -551,44 +562,35 @@ public class ResearchEngine {
                         }
                     } else {
                         for (Map<CheckDetection, Double> map : wave.values()) {
-                            double sum = 0,
-                                    squareSum = 0,
-                                    min = Double.MAX_VALUE,
-                                    max = Double.MIN_VALUE;
+                            double divisor = map.size();
 
-                            for (double value : map.values()) {
-                                sum += value;
-                                squareSum += value * value;
-                            }
-                            double divisor = map.size(),
-                                    mean = sum / divisor,
-                                    deviation = Math.sqrt(squareSum / divisor);
-
-                            for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
-                                double probability = StatisticsMath.getCumulativeProbability(
-                                        (entry.getValue() - mean) / deviation
-                                );
-                                entry.setValue(probability);
-
-                                if (probability > max) {
-                                    max = probability;
+                            if (divisor < PlayerEvidence.factorRequirement) {
+                                for (CheckDetection detection : map.keySet()) {
+                                    detection.clearProbability(dataType);
                                 }
-                                if (probability < min) {
-                                    min = probability;
-                                }
-                            }
-                            max = 1.0 - max;
-                            double distributionDifference = Math.abs(max - min);
+                            } else {
+                                double sum = 0,
+                                        variance = 0;
 
-                            for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
-                                entry.getKey().setProbability(
-                                        dataType,
-                                        PlayerEvidence.modifyProbability(
-                                                entry.getValue(),
-                                                Math.max(min - distributionDifference, 0.0),
-                                                Math.max(max - distributionDifference, 0.0)
-                                        )
-                                );
+                                for (double value : map.values()) {
+                                    sum += value;
+                                }
+                                double mean = sum / divisor;
+
+                                for (double value : map.values()) {
+                                    double difference = value - mean;
+                                    variance += difference * difference;
+                                }
+                                double deviation = Math.sqrt(variance / divisor);
+
+                                for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
+                                    entry.getKey().setProbability(
+                                            dataType,
+                                            StatisticsMath.getCumulativeProbability(
+                                                    (entry.getValue() - mean) / deviation
+                                            )
+                                    );
+                                }
                             }
                         }
                     }

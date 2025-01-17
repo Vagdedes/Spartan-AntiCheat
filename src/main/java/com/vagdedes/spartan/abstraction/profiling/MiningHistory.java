@@ -14,9 +14,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 public class MiningHistory {
 
     public static final String
@@ -122,21 +119,23 @@ public class MiningHistory {
 
     private final PlayerProfile profile;
     public final MiningOre ore;
-    private final Map<Integer, Integer> count;
+    private final int[] count;
 
     MiningHistory(PlayerProfile profile, MiningOre ore) {
         World.Environment[] environments = World.Environment.values();
         this.profile = profile;
         this.ore = ore;
-        this.count = new ConcurrentHashMap<>(environments.length + 1, 1.0f);
+        this.count = new int[environments.length];
+
+        for (int i = 0; i < environments.length; i++) {
+            this.count[i] = 0;
+        }
     }
 
     public double getMinesToTimeRatio(World.Environment environment) {
-        Integer mines = count.get(environment.ordinal());
+        int mines = count[environment.ordinal()];
 
-        if (mines == null) {
-            return 0.0;
-        } else {
+        if (mines > 0) {
             long onlineTime = this.profile.getContinuity().getOnlineTime();
 
             if (onlineTime > 0L) {
@@ -145,14 +144,13 @@ public class MiningHistory {
             } else {
                 return 0.0;
             }
+        } else {
+            return 0.0;
         }
     }
 
     public void increaseMines(World.Environment environment, int amount) {
-        count.put(
-                environment.ordinal(),
-                count.getOrDefault(environment.ordinal(), 0) + amount
-        );
+        count[environment.ordinal()] += amount;
     }
 
 }

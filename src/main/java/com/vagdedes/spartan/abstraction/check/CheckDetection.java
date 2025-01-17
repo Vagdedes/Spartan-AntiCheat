@@ -22,7 +22,6 @@ import org.bukkit.Location;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CheckDetection extends CheckProcess {
@@ -32,71 +31,81 @@ public abstract class CheckDetection extends CheckProcess {
             checkIdentifier = "Check:",
             detectionIdentifier = "Detection:",
             certaintyIdentifier = "Certainty:";
-    private static double defaultData = (double) Long.MAX_VALUE;
-
-    protected static double defaultData() {
-        return defaultData;
-    }
-
-    protected static void setDefaultData(double newData) {
-        CheckDetection.defaultData = Math.max(CheckDetection.defaultData, newData);
-    }
 
     // Separator
 
     private long accumulatedProbabilityTime;
     public final CheckRunner executor;
-    public final String name, random;
-    private final boolean def;
+    public final String name;
+    public final boolean hasName;
+    private final Boolean def;
     private final Map<Check.DataType, Double> probability;
+    public final Check.DataType forcedDataType;
+    public final Check.DetectionType detectionType;
     protected long notifications;
 
-    protected CheckDetection(CheckRunner executor, String name, boolean def) {
+    protected CheckDetection(
+            CheckRunner executor,
+            Check.DataType forcedDataType,
+            Check.DetectionType detectionType,
+            String name,
+            Boolean def
+    ) {
         super(executor.hackType, executor.protocol);
         this.executor = executor;
-        this.name = name;
+        this.name = name == null
+                ? Integer.toString(this.getClass().getName().hashCode())
+                : name;
+        this.hasName = name != null;
         this.def = def;
         this.probability = new ConcurrentHashMap<>(Check.DataType.values().length);
+        this.forcedDataType = forcedDataType;
+        this.detectionType = detectionType;
         this.isEnabled();
 
-        if (this.name == null) {
-            String random;
-
-            while (true) {
-                random = Integer.toString(new Random().nextInt());
-
-                if (executor.addDetection(random, this) == null) {
-                    break;
-                }
-            }
-            this.random = random;
-        } else {
-            if (executor.addDetection(this.name, this) != null) {
-                throw new IllegalArgumentException(
-                        "Detection '" + this.name + "' already exists for enum '" + executor.hackType.toString() + "'."
-                );
-            }
-            this.random = this.name;
+        if (executor.addDetection(this.name, this) != null) {
+            throw new IllegalArgumentException(
+                    "Detection '" + this.name + "' already exists for enum '" + executor.hackType.toString() + "'."
+            );
         }
     }
 
     @Override
     public int hashCode() {
-        return this.hackType.hashCode() * SpartanBukkit.hashCodeMultiplier + this.random.hashCode();
+        return this.hackType.hashCode() * SpartanBukkit.hashCodeMultiplier + this.name.hashCode();
     }
 
     // Check
 
     public final boolean isEnabled() {
-        return this.name == null
+        return !this.hasName
+                || this.def == null
                 || this.hackType.getCheck().getBooleanOption("check_" + this.name, this.def);
     }
 
-    // Data
-
-    protected boolean hasData(PlayerProfile profile, Check.DataType dataType) {
-        return true;
+    public final boolean supportsDataType(Check.DataType dataType) {
+        return this.forcedDataType == null
+                || this.forcedDataType == dataType;
     }
+
+    public final boolean supportsDetectionType(Check.DetectionType detectionType) {
+        return this.detectionType == null
+                || this.detectionType == detectionType;
+    }
+
+    public final boolean canCall() {
+        return this.protocol != null
+                && this.supportsDataType(this.protocol.spartan.dataType)
+                && this.supportsDetectionType(this.protocol.spartan.detectionType);
+    }
+
+    public final void call(Runnable runnable) {
+        if (this.canCall()) {
+            runnable.run();
+        }
+    }
+
+    // Data
 
     abstract protected boolean hasSufficientData(Check.DataType dataType);
 
@@ -109,12 +118,15 @@ public abstract class CheckDetection extends CheckProcess {
     public void sort() {
     }
 
-    public double getData(PlayerProfile profile, Check.DataType dataType) {
-        return defaultData();
+    protected boolean hasData(
+            PlayerProfile profile,
+            Check.DataType dataType
+    ) {
+        return true;
     }
 
-    protected int getDataCount(Check.DataType dataType) {
-        return 0;
+    public double getData(PlayerProfile profile, Check.DataType dataType) {
+        return -1.0;
     }
 
     long getFirstTime(Check.DataType dataType) {
@@ -141,7 +153,7 @@ public abstract class CheckDetection extends CheckProcess {
         }
     }
 
-    final double getProbability(Check.DataType dataType) {
+    public double getProbability(Check.DataType dataType) {
         return isEnabled()
                 ? this.probability.getOrDefault(dataType, PlayerEvidence.emptyProbability)
                 : PlayerEvidence.emptyProbability;
@@ -153,22 +165,30 @@ public abstract class CheckDetection extends CheckProcess {
         return Math.max(this.accumulatedProbabilityTime - time, 0L);
     }
 
-    public final boolean canSendNotification(CheckDetection detection, long time, double probability) {
+    public final boolean canSendNotification(CheckDetection detection, long time, double certainty) {
         int ticks = this.executor.getNotificationTicksCooldown(protocol);
+        boolean canSend = PlayerEvidence.surpassedProbability(
+                PlayerEvidence.probabilityToCertainty(certainty / 100.0),
+                PlayerEvidence.preventionProbability
+        ) || DetectionNotifications.isVerboseEnabled(this.protocol);
 
         if (ticks == 0) {
-            return true;
-        } else if (this.notifications <= time) {
-            if (probability == -1.0 || detection == null) {
+            return canSend;
+        } else if (canSend && this.notifications <= time) {
+            if (certainty == -1.0
+                    || detection == null) {
                 this.notifications = System.currentTimeMillis() + (ticks * TPS.tickTime);
                 return true;
             } else {
                 int threshold = 1_000;
 
                 if (detection.accumulatedProbabilityTime < time) {
-                    detection.accumulatedProbabilityTime = System.currentTimeMillis() + AlgebraUtils.integerRound(probability * threshold);
+                    detection.accumulatedProbabilityTime = System.currentTimeMillis()
+                            + AlgebraUtils.integerRound((certainty / 100.0) * threshold);
                 } else {
-                    detection.accumulatedProbabilityTime += AlgebraUtils.integerRound(probability * threshold);
+                    detection.accumulatedProbabilityTime += AlgebraUtils.integerRound(
+                            (certainty / 100.0) * threshold
+                    );
                 }
                 long remaining = detection.getAccumulatedProbabilityTime(time);
 
@@ -182,13 +202,17 @@ public abstract class CheckDetection extends CheckProcess {
 
                         for (SpartanProtocol protocol : protocols) {
                             if (!protocol.spartan.isAFK()) {
-                                individual = protocol.profile().getRunner(
+                                CheckDetection protocolDetection = protocol.profile().getRunner(
                                         this.hackType
                                 ).getDetection(
                                         this.name
-                                ).getAccumulatedProbabilityTime(time);
-                                sum += individual * individual;
-                                total++;
+                                );
+
+                                if (protocolDetection != null) {
+                                    individual = protocolDetection.getAccumulatedProbabilityTime(time);
+                                    sum += individual * individual;
+                                    total++;
+                                }
                             }
                         }
                     }
@@ -210,7 +234,9 @@ public abstract class CheckDetection extends CheckProcess {
 
     protected void notify(double probability, boolean enabled, boolean sufficientData, long time, String information) {
         double certainty = PlayerEvidence.probabilityToCertainty(probability) * 100.0,
-                dataCompletion = sufficientData ? 100.0 : this.getDataCompletion(this.protocol.spartan.dataType) * 100.0;
+                dataCompletion = sufficientData
+                        ? 100.0
+                        : this.getDataCompletion(this.protocol.spartan.dataType) * 100.0;
         int roundedCertainty = AlgebraUtils.integerRound(certainty);
         String notification = ConfigUtils.replaceWithSyntax(
                 this.protocol,
@@ -218,8 +244,8 @@ public abstract class CheckDetection extends CheckProcess {
                         .replace("{info}", information)
                         .replace("{detection:percentage}",
                                 sufficientData
-                                        ? ((roundedCertainty == 0 ? 1 : roundedCertainty) + "%")
-                                        : "unlikely (data " + AlgebraUtils.integerRound(dataCompletion) + "% complete)"
+                                        ? ((roundedCertainty == 0 ? 1 : roundedCertainty) + "/100")
+                                        : "DATA " + AlgebraUtils.integerRound(100.0 - dataCompletion) + "% INCOMPLETE"
                         ),
                 hackType
         );
@@ -247,7 +273,7 @@ public abstract class CheckDetection extends CheckProcess {
                         && sufficientData
                         && PlayerEvidence.surpassedProbability(
                         probability,
-                        PlayerEvidence.notificationProbability
+                        PlayerEvidence.preventionProbability
                 ),
                 null,
                 this.hackType,
@@ -268,7 +294,10 @@ public abstract class CheckDetection extends CheckProcess {
 
                 if (!protocols.isEmpty()) {
                     for (SpartanProtocol staff : protocols) {
-                        if (staff.profile().getRunner(this.hackType).getDetection(this.name).canSendNotification(this, time, certainty)) {
+                        CheckDetection detection = staff.profile().getRunner(this.hackType).getDetection(this.name);
+
+                        if (detection != null
+                                && detection.canSendNotification(this, time, certainty)) {
                             ClickableMessage.sendCommand(
                                     staff.bukkit(),
                                     notification,
@@ -290,8 +319,8 @@ public abstract class CheckDetection extends CheckProcess {
         if (check.canPunish(this.protocol.spartan.dataType)
                 && PlayerEvidence.surpassedProbability(
                 probability,
-                PlayerEvidence.punishmentProbability)
-        ) {
+                PlayerEvidence.punishmentProbability
+        )) {
             List<String> commands = check.getPunishmentCommands();
 
             if (!commands.isEmpty()) {

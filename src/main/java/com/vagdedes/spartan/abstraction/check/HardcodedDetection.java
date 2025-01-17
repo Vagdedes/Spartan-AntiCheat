@@ -1,22 +1,43 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 
 public abstract class HardcodedDetection extends CheckDetection {
 
-    public HardcodedDetection(CheckRunner executor, String name, boolean def) {
-        super(executor, name, def);
+    private long lastUpdate;
+
+    public HardcodedDetection(
+            CheckRunner executor,
+            Check.DataType forcedDataType,
+            Check.DetectionType detectionType,
+            String name,
+            Boolean def
+    ) {
+        super(executor, forcedDataType, detectionType, name, def);
+        this.lastUpdate = System.currentTimeMillis();
     }
 
     public final void setHackingRatio(double ratio) {
-        SpartanProtocol protocol = this.protocol;
-
-        if (protocol != null && protocol.bukkit().isOnline()) {
+        if (this.protocol != null) {
             this.setProbability(
-                    protocol.spartan.dataType,
+                    this.protocol.spartan.dataType,
                     PlayerEvidence.probabilityToCertainty(ratio)
             );
+            this.lastUpdate = System.currentTimeMillis();
+        }
+    }
+
+    @Override
+    public final double getProbability(Check.DataType dataType) {
+        long max = 60_000;
+        double passed = max - (System.currentTimeMillis() - this.lastUpdate) / (double) max;
+
+        if (passed <= 0.0) {
+            return PlayerEvidence.emptyProbability;
+        } else if (PlayerEvidence.POSITIVE) {
+            return passed * super.getProbability(dataType);
+        } else {
+            return 1.0 - (passed * (1.0 - super.getProbability(dataType)));
         }
     }
 
