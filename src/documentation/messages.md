@@ -60,7 +60,6 @@ Messages:
 {z} Player’s Z coordinate in non-decimal form
 {yaw} Player’s Yaw coordinate in non-decimal form
 {pitch} Player’s Pitch coordinate in non-decimal form
-{cps} Player’s amount of recent clicks per second
 ```
 ### Detections:
 ```
