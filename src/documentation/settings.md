@@ -22,7 +22,7 @@ Important:
   enable_watermark: true # Allow the plugin to send messages to players that this server is protected by Spartan
   server_name: specify server name # Put the same unique name for each server you have put in your proxy configuration
 Detections:
-  fall_damage_on_teleport: false # Create artificial fall damage when a player is teleported by a detection
+  damage_on_detection: false # Create artificial fall damage when a player is teleported by a detection
   ground_teleport_on_detection: true # Teleport a player to the ground when identified by a detection
 Discord:
   webhook_hex_color: 4caf50
