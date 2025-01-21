@@ -27,5 +27,4 @@ Detections:
 Discord:
   webhook_hex_color: 4caf50
   checks_webhook_url: ''
-  punishments_webhook_url: ''
 ```
