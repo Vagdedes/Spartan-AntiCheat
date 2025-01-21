@@ -2,4 +2,4 @@
  
 ## advanced.yml Example
 ### Configuration dedicated for advanced options used by multiple checks.
-### NOT IMPLEMENTED YET BUT IS PLANNED FOR THE FUTURE.
+### NOT IMPLEMENTED YET BUT MAY BE RELEASED IN THE FUTURE.
