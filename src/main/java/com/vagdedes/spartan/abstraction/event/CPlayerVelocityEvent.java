@@ -1,30 +1,44 @@
 package com.vagdedes.spartan.abstraction.event;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import org.bukkit.event.player.PlayerVelocityEvent;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
-public class CPlayerVelocityEvent {
+public class CPlayerVelocityEvent extends PlayerEvent implements Cancellable {
 
-    /*
-    This event is only called when the packet has reached the client.
-     */
-    public final SpartanProtocol protocol;
-    public final PlayerVelocityEvent velocityEvent;
+    private static final HandlerList handlers = new HandlerList();
+    private boolean cancel = false;
+    private Vector velocity;
 
-    public CPlayerVelocityEvent(SpartanProtocol protocol, PlayerVelocityEvent velocityEvent) {
-        this.protocol = protocol;
-        this.velocityEvent = velocityEvent;
+    public CPlayerVelocityEvent(@NotNull Player player, @NotNull Vector velocity) {
+        super(player);
+        this.velocity = velocity;
     }
 
-    public double getXMotion() {
-        return this.velocityEvent.getVelocity().getX();
+    public boolean isCancelled() {
+        return this.cancel;
     }
 
-    public double getYMotion() {
-        return this.velocityEvent.getVelocity().getY();
+    public void setCancelled(boolean cancel) {
+        this.cancel = cancel;
     }
 
-    public double getZMotion() {
-        return this.velocityEvent.getVelocity().getY();
+    public @NotNull Vector getVelocity() {
+        return this.velocity;
+    }
+
+    public void setVelocity(@NotNull Vector velocity) {
+        this.velocity = velocity;
+    }
+
+    public @NotNull HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static @NotNull HandlerList getHandlerList() {
+        return handlers;
     }
 }

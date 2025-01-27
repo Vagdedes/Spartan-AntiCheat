@@ -10,13 +10,11 @@ public class PluginEvent implements Listener {
 
     @EventHandler
     private void PluginEnable(PluginEnableEvent e) {
-        // System
         Config.compatibility.fastRefresh();
     }
 
     @EventHandler
     private void PluginDisable(PluginDisableEvent e) {
-        // System
         Config.compatibility.fastRefresh();
     }
 

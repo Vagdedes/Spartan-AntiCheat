@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.enchants;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.willfp.ecoenchants.enchants.EcoEnchant;
@@ -10,7 +10,7 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class EcoEnchants {
 
-    public static boolean has(SpartanProtocol protocol) {
+    public static boolean has(PlayerProtocol protocol) {
         if (Compatibility.CompatibilityType.ECO_ENCHANTS.isFunctional()) {
             PlayerInventory inventory = protocol.bukkit().getInventory();
 

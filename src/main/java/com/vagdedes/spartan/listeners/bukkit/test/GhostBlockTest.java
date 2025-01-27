@@ -6,6 +6,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 
 public class GhostBlockTest implements Listener {
+    
     @EventHandler
     public void block(BlockPlaceEvent event) {
         event.setCancelled(true);

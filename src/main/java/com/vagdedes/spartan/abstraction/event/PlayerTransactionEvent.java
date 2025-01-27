@@ -1,13 +1,13 @@
 package com.vagdedes.spartan.abstraction.event;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 
 public class PlayerTransactionEvent {
 
-    public final SpartanProtocol protocol;
+    public final PlayerProtocol protocol;
     public final long time, delay;
 
-    public PlayerTransactionEvent(SpartanProtocol protocol) {
+    public PlayerTransactionEvent(PlayerProtocol protocol) {
         this.time = System.currentTimeMillis();
         this.protocol = protocol;
         this.delay = protocol.transactionPing;

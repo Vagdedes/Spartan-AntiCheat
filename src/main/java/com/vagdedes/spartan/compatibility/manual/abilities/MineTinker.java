@@ -2,7 +2,7 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import de.flo56958.minetinker.events.MTPlayerInteractEvent;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
@@ -17,7 +17,7 @@ public class MineTinker implements Listener {
 
         if (compatibilityType.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    SpartanBukkit.getProtocol(e.getPlayer()),
+                    PluginBase.getProtocol(e.getPlayer()),
                     compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.KillAura,

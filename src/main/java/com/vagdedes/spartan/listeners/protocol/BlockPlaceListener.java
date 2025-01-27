@@ -9,11 +9,11 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.event.ServerBlockChange;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
+import com.vagdedes.spartan.functionality.concurrent.CheckThread;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.BlockPlaceEvent;
 import com.vagdedes.spartan.listeners.bukkit.standalone.ChunksEvent;
 import org.bukkit.Location;
@@ -38,9 +38,9 @@ public class BlockPlaceListener extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        PlayerProtocol protocol = PluginBase.getProtocol(player);
         PacketContainer packet = event.getPacket();
-        SpartanScheduler.run(() -> {
+        CheckThread.run(() -> {
             if (isPlacingBlock(packet)) {
                 if (packet.getBlockPositionModifier().getValues().isEmpty() && packet.getMovingBlockPositions().getValues().isEmpty()) {
                     // stub for debug
@@ -90,7 +90,7 @@ public class BlockPlaceListener extends PacketAdapter {
                                     material
                             ));
 
-                            BlockPlaceEvent.event(protocol, block, blockAgainst, event.isCancelled());
+                            BlockPlaceEvent.event(protocol, block, blockAgainst, event);
                             protocol.rightClickCounter = 0;
                         } else {
                             protocol.rightClickCounter++;

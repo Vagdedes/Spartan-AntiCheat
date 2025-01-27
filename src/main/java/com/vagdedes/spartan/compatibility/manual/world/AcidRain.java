@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.compatibility.manual.world;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerBukkit;
 import com.vagdedes.spartan.compatibility.Compatibility;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.wasteofplastic.acidisland.events.AcidEvent;
 import com.wasteofplastic.acidisland.events.AcidRainEvent;
 import org.bukkit.event.EventHandler;
@@ -14,7 +14,7 @@ public class AcidRain implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void AcidRainEvent(AcidRainEvent e) {
         if (Compatibility.CompatibilityType.ACID_RAIN.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
+            PlayerBukkit p = PluginBase.getProtocol(e.getPlayer()).bukkitExtra;
 
             p.handleReceivedDamage();
         }
@@ -23,7 +23,7 @@ public class AcidRain implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void AcidEvent(AcidEvent e) {
         if (Compatibility.CompatibilityType.ACID_RAIN.isFunctional()) {
-            SpartanPlayer p = SpartanBukkit.getProtocol(e.getPlayer()).spartan;
+            PlayerBukkit p = PluginBase.getProtocol(e.getPlayer()).bukkitExtra;
 
             p.handleReceivedDamage();
         }

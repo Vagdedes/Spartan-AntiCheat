@@ -32,7 +32,7 @@ public class PacketWorld {
         if (tickEvent.getDelay() < 12) {
             this.lagTick = 3;
         } else if (lagTick > 0) {
-           if (!this.transactionLock) this.lagTick--;
+            if (!this.transactionLock) this.lagTick--;
         } else {
             synchronized (this.query) {
                 this.query.removeIf(change -> --change.tick == 0);
@@ -49,11 +49,11 @@ public class PacketWorld {
     public Material getBlock(Location location) {
         synchronized (this.query) {
             for (ServerBlockChange change : this.query) {
-                Location lL = change.getPosition().toLocation(this.player.getWorld());
+                Location lL = change.position.toLocation(this.player.getWorld());
 
                 if (Math.abs(lL.getX() - location.getX()) <= 1.3 &&
-                                Math.abs(lL.getY() - location.getY()) <= 1.3 &&
-                                Math.abs(lL.getZ() - location.getZ()) <= 1.3) {
+                        Math.abs(lL.getY() - location.getY()) <= 1.3 &&
+                        Math.abs(lL.getZ() - location.getZ()) <= 1.3) {
                     return change.getData();
                 }
             }
@@ -66,9 +66,7 @@ public class PacketWorld {
     public void worldChange(ServerBlockChange blockChange) {
         if (BlockUtils.areAir(blockChange.getData())) {
             Block b = ChunksEvent.getBlockAsync(
-                            blockChange
-                                            .getPosition()
-                                            .toLocation(this.player.getWorld())
+                    blockChange.position.toLocation(this.player.getWorld())
             );
             if (b == null || BlockUtils.areAir(b.getType())) return;
             blockChange.setData(b.getType());

@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.tracking;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -79,7 +79,7 @@ public class AntiCheatLogs {
                     todayFile = getFile();
                     fileConfiguration = YamlConfiguration.loadConfiguration(todayFile);
                 }
-                SpartanBukkit.dataThread.executeIfUnknownThreadElseHere(() -> {
+                PluginBase.dataThread.executeIfUnknownThreadElseHere(() -> {
                     fileConfiguration.set(
                             AntiCheatLogs.getDate(AntiCheatLogs.dateFormat, time),
                             information
@@ -93,7 +93,7 @@ public class AntiCheatLogs {
         }
     }
 
-    public static void logInfo(SpartanProtocol p,
+    public static void logInfo(PlayerProtocol p,
                                String notification,
                                String information,
                                boolean console,

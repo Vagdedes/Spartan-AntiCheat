@@ -5,55 +5,40 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.TeleportEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public class TeleportListener extends PacketAdapter {
 
-    public static class TeleportData {
-
-        private final Location location;
-        private final boolean silent;
-
-        public TeleportData(Location location, boolean silent) {
-            this.location = location;
-            this.silent = silent;
-        }
-
-        public Location getLocation() {
-            return location;
-        }
-
-        public boolean isSilent() {
-            return silent;
-        }
-    }
+    public static final PacketType[] packetTypes = new PacketType[]{
+            PacketType.Play.Server.POSITION,
+            PacketType.Play.Server.RESPAWN
+    };
 
     public TeleportListener() {
         super(
                 Register.plugin,
                 ListenerPriority.HIGHEST,
-                PacketType.Play.Server.POSITION,
-                PacketType.Play.Server.RESPAWN
+                packetTypes
         );
     }
 
     @Override
     public void onPacketSending(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        PlayerProtocol protocol = PluginBase.getProtocol(player);
 
-        if (protocol.spartan.isBedrockPlayer()) {
+        if (protocol.bukkitExtra.isBedrockPlayer()) {
             return;
         }
         PacketType packetType = event.getPacket().getType();
 
         if (packetType.equals(PacketType.Play.Server.POSITION)) {
             protocol.teleported = true;
-            TeleportEvent.teleport(player, true);
+            TeleportEvent.teleport(player, true, event);
             /*
             Location teleportLocation = add(
                     protocol.getLocation().clone(),
@@ -75,7 +60,7 @@ public class TeleportListener extends PacketAdapter {
             protocol.mutateTeleport = true;
              */
             protocol.teleported = true;
-            TeleportEvent.respawn(player, true);
+            TeleportEvent.respawn(player, true, event);
         }
     }
 

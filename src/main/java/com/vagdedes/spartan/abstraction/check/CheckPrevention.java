@@ -1,8 +1,7 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.server.TPS;
 import org.bukkit.Location;
 
@@ -25,8 +24,11 @@ public class CheckPrevention {
     CheckPrevention(Location location, int cancelTicks, boolean groundTeleport, double damage) {
         this.canPrevent = false;
         this.location = location;
-        this.groundTeleport = groundTeleport;
-        this.damage = damage;
+        this.groundTeleport = groundTeleport
+                && Config.settings.getBoolean("Detections.ground_teleport_on_detection");
+        this.damage = Config.settings.getBoolean("Detections.damage_on_detection")
+                ? damage
+                : 0.0;
         this.expiration = cancelTicks <= 1
                 ? Long.MAX_VALUE
                 : System.currentTimeMillis() + (cancelTicks * TPS.tickTime);
@@ -36,26 +38,22 @@ public class CheckPrevention {
         return this.canPrevent && System.currentTimeMillis() <= this.expiration;
     }
 
-    void handle(SpartanProtocol protocol) {
-        Runnable runnable = () -> {
-            if (this.location != null
-                    && protocol.packetsEnabled()) {
-                protocol.teleport(this.location);
-            }
-            if (this.groundTeleport) {
-                protocol.spartan.groundTeleport();
-            }
-            if (this.damage > 0.0
-                    && (this.location == null && !this.groundTeleport
-                    || Config.settings.getBoolean("Detections.fall_damage_on_teleport"))) {
-                protocol.spartan.damage(this.damage);
-            }
-        };
-
-        if (SpartanBukkit.isSynchronised()) {
-            runnable.run();
+    void handle(CheckDetection detection) {
+        if (PluginBase.isSynchronised()) {
+            detection.prevention(
+                    this.location,
+                    this.groundTeleport,
+                    this.damage
+            ).run();
         } else {
-            SpartanBukkit.transferTask(protocol, runnable);
+            PluginBase.transferTask(
+                    detection.protocol,
+                    detection.prevention(
+                            this.location,
+                            this.groundTeleport,
+                            this.damage
+                    )
+            );
         }
     }
 

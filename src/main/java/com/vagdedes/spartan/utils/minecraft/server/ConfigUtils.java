@@ -2,10 +2,10 @@ package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import lombok.SneakyThrows;
 import me.vagdedes.spartan.api.API;
@@ -30,7 +30,7 @@ public class ConfigUtils {
 
     public static String replaceWithSyntax(String message, HackType hackType) {
         message = replace(message, "{space}", " ");
-        message = replace(message, "{online}", String.valueOf(SpartanBukkit.getPlayerCount()));
+        message = replace(message, "{online}", String.valueOf(PluginBase.getPlayerCount()));
         message = replace(message, "{motd}", Bukkit.getMotd());
         message = replace(message, "{server:name}", CrossServerNotifications.getServerName());
         message = replace(message, "{plugin:version}", API.getVersion());
@@ -51,26 +51,25 @@ public class ConfigUtils {
         return message;
     }
 
-    public static String replaceWithSyntax(SpartanProtocol p, String message, HackType hackType) {
+    public static String replaceWithSyntax(PlayerProtocol p, String message, HackType hackType) {
         Location loc = p.getLocationOrVehicle();
         String worldName = p.getWorld().getName();
         message = replace(message, "{player}", p.bukkit().getName());
-        message = replace(message, "{player:type}", p.spartan.dataType.toString().toLowerCase());
+        message = replace(message, "{player:type}", p.bukkitExtra.dataType.toString().toLowerCase());
         message = replace(message, "{uuid}", p.getUUID().toString());
         message = replace(message, "{ping}", String.valueOf(p.getPing()));
         message = replace(message, "{world}", worldName);
-        message = replace(message, "{health}", String.valueOf(p.spartan.getHealth()));
+        message = replace(message, "{health}", String.valueOf(p.bukkitExtra.getHealth()));
         message = replace(message, "{gamemode}", p.bukkit().getGameMode().toString().toLowerCase());
         message = replace(message, "{x}", String.valueOf(loc.getBlockX()));
         message = replace(message, "{y}", String.valueOf(loc.getBlockY()));
         message = replace(message, "{z}", String.valueOf(loc.getBlockZ()));
         message = replace(message, "{yaw}", String.valueOf(AlgebraUtils.integerRound(loc.getYaw())));
         message = replace(message, "{pitch}", String.valueOf(AlgebraUtils.integerRound(loc.getPitch())));
-        message = replace(message, "{cps}", String.valueOf(p.spartan.clicks.getCount()));
 
         if (hackType != null) {
-            message = replace(message, "{detection:silent}", String.valueOf(hackType.getCheck().isSilent(p.spartan.dataType, worldName)));
-            message = replace(message, "{detection:punish}", String.valueOf(hackType.getCheck().canPunish(p.spartan.dataType)));
+            message = replace(message, "{detection:silent}", String.valueOf(hackType.getCheck().isSilent(p.bukkitExtra.dataType, worldName)));
+            message = replace(message, "{detection:punish}", String.valueOf(hackType.getCheck().canPunish(p.bukkitExtra.dataType)));
         }
         return ChatColor.translateAlternateColorCodes('&', replaceWithSyntax(message, hackType));
     }
@@ -79,7 +78,7 @@ public class ConfigUtils {
         boolean hasHackType = hackType != null;
 
         if (off.isOnline()) {
-            SpartanProtocol p = SpartanBukkit.getProtocol((Player) off);
+            PlayerProtocol p = PluginBase.getProtocol((Player) off);
             return replaceWithSyntax(p, message, hackType);
         } else {
             UUID uuid = off.getUniqueId();

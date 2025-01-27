@@ -3,10 +3,10 @@ package com.vagdedes.spartan.compatibility.manual.abilities;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
 import com.projectkorra.projectkorra.event.AbilityProgressEvent;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -19,14 +19,14 @@ public class ProjectKorra implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void AbilityStart(AbilityStartEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()), 60);
+            evadeCombatFPs(PluginBase.getProtocol(e.getAbility().getPlayer()), 60);
         }
     }
 
     @EventHandler
     private void AbilityProgress(AbilityProgressEvent e) {
         if (Compatibility.CompatibilityType.PROJECT_KORRA.isFunctional()) {
-            evadeCombatFPs(SpartanBukkit.getProtocol(e.getAbility().getPlayer()), 40);
+            evadeCombatFPs(PluginBase.getProtocol(e.getAbility().getPlayer()), 40);
         }
     }
 
@@ -37,14 +37,14 @@ public class ProjectKorra implements Listener {
 
             if (entity instanceof Player) {
                 evadeCombatFPs(
-                        SpartanBukkit.getProtocol((Player) entity),
+                        PluginBase.getProtocol((Player) entity),
                         60
                 );
             }
         }
     }
 
-    private static void evadeCombatFPs(SpartanProtocol protocol, int ticks) {
+    private static void evadeCombatFPs(PlayerProtocol protocol, int ticks) {
         Compatibility.CompatibilityType compatibilityType = Compatibility.CompatibilityType.PROJECT_KORRA;
         Config.compatibility.evadeFalsePositives(
                 protocol,

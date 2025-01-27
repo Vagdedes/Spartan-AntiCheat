@@ -3,10 +3,10 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import org.bukkit.Bukkit;
 
@@ -47,7 +47,7 @@ public class SpartanEdition {
             firstLoad = true,
             notifyCache = false,
             currentVersion = true,
-            alternativeVersion = false;
+            alternativeVersion = true;
 
     // Verification
 
@@ -56,7 +56,7 @@ public class SpartanEdition {
             firstLoad = false;
             currentVersion = !IDs.hasToken();
         }
-        SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
+        PluginBase.connectionThread.executeIfUnknownThreadElseHere(() -> {
             if (!currentVersion
                     && CloudConnections.ownsProduct(
                     getProductID(currentType)
@@ -64,15 +64,11 @@ public class SpartanEdition {
                 currentVersion = true;
             }
             if (!alternativeVersion
+                    && (!currentVersion || CloudConnections.ownsProduct("26"))
                     && CloudConnections.ownsProduct(
                     getProductID(alternativeType)
             )) {
                 alternativeVersion = true;
-            }
-            if (currentVersion
-                    && alternativeVersion
-                    && !CloudConnections.ownsProduct("26")) {
-                alternativeVersion = false;
             }
             hasAccount = !IDs.hasToken() || CloudConnections.hasAccount();
         });
@@ -123,12 +119,7 @@ public class SpartanEdition {
 
     // Notifications
 
-    // Priority:
-    // 1. Verify (No Version)
-    // 2. Detection (No Slots)
-    // 3. Alternative (No Other Version)
-    // 4. Account (No Account)
-    public static void attemptNotifications(SpartanProtocol protocol) {
+    public static void attemptNotifications(PlayerProtocol protocol) {
         Check.DataType[] missingDetections =
                 !currentVersion && !alternativeVersion
                         ? new Check.DataType[]{currentType, alternativeType}
@@ -153,12 +144,12 @@ public class SpartanEdition {
             if ((time - checkTime) >= 60_000L) {
                 checkTime = time;
 
-                if (missingDetections[0] == protocol.spartan.dataType) {
+                if (missingDetections[0] == protocol.bukkitExtra.dataType) {
                     notifyCache = true;
                     attemptVersionNotification(protocol, missingDetections[0]);
                     return;
                 }
-                Collection<SpartanProtocol> players = SpartanBukkit.getProtocols();
+                Collection<PlayerProtocol> players = PluginBase.getProtocols();
                 players.remove(protocol);
                 int size = players.size();
                 List<PlayerProfile> checkedProfiles;
@@ -166,8 +157,8 @@ public class SpartanEdition {
                 if (size > 0) {
                     checkedProfiles = new ArrayList<>(size);
 
-                    for (SpartanProtocol otherProtocol : players) {
-                        if (missingDetections[0] == otherProtocol.spartan.dataType) {
+                    for (PlayerProtocol otherProtocol : players) {
+                        if (missingDetections[0] == otherProtocol.bukkitExtra.dataType) {
                             notifyCache = true;
                             attemptVersionNotification(otherProtocol, missingDetections[0]);
                             return;
@@ -202,7 +193,7 @@ public class SpartanEdition {
         attemptNoAccountNotification(protocol);
     }
 
-    private static void attemptVersionNotification(SpartanProtocol protocol, Check.DataType dataType) {
+    private static void attemptVersionNotification(PlayerProtocol protocol, Check.DataType dataType) {
         String message;
 
         if (dataType == null) {
@@ -227,18 +218,19 @@ public class SpartanEdition {
             );
         }
 
-        if (AwarenessNotifications.canSend(protocol.getUUID(), "alternative-version", notificationCooldown)) {
-            protocol.spartan.sendImportantMessage(message);
+        if (message != null
+                && AwarenessNotifications.canSend(protocol.getUUID(), "alternative-version", notificationCooldown)) {
+            protocol.bukkitExtra.sendImportantMessage(message);
         }
     }
 
-    private static void attemptNoAccountNotification(SpartanProtocol protocol) {
+    private static void attemptNoAccountNotification(PlayerProtocol protocol) {
         if (!hasAccount) {
             String message = AwarenessNotifications.getOptionalNotification(hasAccountNotificationMessage);
 
             if (message != null
                     && AwarenessNotifications.canSend(protocol.getUUID(), "has-account", notificationCooldown)) {
-                protocol.spartan.sendImportantMessage(message);
+                protocol.bukkitExtra.sendImportantMessage(message);
             }
         }
     }

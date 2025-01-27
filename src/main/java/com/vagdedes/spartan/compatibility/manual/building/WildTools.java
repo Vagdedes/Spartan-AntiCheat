@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility.manual.building;
 import com.bgsoftware.wildtools.api.events.ToolUseEvent;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,7 +17,7 @@ public class WildTools implements Listener {
 
         if (compatibilityType.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    SpartanBukkit.getProtocol(e.getPlayer()),
+                    PluginBase.getProtocol(e.getPlayer()),
                     compatibilityType,
                     new Enums.HackType[]{
                             Enums.HackType.FastBreak,

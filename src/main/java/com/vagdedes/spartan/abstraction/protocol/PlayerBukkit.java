@@ -5,12 +5,10 @@ import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.compatibility.necessary.BedrockCompatibility;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.server.TPS;
-import com.vagdedes.spartan.listeners.bukkit.standalone.ChunksEvent;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.MathHelper;
@@ -18,7 +16,6 @@ import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import com.vagdedes.spartan.utils.minecraft.server.PluginUtils;
 import com.vagdedes.spartan.utils.minecraft.world.BlockUtils;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
-import me.vagdedes.spartan.system.Enums;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.Inventory;
@@ -29,32 +26,42 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SpartanPlayer {
+public class PlayerBukkit {
 
-    final SpartanProtocol protocol;
+    final PlayerProtocol protocol;
     private final Map<PotionEffectType, ExtendedPotionEffect> potionEffects;
     public final Check.DataType dataType;
     public final Check.DetectionType detectionType;
     public final PlayerMovement movement;
     public final PlayerPunishments punishments;
     public final PlayerTrackers trackers;
-    public final PlayerClicks clicks;
     private long lastInteraction;
     private boolean afk;
+    private Entity[] nearbyEntities;
+    private final double[] maxNearbyEntitiesCoordinate;
 
     static {
-        SpartanBukkit.runRepeatingTask(() -> {
-            Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        PluginBase.runRepeatingTask(() -> {
+            Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
             if (!protocols.isEmpty()) {
-                for (SpartanProtocol protocol : protocols) {
+                for (PlayerProtocol protocol : protocols) {
                     if (!MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13)) {
-                        protocol.spartan.setStoredPotionEffects();
+                        protocol.bukkitExtra.setStoredPotionEffects();
                     }
-                    protocol.profile().getRunner(Enums.HackType.AutoRespawn).run(false);
-                    protocol.profile().getRunner(Enums.HackType.Exploits).run(false);
-                    protocol.spartan.movement.schedulerFrom = protocol.getLocation();
-                    protocol.spartan.checkForAFK();
+                    protocol.profile().executeRunners(false, null);
+                    protocol.bukkitExtra.movement.schedulerFrom = protocol.getLocation();
+                    protocol.bukkitExtra.checkForAFK();
+
+                    if (protocol.bukkitExtra.maxNearbyEntitiesCoordinate[0] > 0.0
+                            || protocol.bukkitExtra.maxNearbyEntitiesCoordinate[1] > 0.0
+                            || protocol.bukkitExtra.maxNearbyEntitiesCoordinate[2] > 0.0) {
+                        protocol.bukkitExtra.nearbyEntities = protocol.bukkit().getNearbyEntities(
+                                protocol.bukkitExtra.maxNearbyEntitiesCoordinate[0],
+                                protocol.bukkitExtra.maxNearbyEntitiesCoordinate[1],
+                                protocol.bukkitExtra.maxNearbyEntitiesCoordinate[2]
+                        ).toArray(new Entity[0]);
+                    }
                 }
             }
         }, 1L, 1L);
@@ -62,7 +69,7 @@ public class SpartanPlayer {
 
     // Object
 
-    public SpartanPlayer(SpartanProtocol protocol) {
+    public PlayerBukkit(PlayerProtocol protocol) {
         this.protocol = protocol;
         this.dataType = BedrockCompatibility.isPlayer(protocol.bukkit())
                 ? Check.DataType.BEDROCK
@@ -71,11 +78,12 @@ public class SpartanPlayer {
                 ? Check.DetectionType.PACKETS
                 : Check.DetectionType.BUKKIT;
         this.trackers = new PlayerTrackers();
+        this.nearbyEntities = new Entity[0];
+        this.maxNearbyEntitiesCoordinate = new double[3];
 
         this.potionEffects = new ConcurrentHashMap<>(2);
         this.setStoredPotionEffects();
 
-        this.clicks = new PlayerClicks();
         this.movement = new PlayerMovement(this);
         this.punishments = new PlayerPunishments(this);
 
@@ -114,7 +122,7 @@ public class SpartanPlayer {
     }
 
     public boolean packetsEnabled() {
-        return SpartanBukkit.packetsEnabled() && !this.isBedrockPlayer();
+        return PluginBase.packetsEnabled() && !this.isBedrockPlayer();
     }
 
     @Override
@@ -150,13 +158,13 @@ public class SpartanPlayer {
                     }
                     string += StringUtils.toString(message, " ");
                 }
-                Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+                Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
                 if (!protocols.isEmpty()) {
                     if (broadcast) {
                         Bukkit.broadcastMessage(string);
                     } else {
-                        for (SpartanProtocol protocol : protocols) {
+                        for (PlayerProtocol protocol : protocols) {
                             if (protocol.bukkit().isOp()) {
                                 protocol.bukkit().sendMessage(string);
                             }
@@ -176,19 +184,7 @@ public class SpartanPlayer {
         for (PlayerTrackers.TrackerType handlerType : PlayerTrackers.TrackerType.values()) {
             this.trackers.remove(handlerType);
         }
-        if (!this.movement.judgeGround()) {
-            this.movement.resetAirTicks();
-        }
-    }
-
-    // Separator
-
-    public void calculateClicks(boolean run) {
-        if (run) {
-            clicks.calculate();
-            this.protocol.profile().getRunner(Enums.HackType.FastClicks).run(false);
-            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
-        }
+        this.movement.judgeGround();
     }
 
     // Separator
@@ -220,26 +216,13 @@ public class SpartanPlayer {
         return this.protocol.bukkit().getInventory().getItemInHand();
     }
 
-    // Separator
-
-    public boolean isOnGround(Location location, boolean checkEntities) {
-        return GroundUtils.isOnGround(
-                this.protocol,
-                location,
-                this.protocol.isOnGround(),
-                checkEntities
-        );
-    }
-
-    public boolean isOnGround(boolean custom) {
-        Entity vehicle = this.protocol.spartan.getVehicle();
+    boolean isOnGround() {
+        Entity vehicle = this.protocol.bukkitExtra.getVehicle();
 
         if (vehicle != null) {
             return vehicle.isOnGround();
         } else {
-            return this.protocol.isOnGround()
-                    || custom
-                    && GroundUtils.isOnGround(this.protocol, protocol.getLocation(), false, true);
+            return this.protocol.bukkit().isOnGround();
         }
     }
 
@@ -312,7 +295,7 @@ public class SpartanPlayer {
 
     private void setStoredPotionEffects() {
         if (!ProtocolLib.isTemporary(this.protocol.bukkit())) {
-            SpartanBukkit.transferTask(
+            PluginBase.transferTask(
                     protocol,
                     () -> {
                         for (PotionEffect effect : this.protocol.bukkit().getActivePotionEffects()) {
@@ -353,12 +336,19 @@ public class SpartanPlayer {
     // Separator
 
     public List<Entity> getNearbyEntities(double radius) {
-        if (SpartanBukkit.isSynchronised()) {
-            return this.protocol.bukkit().getNearbyEntities(radius, radius, radius);
+        this.maxNearbyEntitiesCoordinate[0] = Math.max(radius, this.maxNearbyEntitiesCoordinate[0]);
+        this.maxNearbyEntitiesCoordinate[1] = Math.max(radius, this.maxNearbyEntitiesCoordinate[1]);
+        this.maxNearbyEntitiesCoordinate[2] = Math.max(radius, this.maxNearbyEntitiesCoordinate[2]);
+
+        if (PluginBase.isSynchronised()) {
+            List<Entity> list = this.protocol.bukkit().getNearbyEntities(radius, radius, radius);
+            this.nearbyEntities = list.toArray(new Entity[0]);
+            return list;
+        } else if (this.nearbyEntities.length == 0) {
+            return new ArrayList<>(0);
         } else {
             List<Entity> entities = new ArrayList<>();
             Location location = protocol.getLocation();
-            World world = location.getWorld();
             int smallX = MathHelper.floor_double((location.getX() - radius) / PlayerUtils.chunk);
             int bigX = MathHelper.floor_double((location.getX() + radius) / PlayerUtils.chunk);
             int smallZ = MathHelper.floor_double((location.getZ() - radius) / PlayerUtils.chunk);
@@ -367,17 +357,15 @@ public class SpartanPlayer {
 
             for (int xx = smallX; xx <= bigX; xx++) {
                 for (int zz = smallZ; zz <= bigZ; zz++) {
-                    if (ChunksEvent.isLoaded(world, xx, zz)) {
-                        for (Entity entity : world.getChunkAt(xx, zz).getEntities()) {
-                            Location eLoc = ProtocolLib.getLocationOrNull(entity);
+                    for (Entity entity : nearbyEntities) {
+                        Location eLoc = ProtocolLib.getLocationOrNull(entity);
 
-                            if (eLoc != null) {
-                                if (SpartanLocation.distanceSquared(
-                                        eLoc,
-                                        location
-                                ) <= radiusSquared) {
-                                    entities.add(entity);
-                                }
+                        if (eLoc != null) {
+                            if (SpartanLocation.distanceSquared(
+                                    eLoc,
+                                    location
+                            ) <= radiusSquared) {
+                                entities.add(entity);
                             }
                         }
                     }
@@ -389,12 +377,19 @@ public class SpartanPlayer {
     }
 
     public List<Entity> getNearbyEntities(double x, double y, double z) {
-        if (SpartanBukkit.isSynchronised()) {
-            return this.protocol.bukkit().getNearbyEntities(x, y, z);
+        this.maxNearbyEntitiesCoordinate[0] = Math.max(x, this.maxNearbyEntitiesCoordinate[0]);
+        this.maxNearbyEntitiesCoordinate[1] = Math.max(y, this.maxNearbyEntitiesCoordinate[1]);
+        this.maxNearbyEntitiesCoordinate[2] = Math.max(z, this.maxNearbyEntitiesCoordinate[2]);
+
+        if (PluginBase.isSynchronised()) {
+            List<Entity> list = this.protocol.bukkit().getNearbyEntities(x, y, z);
+            this.nearbyEntities = list.toArray(new Entity[0]);
+            return list;
+        } else if (this.nearbyEntities.length == 0) {
+            return new ArrayList<>(0);
         } else {
             List<Entity> entities = new ArrayList<>();
             Location location = protocol.getLocation();
-            World world = location.getWorld();
             int smallX = MathHelper.floor_double((location.getX() - x) / PlayerUtils.chunk);
             int bigX = MathHelper.floor_double((location.getX() + x) / PlayerUtils.chunk);
             int smallZ = MathHelper.floor_double((location.getZ() - z) / PlayerUtils.chunk);
@@ -402,16 +397,14 @@ public class SpartanPlayer {
 
             for (int xx = smallX; xx <= bigX; xx++) {
                 for (int zz = smallZ; zz <= bigZ; zz++) {
-                    if (ChunksEvent.isLoaded(world, xx, zz)) {
-                        for (Entity entity : world.getChunkAt(xx, zz).getEntities()) {
-                            Location eLoc = ProtocolLib.getLocationOrNull(entity);
+                    for (Entity entity : nearbyEntities) {
+                        Location eLoc = ProtocolLib.getLocationOrNull(entity);
 
-                            if (eLoc != null) {
-                                if (Math.abs(eLoc.getX() - location.getX()) <= x
-                                        && Math.abs(eLoc.getY() - location.getY()) <= y
-                                        && Math.abs(eLoc.getZ() - location.getZ()) <= z) {
-                                    entities.add(entity);
-                                }
+                        if (eLoc != null) {
+                            if (Math.abs(eLoc.getX() - location.getX()) <= x
+                                    && Math.abs(eLoc.getY() - location.getY()) <= y
+                                    && Math.abs(eLoc.getZ() - location.getZ()) <= z) {
+                                entities.add(entity);
                             }
                         }
                     }
@@ -425,14 +418,7 @@ public class SpartanPlayer {
     // Teleport
 
     public void groundTeleport() {
-        if (!Config.settings.getBoolean("Detections.ground_teleport_on_detection")) {
-            return;
-        }
         Location location = this.protocol.getLocation();
-
-        if (this.isOnGround(location, true)) {
-            return;
-        }
         SpartanLocation locationP1 = new SpartanLocation(location.clone().add(0, 1, 0));
 
         if (BlockUtils.isSolid(locationP1.getBlock().getType())
@@ -461,13 +447,8 @@ public class SpartanPlayer {
                     || !BlockUtils.isSolid(material))) {
                 iterations++;
             } else {
-                double blockBox = GroundUtils.getMaxHeight(material);
+                loopLocation.setY(Math.floor(progressiveY) + 1.0);
 
-                if (blockBox == 0.0 || blockBox == 0.5) {
-                    loopLocation.setY(Math.floor(progressiveY) + 1.0);
-                } else {
-                    loopLocation.setY(Math.floor(progressiveY) + Math.max(blockBox, box));
-                }
                 if (this.packetsEnabled()) {
                     this.protocol.teleport(loopLocation.bukkit());
                 }

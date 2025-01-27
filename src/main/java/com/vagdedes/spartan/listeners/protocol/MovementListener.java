@@ -9,16 +9,15 @@ import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.data.EncirclementData;
 import com.vagdedes.spartan.abstraction.event.PlayerTickEvent;
 import com.vagdedes.spartan.abstraction.event.SuperPositionPacketEvent;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.protocol.PlayerTrackers;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.concurrent.CheckThread;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.MovementEvent;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
-import me.vagdedes.spartan.system.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Boat;
@@ -47,7 +46,7 @@ public class MovementListener extends PacketAdapter {
     @Override
     public void onPacketSending(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol p = SpartanBukkit.getProtocol(player);
+        PlayerProtocol p = PluginBase.getProtocol(player);
         Location tp = ProtocolTools.readLocation(event);
         if (!event.getPacket().getFloat().getValues().isEmpty()) {
             tp.setYaw(event.getPacket().getFloat().read(0));
@@ -75,10 +74,10 @@ public class MovementListener extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol p = SpartanBukkit.getProtocol(player);
+        PlayerProtocol p = PluginBase.getProtocol(player);
         PacketContainer packet = event.getPacket();
         // Always loaded if you use this listener
-        if (p.spartan.isBedrockPlayer()) {
+        if (p.bukkitExtra.isBedrockPlayer()) {
             return;
         }
         Location l = p.getLocation();
@@ -99,8 +98,8 @@ public class MovementListener extends PacketAdapter {
         double[] v = new double[]{c.getX(), c.getY(), c.getZ(), c.getYaw(), c.getPitch()};
         for (Double check : v) {
             if (check.isNaN() || check.isInfinite() || Math.abs(check) > 3E8) {
-                SpartanBukkit.getProtocol(player)
-                        .spartan.punishments.kick(Bukkit.getConsoleSender(), "Invalid packet");
+                PluginBase.getProtocol(player)
+                        .bukkitExtra.punishments.kick(Bukkit.getConsoleSender(), "Invalid packet");
                 return;
             }
         }
@@ -155,8 +154,8 @@ public class MovementListener extends PacketAdapter {
                             p.setFromLocation(p.getTeleport().clone());
                             p.setTeleport(null);
                         } else {
-                            if (p.spartan.trackers.has(PlayerTrackers.TrackerType.VEHICLE, "enter")) return;
-                            for (Entity entity : p.spartan.getNearbyEntities(5))
+                            if (p.bukkitExtra.trackers.has(PlayerTrackers.TrackerType.VEHICLE, "enter")) return;
+                            for (Entity entity : p.bukkitExtra.getNearbyEntities(5))
                                 if (entity instanceof Boat) return;
 
                             // Force packet stop if your packet are shit
@@ -190,8 +189,9 @@ public class MovementListener extends PacketAdapter {
                 } else {
                     if (!player.getInventory().getItemInHand().getType().isEdible()) p.useItemPacket = false;
                 }
+                if (player.getFoodLevel() == 20 || p.useItemPacketReset) p.useItemPacket = false;
             }
-            SpartanScheduler.run(() -> {
+            CheckThread.run(() -> {
                 PlayerMoveEvent moveEvent = new PlayerMoveEvent(
                                 player,
                                 p.getFromLocation(),
@@ -205,14 +205,11 @@ public class MovementListener extends PacketAdapter {
 
             //player.sendMessage("event: " + moveEvent.getTo().toVector());
         } else {
-            superPosition(new SuperPositionPacketEvent(p, event));
+            p.profile().executeRunners(
+                    event.isCancelled(),
+                    new SuperPositionPacketEvent(p, event)
+            );
         }
-    }
-
-    private static void superPosition(SuperPositionPacketEvent packet) {
-        boolean cancelled = packet.packetEvent.isCancelled();
-        packet.protocol.profile().getRunner(Enums.HackType.Exploits).handle(cancelled, packet);
-        packet.protocol.profile().getRunner(Enums.HackType.IrregularMovements).handle(cancelled, packet);
     }
 
     public enum tpFlags {

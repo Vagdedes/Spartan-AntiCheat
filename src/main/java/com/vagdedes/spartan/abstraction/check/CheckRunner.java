@@ -1,7 +1,6 @@
 package com.vagdedes.spartan.abstraction.check;
 
-import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
@@ -9,20 +8,16 @@ import com.vagdedes.spartan.compatibility.manual.enchants.CustomEnchantsPlus;
 import com.vagdedes.spartan.compatibility.manual.enchants.EcoEnchants;
 import com.vagdedes.spartan.compatibility.manual.vanilla.Attributes;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.server.Config;
+import com.vagdedes.spartan.functionality.moderation.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
-import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
-import me.vagdedes.spartan.api.CheckCancelEvent;
 import me.vagdedes.spartan.system.Enums;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.event.Cancellable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,15 +28,13 @@ public abstract class CheckRunner extends CheckProcess {
 
     final long creation;
     private final Collection<CheckCancellation> disableCauses, silentCauses;
-    CheckPrevention prevention;
     private boolean cancelled;
     private final Map<String, CheckDetection> detections;
     private final boolean[] supportsDataType, supportsDetectionType;
 
-    public CheckRunner(Enums.HackType hackType, SpartanProtocol protocol) {
+    public CheckRunner(Enums.HackType hackType, PlayerProtocol protocol) {
         super(hackType, protocol);
         this.creation = System.currentTimeMillis();
-        this.prevention = new CheckPrevention();
         this.detections = new ConcurrentHashMap<>(2);
         this.disableCauses = Collections.synchronizedList(new ArrayList<>(1));
         this.silentCauses = Collections.synchronizedList(new ArrayList<>(1));
@@ -99,60 +92,20 @@ public abstract class CheckRunner extends CheckProcess {
     public final double getExtremeProbability(Check.DataType dataType, Check.DetectionType detectionType) {
         double num = PlayerEvidence.emptyProbability;
 
-        for (CheckDetection detectionExecutor : this.getDetections()) {
-            if (detectionExecutor.supportsDataType(dataType)
-                    && detectionExecutor.supportsDetectionType(detectionType)
-                    && detectionExecutor.hasSufficientData(dataType)) {
-                if (PlayerEvidence.POSITIVE) {
-                    num = Math.max(num, detectionExecutor.getProbability(dataType));
-                } else {
-                    num = Math.min(num, detectionExecutor.getProbability(dataType));
+        if (this.hackType.getCheck().isEnabled(dataType, null)) {
+            for (CheckDetection detectionExecutor : this.getDetections()) {
+                if (detectionExecutor.supportsDataType(dataType)
+                        && detectionExecutor.supportsDetectionType(detectionType)
+                        && detectionExecutor.hasSufficientData(dataType)) {
+                    if (PlayerEvidence.POSITIVE) {
+                        num = Math.max(num, detectionExecutor.getProbability(dataType));
+                    } else {
+                        num = Math.min(num, detectionExecutor.getProbability(dataType));
+                    }
                 }
             }
         }
         return num;
-    }
-
-    public final long getRemainingCompletionTime(Check.DataType dataType, Check.DetectionType detectionType) {
-        Collection<PlayerProfile> playerProfiles = ResearchEngine.getPlayerProfiles();
-
-        if (playerProfiles.isEmpty()) {
-            return 0L;
-        } else {
-            double averageTime = 0.0,
-                    averageCompletion = 0.0;
-            int size = 0;
-
-            for (PlayerProfile profile : playerProfiles) {
-                for (CheckDetection detection : profile.getRunner(this.hackType).getDetections()) {
-                    if (detection.supportsDataType(dataType)
-                            && detection.supportsDetectionType(detectionType)) {
-                        long firstTime = detection.getFirstTime(dataType);
-
-                        if (firstTime != -1L) {
-                            long lastTime = detection.getLastTime(dataType);
-
-                            if (lastTime != -1L) {
-                                double completion = detection.getDataCompletion(dataType);
-                                averageCompletion += completion * completion;
-                                lastTime -= firstTime;
-                                averageTime += lastTime * lastTime;
-                                size++;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (size == 0) {
-                return 0L;
-            }
-            averageTime = Math.sqrt(averageTime / size);
-            averageCompletion = Math.sqrt(averageCompletion / size);
-            long time = (long) ((1.0 - averageCompletion) * averageTime);
-            // Less than a second is quite irrelevant
-            return Math.max(time, 1_000L);
-        }
     }
 
     // Detections
@@ -204,25 +157,29 @@ public abstract class CheckRunner extends CheckProcess {
         }
     }
 
-    // Run
-
-    public final void run(boolean cancelled) {
-        if (this.protocol != null) {
-            this.cancelled = cancelled;
-            this.runInternal(cancelled);
-        }
-    }
-
-    protected void runInternal(boolean cancelled) {
-
-    }
-
     // Handle
 
-    public final void handle(boolean cancelled, Object object) {
+    public final void handle(Object cancelled, Object object) {
         if (this.protocol != null) {
-            this.cancelled = cancelled;
-            this.handleInternal(cancelled, object);
+            boolean result;
+
+            if (cancelled == null) {
+                if (object instanceof Cancellable) {
+                    result = ((Cancellable) object).isCancelled();
+                } else {
+                    result = false;
+                }
+            } else if (cancelled instanceof Boolean) {
+                result = (Boolean) cancelled;
+            } else {
+                if (cancelled instanceof Cancellable) {
+                    result = ((Cancellable) cancelled).isCancelled();
+                } else {
+                    result = false;
+                }
+            }
+            this.cancelled = result;
+            this.handleInternal(result, object);
         }
     }
 
@@ -249,8 +206,8 @@ public abstract class CheckRunner extends CheckProcess {
     final boolean canFunction() {
         return this.protocol != null
                 && !this.protocol.npc
-                && this.supportsDataType[this.protocol.spartan.dataType.ordinal()]
-                && this.supportsDetectionType[this.protocol.spartan.detectionType.ordinal()]
+                && this.supportsDataType[this.protocol.bukkitExtra.dataType.ordinal()]
+                && this.supportsDetectionType[this.protocol.bukkitExtra.detectionType.ordinal()]
                 && (System.currentTimeMillis() - this.creation) > TPS.maximum * TPS.tickTime
                 && (!cancelled || hackType.getCheck().handleCancelledEvents)
                 && (!v1_8 || this.protocol.bukkit().getGameMode() != GameMode.SPECTATOR)
@@ -310,7 +267,7 @@ public abstract class CheckRunner extends CheckProcess {
         this.disableCauses.add(new CheckCancellation(reason, pointer, ticks));
 
         if (this.protocol != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
+            PluginBase.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
@@ -318,7 +275,7 @@ public abstract class CheckRunner extends CheckProcess {
         this.silentCauses.add(new CheckCancellation(reason, pointer, ticks));
 
         if (this.protocol != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
+            PluginBase.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
@@ -326,7 +283,7 @@ public abstract class CheckRunner extends CheckProcess {
         this.disableCauses.clear();
 
         if (this.protocol != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
+            PluginBase.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
@@ -334,41 +291,26 @@ public abstract class CheckRunner extends CheckProcess {
         this.silentCauses.clear();
 
         if (this.protocol != null) {
-            InteractiveInventory.playerInfo.refresh(this.protocol.bukkit().getName());
+            PluginBase.playerInfo.refresh(this.protocol.bukkit().getName());
         }
     }
 
     // Prevention
 
     public final boolean prevent() {
-        if (this.prevention.complete()) {
-            if (SpartanBukkit.isSynchronised()) {
-                if (Config.settings.getBoolean("Important.enable_developer_api")) {
-                    CheckCancelEvent checkCancelEvent = new CheckCancelEvent(this.protocol.bukkit(), hackType);
-                    Bukkit.getPluginManager().callEvent(checkCancelEvent);
-
-                    if (checkCancelEvent.isCancelled()) {
-                        return false;
-                    } else {
-                        this.prevention.handle(this.protocol);
-                        return true;
-                    }
-                } else {
-                    this.prevention.handle(this.protocol);
+        if (!this.detections.isEmpty()) {
+            for (CheckDetection detection : this.getDetections()) {
+                if (detection.prevent()) {
                     return true;
                 }
-            } else {
-                this.prevention.handle(this.protocol);
-                return true;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     // Notification
 
-    final int getNotificationTicksCooldown(SpartanProtocol detected) {
+    final int getNotificationTicksCooldown(PlayerProtocol detected) {
         Integer frequency = DetectionNotifications.getFrequency(this.protocol);
 
         if (frequency != null

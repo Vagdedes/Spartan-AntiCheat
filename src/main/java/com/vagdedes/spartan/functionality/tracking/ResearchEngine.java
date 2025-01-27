@@ -7,12 +7,11 @@ import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
 import com.vagdedes.spartan.abstraction.profiling.MiningHistory;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.concurrent.Threads;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.concurrent.GeneralThread;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.math.statistics.StatisticsMath;
@@ -35,10 +34,10 @@ public class ResearchEngine {
     public static Map<Enums.HackType, Collection<Check.DataType>> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
     private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
-    private static final Threads.ThreadPool statisticsThread = new Threads.ThreadPool(1L);
+    private static final GeneralThread.ThreadPool statisticsThread = new GeneralThread.ThreadPool(1L);
 
     static {
-        SpartanBukkit.runRepeatingTask(() -> {
+        PluginBase.runRepeatingTask(() -> {
             if (firstLoad) {
                 if (schedulerTicks == 0) {
                     schedulerTicks = 1200L;
@@ -93,7 +92,7 @@ public class ResearchEngine {
         return null;
     }
 
-    public static PlayerProfile getPlayerProfile(SpartanProtocol protocol) {
+    public static PlayerProfile getPlayerProfile(PlayerProtocol protocol) {
         PlayerProfile playerProfile = playerProfiles.get(protocol.bukkit().getName());
 
         if (playerProfile == null) {
@@ -103,7 +102,7 @@ public class ResearchEngine {
         return playerProfile;
     }
 
-    private static void createPlayerProfile(SpartanProtocol protocol) {
+    private static void createPlayerProfile(PlayerProtocol protocol) {
         PlayerProfile profile = new PlayerProfile(protocol);
         profile.update(protocol);
         playerProfiles.put(protocol.bukkit().getName(), new PlayerProfile(protocol));
@@ -168,7 +167,7 @@ public class ResearchEngine {
     public static void resetData(String playerName) {
         if (firstLoad) {
             // Clear Violations
-            SpartanProtocol player = SpartanBukkit.getProtocol(playerName);
+            PlayerProtocol player = PluginBase.getProtocol(playerName);
 
             if (isStorageMode()) {
                 // Clear Files/Database
@@ -207,7 +206,7 @@ public class ResearchEngine {
                 createPlayerProfile(player);
             }
             MainMenu.refresh();
-            InteractiveInventory.playerInfo.refresh(playerName);
+            PluginBase.playerInfo.refresh(playerName);
         }
     }
 
@@ -280,7 +279,7 @@ public class ResearchEngine {
 
         if (Config.sql.isEnabled()) {
             try {
-                ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + SpartanBukkit.maxSQLRows + ";");
+                ResultSet rs = Config.sql.query("SELECT creation_date, information FROM " + Config.sql.getTable() + " ORDER BY id DESC LIMIT " + PluginBase.maxSQLRows + ";");
 
                 if (rs != null) {
                     while (rs.next()) {
@@ -289,7 +288,7 @@ public class ResearchEngine {
                         cache.put(date, data);
                         byteSize += date.length() + data.length();
 
-                        if (byteSize >= SpartanBukkit.maxBytes) {
+                        if (byteSize >= PluginBase.maxBytes) {
                             isFull = true;
                             break;
                         }
@@ -325,7 +324,7 @@ public class ResearchEngine {
                             cache.put(key, data);
                             byteSize += key.length() + data.length();
 
-                            if (byteSize >= SpartanBukkit.maxBytes) {
+                            if (byteSize >= PluginBase.maxBytes) {
                                 isFull = true;
                                 break;
                             }
@@ -404,7 +403,7 @@ public class ResearchEngine {
                                             SimpleDateFormat sdf = new SimpleDateFormat(AntiCheatLogs.dateFormat);
 
                                             try {
-                                                detectionExecutor.store(
+                                                detectionExecutor.storeData(
                                                         dataType,
                                                         sdf.parse(fullDate).getTime()
                                                 );
@@ -494,7 +493,7 @@ public class ResearchEngine {
         for (PlayerProfile profile : playerProfiles.values()) {
             for (CheckRunner runner : profile.getRunners()) {
                 for (CheckDetection detection : runner.getDetections()) {
-                    detection.sort();
+                    detection.sortData();
                 }
             }
         }
@@ -528,69 +527,80 @@ public class ResearchEngine {
                         : (dataTypes == null || dataTypes.isEmpty()
                         ? Arrays.asList(Check.DataType.values()) :
                         dataTypes))) {
-                    Map<String, Map<CheckDetection, Double>> wave = new LinkedHashMap<>();
+                    Map<String, Map<CheckDetection, List<Double>>> wave = new LinkedHashMap<>();
 
                     if (hackType.getCheck().isEnabled(dataType, null)) {
                         for (PlayerProfile profile : profiles) {
                             for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                double data = detectionExecutor.getData(profile, dataType);
+                                List<Double> dataSamples = detectionExecutor.getDataSamples(profile, dataType);
+                                double allData = detectionExecutor.getAllData(profile, dataType);
 
-                                if (data != -1.0) {
+                                if (allData != -1.0) {
+                                    dataSamples.add(allData);
                                     wave.computeIfAbsent(
                                             detectionExecutor.name,
                                             k -> new LinkedHashMap<>()
                                     ).put(
                                             detectionExecutor,
-                                            data
+                                            dataSamples
                                     );
+                                }
+                            }
+                        }
+
+                        if (wave.isEmpty()) {
+                            for (PlayerProfile profile : profiles) {
+                                for (CheckDetection detection : profile.getRunner(hackType).getDetections()) {
+                                    detection.setProbability(dataType, PlayerEvidence.nullProbability);
+                                }
+                            }
+                        } else {
+                            for (Map<CheckDetection, List<Double>> map : wave.values()) {
+                                Collection<List<Double>> allValues = map.values();
+                                double divisor = 0;
+
+                                for (List<Double> values : allValues) {
+                                    divisor += values.size();
+                                }
+                                if (divisor < PlayerEvidence.factorRequirement) {
+                                    for (CheckDetection detection : map.keySet()) {
+                                        detection.setProbability(dataType, PlayerEvidence.nullProbability);
+                                    }
+                                } else {
+                                    double sum = 0,
+                                            variance = 0;
+
+                                    for (List<Double> values : allValues) {
+                                        for (double value : values) {
+                                            sum += value;
+                                        }
+                                    }
+                                    double mean = sum / divisor;
+
+                                    for (List<Double> values : allValues) {
+                                        for (double value : values) {
+                                            double difference = value - mean;
+                                            variance += difference * difference;
+                                        }
+                                    }
+                                    double deviation = Math.sqrt(variance / divisor);
+
+                                    for (Map.Entry<CheckDetection, List<Double>> entry : map.entrySet()) {
+                                        List<Double> collection = entry.getValue();
+                                        entry.getKey().setProbability(
+                                                dataType,
+                                                StatisticsMath.getCumulativeProbability(
+                                                        (collection.get(collection.size() - 1) - mean) / deviation
+                                                )
+                                        );
+                                    }
                                 }
                             }
                         }
                     } else {
                         for (PlayerProfile profile : profiles) {
-                            for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                detectionExecutor.clearProbability(dataType);
-                            }
-                        }
-                    }
-
-                    if (wave.isEmpty()) {
-                        for (PlayerProfile profile : profiles) {
-                            for (CheckDetection detectionExecutor : profile.getRunner(hackType).getDetections()) {
-                                detectionExecutor.clearProbability(dataType);
-                            }
-                        }
-                    } else {
-                        for (Map<CheckDetection, Double> map : wave.values()) {
-                            double divisor = map.size();
-
-                            if (divisor < PlayerEvidence.factorRequirement) {
-                                for (CheckDetection detection : map.keySet()) {
-                                    detection.clearProbability(dataType);
-                                }
-                            } else {
-                                double sum = 0,
-                                        variance = 0;
-
-                                for (double value : map.values()) {
-                                    sum += value;
-                                }
-                                double mean = sum / divisor;
-
-                                for (double value : map.values()) {
-                                    double difference = value - mean;
-                                    variance += difference * difference;
-                                }
-                                double deviation = Math.sqrt(variance / divisor);
-
-                                for (Map.Entry<CheckDetection, Double> entry : map.entrySet()) {
-                                    entry.getKey().setProbability(
-                                            dataType,
-                                            StatisticsMath.getCumulativeProbability(
-                                                    (entry.getValue() - mean) / deviation
-                                            )
-                                    );
-                                }
+                            for (CheckDetection detection : profile.getRunner(hackType).getDetections()) {
+                                detection.clearProbability(dataType);
                             }
                         }
                     }

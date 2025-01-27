@@ -1,6 +1,6 @@
-package com.vagdedes.spartan.functionality.notifications;
+package com.vagdedes.spartan.functionality.moderation;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import org.bukkit.Bukkit;
 
@@ -70,7 +70,7 @@ public class AwarenessNotifications {
         return !areEnabled() || s == null ? null : getNotification(s, true);
     }
 
-    public static void forcefullySend(SpartanProtocol protocol, String message, boolean console) {
+    public static void forcefullySend(PlayerProtocol protocol, String message, boolean console) {
         message = getNotification(message);
 
         if (protocol != null) {

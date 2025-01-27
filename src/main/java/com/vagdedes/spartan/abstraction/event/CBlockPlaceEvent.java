@@ -1,18 +1,19 @@
 package com.vagdedes.spartan.abstraction.event;
 
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 
-public class PlayerAttackEvent implements Cancellable {
+public class CBlockPlaceEvent implements Cancellable {
 
-    public final Player player;
-    public final LivingEntity target;
     private boolean cancelled;
+    public final Block placedBlock, placedAgainstBlock;
+    public final Player player;
 
-    public PlayerAttackEvent(Player player, LivingEntity target, boolean cancelled) {
+    public CBlockPlaceEvent(Player player, Block placedBlock, Block placedAgainst, boolean cancelled) {
         this.player = player;
-        this.target = target;
+        this.placedAgainstBlock = placedAgainst;
+        this.placedBlock = placedBlock;
         this.cancelled = cancelled;
     }
 

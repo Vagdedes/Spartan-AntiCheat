@@ -1,8 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import me.vagdedes.spartan.system.Enums;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,14 +16,8 @@ public class BowEvent implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity, true);
-
-            // Detections
-            p.profile().getRunner(Enums.HackType.FastBow).handle(e.isCancelled(), e);
-
-            if (p.profile().getRunner(Enums.HackType.FastBow).prevent()) {
-                e.setCancelled(true);
-            }
+            PlayerProtocol p = PluginBase.getProtocol((Player) entity, true);
+            p.profile().executeRunners(e.isCancelled(), e);
         }
     }
 

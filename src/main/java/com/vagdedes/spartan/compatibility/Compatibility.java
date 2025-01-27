@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.manual.abilities.*;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShot;
 import com.vagdedes.spartan.compatibility.manual.abilities.crackshot.CrackShotPlus;
@@ -14,7 +14,7 @@ import com.vagdedes.spartan.compatibility.manual.entity.Vehicles;
 import com.vagdedes.spartan.compatibility.manual.world.AcidRain;
 import com.vagdedes.spartan.compatibility.necessary.Floodgate;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
@@ -422,7 +422,7 @@ public class Compatibility {
         return active;
     }
 
-    public void evadeFalsePositives(SpartanProtocol protocol,
+    public void evadeFalsePositives(PlayerProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackType[] hackTypes,
                                     int ticks) {
@@ -431,14 +431,14 @@ public class Compatibility {
         }
     }
 
-    public void evadeFalsePositives(SpartanProtocol protocol,
+    public void evadeFalsePositives(PlayerProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackType hackType,
                                     int ticks) {
         protocol.profile().getRunner(hackType).addDisableCause(compatibilityType.toString(), null, ticks);
     }
 
-    public void evadeFalsePositives(SpartanProtocol protocol,
+    public void evadeFalsePositives(PlayerProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackCategoryType[] types,
                                     int ticks) {
@@ -452,7 +452,7 @@ public class Compatibility {
         }
     }
 
-    public void evadeFalsePositives(SpartanProtocol protocol,
+    public void evadeFalsePositives(PlayerProtocol protocol,
                                     Compatibility.CompatibilityType compatibilityType,
                                     Enums.HackCategoryType type,
                                     int ticks) {

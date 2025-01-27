@@ -1,11 +1,11 @@
-package com.vagdedes.spartan.functionality.notifications;
+package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudConnections;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -21,13 +21,13 @@ public class SuspicionNotifications {
     private static final String comma = ", ";
 
     static void run() {
-        SpartanBukkit.runRepeatingTask(() -> { // Here because there are no other class calls
+        PluginBase.runRepeatingTask(() -> { // Here because there are no other class calls
             if (!Config.settings.getBoolean("Notifications.individual_only_notifications")) {
-                Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+                Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
                 if (!protocols.isEmpty()) {
-                    List<SpartanProtocol> staff = new ArrayList<>(protocols);
-                    Iterator<SpartanProtocol> iterator = staff.iterator();
+                    List<PlayerProtocol> staff = new ArrayList<>(protocols);
+                    Iterator<PlayerProtocol> iterator = staff.iterator();
 
                     while (iterator.hasNext()) {
                         Integer frequency = DetectionNotifications.getFrequency(iterator.next());
@@ -42,11 +42,11 @@ public class SuspicionNotifications {
         }, 1L, 300L);
     }
 
-    private static void run(List<SpartanProtocol> staff, Collection<SpartanProtocol> online) {
+    private static void run(List<PlayerProtocol> staff, Collection<PlayerProtocol> online) {
         StringBuilder players = new StringBuilder();
         int size = 0, commaLength = comma.length();
 
-        for (SpartanProtocol protocol : online) {
+        for (PlayerProtocol protocol : online) {
             PlayerProfile profile = protocol.profile();
             Collection<Enums.HackType> list = profile.getEvidenceList(
                     PlayerEvidence.preventionProbability
@@ -58,8 +58,8 @@ public class SuspicionNotifications {
                 for (Enums.HackType hackType : list) {
                     CheckRunner runner = protocol.profile().getRunner(hackType);
                     double probability = runner.getExtremeProbability(
-                            protocol.spartan.dataType,
-                            protocol.spartan.detectionType
+                            protocol.bukkitExtra.dataType,
+                            protocol.bukkitExtra.detectionType
                     );
 
                     if (probability != PlayerEvidence.emptyProbability) {
@@ -70,8 +70,8 @@ public class SuspicionNotifications {
                                         AlgebraUtils.integerRound(
                                                 PlayerEvidence.probabilityToCertainty(
                                                         runner.getExtremeProbability(
-                                                                protocol.spartan.dataType,
-                                                                protocol.spartan.detectionType
+                                                                protocol.bukkitExtra.dataType,
+                                                                protocol.bukkitExtra.detectionType
                                                         )
                                                 ) * 100.0)
                                 )
@@ -104,7 +104,7 @@ public class SuspicionNotifications {
                     .replace("{players}", players.substring(0, players.length() - comma.length()));
 
             if (!staff.isEmpty()) {
-                for (SpartanProtocol protocol : staff) {
+                for (PlayerProtocol protocol : staff) {
                     protocol.bukkit().sendMessage(message);
                 }
             }

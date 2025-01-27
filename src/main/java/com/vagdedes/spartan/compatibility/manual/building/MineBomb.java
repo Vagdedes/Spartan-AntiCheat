@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerBukkit;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -17,7 +17,7 @@ public class MineBomb {
         hs.clear();
     }
 
-    public static boolean isUsing(SpartanPlayer p) {
+    public static boolean isUsing(PlayerBukkit p) {
         if (Compatibility.CompatibilityType.MINE_BOMB.isFunctional()) {
             if (cacheCanUse(p)) {
                 return true;
@@ -44,7 +44,7 @@ public class MineBomb {
         return false;
     }
 
-    private static boolean cacheCanUse(SpartanPlayer p) {
+    private static boolean cacheCanUse(PlayerBukkit p) {
         for (Material m : hs) {
             if (p.getItemInHand().getType() == m) {
                 return true;

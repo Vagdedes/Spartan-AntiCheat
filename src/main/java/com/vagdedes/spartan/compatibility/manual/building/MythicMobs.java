@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.building;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -54,7 +54,7 @@ public class MythicMobs {
                 && new BukkitAPIHelper().isMythicMob(entity);
     }
 
-    public static boolean is(SpartanProtocol protocol) {
+    public static boolean is(PlayerProtocol protocol) {
         if (Compatibility.CompatibilityType.MYTHIC_MOBS.isFunctional()) {
             PlayerInventory inventory = protocol.bukkit().getInventory();
 

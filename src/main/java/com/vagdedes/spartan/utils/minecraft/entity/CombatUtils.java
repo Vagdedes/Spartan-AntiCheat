@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.utils.minecraft.entity;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.compatibility.manual.abilities.ItemsAdder;
 import com.vagdedes.spartan.compatibility.manual.building.MythicMobs;
@@ -153,7 +153,7 @@ public class CombatUtils {
         return e.getType().toString().toLowerCase().replace("_", "-");
     }
 
-    public static boolean hasBlockBehind(SpartanProtocol p, LivingEntity entity) {
+    public static boolean hasBlockBehind(PlayerProtocol p, LivingEntity entity) {
         Location entityLoc = ProtocolLib.getLocationOrNull(entity);
 
         if (entityLoc == null) {
@@ -181,10 +181,10 @@ public class CombatUtils {
         return false;
     }
 
-    public static boolean canCheck(SpartanProtocol protocol) {
-        if (!protocol.spartan.movement.isLowEyeHeight() // Covers swimming & gliding
-                && !protocol.spartan.movement.wasFlying()
-                && protocol.spartan.getVehicle() == null
+    public static boolean canCheck(PlayerProtocol protocol) {
+        if (!protocol.bukkitExtra.movement.isLowEyeHeight() // Covers swimming & gliding
+                && !protocol.bukkitExtra.movement.wasFlying()
+                && protocol.bukkitExtra.getVehicle() == null
                 && Attributes.getAmount(protocol, Attributes.GENERIC_ARMOR) == 0.0
                 && Attributes.getAmount(protocol, Attributes.GENERIC_ATTACK_SPEED) == 0.0
                 && Attributes.getAmount(protocol, Attributes.GENERIC_KNOCKBACK_RESISTANCE) == 0.0
@@ -198,7 +198,7 @@ public class CombatUtils {
         }
     }
 
-    public static boolean canCheck(SpartanProtocol protocol, LivingEntity entity) {
+    public static boolean canCheck(PlayerProtocol protocol, LivingEntity entity) {
         return !protocol.bukkit().getName().equals(entity.getName())
                 && !MythicMobs.is(entity)
                 && !ItemsAdder.is(entity);

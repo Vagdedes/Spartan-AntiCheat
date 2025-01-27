@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.functionality.command;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -81,15 +81,15 @@ public class CommandTab implements TabCompleter {
                 }
             }
         } else if (length > 1) {
-            Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+            Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
             if (!protocols.isEmpty()) {
                 String argAbstract = args[length - 1].toLowerCase();
                 boolean player = sender instanceof Player;
-                SpartanProtocol p = player ? SpartanBukkit.getProtocol((Player) sender) : null;
+                PlayerProtocol p = player ? PluginBase.getProtocol((Player) sender) : null;
                 player &= p != null;
 
-                for (SpartanProtocol protocol : protocols) {
+                for (PlayerProtocol protocol : protocols) {
                     if (!player || p.bukkit().canSee(protocol.bukkit())) {
                         String name = protocol.bukkit().getName();
 

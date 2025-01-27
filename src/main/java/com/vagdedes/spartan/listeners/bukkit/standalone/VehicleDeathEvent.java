@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.VehicleEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -22,7 +22,7 @@ public class VehicleDeathEvent implements Listener {
         if (passengers.length > 0) {
             for (Entity passenger : passengers) {
                 if (passenger instanceof Player) {
-                    VehicleEvent.exit(SpartanBukkit.getProtocol((Player) passenger, true).spartan);
+                    VehicleEvent.exit(PluginBase.getProtocol((Player) passenger, true).bukkitExtra);
                 }
             }
         }

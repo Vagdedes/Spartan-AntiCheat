@@ -4,7 +4,7 @@ import com.nisovin.magicspells.events.SpellCastEvent;
 import com.nisovin.magicspells.events.SpellCastedEvent;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ public class MagicSpells implements Listener {
 
             if (caster instanceof Player) {
                 Config.compatibility.evadeFalsePositives(
-                        SpartanBukkit.getProtocol((Player) caster),
+                        PluginBase.getProtocol((Player) caster),
                         Compatibility.CompatibilityType.MAGIC_SPELLS,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -40,7 +40,7 @@ public class MagicSpells implements Listener {
 
             if (caster instanceof Player) {
                 Config.compatibility.evadeFalsePositives(
-                        SpartanBukkit.getProtocol((Player) caster),
+                        PluginBase.getProtocol((Player) caster),
                         Compatibility.CompatibilityType.MAGIC_SPELLS,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,

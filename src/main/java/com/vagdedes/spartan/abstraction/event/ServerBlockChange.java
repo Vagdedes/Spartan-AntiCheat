@@ -6,8 +6,8 @@ import lombok.Setter;
 import org.bukkit.Material;
 
 public class ServerBlockChange {
-    @Getter
-    private final BlockPosition position;
+
+    public final BlockPosition position;
     @Setter
     @Getter
     private Material data;

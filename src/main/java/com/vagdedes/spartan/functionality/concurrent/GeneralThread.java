@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Threads {
+public class GeneralThread {
 
     // Methods
 
@@ -14,7 +14,7 @@ public class Threads {
 
     public static void disable() {
         enabled = false;
-        SpartanScheduler.shutdown();
+        CheckThread.shutdown();
     }
 
     public static boolean isKnown(Thread thread) {

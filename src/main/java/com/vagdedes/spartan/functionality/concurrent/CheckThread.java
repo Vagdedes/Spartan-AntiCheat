@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 @Log
 @UtilityClass
-public class SpartanScheduler {
+public class CheckThread {
 
     private static boolean debug = false;
     private static final char INNER_CLASS_SEPARATOR_CHAR = '$';
@@ -88,7 +88,7 @@ public class SpartanScheduler {
                 if (debug) {
                     long after = System.currentTimeMillis() - start;
                     if (after > STOP_WATCH_TIME_MILLIS) {
-                        String l = SpartanScheduler.toString(originalRunnable);
+                        String l = CheckThread.toString(originalRunnable);
                         if (l.length() > 26) l = l.substring(0, 26) + "...";
                         log.warning("Busy task " + l + ", it was performed " + after + "ms.");
                     }
@@ -117,14 +117,14 @@ public class SpartanScheduler {
             try {
                 return decoratedCallable.call();
             } catch (Throwable e) {
-                log.severe("Error while accepting to call method: " + SpartanScheduler.toString(originalCallable));
+                log.severe("Error while accepting to call method: " + CheckThread.toString(originalCallable));
                 e.printStackTrace();
                 throw e;
             } finally {
                 if (debug) {
                     long after = System.currentTimeMillis() - start;
                     if (after > STOP_WATCH_TIME_MILLIS) {
-                        String l = SpartanScheduler.toString(originalCallable);
+                        String l = CheckThread.toString(originalCallable);
                         if (l.length() > 26) l = l.substring(0, 26) + "...";
                         log.warning("Busy task " + l + ", it was performed " + after + "ms.");
                     }

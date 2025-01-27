@@ -1,10 +1,10 @@
 package com.vagdedes.spartan.compatibility.manual.abilities.crackshot;
 
 import com.vagdedes.spartan.abstraction.data.Buffer;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import me.DeeCaaD.CrackShotPlus.Events.WeaponSecondScopeEvent;
 import me.vagdedes.spartan.system.Enums;
@@ -27,7 +27,7 @@ public class CrackShotPlus implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponSecondScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+            PlayerProtocol protocol = PluginBase.getProtocol(e.getPlayer());
 
             if (!e.isCancelled()) {
                 Config.compatibility.evadeFalsePositives(
@@ -57,7 +57,7 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
+                PlayerProtocol p = PluginBase.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -80,7 +80,7 @@ public class CrackShotPlus implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
+                PlayerProtocol p = PluginBase.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -97,7 +97,7 @@ public class CrackShotPlus implements Listener {
         }
     }
 
-    static boolean isUsingScope(SpartanProtocol p) {
+    static boolean isUsingScope(PlayerProtocol p) {
         return Compatibility.CompatibilityType.CRACK_SHOT_PLUS.isFunctional()
                 && buffers.get(p.getUUID() + "=crackshotplus=compatibility=scope") != 0;
     }

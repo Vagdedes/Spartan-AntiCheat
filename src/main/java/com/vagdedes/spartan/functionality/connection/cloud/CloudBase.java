@@ -2,12 +2,12 @@ package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -34,8 +34,8 @@ public class CloudBase {
     static final String separator = ">@#&!%<;=";
 
     static {
-        SpartanBukkit.runRepeatingTask(
-                () -> SpartanBukkit.connectionThread.execute(CloudBase::refresh),
+        PluginBase.runRepeatingTask(
+                () -> PluginBase.connectionThread.execute(CloudBase::refresh),
                 1L,
                 refreshTime
         );
@@ -60,9 +60,9 @@ public class CloudBase {
         return false;
     }
 
-    public static void announce(SpartanProtocol protocol) {
+    public static void announce(PlayerProtocol protocol) {
         if (Permissions.isStaff(protocol.bukkit())) {
-            SpartanBukkit.connectionThread.execute(() -> {
+            PluginBase.connectionThread.execute(() -> {
                 String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                 if (announcements.length > 0) {
@@ -109,10 +109,10 @@ public class CloudBase {
             connectionRefreshCooldown = ms + refreshTime;
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(SpartanEdition::refresh);
+            PluginBase.connectionThread.executeIfUnknownThreadElseHere(SpartanEdition::refresh);
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
+            PluginBase.connectionThread.executeIfUnknownThreadElseHere(() -> {
                 try {
                     String[] results = RequestUtils.get(StringUtils.decodeBase64(JarVerification.website) + "?" + identification()
                             + "&action=get&data=automaticConfigurationChanges&version=" + Register.plugin.getDescription().getVersion());
@@ -179,7 +179,7 @@ public class CloudBase {
             // Separator
             Map<Enums.HackType, String[]> disabledDetections = new LinkedHashMap<>();
 
-            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
+            PluginBase.connectionThread.executeIfUnknownThreadElseHere(() -> {
                 try {
                     String[] results = RequestUtils.get(StringUtils.decodeBase64(JarVerification.website) + "?" + identification()
                             + "&action=get&data=disabledDetections&version=" + Register.plugin.getDescription().getVersion() + "&value="
@@ -222,15 +222,15 @@ public class CloudBase {
             });
 
             // Separator
-            SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
-                List<SpartanProtocol> protocols = Permissions.getStaff();
+            PluginBase.connectionThread.executeIfUnknownThreadElseHere(() -> {
+                List<PlayerProtocol> protocols = Permissions.getStaff();
 
                 if (!protocols.isEmpty()) {
                     String[][] announcements = CloudConnections.getStaffAnnouncements();
 
                     if (announcements.length > 0) {
                         for (String[] announcement : announcements) {
-                            for (SpartanProtocol p : protocols) {
+                            for (PlayerProtocol p : protocols) {
                                 if (AwarenessNotifications.canSend(
                                         p.getUUID(),
                                         "staff-announcement-" + announcement[0],
@@ -241,7 +241,7 @@ public class CloudBase {
                             }
                         }
                     } else {
-                        for (SpartanProtocol p : protocols) {
+                        for (PlayerProtocol p : protocols) {
                             SpartanEdition.attemptNotifications(p);
                         }
                     }

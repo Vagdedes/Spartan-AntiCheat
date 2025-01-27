@@ -5,7 +5,7 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.entity.Player;
 
 public class AbilitiesListener extends PacketAdapter {
@@ -19,7 +19,7 @@ public class AbilitiesListener extends PacketAdapter {
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
         if (player.getAllowFlight()) {
-            SpartanBukkit.getProtocol(player).flyingTicks = 2;
+            PluginBase.getProtocol(player).flyingTicks = 2;
         }
     }
 

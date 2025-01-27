@@ -9,9 +9,9 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.event.PlayerUseEvent;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.CombatEvent;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import org.bukkit.Bukkit;
@@ -42,9 +42,9 @@ public class CombatListener extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+            PlayerProtocol protocol = PluginBase.getProtocol(event.getPlayer());
 
-            if (protocol.spartan.isBedrockPlayer()) {
+            if (protocol.bukkitExtra.isBedrockPlayer()) {
                 return;
             }
             PacketContainer packet = event.getPacket();
@@ -86,9 +86,9 @@ public class CombatListener extends PacketAdapter {
     @Override
     public void onPacketSending(PacketEvent event) {
         if (event.getPacketType() == PacketType.Play.Server.DAMAGE_EVENT) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+            PlayerProtocol protocol = PluginBase.getProtocol(event.getPlayer());
 
-            if (protocol.spartan.isBedrockPlayer()) {
+            if (protocol.bukkitExtra.isBedrockPlayer()) {
                 return;
             }
             int entityId = event.getPacket().getIntegers().read(0);

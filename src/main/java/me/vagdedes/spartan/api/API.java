@@ -239,6 +239,7 @@ public class API {
         BackgroundAPI.setMiningNotifications(p, value);
     }
 
+    @Deprecated
     public static int getCPS(Player p) {
         return BackgroundAPI.getCPS(p);
     }

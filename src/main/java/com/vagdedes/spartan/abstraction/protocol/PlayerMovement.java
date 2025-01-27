@@ -8,7 +8,6 @@ import com.vagdedes.spartan.utils.minecraft.entity.PotionEffectUtils;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
 import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -17,23 +16,20 @@ import java.util.*;
 
 public class PlayerMovement {
 
-    private final SpartanPlayer parent;
+    private final PlayerBukkit parent;
     private final Map<Long, SpartanLocation> locations;
-    private int
-            airTicks;
+    int airTicks;
     private long
             lastFlight,
             lastGlide,
             artificialSwimming,
             lastLiquidTicks;
-    private Material lastLiquidMaterial;
     Location schedulerFrom;
     private Vector clampVector;
     public double motionY;
 
-    PlayerMovement(SpartanPlayer parent) {
+    PlayerMovement(PlayerBukkit parent) {
         this.parent = parent;
-        this.lastLiquidMaterial = Material.AIR;
 
         Location bukkit = ProtocolTools.getLoadLocation(this.parent.protocol.bukkit());
         SpartanLocation location = new SpartanLocation(bukkit);
@@ -54,15 +50,6 @@ public class PlayerMovement {
                 this.parent.protocol.getPing(),
                 5L * TPS.tickTime
         );
-    }
-
-    public Material getLastLiquidMaterial() {
-        return lastLiquidMaterial;
-    }
-
-    public void setLastLiquid(Material material) {
-        lastLiquidTicks = System.currentTimeMillis();
-        lastLiquidMaterial = material;
     }
 
     public void removeLastLiquidTime() {
@@ -92,7 +79,7 @@ public class PlayerMovement {
     }
 
     public boolean isFlying() {
-        Entity vehicle = this.parent.protocol.spartan.getVehicle();
+        Entity vehicle = this.parent.protocol.bukkitExtra.getVehicle();
         boolean flying;
 
         if (vehicle != null) {
@@ -127,33 +114,6 @@ public class PlayerMovement {
                 PlayerUtils.getPotionLevel(this.parent, PotionEffectUtils.JUMP) + 1,
                 GroundUtils.maxHeightLengthRatio
         );
-    }
-
-    // Separator
-
-    public double getAirAcceleration() {
-        return new SpartanLocation(this.parent.protocol.getLocationOrVehicle()).isChunkLoaded()
-                ? PlayerUtils.airAcceleration
-                : PlayerUtils.airAccelerationUnloaded;
-    }
-
-    public int getFallTick(double d, double acceleration, double drag, double precision) {
-        return PlayerUtils.getFallTick(
-                d,
-                acceleration,
-                drag,
-                precision,
-                PlayerUtils.getPotionLevel(this.parent, PotionEffectUtils.JUMP) + 1
-        );
-    }
-
-    public boolean isFalling(double d, double acceleration, double drag, double precision) {
-        return getFallTick(
-                d,
-                acceleration,
-                drag,
-                precision
-        ) != -1;
     }
 
     // Separator
@@ -250,7 +210,6 @@ public class PlayerMovement {
         if (!packets) {
             this.parent.protocol.setFromLocation(from);
         }
-        this.judgeGround(true);
         return true;
     }
 
@@ -260,24 +219,10 @@ public class PlayerMovement {
 
     // Separator
 
-    private boolean judgeGround(boolean increase) {
-        if (this.parent.isOnGround(false)) {
-            this.resetAirTicks();
-            return true;
-        } else {
-            if (increase) {
-                this.airTicks++;
-            }
-            return false;
+    public void judgeGround() {
+        if (this.parent.protocol.isOnGround()) {
+            this.airTicks = 0;
         }
-    }
-
-    public boolean judgeGround() {
-        return this.judgeGround(false);
-    }
-
-    public void resetAirTicks() {
-        this.airTicks = 0;
     }
 
 }

@@ -5,9 +5,9 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.concurrent.CheckThread;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 
 public class EntityActionListener extends PacketAdapter {
 
@@ -28,12 +28,12 @@ public class EntityActionListener extends PacketAdapter {
 
     @Override
     public void onPacketReceiving(PacketEvent event) {
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+        PlayerProtocol protocol = PluginBase.getProtocol(event.getPlayer());
 
-        if (protocol.spartan.isBedrockPlayer()) {
+        if (protocol.bukkitExtra.isBedrockPlayer()) {
             return;
         }
-        SpartanScheduler.run(() -> {
+        CheckThread.run(() -> {
             if (event.getPacket().getModifier().getValues().size() > 1) {
                 String typeString = event.getPacket().getModifier().getValues().get(1).toString();
                 AbilitiesEnum type = getEnum(typeString);

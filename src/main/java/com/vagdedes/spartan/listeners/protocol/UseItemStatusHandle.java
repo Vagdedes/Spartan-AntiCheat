@@ -8,11 +8,11 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
+import com.vagdedes.spartan.functionality.concurrent.CheckThread;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -26,9 +26,9 @@ public class UseItemStatusHandle extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        PlayerProtocol protocol = PluginBase.getProtocol(player);
         PacketContainer packet = event.getPacket();
-        SpartanScheduler.run(() -> {
+        CheckThread.run(() -> {
             //player.sendMessage("p: " + event.getPacket().getType() + " " + event.getPacket().getStructures().getValues());
             if (packet.getType().equals(PacketType.Play.Client.BLOCK_DIG)) {
                 protocol.useItemPacket = false;
@@ -58,6 +58,9 @@ public class UseItemStatusHandle extends PacketAdapter {
                                 && !player.getGameMode().equals(GameMode.CREATIVE))) {
                     //player.sendMessage("use");
                     protocol.useItemPacket = true;
+                    protocol.useItemPacketReset =
+                                    !(itemStack.getType().toString().contains("SHIELD") ||
+                                    itemStack.getType().toString().contains("GOLDEN_APPLE"));
                 }
             }
         });

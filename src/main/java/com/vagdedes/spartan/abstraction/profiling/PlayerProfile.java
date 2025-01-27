@@ -3,8 +3,8 @@ package com.vagdedes.spartan.abstraction.profiling;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import lombok.Getter;
@@ -42,7 +42,7 @@ public class PlayerProfile {
         this.runners = new CheckRunner[Enums.HackType.values().length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
         this.lastDataType = Check.DataType.JAVA;
-        this.lastDetectionType = SpartanBukkit.packetsEnabled()
+        this.lastDetectionType = PluginBase.packetsEnabled()
                 ? Check.DetectionType.PACKETS
                 : Check.DetectionType.BUKKIT;
         this.continuity = new ProfileContinuity(this);
@@ -53,7 +53,7 @@ public class PlayerProfile {
 
         // Separator
 
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(name);
+        PlayerProtocol protocol = PluginBase.getProtocol(name);
 
         if (protocol != null) {
             this.offlinePlayer = protocol.bukkit();
@@ -64,13 +64,13 @@ public class PlayerProfile {
         }
     }
 
-    public PlayerProfile(SpartanProtocol protocol) {
+    public PlayerProfile(PlayerProtocol protocol) {
         this.name = protocol.bukkit().getName();
         this.offlinePlayer = protocol.bukkit(); // Attention
         this.skull = null;
         this.runners = new CheckRunner[Enums.HackType.values().length];
         this.miningHistory = new MiningHistory[MiningHistory.MiningOre.values().length];
-        this.lastDataType = protocol.spartan.dataType;
+        this.lastDataType = protocol.bukkitExtra.dataType;
         this.lastDetectionType = protocol.packetsEnabled()
                 ? Check.DetectionType.PACKETS
                 : Check.DetectionType.BUKKIT;
@@ -84,35 +84,39 @@ public class PlayerProfile {
 
     // Separator
 
-    public void update(SpartanProtocol protocol) {
+    public void update(PlayerProtocol protocol) {
         this.offlinePlayer = protocol.bukkit();
-        this.lastDataType = protocol.spartan.dataType;
-        this.lastDetectionType = protocol.packetsEnabled()
-                ? Check.DetectionType.PACKETS
-                : Check.DetectionType.BUKKIT;
+        this.lastDataType = protocol.bukkitExtra.dataType;
+        this.lastDetectionType = protocol.bukkitExtra.detectionType;
         this.registerRunners(protocol);
     }
 
-    SpartanProtocol protocol() {
+    PlayerProtocol protocol() {
         return this.runners[0].protocol;
     }
 
     public boolean isOnline() {
-        SpartanProtocol protocol = this.protocol();
-        return protocol != null && SpartanBukkit.isOnline(protocol);
+        PlayerProtocol protocol = this.protocol();
+        return protocol != null && PluginBase.isOnline(protocol);
     }
 
     public CheckRunner getRunner(Enums.HackType hackType) {
         return this.runners[hackType.ordinal()];
     }
 
-    private void registerRunners(SpartanProtocol protocol) {
+    public void executeRunners(Object cancelled, Object object) {
+        for (CheckRunner runner : this.getRunners()) {
+            runner.handle(cancelled, object);
+        }
+    }
+
+    private void registerRunners(PlayerProtocol protocol) {
         for (Enums.HackType hackType : Enums.HackType.values()) {
             try {
                 CheckRunner
                         oldRunner = this.runners[hackType.ordinal()],
                         runner = (CheckRunner) hackType.executor
-                                .getConstructor(hackType.getClass(), SpartanProtocol.class)
+                                .getConstructor(hackType.getClass(), PlayerProtocol.class)
                                 .newInstance(hackType, protocol);
                 this.runners[hackType.ordinal()] = runner;
 

@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.inventory;
 
 import com.vagdedes.spartan.abstraction.protocol.ExtendedPotionEffect;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -203,7 +203,7 @@ public class MaterialUtils {
         return Material.getMaterial(MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) ? recent.toUpperCase() : older.toUpperCase());
     }
 
-    public static long getBlockBreakTime(SpartanProtocol protocol, ItemStack itemStack, Material blockType) {
+    public static long getBlockBreakTime(PlayerProtocol protocol, ItemStack itemStack, Material blockType) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_13) && blockType.isBlock()) {
             double multiplier = baseMultiplier.getOrDefault(itemStack.getType(), 1.0);
             boolean canHarvest = true; // No need for method, players cannot break such blocks, thus they will never be checked
@@ -235,7 +235,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            ExtendedPotionEffect hasteEffect = protocol.spartan.getPotionEffect(PotionEffectUtils.FAST_DIGGING, 0L);
+            ExtendedPotionEffect hasteEffect = protocol.bukkitExtra.getPotionEffect(PotionEffectUtils.FAST_DIGGING, 0L);
 
             if (hasteEffect != null
                     && hasteEffect.isActive()) {
@@ -243,7 +243,7 @@ public class MaterialUtils {
             }
 
             // Separator
-            ExtendedPotionEffect miningFatigueEffect = protocol.spartan.getPotionEffect(PotionEffectUtils.SLOW_DIGGING, 0);
+            ExtendedPotionEffect miningFatigueEffect = protocol.bukkitExtra.getPotionEffect(PotionEffectUtils.SLOW_DIGGING, 0);
 
             if (miningFatigueEffect != null
                     && miningFatigueEffect.isActive()) {
@@ -253,7 +253,7 @@ public class MaterialUtils {
             // Separator
             boolean water;
 
-            if (protocol.spartan.movement.isSwimming()) {
+            if (protocol.bukkitExtra.movement.isSwimming()) {
                 water = true;
             } else {
                 SpartanBlock block = new SpartanLocation(protocol.getLocation()).add(0, protocol.bukkit().getEyeHeight(), 0).getBlock();
@@ -282,7 +282,7 @@ public class MaterialUtils {
                     multiplier /= 5.0;
                 }
             }
-            if (!protocol.spartan.isOnGround(false)) {
+            if (!protocol.isOnGround()) {
                 multiplier /= 5.0;
             }
 

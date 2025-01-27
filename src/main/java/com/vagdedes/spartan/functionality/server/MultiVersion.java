@@ -70,7 +70,7 @@ public class MultiVersion {
             protocol = Via.getAPI().getPlayerVersion(player);
         } else if (paperClass) {
             protocol = player.getProtocolVersion();
-        } else if (SpartanBukkit.packetsEnabled()) {
+        } else if (PluginBase.packetsEnabled()) {
             protocol = ProtocolLibrary.getProtocolManager().getProtocolVersion(player);
         } else {
             protocol = -1;

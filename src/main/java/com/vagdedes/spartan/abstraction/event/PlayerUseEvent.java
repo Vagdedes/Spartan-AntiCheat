@@ -2,12 +2,13 @@ package com.vagdedes.spartan.abstraction.event;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 
-public class PlayerUseEvent {
+public class PlayerUseEvent implements Cancellable {
 
-    private final Player player;
-    private final LivingEntity target;
-    private final boolean cancelled;
+    public final Player player;
+    public final LivingEntity target;
+    private boolean cancelled;
 
     public PlayerUseEvent(Player player, LivingEntity target, boolean cancelled) {
         this.player = player;
@@ -15,15 +16,13 @@ public class PlayerUseEvent {
         this.cancelled = cancelled;
     }
 
-    public Player getPlayer() {
-        return this.player;
-    }
-
-    public LivingEntity getTarget() {
-        return this.target;
-    }
-
+    @Override
     public boolean isCancelled() {
         return this.cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean b) {
+        this.cancelled = b;
     }
 }

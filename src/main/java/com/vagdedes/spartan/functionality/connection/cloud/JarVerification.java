@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import org.bukkit.Bukkit;
@@ -20,7 +20,7 @@ public class JarVerification {
 
     public static void run(Plugin plugin) {
         if (!IDs.enabled) {
-            SpartanBukkit.connectionThread.execute(() -> {
+            PluginBase.connectionThread.execute(() -> {
                 int userID = CloudConnections.getUserIdentification();
 
                 if (userID <= 0) {
@@ -43,11 +43,11 @@ public class JarVerification {
                         + " If this download is pirated, please consider purchasing the plugin"
                         + " when your server starts making enough money. We also sell on BuiltByBit"
                         + " which supports many payment methods for all countries including yours.";
-                List<SpartanProtocol> staff = Permissions.getStaff();
+                List<PlayerProtocol> staff = Permissions.getStaff();
 
                 if (!staff.isEmpty()) {
-                    for (SpartanProtocol protocol : staff) {
-                        protocol.spartan.sendImportantMessage(AwarenessNotifications.getNotification(message));
+                    for (PlayerProtocol protocol : staff) {
+                        protocol.bukkitExtra.sendImportantMessage(AwarenessNotifications.getNotification(message));
                     }
                 }
                 AwarenessNotifications.forcefullySend(message);

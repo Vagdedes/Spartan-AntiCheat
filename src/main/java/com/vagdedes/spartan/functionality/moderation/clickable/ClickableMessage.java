@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.functionality.notifications.clickable;
+package com.vagdedes.spartan.functionality.moderation.clickable;
 
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.command.CommandSender;

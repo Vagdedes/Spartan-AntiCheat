@@ -1,10 +1,9 @@
 package com.vagdedes.spartan.functionality.moderation;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -29,7 +28,7 @@ public class Wave {
     }
 
     static {
-        SpartanBukkit.runRepeatingTask(() -> {
+        PluginBase.runRepeatingTask(() -> {
             synchronized (commands) {
                 int size = commands.size();
 
@@ -40,7 +39,7 @@ public class Wave {
                         Map.Entry<UUID, String> entry = iterator.next();
                         iterator.remove();
                         remove(entry.getKey());
-                        SpartanBukkit.runCommand(entry.getValue());
+                        PluginBase.runCommand(entry.getValue());
                     }
                     end(size);
                 }
@@ -126,19 +125,19 @@ public class Wave {
 
         if (uuids.length > 0) {
             synchronized (commands) {
-                Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+                Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
                 if (!protocols.isEmpty()) {
                     String message = Config.messages.getColorfulString("wave_start_message");
 
-                    for (SpartanProtocol protocol : protocols) {
+                    for (PlayerProtocol protocol : protocols) {
                         if (DetectionNotifications.hasPermission(protocol)) {
                             protocol.bukkit().sendMessage(message);
                         }
                     }
                 }
 
-                SpartanBukkit.dataThread.executeIfFreeElseHere(() -> {
+                PluginBase.dataThread.executeIfFreeElseHere(() -> {
                     for (UUID uuid : uuids) {
                         try {
                             String command = getCommand(uuid);
@@ -158,12 +157,12 @@ public class Wave {
     }
 
     private static void end(int total) {
-        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
         if (!protocols.isEmpty()) {
             String message = Config.messages.getColorfulString("wave_end_message").replace("{total}", String.valueOf(total));
 
-            for (SpartanProtocol protocol : protocols) {
+            for (PlayerProtocol protocol : protocols) {
                 if (DetectionNotifications.hasPermission(protocol)) {
                     protocol.bukkit().sendMessage(message);
                 }

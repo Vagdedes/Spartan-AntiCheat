@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.DetectionNotifications;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 
 import java.util.Collection;
 
@@ -34,13 +34,13 @@ public class Settings extends ConfigurationBuilder {
         addOption("Important.enable_watermark", true);
 
         addOption("Detections.ground_teleport_on_detection", true);
-        addOption("Detections.fall_damage_on_teleport", false);
+        addOption("Detections.damage_on_detection", false);
 
         addOption("Discord.webhook_hex_color", "4caf50");
         addOption("Discord.checks_webhook_url", "");
     }
 
-    public void runOnLogin(SpartanProtocol p) {
+    public void runOnLogin(PlayerProtocol p) {
         if (getBoolean("Notifications.enable_notifications_on_login")
                 && DetectionNotifications.hasPermission(p)
                 && !DetectionNotifications.isEnabled(p)) {
@@ -49,10 +49,10 @@ public class Settings extends ConfigurationBuilder {
     }
 
     public void runOnLogin() {
-        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
         if (!protocols.isEmpty()) {
-            for (SpartanProtocol protocol : protocols) {
+            for (PlayerProtocol protocol : protocols) {
                 runOnLogin(protocol);
             }
         }

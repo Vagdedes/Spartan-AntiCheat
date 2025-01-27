@@ -9,8 +9,8 @@ import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.WrappedBlockData;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.event.ServerBlockChange;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.entity.Player;
 
 public class PacketServerBlockHandle extends PacketAdapter {
@@ -22,7 +22,7 @@ public class PacketServerBlockHandle extends PacketAdapter {
     @Override
     public void onPacketSending(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        PlayerProtocol protocol = PluginBase.getProtocol(player);
         PacketContainer packet = event.getPacket();
         BlockPosition blockPosition = packet.getBlockPositionModifier().read(0);
         WrappedBlockData blockData = packet.getBlockData().read(0);

@@ -3,11 +3,11 @@ package com.vagdedes.spartan;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.command.CommandTab;
 import com.vagdedes.spartan.functionality.connection.cloud.JarVerification;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.npc.NPCManager;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
+import com.vagdedes.spartan.listeners.NPCManager;
 import com.vagdedes.spartan.listeners.bukkit.*;
 import com.vagdedes.spartan.listeners.bukkit.standalone.*;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
@@ -63,7 +63,7 @@ public class Register extends JavaPlugin {
         enable(new VehicleEvent());
         enable(new VelocityEvent());
         enable(new WorldEvent());
-        enable(new DamagedEvent());
+        enable(new DamageEvent());
 
         //enable(new GhostBlockTest());
 
@@ -90,7 +90,7 @@ public class Register extends JavaPlugin {
         // Separator
         ProxyUtils.unregister();
         listeners.clear();
-        SpartanBukkit.disable();
+        PluginBase.disable();
     }
 
     // Utilities

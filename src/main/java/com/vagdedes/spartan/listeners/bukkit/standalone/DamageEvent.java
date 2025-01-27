@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,16 +10,16 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-public class DamagedEvent implements Listener {
+public class DamageEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(EntityDamageEvent e) {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) entity, true);
+            PlayerProtocol protocol = PluginBase.getProtocol((Player) entity, true);
 
-            protocol.spartan.handleReceivedDamage();
+            protocol.bukkitExtra.handleReceivedDamage();
         } else {
             handlePassengers(entity, false, e);
         }
@@ -34,10 +34,10 @@ public class DamagedEvent implements Listener {
             for (Entity passenger : passengers) {
                 if (passenger instanceof Player) {
                     // Objects
-                    SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) passenger);
+                    PlayerProtocol protocol = PluginBase.getProtocol((Player) passenger);
 
                     if (protocol.packetsEnabled() == packets) {
-                        protocol.spartan.handleReceivedDamage();
+                        protocol.bukkitExtra.handleReceivedDamage();
                     }
                 }
             }

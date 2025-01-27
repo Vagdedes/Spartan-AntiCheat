@@ -1,4 +1,4 @@
-package com.vagdedes.spartan.functionality.notifications.clickable;
+package com.vagdedes.spartan.functionality.moderation.clickable;
 
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;

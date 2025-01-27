@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.vanilla;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
@@ -57,7 +57,7 @@ public class Attributes {
 
     PLAYER_BLOCK_BREAK_SPEED = "PLAYER_BLOCK_BREAK_SPEED";
 
-    public static double getAmount(SpartanProtocol p, String attributeString) {
+    public static double getAmount(PlayerProtocol p, String attributeString) {
         if (classExists && Compatibility.CompatibilityType.ITEM_ATTRIBUTES.isFunctional()) {
             for (Attribute attribute : Attribute.values()) {
                 if (attribute.name().equals(attributeString)) {

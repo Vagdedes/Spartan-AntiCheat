@@ -6,9 +6,9 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -28,7 +28,7 @@ public class ExplosionListener extends PacketAdapter {
 
         if (d.size() >= 3) {
             Player player = event.getPlayer();
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+            PlayerProtocol protocol = PluginBase.getProtocol(player);
             Location l = new Location(player.getWorld(), d.get(0), d.get(1), d.get(2));
 
             if (SpartanLocation.distanceSquared(l, protocol.getLocation()) < 10) {

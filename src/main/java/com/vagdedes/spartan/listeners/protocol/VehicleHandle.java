@@ -5,9 +5,9 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.concurrent.SpartanScheduler;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.concurrent.CheckThread;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.MovementEvent;
 import com.vagdedes.spartan.listeners.bukkit.VehicleEvent;
 import com.vagdedes.spartan.utils.minecraft.protocol.ProtocolTools;
@@ -34,17 +34,17 @@ public class VehicleHandle extends PacketAdapter {
     @Override
     public void onPacketReceiving(PacketEvent event) {
         Player player = event.getPlayer();
-        SpartanProtocol protocol = SpartanBukkit.getProtocol(player);
+        PlayerProtocol protocol = PluginBase.getProtocol(player);
 
-        if (protocol.spartan.isBedrockPlayer()) {
+        if (protocol.bukkitExtra.isBedrockPlayer()) {
             return;
         }
         if (ProtocolTools.hasPosition(event.getPacket().getType()) && protocol.entityHandle) {
             protocol.entityHandle = false;
         }
         final boolean[] nearbyEntities = {false};
-        SpartanScheduler.run(() -> {
-            for (Entity entity : protocol.spartan.getNearbyEntities(4.5)) {
+        CheckThread.run(() -> {
+            for (Entity entity : protocol.bukkitExtra.getNearbyEntities(4.5)) {
                 if (entity.getUniqueId() != protocol.getUUID()) {
                     nearbyEntities[0] = true;
                     break;
@@ -65,12 +65,11 @@ public class VehicleHandle extends PacketAdapter {
                 }
             }
             if (event.getPacket().getType().equals(PacketType.Play.Client.STEER_VEHICLE)) {
-                if (protocol.spartan.getVehicle() != null) {
-                    Entity vehicle = protocol.spartan.getVehicle();
+                if (protocol.bukkitExtra.getVehicle() != null) {
+                    Entity vehicle = protocol.bukkitExtra.getVehicle();
                     Location location = vehicle.getLocation();
                     protocol.setLocation(location);
                     MovementEvent.event(new PlayerMoveEvent(player, protocol.getFromLocation(), protocol.getLocation()), true);
-                    //protocol.profile().getRunner(Enums.HackType.IrregularMovements).run(event.isCancelled());
                 }
             }
         });

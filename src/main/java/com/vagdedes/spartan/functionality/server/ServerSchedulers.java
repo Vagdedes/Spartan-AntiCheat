@@ -1,14 +1,14 @@
 package com.vagdedes.spartan.functionality.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-class SpartanScheduler {
+class ServerSchedulers {
 
     static void transfer(Runnable runnable) {
         if (Register.isPluginEnabled()) {
@@ -20,7 +20,7 @@ class SpartanScheduler {
         }
     }
 
-    static void run(SpartanProtocol protocol, Runnable runnable, boolean sync) {
+    static void run(PlayerProtocol protocol, Runnable runnable, boolean sync) {
         if (!MultiVersion.folia) {
             if (sync && !Bukkit.isPrimaryThread()) {
                 if (Register.isPluginEnabled()) {
@@ -63,7 +63,7 @@ class SpartanScheduler {
         }
     }
 
-    static Object schedule(SpartanProtocol protocol, Runnable runnable, long start, long repetition) {
+    static Object schedule(PlayerProtocol protocol, Runnable runnable, long start, long repetition) {
         if (Register.isPluginEnabled()) {
             if (!MultiVersion.folia) {
                 if (repetition == -1L) {

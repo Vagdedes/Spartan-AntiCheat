@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.abstraction.inventory;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.inventory.ClickType;
@@ -36,39 +36,39 @@ public abstract class InventoryMenu {
         this(title, size, new Enums.Permission[]{permissions});
     }
 
-    protected Inventory setInventory(SpartanProtocol protocol, String title, int size) {
+    protected Inventory setInventory(PlayerProtocol protocol, String title, int size) {
         this.title = title;
         this.size = size;
-        return inventory = protocol.spartan.createInventory(size, title);
+        return inventory = protocol.bukkitExtra.createInventory(size, title);
     }
 
-    protected Inventory setSize(SpartanProtocol protocol, int size) {
+    protected Inventory setSize(PlayerProtocol protocol, int size) {
         this.size = size;
-        return inventory = protocol.spartan.createInventory(size, title);
+        return inventory = protocol.bukkitExtra.createInventory(size, title);
     }
 
-    protected Inventory setTitle(SpartanProtocol protocol, String title) {
+    protected Inventory setTitle(PlayerProtocol protocol, String title) {
         this.title = title;
-        return inventory = protocol.spartan.createInventory(size, title);
+        return inventory = protocol.bukkitExtra.createInventory(size, title);
     }
 
     protected void add(String name, List<String> lore, ItemStack item, int slot) {
         InventoryUtils.add(inventory, name, lore, item, slot);
     }
 
-    public boolean open(SpartanProtocol protocol, boolean permissionMessage) {
+    public boolean open(PlayerProtocol protocol, boolean permissionMessage) {
         return open(protocol, permissionMessage, null);
     }
 
-    public boolean open(SpartanProtocol protocol, Object object) {
+    public boolean open(PlayerProtocol protocol, Object object) {
         return open(protocol, true, object);
     }
 
-    public boolean open(SpartanProtocol protocol) {
+    public boolean open(PlayerProtocol protocol) {
         return open(protocol, true, null);
     }
 
-    public boolean open(SpartanProtocol protocol, boolean permissionMessage, Object object) {
+    public boolean open(PlayerProtocol protocol, boolean permissionMessage, Object object) {
         boolean access;
 
         if (permissions.length == 0) {
@@ -86,9 +86,9 @@ public abstract class InventoryMenu {
         }
 
         if (access) {
-            inventory = protocol.spartan.createInventory(size, title);
+            inventory = protocol.bukkitExtra.createInventory(size, title);
             if (internalOpen(protocol, permissionMessage, object)) {
-                SpartanBukkit.transferTask(
+                PluginBase.transferTask(
                         protocol,
                         () -> protocol.bukkit().openInventory(inventory)
                 );
@@ -100,14 +100,14 @@ public abstract class InventoryMenu {
             if (permissionMessage) {
                 protocol.bukkit().sendMessage(Config.messages.getColorfulString("no_permission"));
             }
-            SpartanBukkit.transferTask(protocol, protocol.bukkit()::closeInventory);
+            PluginBase.transferTask(protocol, protocol.bukkit()::closeInventory);
             return false;
         }
     }
 
-    protected abstract boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object);
+    protected abstract boolean internalOpen(PlayerProtocol protocol, boolean permissionMessage, Object object);
 
-    public boolean handle(SpartanProtocol protocol, String title, ItemStack itemStack, ClickType clickType, int slot) {
+    public boolean handle(PlayerProtocol protocol, String title, ItemStack itemStack, ClickType clickType, int slot) {
         if (title.equals(this.title)) {
             boolean access;
 
@@ -139,5 +139,5 @@ public abstract class InventoryMenu {
         return false;
     }
 
-    protected abstract boolean internalHandle(SpartanProtocol protocol);
+    protected abstract boolean internalHandle(PlayerProtocol protocol);
 }

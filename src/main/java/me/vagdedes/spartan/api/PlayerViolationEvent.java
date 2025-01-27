@@ -1,6 +1,6 @@
 package me.vagdedes.spartan.api;
 
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import me.vagdedes.spartan.system.Enums.HackType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

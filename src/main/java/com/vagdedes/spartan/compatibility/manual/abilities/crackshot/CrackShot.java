@@ -5,10 +5,10 @@ import com.shampaggon.crackshot.events.WeaponPreShootEvent;
 import com.shampaggon.crackshot.events.WeaponScopeEvent;
 import com.shampaggon.crackshot.events.WeaponShootEvent;
 import com.vagdedes.spartan.abstraction.data.Buffer;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.entity.Entity;
@@ -30,7 +30,7 @@ public class CrackShot implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void WeaponScope(WeaponScopeEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
+            PlayerProtocol protocol = PluginBase.getProtocol(e.getPlayer());
 
             if (!e.isCancelled()) {
                 Config.compatibility.evadeFalsePositives(
@@ -58,7 +58,7 @@ public class CrackShot implements Listener {
     private void WeaponPreShoot(WeaponPreShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    SpartanBukkit.getProtocol(e.getPlayer()),
+                    PluginBase.getProtocol(e.getPlayer()),
                     Compatibility.CompatibilityType.CRACK_SHOT,
                     new Enums.HackCategoryType[]{
                             Enums.HackCategoryType.MOVEMENT,
@@ -73,7 +73,7 @@ public class CrackShot implements Listener {
     private void WeaponShoot(WeaponShootEvent e) {
         if (Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    SpartanBukkit.getProtocol(e.getPlayer()),
+                    PluginBase.getProtocol(e.getPlayer()),
                     Compatibility.CompatibilityType.CRACK_SHOT,
                     new Enums.HackCategoryType[]{
                             Enums.HackCategoryType.MOVEMENT,
@@ -91,7 +91,7 @@ public class CrackShot implements Listener {
 
             if (entity instanceof Player) {
                 Config.compatibility.evadeFalsePositives(
-                        SpartanBukkit.getProtocol((Player) entity),
+                        PluginBase.getProtocol((Player) entity),
                         Compatibility.CompatibilityType.CRACK_SHOT,
                         new Enums.HackCategoryType[]{
                                 Enums.HackCategoryType.MOVEMENT,
@@ -109,7 +109,7 @@ public class CrackShot implements Listener {
             Entity entity = e.getEntity();
 
             if (entity instanceof Player) {
-                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
+                PlayerProtocol p = PluginBase.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -132,7 +132,7 @@ public class CrackShot implements Listener {
             Entity entity = e.getDamager();
 
             if (entity instanceof Player) {
-                SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
+                PlayerProtocol p = PluginBase.getProtocol((Player) entity);
 
                 if (isUsingScope(p)) {
                     Config.compatibility.evadeFalsePositives(
@@ -149,7 +149,7 @@ public class CrackShot implements Listener {
         }
     }
 
-    public static boolean isUsingScope(SpartanProtocol p) {
+    public static boolean isUsingScope(PlayerProtocol p) {
         return Compatibility.CompatibilityType.CRACK_SHOT.isFunctional()
                 && buffers.get(p.getUUID() + "=crackshot=compatibility=scope") != 0
                 || CrackShotPlus.isUsingScope(p);

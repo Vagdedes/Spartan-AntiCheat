@@ -1,12 +1,12 @@
 package com.vagdedes.spartan.abstraction.configuration.implementation;
 
 import com.vagdedes.spartan.abstraction.configuration.ConfigurationBuilder;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.concurrent.Threads;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
-import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.concurrent.GeneralThread;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.moderation.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
 import com.vagdedes.spartan.utils.java.StringUtils;
@@ -20,7 +20,7 @@ import java.sql.*;
 
 public class SQLFeature extends ConfigurationBuilder {
 
-    private static final Threads.ThreadPool sqlThread = new Threads.ThreadPool(TPS.tickTime);
+    private static final GeneralThread.ThreadPool sqlThread = new GeneralThread.ThreadPool(TPS.tickTime);
 
     public SQLFeature() {
         super("sql");
@@ -316,7 +316,7 @@ public class SQLFeature extends ConfigurationBuilder {
 
     // Separator
 
-    public void logInfo(SpartanProtocol p,
+    public void logInfo(PlayerProtocol p,
                         String notification,
                         String information,
                         Material material,
@@ -339,7 +339,7 @@ public class SQLFeature extends ConfigurationBuilder {
                             + ", " + syntaxForColumn(CrossServerNotifications.getServerName())
                             + ", " + syntaxForColumn(API.getVersion())
                             + ", " + syntaxForColumn(MultiVersion.serverVersion.toString())
-                            + ", " + syntaxForColumn(SpartanBukkit.getPlayerCount())
+                            + ", " + syntaxForColumn(PluginBase.getPlayerCount())
                             + ", " + syntaxForColumn(hasMaterial ? "mining" : hasCheck ? "violation" : "other")
                             + ", " + (notification != null ? syntaxForColumn(notification) : "NULL")
                             + ", " + syntaxForColumn(information)

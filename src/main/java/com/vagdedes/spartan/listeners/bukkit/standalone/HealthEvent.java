@@ -1,8 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
-import me.vagdedes.spartan.system.Enums;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,16 +17,8 @@ public class HealthEvent implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
-            boolean cancelled = e.isCancelled();
-
-            // Detections
-            p.profile().getRunner(Enums.HackType.FastEat).handle(cancelled, e);
-            p.profile().getRunner(Enums.HackType.FastHeal).handle(cancelled, e);
-
-            if (p.profile().getRunner(Enums.HackType.FastEat).prevent()) {
-                e.setCancelled(true);
-            }
+            PlayerProtocol p = PluginBase.getProtocol((Player) entity);
+            p.profile().executeRunners(e.isCancelled(), e);
         }
     }
 
@@ -36,14 +27,8 @@ public class HealthEvent implements Listener {
         Entity entity = e.getEntity();
 
         if (entity instanceof Player) {
-            SpartanProtocol p = SpartanBukkit.getProtocol((Player) entity);
-
-            // Detections
-            p.profile().getRunner(Enums.HackType.FastHeal).handle(e.isCancelled(), e);
-
-            if (p.profile().getRunner(Enums.HackType.FastHeal).prevent()) {
-                e.setCancelled(true);
-            }
+            PlayerProtocol p = PluginBase.getProtocol((Player) entity);
+            p.profile().executeRunners(e.isCancelled(), e);
         }
     }
 

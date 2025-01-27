@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.abstraction.world;
 
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.listeners.bukkit.standalone.ChunksEvent;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
@@ -57,8 +57,8 @@ public class SpartanLocation implements Cloneable {
     }
 
     private static int locationIdentifier(int x, int y, int z) {
-        x = (SpartanBukkit.hashCodeMultiplier * x) + y;
-        return (SpartanBukkit.hashCodeMultiplier * x) + z;
+        x = (PluginBase.hashCodeMultiplier * x) + y;
+        return (PluginBase.hashCodeMultiplier * x) + z;
     }
 
     // Object
@@ -192,14 +192,14 @@ public class SpartanLocation implements Cloneable {
         if (ChunksEvent.heightSupport ?
                 blockY >= this.world.getMinHeight() && blockY <= this.world.getMaxHeight() :
                 blockY >= 0 && blockY <= PlayerUtils.height) {
-            if (SpartanBukkit.packetsEnabled()) {
-                if (SpartanBukkit.isSynchronised()) {
+            if (PluginBase.packetsEnabled()) {
+                if (PluginBase.isSynchronised()) {
                     return setBlock();
                 } else {
                     return setAsyncBlock();
                 }
             } else if (MultiVersion.folia
-                    || SpartanBukkit.isSynchronised()) {
+                    || PluginBase.isSynchronised()) {
                 return setBlock();
             } else {
                 int x = getChunkX(), z = getChunkZ();

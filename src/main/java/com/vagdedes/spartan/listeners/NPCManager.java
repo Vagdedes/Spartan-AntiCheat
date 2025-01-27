@@ -1,11 +1,11 @@
-package com.vagdedes.spartan.functionality.npc;
+package com.vagdedes.spartan.listeners;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.entity.PluginNPC;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -22,24 +22,24 @@ import java.util.*;
 public class NPCManager implements Listener {
 
     public static final boolean supported = MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8);
-    private static final List<SpartanNPC> list = Collections.synchronizedList(new ArrayList<>());
+    private static final List<PluginNPC> list = Collections.synchronizedList(new ArrayList<>());
 
     static {
-        SpartanBukkit.runRepeatingTask(() -> {
+        PluginBase.runRepeatingTask(() -> {
             if (!list.isEmpty()) {
-                List<SpartanProtocol> staff = Permissions.getStaff();
+                List<PlayerProtocol> staff = Permissions.getStaff();
 
                 if (staff.isEmpty()) {
                     clear();
                 } else {
                     synchronized (list) {
-                        Iterator<SpartanNPC> iterator = list.iterator();
+                        Iterator<PluginNPC> iterator = list.iterator();
 
                         while (iterator.hasNext()) {
-                            SpartanNPC npc = iterator.next();
+                            PluginNPC npc = iterator.next();
                             boolean animate = false;
 
-                            for (SpartanProtocol player : staff) {
+                            for (PlayerProtocol player : staff) {
                                 if (SpartanLocation.distance(npc.location, player.getLocationOrVehicle()) <= PlayerUtils.chunk) {
                                     animate = true;
                                     break;
@@ -64,7 +64,7 @@ public class NPCManager implements Listener {
     public static void clear() {
         if (!list.isEmpty()) {
             synchronized (list) {
-                for (SpartanNPC npc : list) {
+                for (PluginNPC npc : list) {
                     npc.remove();
                 }
                 list.clear();
@@ -75,7 +75,7 @@ public class NPCManager implements Listener {
     public static void clear(World world) {
         if (!list.isEmpty()) {
             synchronized (list) {
-                for (SpartanNPC npc : list) {
+                for (PluginNPC npc : list) {
                     if (world.equals(npc.armorStand.getWorld())) {
                         npc.remove();
                     }
@@ -85,23 +85,23 @@ public class NPCManager implements Listener {
         }
     }
 
-    public static void create(SpartanProtocol protocol) {
+    public static void create(PlayerProtocol protocol) {
         if (supported) {
             Location location = protocol.getLocationOrVehicle();
 
             if (!list.isEmpty()) {
                 synchronized (list) {
-                    for (SpartanNPC npc : list) {
+                    for (PluginNPC npc : list) {
                         if (SpartanLocation.distance(npc.location, location) <= PlayerUtils.chunk) {
                             protocol.teleport(npc.location);
                             return;
                         }
                     }
-                    list.add(new SpartanNPC(location));
+                    list.add(new PluginNPC(location));
                 }
             } else {
                 synchronized (list) {
-                    list.add(new SpartanNPC(location));
+                    list.add(new PluginNPC(location));
                 }
             }
         }
@@ -116,12 +116,12 @@ public class NPCManager implements Listener {
 
             if (!list.isEmpty()) {
                 synchronized (list) {
-                    for (SpartanNPC npc : list) {
+                    for (PluginNPC npc : list) {
                         if (npc.getUniqueId().equals(uuid)) {
                             e.setCancelled(true);
                             npc.updateHead();
-                            SpartanProtocol protocol = SpartanBukkit.getProtocol(e.getPlayer());
-                            InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
+                            PlayerProtocol protocol = PluginBase.getProtocol(e.getPlayer());
+                            PluginBase.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
                             break;
                         }
                     }
@@ -139,15 +139,15 @@ public class NPCManager implements Listener {
 
             if (!list.isEmpty()) {
                 synchronized (list) {
-                    for (SpartanNPC npc : list) {
+                    for (PluginNPC npc : list) {
                         if (npc.getUniqueId().equals(uuid)) {
                             e.setCancelled(true);
                             npc.updateHead();
                             Entity damager = e.getDamager();
 
                             if (damager instanceof Player) {
-                                SpartanProtocol protocol = SpartanBukkit.getProtocol((Player) damager);
-                                InteractiveInventory.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
+                                PlayerProtocol protocol = PluginBase.getProtocol((Player) damager);
+                                PluginBase.mainMenu.open(protocol, Permissions.has(protocol.bukkit()));
                             }
                             break;
                         }

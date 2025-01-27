@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.functionality.npc.NPCManager;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
+import com.vagdedes.spartan.listeners.NPCManager;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;

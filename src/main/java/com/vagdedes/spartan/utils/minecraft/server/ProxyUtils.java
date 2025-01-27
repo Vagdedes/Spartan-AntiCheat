@@ -1,11 +1,11 @@
 package com.vagdedes.spartan.utils.minecraft.server;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.necessary.protocollib.ProtocolLib;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -35,10 +35,10 @@ public class ProxyUtils {
             boolean isNull = player == null;
 
             if (isNull || !player.isOp()) {
-                Set<Map.Entry<UUID, SpartanProtocol>> entries = SpartanBukkit.getPlayerEntries();
+                Set<Map.Entry<UUID, PlayerProtocol>> entries = PluginBase.getPlayerEntries();
 
                 if (!isNull) {
-                    Iterator<Map.Entry<UUID, SpartanProtocol>> iterator = entries.iterator();
+                    Iterator<Map.Entry<UUID, PlayerProtocol>> iterator = entries.iterator();
 
                     while (iterator.hasNext()) {
                         UUID uuid = iterator.next().getKey();
@@ -50,8 +50,8 @@ public class ProxyUtils {
                     }
                 }
                 if (!entries.isEmpty()) { // 1 because we already know we have one player
-                    for (Map.Entry<UUID, SpartanProtocol> entry : entries) {
-                        SpartanProtocol protocol = entry.getValue();
+                    for (Map.Entry<UUID, PlayerProtocol> entry : entries) {
+                        PlayerProtocol protocol = entry.getValue();
 
                         if (protocol.bukkit().isOp()) {
                             player = protocol.bukkit();

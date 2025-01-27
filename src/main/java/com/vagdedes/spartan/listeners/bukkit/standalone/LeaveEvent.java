@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.listeners.bukkit.standalone;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.DetectionNotifications;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -12,13 +12,11 @@ public class LeaveEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void Event(PlayerQuitEvent e) {
-        SpartanProtocol protocol = SpartanBukkit.deleteProtocol(e.getPlayer());
+        PlayerProtocol protocol = PluginBase.deleteProtocol(e.getPlayer());
 
         if (protocol == null) {
             return;
         }
-
-        // Features
         DetectionNotifications.runOnLeave(protocol);
     }
 

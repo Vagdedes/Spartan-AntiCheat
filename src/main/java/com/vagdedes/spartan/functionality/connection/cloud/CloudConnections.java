@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.functionality.connection.cloud;
 
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.functionality.notifications.CrossServerNotifications;
+import com.vagdedes.spartan.functionality.moderation.CrossServerNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.java.StringUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
@@ -133,7 +133,7 @@ public class CloudConnections {
             int length = color.length();
 
             if (length >= 3 && length <= 6) {
-                SpartanBukkit.connectionThread.executeIfUnknownThreadElseHere(() -> {
+                PluginBase.connectionThread.executeIfUnknownThreadElseHere(() -> {
                     try {
                         int webhookVersion = 2;
                         String crossServerInformationOption = CrossServerNotifications.getServerName();

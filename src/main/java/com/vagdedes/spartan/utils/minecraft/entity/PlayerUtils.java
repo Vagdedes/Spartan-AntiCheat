@@ -1,14 +1,12 @@
 package com.vagdedes.spartan.utils.minecraft.entity;
 
 import com.vagdedes.spartan.abstraction.protocol.ExtendedPotionEffect;
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
+import com.vagdedes.spartan.abstraction.protocol.PlayerBukkit;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
 import com.vagdedes.spartan.functionality.server.TPS;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
-import com.vagdedes.spartan.utils.minecraft.world.GroundUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -172,74 +170,6 @@ public class PlayerUtils {
 
     // Falling
 
-    public static int getFallTick(double d, double acceleration, double drag, double precision, int jump) {
-        if (d < 0.0) {
-            acceleration = Math.abs(acceleration);
-            int key = (Double.hashCode(precision) * SpartanBukkit.hashCodeMultiplier)
-                    + Double.hashCode(AlgebraUtils.cut(d, GroundUtils.maxHeightLength)),
-                    maxTicks = AlgebraUtils.integerCeil(1.0 / (1.0 - drag)) * 10;
-            key = (key * SpartanBukkit.hashCodeMultiplier) + Double.hashCode(acceleration);
-            key = (key * SpartanBukkit.hashCodeMultiplier) + Double.hashCode(drag);
-            key = (key * SpartanBukkit.hashCodeMultiplier) + jump;
-            Integer ticks = fallTicks.get(key);
-
-            if (ticks == null) {
-                ticks = 0;
-                double preD = 0.0;
-
-                while (d < 0.0) {
-                    preD = d;
-                    d = (d / drag) + acceleration;
-                    ticks++;
-
-                    if (ticks > maxTicks) {
-                        fallTicks.put(key, -1);
-                        return -1;
-                    }
-                }
-
-                if (ticks > 0) {
-                    preD = Math.abs(preD);
-                    boolean precisely = preD < precision;
-
-                    if (!precisely && Math.abs(preD - (acceleration * drag)) >= precision) {
-                        boolean found = false;
-
-                        if (jump == 0) {
-                            List<Double> motions = getJumpMotions(0);
-                            double last = motions.get(motions.size() - 1);
-
-                            if (Math.abs(last - d) < precision) {
-                                found = true;
-                            }
-                        } else {
-                            for (int i : new int[]{jump, 0}) {
-                                List<Double> motions = getJumpMotions(i);
-                                double last = motions.get(motions.size() - 1);
-
-                                if (Math.abs(last - d) < precision) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!found) {
-                            ticks = -1;
-                        }
-                    } else if (precisely) {
-                        ticks -= 1;
-                    }
-                } else {
-                    ticks = -1;
-                }
-                fallTicks.put(key, ticks);
-            }
-            return ticks;
-        }
-        return -1;
-    }
-
     public static double calculateTerminalVelocity(double drag, double acceleration) {
         return ((1.0 / (1.0 - drag)) * acceleration);
     }
@@ -295,7 +225,7 @@ public class PlayerUtils {
 
     // Potion Effects
 
-    public static int getPotionLevel(SpartanPlayer entity, PotionEffectType potionEffectType) {
+    public static int getPotionLevel(PlayerBukkit entity, PotionEffectType potionEffectType) {
         ExtendedPotionEffect potionEffect = entity.getPotionEffect(
                 potionEffectType,
                 handledPotionEffects.getOrDefault(potionEffectType, 0L)

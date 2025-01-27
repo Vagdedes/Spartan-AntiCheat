@@ -5,7 +5,7 @@ import com.vagdedes.spartan.abstraction.check.CheckDetection;
 import com.vagdedes.spartan.abstraction.check.CheckRunner;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedHardcodedDetection;
 import com.vagdedes.spartan.abstraction.check.definition.ImplementedProbabilityDetection;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import me.vagdedes.spartan.system.Enums;
 
 public class CheckExecutorExample extends CheckRunner {
@@ -15,7 +15,7 @@ public class CheckExecutorExample extends CheckRunner {
     private final CheckDetection detection3;
     private final CheckDetection detection4;
 
-    public CheckExecutorExample(Enums.HackType hackType, SpartanProtocol protocol, String playerName) {
+    public CheckExecutorExample(Enums.HackType hackType, PlayerProtocol protocol, String playerName) {
         super(hackType, protocol);
 
         this.detection2 = new DetectionExecutorHardcodedExample(
@@ -52,26 +52,12 @@ public class CheckExecutorExample extends CheckRunner {
 
     @Override
     protected void handleInternal(boolean cancelled, Object object) {
-        // This method should be used to handle data for a check/detection when
-        // the information is not directly available via the class or other classes.
-        // You may also use this method to run checks/detections, although it is best
-        // you use the 'runInternal' method for that purpose.
+        // This method should be used to handle data for a check/detection.
         //
         // The boolean 'cancelled' is 'true' when an event is cancelled by the server
         // or by another plugin. Based on configuration, a user of this plugin may
         // choose for cancelled events to not go through, thus causing this method to
         // not be called at all.
-    }
-
-    @Override
-    protected void runInternal(boolean cancelled) {
-        this.detection1.customMethod1();
-        // This method should be used to run a check/detection when no information
-        // needs to be inserted via the method being called and is all available in
-        // the class or via methods of other classes.
-        //
-        // The boolean 'cancelled' works the same as in the 'handleInternal' method
-        // which is where you can find its documentation.
     }
 
     @Override

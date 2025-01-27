@@ -9,7 +9,8 @@ public class PlayerEvidence {
             preventionProbability = createProbability(0.1),
             punishmentProbability = createProbability(0.01),
             slightestProbability = createProbability(0.9999),
-            emptyProbability = createProbability(1.0);
+            emptyProbability = createProbability(1.0),
+            nullProbability = -1.0;
 
     public static double createProbability(double probability) {
         return POSITIVE ? 1.0 - probability : probability;

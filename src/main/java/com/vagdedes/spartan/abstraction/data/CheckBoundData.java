@@ -1,26 +1,26 @@
 package com.vagdedes.spartan.abstraction.data;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import org.bukkit.Location;
 
 public class CheckBoundData {
-    private SpartanProtocol attacker;
+    private PlayerProtocol attacker;
     private Location target;
     public int failures;
 
-    public CheckBoundData(SpartanProtocol player, SpartanProtocol target) {
+    public CheckBoundData(PlayerProtocol player, PlayerProtocol target) {
         this.attacker = player;
         this.target = target.getLocation();
         this.failures = 0;
     }
 
-    public CheckBoundData(SpartanProtocol player, Location target) {
+    public CheckBoundData(PlayerProtocol player, Location target) {
         this.attacker = player;
         this.target = target;
         this.failures = 0;
     }
 
-    public SpartanProtocol getAttacker() {
+    public PlayerProtocol getAttacker() {
         return this.attacker;
     }
 
@@ -32,7 +32,7 @@ public class CheckBoundData {
         return this.failures;
     }
 
-    public void setAttacker(SpartanProtocol attacker) {
+    public void setAttacker(PlayerProtocol attacker) {
         this.attacker = attacker;
     }
 

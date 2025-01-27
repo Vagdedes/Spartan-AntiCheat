@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.functionality.connection;
 
 import com.vagdedes.spartan.abstraction.inventory.implementation.MainMenu;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.RequestUtils;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 
@@ -20,7 +20,7 @@ public class DiscordMemberCount {
         if (times == 0) {
             times = 100;
 
-            SpartanBukkit.connectionThread.execute(() -> {
+            PluginBase.connectionThread.execute(() -> {
                 try {
                     String number = RequestUtils.get(discordURL + "/count/")[0];
 

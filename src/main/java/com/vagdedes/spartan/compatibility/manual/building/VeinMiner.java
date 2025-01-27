@@ -3,7 +3,7 @@ package com.vagdedes.spartan.compatibility.manual.building;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import me.vagdedes.spartan.system.Enums;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,7 +20,7 @@ public class VeinMiner implements Listener {
     private void Event(PlayerVeinMineEvent e) {
         if (Compatibility.CompatibilityType.VEIN_MINER.isFunctional()) {
             Config.compatibility.evadeFalsePositives(
-                    SpartanBukkit.getProtocol(e.getPlayer()),
+                    PluginBase.getProtocol(e.getPlayer()),
                     Compatibility.CompatibilityType.VEIN_MINER,
                     new Enums.HackType[]{
                             Enums.HackType.NoSwing,

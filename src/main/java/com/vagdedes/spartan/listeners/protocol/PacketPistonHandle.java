@@ -6,8 +6,8 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.vagdedes.spartan.Register;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import org.bukkit.Location;
 
 public class PacketPistonHandle extends PacketAdapter {
@@ -21,7 +21,7 @@ public class PacketPistonHandle extends PacketAdapter {
         PacketContainer packet = event.getPacket();
 
         if (packet.getStructures().getValues().toString().contains("piston")) {
-            SpartanProtocol protocol = SpartanBukkit.getProtocol(event.getPlayer());
+            PlayerProtocol protocol = PluginBase.getProtocol(event.getPlayer());
             protocol.getComponentY().pistonHandle = true;
             Location blockLocation = packet.getBlockPositionModifier()
                     .read(0)

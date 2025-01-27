@@ -1,8 +1,13 @@
 package com.vagdedes.spartan.abstraction.check;
 
+import com.vagdedes.spartan.abstraction.profiling.PlayerProfile;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 
+import java.util.List;
+
 public abstract class HardcodedDetection extends CheckDetection {
+
+    private static final long decay = 60_000;
 
     private long lastUpdate;
 
@@ -20,24 +25,27 @@ public abstract class HardcodedDetection extends CheckDetection {
     public final void setHackingRatio(double ratio) {
         if (this.protocol != null) {
             this.setProbability(
-                    this.protocol.spartan.dataType,
+                    this.protocol.bukkitExtra.dataType,
                     PlayerEvidence.probabilityToCertainty(ratio)
             );
-            this.lastUpdate = System.currentTimeMillis();
+            this.lastUpdate = System.currentTimeMillis() + decay;
         }
     }
 
+    // Separator
+
     @Override
     public final double getProbability(Check.DataType dataType) {
-        long max = 60_000;
-        double passed = max - (System.currentTimeMillis() - this.lastUpdate) / (double) max;
+        if (this.lastUpdate > System.currentTimeMillis()) {
+            double passed = decay - (this.lastUpdate - System.currentTimeMillis()) / (double) decay;
 
-        if (passed <= 0.0) {
-            return PlayerEvidence.emptyProbability;
-        } else if (PlayerEvidence.POSITIVE) {
-            return passed * super.getProbability(dataType);
+            if (PlayerEvidence.POSITIVE) {
+                return passed * super.getProbability(dataType);
+            } else {
+                return 1.0 - (passed * (1.0 - super.getProbability(dataType)));
+            }
         } else {
-            return 1.0 - (passed * (1.0 - super.getProbability(dataType)));
+            return PlayerEvidence.emptyProbability;
         }
     }
 
@@ -46,13 +54,39 @@ public abstract class HardcodedDetection extends CheckDetection {
     }
 
     @Override
+    public final void setProbability(Check.DataType dataType, double probability) {
+        if (probability != PlayerEvidence.nullProbability) {
+            super.setProbability(dataType, probability);
+        }
+    }
+
+    // Separator
+
+    @Override
     protected final boolean hasSufficientData(Check.DataType dataType) {
         return this.getProbability(dataType) != PlayerEvidence.emptyProbability;
     }
 
     @Override
-    final double getDataCompletion(Check.DataType dataType) {
-        return this.hasSufficientData(dataType) ? 1.0 : 0.0;
+    public void clearData(Check.DataType dataType) {
+    }
+
+    @Override
+    public final void storeData(Check.DataType dataType, long time) {
+    }
+
+    @Override
+    public final void sortData() {
+    }
+
+    @Override
+    public final double getAllData(PlayerProfile profile, Check.DataType dataType) {
+        return super.getAllData(profile, dataType);
+    }
+
+    @Override
+    public final List<Double> getDataSamples(PlayerProfile profile, Check.DataType dataType) {
+        return super.getDataSamples(profile, dataType);
     }
 
 }

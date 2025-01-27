@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.compatibility.necessary.protocollib;
 
 import com.comphenix.protocol.injector.temporary.TemporaryPlayer;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
-import com.vagdedes.spartan.functionality.notifications.AwarenessNotifications;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
+import com.vagdedes.spartan.functionality.moderation.AwarenessNotifications;
 import com.vagdedes.spartan.functionality.server.Permissions;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
 import org.bukkit.Bukkit;
@@ -50,10 +50,10 @@ public class ProtocolLib {
         );
 
         if (message != null) {
-            List<SpartanProtocol> players = Permissions.getStaff();
+            List<PlayerProtocol> players = Permissions.getStaff();
 
             if (!players.isEmpty()) {
-                for (SpartanProtocol p : players) {
+                for (PlayerProtocol p : players) {
                     if (AwarenessNotifications.canSend(p.getUUID(), "protocol-lib", 0)) {
                         p.bukkit().sendMessage(message);
                     }

@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.compatibility.manual.abilities;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.utils.java.ReflectionUtils;
@@ -16,7 +16,7 @@ public class ItemsAdder {
 
     private static final boolean classExists = ReflectionUtils.classExists("me.libraryaddict.disguise.DisguiseAPI");
 
-    public static boolean is(SpartanProtocol protocol) {
+    public static boolean is(PlayerProtocol protocol) {
         if (classExists && Compatibility.CompatibilityType.ITEMS_ADDER.isFunctional()) {
             PlayerInventory inventory = protocol.bukkit().getInventory();
 

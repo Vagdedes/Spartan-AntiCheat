@@ -1,6 +1,6 @@
 package com.vagdedes.spartan.abstraction.profiling;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.tracking.AntiCheatLogs;
@@ -21,9 +21,9 @@ public class MiningHistory {
             amountIdentifier = "Amount: ",
             oreIdentifier = "Ore: ";
 
-    public static void log(SpartanProtocol protocol, Block block, boolean cancelled) {
+    public static void log(PlayerProtocol protocol, Block block, boolean cancelled) {
         if (protocol.bukkit().getGameMode() == GameMode.SURVIVAL
-                && PlayerUtils.isPickaxeItem(protocol.spartan.getItemInHand().getType())) {
+                && PlayerUtils.isPickaxeItem(protocol.bukkitExtra.getItemInHand().getType())) {
             MiningHistory.MiningOre ore = MiningHistory.getMiningOre(block.getType());
 
             if (ore != null) {
@@ -46,8 +46,7 @@ public class MiningHistory {
                     event = null;
                 }
 
-                if ((event == null || !event.isCancelled())
-                        && Enums.HackType.XRay.getCheck().isEnabled(protocol.spartan.dataType, protocol.getWorld().getName())) {
+                if (event == null || !event.isCancelled()) {
                     AntiCheatLogs.logInfo(
                             protocol,
                             null,

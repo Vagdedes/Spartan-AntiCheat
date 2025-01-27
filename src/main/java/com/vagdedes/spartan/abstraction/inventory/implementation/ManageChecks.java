@@ -2,19 +2,18 @@ package com.vagdedes.spartan.abstraction.inventory.implementation;
 
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.CloudBase;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
+import com.vagdedes.spartan.functionality.moderation.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.functionality.tracking.PlayerEvidence;
 import com.vagdedes.spartan.functionality.tracking.ResearchEngine;
-import com.vagdedes.spartan.utils.java.TimeUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.EnchantmentUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
 import me.vagdedes.spartan.system.Enums;
@@ -34,7 +33,7 @@ public class ManageChecks extends InventoryMenu {
     }
 
     @Override
-    public boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object) {
+    public boolean internalOpen(PlayerProtocol protocol, boolean permissionMessage, Object object) {
         for (HackType check : Enums.HackType.values()) {
             addCheck(protocol, check);
         }
@@ -49,12 +48,12 @@ public class ManageChecks extends InventoryMenu {
     }
 
     @Override
-    public boolean internalHandle(SpartanProtocol protocol) {
+    public boolean internalHandle(PlayerProtocol protocol) {
         String item = itemStack.getItemMeta().getDisplayName();
         item = item.startsWith("§") ? item.substring(2) : item;
 
         if (item.equals("Back")) {
-            InteractiveInventory.mainMenu.open(protocol);
+            PluginBase.mainMenu.open(protocol);
         } else if (item.equals("Disable all checks")) {
             Config.disableChecks();
             open(protocol);
@@ -112,7 +111,7 @@ public class ManageChecks extends InventoryMenu {
         return true;
     }
 
-    private void addCheck(SpartanProtocol protocol, HackType hackType) {
+    private void addCheck(PlayerProtocol protocol, HackType hackType) {
         Check check = hackType.getCheck();
         boolean enabled = check.isEnabled(null, null),
                 silent = check.isSilent(null, null),
@@ -223,18 +222,8 @@ public class ManageChecks extends InventoryMenu {
         // Separator
 
         if (notEnoughData != null && (!silent || punish)) {
-            long remainingTime = protocol.profile().getRunner(hackType).getRemainingCompletionTime(
-                    notEnoughData,
-                    null
-            );
             lore.add("");
-
-            if (remainingTime > 0L) {
-                lore.add("§eData pending to enable preventions & punishments:");
-                lore.add("§e" + TimeUtils.convertMilliseconds(remainingTime));
-            } else {
-                lore.add("§eData pending to enable preventions & punishments.");
-            }
+            lore.add("§eData incomplete in order to enable preventions & punishments.");
         }
         if (enabled && silent) {
             item.addUnsafeEnchantment(EnchantmentUtils.DURABILITY, 1);

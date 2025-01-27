@@ -1,9 +1,9 @@
 package com.vagdedes.spartan.compatibility.manual.entity;
 
 import com.vagdedes.spartan.abstraction.data.Cooldowns;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.java.OverflowMap;
 import es.pollitoyeye.vehicles.enums.VehicleType;
 import es.pollitoyeye.vehicles.events.VehicleEnterEvent;
@@ -31,7 +31,7 @@ public class Vehicles implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Enter(VehicleEnterEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanProtocol p = SpartanBukkit.getProtocol(e.getPlayer());
+            PlayerProtocol p = PluginBase.getProtocol(e.getPlayer());
             VehicleType vehicleType = e.getVehicleType();
 
             if (vehicleType == VehicleType.DRILL) {
@@ -45,7 +45,7 @@ public class Vehicles implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private void Exit(VehicleExitEvent e) {
         if (Compatibility.CompatibilityType.VEHICLES.isFunctional()) {
-            SpartanProtocol p = SpartanBukkit.getProtocol(e.getPlayer());
+            PlayerProtocol p = PluginBase.getProtocol(e.getPlayer());
 
             for (String type : types) {
                 cooldowns.remove(key(p, type));
@@ -53,19 +53,19 @@ public class Vehicles implements Listener {
         }
     }
 
-    private static String key(SpartanProtocol p, String type) {
+    private static String key(PlayerProtocol p, String type) {
         return p.getUUID() + "=" + key + type;
     }
 
-    private static void add(SpartanProtocol p, String type) {
+    private static void add(PlayerProtocol p, String type) {
         cooldowns.add(key(p, type), 20);
     }
 
-    public static boolean has(SpartanProtocol p, String type) {
+    public static boolean has(PlayerProtocol p, String type) {
         return !cooldowns.canDo(key(p, type));
     }
 
-    public static boolean has(SpartanProtocol p, String[] types) {
+    public static boolean has(PlayerProtocol p, String[] types) {
         for (String type : types) {
             if (has(p, type)) {
                 return true;

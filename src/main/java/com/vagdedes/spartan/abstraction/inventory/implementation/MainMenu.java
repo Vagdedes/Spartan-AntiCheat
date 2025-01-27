@@ -4,18 +4,17 @@ import com.vagdedes.filegui.api.FileGUIAPI;
 import com.vagdedes.spartan.Register;
 import com.vagdedes.spartan.abstraction.check.Check;
 import com.vagdedes.spartan.abstraction.inventory.InventoryMenu;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.compatibility.Compatibility;
 import com.vagdedes.spartan.functionality.command.CommandExecution;
 import com.vagdedes.spartan.functionality.connection.DiscordMemberCount;
 import com.vagdedes.spartan.functionality.connection.cloud.SpartanEdition;
-import com.vagdedes.spartan.functionality.inventory.InteractiveInventory;
-import com.vagdedes.spartan.functionality.inventory.PlayerStateLists;
-import com.vagdedes.spartan.functionality.notifications.clickable.ClickableMessage;
+import com.vagdedes.spartan.functionality.moderation.PlayerStateLists;
+import com.vagdedes.spartan.functionality.moderation.clickable.ClickableMessage;
 import com.vagdedes.spartan.functionality.server.Config;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
 import com.vagdedes.spartan.functionality.server.Permissions;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.math.AlgebraUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.InventoryUtils;
 import com.vagdedes.spartan.utils.minecraft.inventory.MaterialUtils;
@@ -38,16 +37,16 @@ public class MainMenu extends InventoryMenu {
     }
 
     public static void refresh() {
-        Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+        Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
         if (!protocols.isEmpty()) {
-            for (SpartanProtocol protocol : protocols) {
-                SpartanBukkit.transferTask(protocol, () -> {
+            for (PlayerProtocol protocol : protocols) {
+                PluginBase.transferTask(protocol, () -> {
                     String title = protocol.bukkit().getOpenInventory().getTitle();
 
                     if (title.startsWith(name)) {
                         DiscordMemberCount.ignore();
-                        InteractiveInventory.mainMenu.open(protocol);
+                        PluginBase.mainMenu.open(protocol);
                     }
                 });
             }
@@ -55,7 +54,7 @@ public class MainMenu extends InventoryMenu {
     }
 
     @Override
-    public boolean internalOpen(SpartanProtocol protocol, boolean permissionMessage, Object object) {
+    public boolean internalOpen(PlayerProtocol protocol, boolean permissionMessage, Object object) {
         List<String> lore = new ArrayList<>(20);
         UUID uuid = protocol.getUUID();
         int page = PlayerStateLists.getPage(uuid), previousPageSlot = 18, nextPageSlot = 26;
@@ -68,7 +67,7 @@ public class MainMenu extends InventoryMenu {
         // Configuration
         InventoryUtils.prepareDescription(lore, "Plugin Management");
 
-        lore.add("§7Packets§8: §a" + (SpartanBukkit.packetsEnabled() ? "Enabled" : "Disabled"));
+        lore.add("§7Packets§8: §a" + (PluginBase.packetsEnabled() ? "Enabled" : "Disabled"));
         lore.add("§7Detections Available§8: "
                 + (SpartanEdition.hasDetectionsPurchased(Check.DataType.JAVA) ? "§a" : "§c") + Check.DataType.JAVA
                 + " §8/ "
@@ -142,12 +141,12 @@ public class MainMenu extends InventoryMenu {
     }
 
     @Override
-    public boolean internalHandle(SpartanProtocol protocol) {
+    public boolean internalHandle(PlayerProtocol protocol) {
         String name = itemStack.getItemMeta().getDisplayName(),
                 item = (name.startsWith("§") ? name.substring(2) : name);
 
         if (item.equals("Auto Updater")) {
-            protocol.spartan.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
+            protocol.bukkitExtra.sendImportantMessage("§6Discord Invite URL§8: §e§n" + DiscordMemberCount.discordURL);
 
         } else if (item.equals("Compatibilities")) {
             if (!Permissions.has(protocol.bukkit(), Permission.MANAGE)) {
@@ -184,7 +183,7 @@ public class MainMenu extends InventoryMenu {
                         DiscordMemberCount.discordURL
                 );
             } else {
-                InteractiveInventory.manageChecks.open(protocol);
+                PluginBase.manageChecks.open(protocol);
             }
 
         } else if (item.startsWith("Page")) {
@@ -212,7 +211,7 @@ public class MainMenu extends InventoryMenu {
             }
         } else if (!name.startsWith(PlayerStateLists.inactiveColour)
                 && !item.equals("Summary")) {
-            InteractiveInventory.playerInfo.open(protocol, false, item);
+            PluginBase.playerInfo.open(protocol, false, item);
         }
         return true;
     }

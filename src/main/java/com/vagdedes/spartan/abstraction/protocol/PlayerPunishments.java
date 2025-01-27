@@ -1,8 +1,8 @@
 package com.vagdedes.spartan.abstraction.protocol;
 
-import com.vagdedes.spartan.functionality.notifications.DetectionNotifications;
+import com.vagdedes.spartan.functionality.moderation.DetectionNotifications;
 import com.vagdedes.spartan.functionality.server.Config;
-import com.vagdedes.spartan.functionality.server.SpartanBukkit;
+import com.vagdedes.spartan.functionality.server.PluginBase;
 import com.vagdedes.spartan.utils.minecraft.server.ConfigUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -12,10 +12,10 @@ import java.util.Collection;
 
 public class PlayerPunishments {
 
-    private final SpartanPlayer parent;
+    private final PlayerBukkit parent;
     private long kickCooldown, warnCooldown;
 
-    public PlayerPunishments(SpartanPlayer player) {
+    public PlayerPunishments(PlayerBukkit player) {
         this.parent = player;
     }
 
@@ -37,17 +37,17 @@ public class PlayerPunishments {
                                     .replace("{punisher}", punisherName),
                             null);
 
-            Collection<SpartanProtocol> protocols = SpartanBukkit.getProtocols();
+            Collection<PlayerProtocol> protocols = PluginBase.getProtocols();
 
             if (!protocols.isEmpty()) {
-                for (SpartanProtocol protocol : protocols) {
+                for (PlayerProtocol protocol : protocols) {
                     if (DetectionNotifications.hasPermission(protocol)) {
                         protocol.bukkit().sendMessage(announcement);
                     }
                 }
             }
 
-            SpartanBukkit.transferTask(
+            PluginBase.transferTask(
                     this.parent.protocol,
                     () -> target.kickPlayer(kick)
             );

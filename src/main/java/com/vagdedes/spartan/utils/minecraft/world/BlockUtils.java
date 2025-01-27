@@ -1,7 +1,7 @@
 package com.vagdedes.spartan.utils.minecraft.world;
 
-import com.vagdedes.spartan.abstraction.protocol.SpartanPlayer;
-import com.vagdedes.spartan.abstraction.protocol.SpartanProtocol;
+import com.vagdedes.spartan.abstraction.protocol.PlayerBukkit;
+import com.vagdedes.spartan.abstraction.protocol.PlayerProtocol;
 import com.vagdedes.spartan.abstraction.world.SpartanBlock;
 import com.vagdedes.spartan.abstraction.world.SpartanLocation;
 import com.vagdedes.spartan.functionality.server.MultiVersion;
@@ -1502,10 +1502,10 @@ public class BlockUtils {
         return time >= 0L && time <= sensitiveBlockBreakTime || sensitive.contains(m);
     }
 
-    public static boolean isSensitive(SpartanProtocol p, Material m) {
+    public static boolean isSensitive(PlayerProtocol p, Material m) {
         return isSensitive(
                 m,
-                p == null ? -1 : MaterialUtils.getBlockBreakTime(p, p.spartan.getItemInHand(), m)
+                p == null ? -1 : MaterialUtils.getBlockBreakTime(p, p.bukkitExtra.getItemInHand(), m)
         );
     }
 
@@ -1521,7 +1521,7 @@ public class BlockUtils {
         return semi_solid.contains(m);
     }
 
-    public static boolean isInteractiveAndPassable(SpartanPlayer p, Material material) {
+    public static boolean isInteractiveAndPassable(PlayerBukkit p, Material material) {
         return interactive_and_passable.contains(material)
                 || p != null && p.isFrozen();
     }
@@ -1554,9 +1554,9 @@ public class BlockUtils {
 
     // Separator
 
-    public static boolean isSlime(SpartanProtocol p, SpartanLocation loc, int blocks) {
+    public static boolean isSlime(PlayerProtocol p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_8)) {
-            if (p.spartan.isOnGround(false)) {
+            if (p.isOnGround()) {
                 return loc.getBlock().getType() == Material.SLIME_BLOCK;
             } else {
                 SpartanLocation loopLocation = loc.clone();
@@ -1585,9 +1585,9 @@ public class BlockUtils {
         return false;
     }
 
-    public static boolean isBed(SpartanProtocol p, SpartanLocation loc, int blocks) {
+    public static boolean isBed(PlayerProtocol p, SpartanLocation loc, int blocks) {
         if (MultiVersion.isOrGreater(MultiVersion.MCVersion.V1_12)) {
-            if (p.spartan.isOnGround(false)) {
+            if (p.isOnGround()) {
                 return areBeds(loc.getBlock().getType());
             } else {
                 SpartanLocation loopLocation = loc.clone();
@@ -1610,7 +1610,7 @@ public class BlockUtils {
         return false;
     }
 
-    public static boolean isBouncingBlock(SpartanProtocol p, SpartanLocation loc, int blocks) {
+    public static boolean isBouncingBlock(PlayerProtocol p, SpartanLocation loc, int blocks) {
         return isSlime(p, loc, blocks) || isBed(p, loc, blocks);
     }
 
