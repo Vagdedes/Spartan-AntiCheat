@@ -1,6 +1,5 @@
 package ai.idealistic.spartan.abstraction.check;
 
-import ai.idealistic.spartan.Register;
 import ai.idealistic.spartan.abstraction.protocol.PlayerProtocol;
 import ai.idealistic.spartan.compatibility.Compatibility;
 import ai.idealistic.spartan.compatibility.manual.abilities.ItemsAdder;
@@ -14,7 +13,7 @@ import ai.idealistic.spartan.functionality.server.MultiVersion;
 import ai.idealistic.spartan.functionality.server.Permissions;
 import ai.idealistic.spartan.functionality.server.PluginBase;
 import ai.idealistic.spartan.functionality.server.TPS;
-import ai.idealistic.spartan.functionality.tracking.DetectionCharge;
+import ai.idealistic.spartan.functionality.tracking.LimitedEdition;
 import ai.idealistic.spartan.utils.math.AlgebraUtils;
 import ai.idealistic.spartan.utils.minecraft.entity.PlayerUtils;
 import org.bukkit.GameMode;
@@ -100,13 +99,11 @@ public abstract class CheckRunner extends CheckProcess {
         if (this.protocol.npc) {
             builder.append("Player was determined to be an NPC");
         }
-        if (!DetectionCharge.has()) {
+        if (!LimitedEdition.canRun()) {
             if (builder.length() > 0) {
                 builder.append(", ");
             }
-            builder.append("Detections need to be charged, run /")
-                    .append(Register.pluginName.toLowerCase())
-                    .append(" charge");
+            builder.append(LimitedEdition.message);
         }
         String world = this.protocol.getWorld().getName();
 

@@ -1320,26 +1320,8 @@ public class BlockUtils {
                 && ((Waterlogged) blockData).isWaterlogged();
     }
 
-    public static boolean isWaterLogged(Block block) {
-        return blockDataExists
-                && ChunksEvent.isLoaded(block)
-                && isWaterLogged(block.getBlockData());
-    }
-
-    public static boolean isWaterLogged(ServerBlock block) {
-        return blockDataExists && isWaterLogged(block.getType().createBlockData());
-    }
-
-    public static boolean isLiquidOrWaterLogged(Object block, boolean lava) {
-        return block instanceof Block
-                ? isLiquidOrWaterLogged((Block) block, lava)
-                : blockDataExists
-                  && block instanceof BlockData
-                  && isLiquidOrWaterLogged((BlockData) block, lava);
-    }
-
     public static boolean isLiquidOrWaterLogged(Block block, boolean lava) {
-        return (isLiquid(block) || isWaterLogged(block))
+        return (isLiquid(block) || new ServerBlock(block).isWaterLogged())
                 && (lava || new ServerBlock(block).getType() != MaterialUtils.get("lava"));
     }
 
@@ -1583,7 +1565,7 @@ public class BlockUtils {
                 if (!isSolid(loopLocation.getBlock().getType())) {
                     int y = loc.getBlockY();
 
-                    for (int i = y; i > Math.max(getMinHeight(p.getWorld()), y - blocks); i--) {
+                    for (int i = y; i > Math.max(getMinHeight(loopLocation.getWorld()), y - blocks); i--) {
                         Material m = loopLocation.add(0, -1, 0).getBlock().getType();
 
                         if (m == Material.SLIME_BLOCK) {
@@ -1614,7 +1596,7 @@ public class BlockUtils {
                 if (!isSolid(loopLocation.getBlock().getType())) {
                     int y = loc.getBlockY();
 
-                    for (int i = y; i > Math.max(getMinHeight(p.getWorld()), y - blocks); i--) {
+                    for (int i = y; i > Math.max(getMinHeight(loopLocation.getWorld()), y - blocks); i--) {
                         Material m = loopLocation.add(0, -1, 0).getBlock().getType();
 
                         if (areBeds(m)) {

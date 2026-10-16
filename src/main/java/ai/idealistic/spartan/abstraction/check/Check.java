@@ -106,6 +106,17 @@ public class Check {
             silentWorlds;
     private Collection<String> punishments;
 
+    // Config values may be booleans, numbers or text, and numbers must not be cast directly as the exact type is unknown
+    private static boolean toBoolean(Object value) {
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        } else if (value instanceof Number) {
+            return ((Number) value).doubleValue() > 0.0;
+        } else {
+            return Boolean.parseBoolean(value.toString().toLowerCase());
+        }
+    }
+
     // Object Methods
 
     public Check(CheckEnums.HackType hackType) {
@@ -132,39 +143,27 @@ public class Check {
                     true,
                     false
             );
-            boolean enabled = optionValue instanceof Boolean ? (boolean) optionValue :
-                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
-                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
-                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            boolean enabled = toBoolean(optionValue);
             this.enabled[dataType.ordinal()] = enabled;
             optionValue = getOption(
                     "silent." + dataType.toString().toLowerCase(),
                     false,
                     false
             );
-            this.silent[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
-                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
-                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
-                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            this.silent[dataType.ordinal()] = toBoolean(optionValue);
             optionValue = getOption(
                     "punishments.enabled." + dataType.toString().toLowerCase(),
                     true,
                     false
             );
-            this.punish[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
-                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
-                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
-                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            this.punish[dataType.ordinal()] = toBoolean(optionValue);
 
             optionValue = getOption(
                     "detection_details." + dataType.toString().toLowerCase(),
                     true,
                     false
             );
-            this.detectionDetails[dataType.ordinal()] = optionValue instanceof Boolean ? (boolean) optionValue :
-                    optionValue instanceof Long || optionValue instanceof Integer || optionValue instanceof Short ? ((long) optionValue) > 0L :
-                            optionValue instanceof Double || optionValue instanceof Float ? ((double) optionValue) > 0.0 :
-                                    Boolean.parseBoolean(optionValue.toString().toLowerCase());
+            this.detectionDetails[dataType.ordinal()] = toBoolean(optionValue);
         }
 
         // Separator
@@ -180,19 +179,8 @@ public class Check {
 
         // Separator
 
-        if (handleCancelledEvents != null) {
-            if (handleCancelledEvents instanceof Boolean) {
-                this.handleCancelledEvents = (boolean) handleCancelledEvents;
-            } else if (handleCancelledEvents instanceof Long || handleCancelledEvents instanceof Integer || handleCancelledEvents instanceof Short) {
-                this.handleCancelledEvents = ((long) handleCancelledEvents) > 0L;
-            } else if (handleCancelledEvents instanceof Double || handleCancelledEvents instanceof Float) {
-                this.handleCancelledEvents = ((double) handleCancelledEvents) > 0.0;
-            } else {
-                this.handleCancelledEvents = Boolean.parseBoolean(handleCancelledEvents.toString().toLowerCase());
-            }
-        } else {
-            this.handleCancelledEvents = false;
-        }
+        this.handleCancelledEvents = handleCancelledEvents != null
+                && toBoolean(handleCancelledEvents);
 
         // Separator
 
@@ -414,16 +402,15 @@ public class Check {
         Object object = getOption(option, def, true);
         return object instanceof Boolean ? (boolean) object :
                 object instanceof String ? Boolean.parseBoolean(object.toString().toLowerCase()) :
-                        object instanceof Long || object instanceof Integer || object instanceof Short ? ((long) object) > 0L :
-                                object instanceof Double || object instanceof Float ? ((double) object) > 0.0 :
-                                        def != null && def;
+                        object instanceof Number ? ((Number) object).doubleValue() > 0.0 :
+                                def != null && def;
     }
 
     public int getNumericalOption(String option, int def) {
         Object object = getOption(option, def, true);
 
         if (object instanceof Integer || object instanceof Short) {
-            return (int) object;
+            return ((Number) object).intValue();
         } else if (object instanceof String || object instanceof Long) {
             try {
                 return Integer.parseInt(object.toString());
@@ -445,7 +432,7 @@ public class Check {
         Object object = getOption(option, def, true);
 
         if (object instanceof Double || object instanceof Float) {
-            return (double) object;
+            return ((Number) object).doubleValue();
         } else if (object instanceof Long) {
             return ((Long) object).doubleValue();
         } else if (object instanceof Integer) {

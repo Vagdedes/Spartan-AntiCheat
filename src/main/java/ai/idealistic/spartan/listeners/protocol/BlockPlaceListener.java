@@ -47,6 +47,7 @@ public class BlockPlaceListener extends PacketAdapter {
             return;
         }
         PacketContainer packet = event.getPacket();
+        World world = player.getWorld();
 
         CheckThread.run(protocol, () -> {
             if (isPlacingBlock(packet)) {
@@ -64,14 +65,19 @@ public class BlockPlaceListener extends PacketAdapter {
                         blockPosition = BlockPositionPlib.getSafeBlockPosition(packet, 0);
                         if (packet.getDirections().size() == 0) {
                             int directionInt = BackPlib.getSafeInt(packet, 0);
-                            direction = EnumWrappers.Direction.values()[directionInt];
+                            EnumWrappers.Direction[] directions = EnumWrappers.Direction.values();
+
+                            if (directionInt < 0 || directionInt >= directions.length) {
+                                return; // Legacy packets use 255 when no face was clicked
+                            }
+                            direction = directions[directionInt];
                         } else {
                             direction = DirectionPlib.getSafeDirection(packet, 0);
                         }
                     }
 
                     Location l = new Location(
-                            protocol.getWorld(),
+                            world,
                             blockPosition.toVector().getBlockX(),
                             blockPosition.toVector().getBlockY(),
                             blockPosition.toVector().getBlockZ()
@@ -79,7 +85,6 @@ public class BlockPlaceListener extends PacketAdapter {
                     if (direction == null) return;
                     l.add(getDirection(BlockFace.valueOf(direction.name())));
 
-                    World world = player.getWorld();
                     Block block = ChunksEvent.getBlockAsync(new Location(world, (int) l.getX(), (int) l.getY(), (int) l.getZ()));
 
                     if (block == null) return;
@@ -91,15 +96,15 @@ public class BlockPlaceListener extends PacketAdapter {
                                : protocol.getInventory().getItemInOffHand()) : player.getItemInHand();
                     if (itemInHand.getType().isBlock()) {
                         if (!isInPlayer(protocol.getLocation(), block.getLocation())) {
-                            Block blockAgainst = player.getLocation().getBlock();
-                            Location blockLoc = new Location(world, blockPosition.getX(), blockPosition.getY(), blockPosition.getY());
+                            Block blockAgainst = ChunksEvent.getBlockAsync(player.getLocation());
+                            Location blockLoc = new Location(world, blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
                             if (!BlockUtils.isSurroundedByAir(protocol, blockLoc)
                                     || !BlockUtils.isSurroundedByAir(protocol, blockLoc.clone().add(0, 1, 0))) {
                                 Material material = itemInHand.getType();
-                                protocol.packetWorld.worldChange(new ServerBlockChange(blockPosition, material));
+                                protocol.packetWorld.worldChange(new ServerBlockChange(blockPosition, material, world));
                                 protocol.packetWorld.worldChange(new ServerBlockChange(
                                         new BlockPosition(blockPosition.getX(), blockPosition.getY() + 1, blockPosition.getZ()),
-                                        material
+                                        material, world
                                 ));
                             }
                             PlaceEvent.event(protocol, block, blockAgainst, event, true);

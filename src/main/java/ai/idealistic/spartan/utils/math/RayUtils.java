@@ -87,7 +87,7 @@ public class RayUtils {
 
     @SafeVarargs
     public static boolean onBlock(PlayerProtocol protocol, Location location, Set<Material>... sets) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -109,7 +109,7 @@ public class RayUtils {
     }
 
     public static boolean onBlock(PlayerProtocol protocol, Location location, Set<Material> set) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -129,7 +129,7 @@ public class RayUtils {
     }
 
     public static boolean onBlock(PlayerProtocol protocol, Location location, Material material) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -149,7 +149,7 @@ public class RayUtils {
     }
 
     public static boolean onSolidBlock(PlayerProtocol protocol, Location location) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.5, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.1, 0.3));
@@ -169,7 +169,7 @@ public class RayUtils {
     }
 
     public static boolean isSolidBlock(PlayerProtocol protocol, Location location) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, -0.3, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.3, 0.3));
@@ -189,7 +189,7 @@ public class RayUtils {
     }
 
     public static boolean inBlock(PlayerProtocol protocol, Location location) {
-        World world = protocol.getWorld();
+        World world = location.getWorld();
         Vector playerLocation = location.toVector(),
                 min = playerLocation.clone().add(new Vector(-0.3, 0.0, -0.3)),
                 max = playerLocation.clone().add(new Vector(0.3, 0.5, 0.3));
@@ -478,6 +478,7 @@ public class RayUtils {
     }
 
     public static boolean isSaveToTeleport(PlayerProtocol protocol, Location location) {
+        World world = location.getWorld();
         double x = location.getX();
         double y = location.getY();
         double z = location.getZ();
@@ -486,7 +487,7 @@ public class RayUtils {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     Material material = new ServerLocation(
-                            new Location(protocol.getWorld(), x + (dx * 0.3), y + (dy * 0.3), z + (dz * 0.3))
+                            new Location(world, x + (dx * 0.3), y + (dy * 0.3), z + (dz * 0.3))
                     ).getBlock(protocol).getTypeOrNull();
                     if (material == null) continue;
                     if (!BlockUtils.areAir(material)) {

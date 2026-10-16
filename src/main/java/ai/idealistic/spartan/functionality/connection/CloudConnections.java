@@ -5,8 +5,6 @@ import ai.idealistic.spartan.functionality.moderation.AwarenessNotifications;
 import ai.idealistic.spartan.functionality.moderation.CrossServerNotifications;
 import ai.idealistic.spartan.functionality.server.Config;
 import ai.idealistic.spartan.functionality.server.PluginBase;
-import ai.idealistic.spartan.utils.java.RequestUtils;
-import ai.idealistic.spartan.utils.java.StringUtils;
 import org.bukkit.ChatColor;
 
 import java.io.OutputStream;
@@ -16,26 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class CloudConnections {
-
-    static String[][] getStaffAnnouncements() {
-        try {
-            String[] results = RequestUtils.get(StringUtils.decodeBase64(JarVerification.website) + "?" + CloudBase.identification()
-                    + "&action=get&data=staffAnnouncements&version=" + Register.plugin.getDescription().getVersion());
-
-            if (results.length > 0) {
-                String[] announcements = results[0].split(CloudBase.separator);
-                String[][] array = new String[results.length][0];
-
-                for (int i = 0; i < announcements.length; i++) {
-                    array[i] = StringUtils.decodeBase64(announcements[i]).split(CloudBase.separator);
-                }
-                return array;
-            }
-        } catch (Exception e) {
-            CloudBase.throwError(e, "staffAnnouncements:GET");
-        }
-        return new String[][]{};
-    }
 
     public static void executeDiscordWebhook(String webhook, UUID uuid, String name, int ping, int x, int y, int z, String type, String information) {
         String urlString = Config.settings.getString("Discord." + webhook + "_webhook_url");
@@ -101,7 +79,7 @@ public class CloudConnections {
                 }
 
             } catch (Exception e) {
-                CloudBase.throwError(e, "discordWebhooks:LOCAL");
+                AwarenessNotifications.optionallySend("Webhook exception: " + e.getMessage());
             }
         });
     }

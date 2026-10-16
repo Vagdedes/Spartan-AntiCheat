@@ -2,12 +2,11 @@ package ai.idealistic.spartan.listeners.bukkit.standalone;
 
 import ai.idealistic.spartan.Register;
 import ai.idealistic.spartan.abstraction.protocol.PlayerProtocol;
-import ai.idealistic.spartan.functionality.connection.CloudBase;
 import ai.idealistic.spartan.functionality.moderation.AwarenessNotifications;
 import ai.idealistic.spartan.functionality.server.Config;
 import ai.idealistic.spartan.functionality.server.Permissions;
 import ai.idealistic.spartan.functionality.server.PluginBase;
-import ai.idealistic.spartan.functionality.tracking.DetectionCharge;
+import ai.idealistic.spartan.functionality.tracking.LimitedEdition;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -35,8 +34,7 @@ public class JoinEvent implements Listener {
 
         PluginBase.runDelayedTask(protocol, () -> {
             Config.settings.runOnLogin(protocol);
-            CloudBase.announce(protocol);
-            DetectionCharge.notify(protocol);
+            LimitedEdition.notify(protocol);
         }, 10L);
     }
 

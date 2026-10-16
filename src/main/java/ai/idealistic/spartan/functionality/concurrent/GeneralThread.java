@@ -9,7 +9,7 @@ public class GeneralThread {
 
     // Methods
 
-    private static boolean enabled = true;
+    private static volatile boolean enabled = true;
     private static final Map<String, Boolean> threads = new ConcurrentHashMap<>();
 
     public static void disable() {
@@ -27,7 +27,7 @@ public class GeneralThread {
 
         private final Thread thread;
         private final List<Runnable> runnables;
-        private boolean pause;
+        private volatile boolean pause;
 
         public ThreadPool(long refreshRateInMilliseconds) {
             pause = false;
@@ -48,7 +48,12 @@ public class GeneralThread {
                         runnable = runnables.isEmpty() ? null : runnables.remove(0);
                     }
                     if (runnable != null) {
-                        runnable.run();
+                        try {
+                            runnable.run();
+                        } catch (Throwable e) {
+                            // A failing task must not terminate the worker, otherwise every later task would never run
+                            e.printStackTrace();
+                        }
                     } else {
                         Thread.sleep(refreshRateInMilliseconds);
                     }

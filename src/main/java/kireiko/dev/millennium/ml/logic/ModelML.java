@@ -4,6 +4,7 @@ import kireiko.dev.millennium.ml.data.DataML;
 import kireiko.dev.millennium.ml.data.ObjectML;
 import kireiko.dev.millennium.ml.data.ResultML;
 import kireiko.dev.millennium.ml.data.statistic.StatisticML;
+import kireiko.dev.millennium.types.Pair;
 import lombok.Data;
 import lombok.SneakyThrows;
 
@@ -88,4 +89,7 @@ public class ModelML implements Serializable, Millennium {
         return i;
     }
 
+    @Override
+    public void trainEpochs(List<Pair<List<ObjectML>, Boolean>> dataset, int epochs) {
+    }
 }

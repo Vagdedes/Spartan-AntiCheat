@@ -12,18 +12,24 @@ public final class RotationEvent {
     private Vec2f from;
     private Vec2f to;
 
-    private static double absDelta(float v1, float v2) {
-        return Math.abs(Math.abs(v1) - Math.abs(v2));
+    // Shortest signed angle between two yaw values, as yaw wraps around at +-180 degrees
+    private static float wrapDegrees(float degrees) {
+        degrees %= 360.0f;
+
+        if (degrees >= 180.0f) {
+            degrees -= 360.0f;
+        } else if (degrees < -180.0f) {
+            degrees += 360.0f;
+        }
+        return degrees;
     }
 
     public Vec2f getDelta() {
-        return new Vec2f(to.getX() - from.getX(), to.getY() - from.getY());
+        return new Vec2f(wrapDegrees(to.getX() - from.getX()), to.getY() - from.getY());
     }
 
     public Vec2f getAbsDelta() {
-        return new Vec2f(
-                absDelta(to.getX(), from.getX()),
-                absDelta(to.getY(), from.getY())
-        );
+        Vec2f delta = this.getDelta();
+        return new Vec2f(Math.abs(delta.getX()), Math.abs(delta.getY()));
     }
 }

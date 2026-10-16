@@ -15,6 +15,7 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.WrappedBlockData;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 public class PacketServerBlockHandle extends PacketAdapter {
@@ -35,7 +36,8 @@ public class PacketServerBlockHandle extends PacketAdapter {
         PacketContainer packet = event.getPacket();
         BlockPosition blockPosition = BlockPositionPlib.getSafeBlockPosition(packet, 0);
         WrappedBlockData blockData = BlockDataPlib.getSafeBlockData(packet, 0);
-        ServerBlockChange serverBlockChange = new ServerBlockChange(blockPosition, blockData.getType());
+        World world = player.getWorld();
+        ServerBlockChange serverBlockChange = new ServerBlockChange(blockPosition, blockData.getType(), world);
         CheckThread.run(protocol, () -> protocol.packetWorld.worldChange(serverBlockChange));
     }
 

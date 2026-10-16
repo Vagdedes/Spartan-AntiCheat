@@ -9,7 +9,6 @@ import ai.idealistic.spartan.abstraction.profiling.MiningHistory;
 import ai.idealistic.spartan.abstraction.profiling.PlayerProfile;
 import ai.idealistic.spartan.abstraction.protocol.PlayerProtocol;
 import ai.idealistic.spartan.functionality.concurrent.GeneralThread;
-import ai.idealistic.spartan.functionality.connection.CloudBase;
 import ai.idealistic.spartan.functionality.server.Config;
 import ai.idealistic.spartan.functionality.server.PluginBase;
 import ai.idealistic.spartan.utils.java.ConcurrentList;
@@ -31,6 +30,9 @@ public class ResearchEngine {
     public static final Map<Integer, Double> averageViolationTime = new ConcurrentHashMap<>();
     public static Map<CheckEnums.HackType, Collection<Check.DataType>> violationFired = new ConcurrentHashMap<>();
     private static long schedulerTicks = 0L;
+    private static final long timestampThreshold = 315_360_000_000L; // ~10 years in ms, anything above is a raw timestamp
+    private static final int minIntervalsPerPlayer = 3, fullConfidencePlayers = 3;
+    private static final double minAverageRatio = 0.1, maxAverageRatio = 3.0;
     private static final Map<String, PlayerProfile> playerProfiles = new ConcurrentHashMap<>();
     private static final GeneralThread.ThreadPool statisticsThread = new GeneralThread.ThreadPool(1L);
 
@@ -94,7 +96,7 @@ public class ResearchEngine {
     private static void createPlayerProfile(PlayerProtocol protocol) {
         PlayerProfile profile = new PlayerProfile(protocol);
         profile.update(protocol);
-        playerProfiles.put(protocol.bukkit().getName(), new PlayerProfile(protocol));
+        playerProfiles.put(protocol.bukkit().getName(), profile);
     }
 
     // Separator
@@ -346,7 +348,6 @@ public class ResearchEngine {
 
             if (enabledPlugin) {
                 buildCache();
-                CloudBase.refresh();
             }
         };
 
@@ -497,6 +498,52 @@ public class ResearchEngine {
         updateCache(true);
     }
 
+    /**
+     * Lists may contain intervals (after sorting) as well as raw violation timestamps (added at runtime),
+     * so both are normalised into positive intervals between consecutive violations.
+     */
+    private static List<Long> extractIntervals(List<Long> values) {
+        List<Long> intervals = new ArrayList<>(values.size());
+        List<Long> timestamps = new ArrayList<>();
+
+        for (long value : values) {
+            long absolute = Math.abs(value);
+
+            if (absolute >= timestampThreshold) {
+                timestamps.add(absolute);
+            } else if (absolute > 0L) {
+                intervals.add(absolute);
+            }
+        }
+
+        if (timestamps.size() > 1) {
+            Collections.sort(timestamps);
+
+            for (int i = 1; i < timestamps.size(); i++) {
+                long difference = timestamps.get(i) - timestamps.get(i - 1);
+
+                if (difference > 0L) {
+                    intervals.add(difference);
+                }
+            }
+        }
+        return intervals;
+    }
+
+    private static <T extends Number> double median(List<T> values) {
+        double[] array = new double[values.size()];
+        int index = 0;
+
+        for (T value : values) {
+            array[index++] = value.doubleValue();
+        }
+        Arrays.sort(array);
+        int middle = array.length / 2;
+        return array.length % 2 == 0
+                ? (array[middle - 1] + array[middle]) / 2.0
+                : array[middle];
+    }
+
     private static void updateCache(boolean force) {
         if ((force || !violationFired.isEmpty()) && !playerProfiles.isEmpty()) {
             Collection<PlayerProfile> profiles = playerProfiles.values();
@@ -543,56 +590,33 @@ public class ResearchEngine {
                             for (Map.Entry<String, List<List<Long>>> entry : statistics.entrySet()) {
                                 List<List<Long>> lists = entry.getValue();
                                 String detection = entry.getKey();
-                                double mean = 0.0,
-                                        realizedMean = 0.0,
-                                        realizedTotal = 0.0,
-                                        total = 0.0;
+                                double defaultTime = hackType.getDefaultAverageTime(detection);
+                                List<Double> playerMedians = new ArrayList<>(lists.size());
 
+                                // One robust value per player, so a single noisy player or cheater cannot dominate
                                 for (List<Long> list : lists) {
                                     if (!list.isEmpty()) {
-                                        for (long time : list) {
-                                            realizedMean += time;
-                                        }
-                                        realizedTotal += list.size();
-                                    }
-                                }
+                                        List<Long> intervals = extractIntervals(list);
 
-                                if (realizedTotal > 0) {
-                                    realizedMean /= realizedTotal;
-
-                                    for (List<Long> list : lists) {
-                                        if (list.isEmpty()) {
-                                            mean += realizedMean;
-                                            total++;
-                                        } else {
-                                            for (long time : list) {
-                                                mean += time;
-                                            }
-                                            total += list.size();
+                                        if (intervals.size() >= minIntervalsPerPlayer) {
+                                            playerMedians.add(median(intervals));
                                         }
                                     }
-                                } else {
-                                    realizedMean = hackType.getDefaultAverageTime(detection);
                                 }
+                                double mean = defaultTime;
 
-                                for (List<Long> list : lists) {
-                                    for (long time : list) {
-                                        mean += time;
-                                    }
-                                    total += list.size();
-                                }
-
-                                if (total > 0) {
-                                    mean /= total;
-                                } else {
-                                    mean = realizedMean;
+                                if (!playerMedians.isEmpty()) {
+                                    // The more players violate at similar intervals, the more likely it is a
+                                    // false positive, so the estimate is trusted proportionally to the player count
+                                    double confidence = Math.min(playerMedians.size() / (double) fullConfidencePlayers, 1.0);
+                                    mean = defaultTime + (median(playerMedians) - defaultTime) * confidence;
                                 }
                                 averageViolationTime.put(
                                         (CheckDetection.generalHashCode(hackType, detection) * PluginBase.hashCodeMultiplier)
                                                 + dataType.hashCode(),
-                                        Math.min(
-                                                mean,
-                                                hackType.getDefaultAverageTime(detection) * 3
+                                        Math.max(
+                                                Math.min(mean, defaultTime * maxAverageRatio),
+                                                defaultTime * minAverageRatio
                                         )
                                 );
                             }

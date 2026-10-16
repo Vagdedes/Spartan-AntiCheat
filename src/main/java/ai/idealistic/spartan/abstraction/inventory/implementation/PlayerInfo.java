@@ -16,7 +16,7 @@ import ai.idealistic.spartan.functionality.moderation.clickable.ClickableMessage
 import ai.idealistic.spartan.functionality.server.Config;
 import ai.idealistic.spartan.functionality.server.Permissions;
 import ai.idealistic.spartan.functionality.server.PluginBase;
-import ai.idealistic.spartan.functionality.tracking.DetectionCharge;
+import ai.idealistic.spartan.functionality.tracking.LimitedEdition;
 import ai.idealistic.spartan.functionality.tracking.ResearchEngine;
 import ai.idealistic.spartan.utils.java.OverflowMap;
 import ai.idealistic.spartan.utils.java.TimeUtils;
@@ -193,8 +193,8 @@ public class PlayerInfo extends InventoryMenu {
                 ? "Player has permission bypass"
                 : disabledCause != null
                 ? "Custom: " + disabledCause.getReason()
-                : DetectionCharge.isLow()
-                ? "Detections are low on charge, run /" + Register.pluginName.toLowerCase() + " charge"
+                : !LimitedEdition.canRun()
+                ? LimitedEdition.message
                 : null;
     }
 

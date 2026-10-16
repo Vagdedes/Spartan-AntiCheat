@@ -1,7 +1,7 @@
 name: Spartan
 authors: [Evangelos Dedes @Vagdedes - Since 2016, pawsashatoy - Since 2024]
 main: ai.idealistic.spartan.Register
-version: 4.0.8.3
+version: 4.0.9.0
 website: https://spartan.top
 description: The longest living Minecraft paid anti cheat!
 api-version: 1.13

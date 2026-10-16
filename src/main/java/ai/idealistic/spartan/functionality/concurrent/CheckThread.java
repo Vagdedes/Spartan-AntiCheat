@@ -102,10 +102,13 @@ public class CheckThread {
             try {
                 decoratedRunnable.run();
             } catch (Throwable e) {
-                if (debug || processedErrors.putIfAbsent(e.getMessage(), true) == null) {
+                if (debug || processedErrors.putIfAbsent(String.valueOf(e.getMessage()), true) == null) {
                     log.severe("Error during execution of asynchronous task:");
                     e.printStackTrace();
-                    throw e;
+                }
+                // Rethrowing would cancel periodic tasks, so only fatal errors are propagated
+                if (e instanceof Error) {
+                    throw (Error) e;
                 }
             } finally {
                 if (debug) {

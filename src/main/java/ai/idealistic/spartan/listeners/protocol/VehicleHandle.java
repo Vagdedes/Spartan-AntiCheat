@@ -46,7 +46,7 @@ public class VehicleHandle extends PacketAdapter {
                 protocol.entityHandle = false;
             }
             for (Entity entity : protocol.getNearbyEntities(4.5)) {
-                if (entity.getUniqueId() != protocol.getUUID()) {
+                if (!entity.getUniqueId().equals(protocol.getUUID())) {
                     if (ProtocolTools.hasPosition(event.getPacket().getType()) && protocol.entityHandle) {
                         protocol.timerBalancer.addBalance(50);
                         VehicleExitEvent bukkitEvent = new VehicleExitEvent(null, protocol.bukkit());

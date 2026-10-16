@@ -38,7 +38,8 @@ public class MultiVersion {
         V1_20(766),
         V1_21(774),
         V26_1(775),
-        V26_2(Integer.MAX_VALUE),
+        V26_2(776),
+        V26_3(Integer.MAX_VALUE),
         OTHER(-1); // Always last
 
         public final int maxProtocol;

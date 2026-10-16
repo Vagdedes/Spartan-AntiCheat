@@ -167,6 +167,14 @@ public abstract class CheckDetection extends CheckProcess {
         }
     }
 
+    public final void call(Runnable runnable, Runnable ifNot) {
+        if (this.canCall()) {
+            runnable.run();
+        } else {
+            ifNot.run();
+        }
+    }
+
     // Data
 
     public final void clearData(Check.DataType dataType) {

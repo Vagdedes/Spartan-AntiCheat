@@ -182,16 +182,14 @@ public class MovementListener extends PacketAdapter {
                                 }
                                 // Force packet stop if your packet are shit
                                 event.setCancelled(true);
-                                PluginBase.runTask(p, () -> {
-                                    Location teleport = p.getTeleport();
+                                Location teleport = p.getTeleport();
 
-                                    if (teleport != null) {
-                                        Location build = teleport.clone();
-                                        build.setYaw(p.getLocation().getYaw());
-                                        build.setPitch(p.getLocation().getPitch());
-                                        p.teleport(build);
-                                    }
-                                });
+                                if (teleport != null) {
+                                    Location build = teleport.clone();
+                                    build.setYaw(p.getLocation().getYaw());
+                                    build.setPitch(p.getLocation().getPitch());
+                                    p.teleport(build);
+                                }
                                 return;
                             }
                         } else { // Build
@@ -226,7 +224,7 @@ public class MovementListener extends PacketAdapter {
                         p.getLocation()
                 );
                 moveEvent.setCancelled(event.isCancelled());
-                PluginBase.runTask(p, () -> p.setEnvironment(new EnvironmentData(p)));
+                p.setEnvironment(new EnvironmentData(p));
                 MovementEvent.event(moveEvent, true);
 
                 if (p.flyingTicks > 0) {

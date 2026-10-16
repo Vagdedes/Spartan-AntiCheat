@@ -4,6 +4,7 @@ import ai.idealistic.spartan.Register;
 import ai.idealistic.spartan.abstraction.inventory.InventoryMenu;
 import ai.idealistic.spartan.abstraction.inventory.implementation.*;
 import ai.idealistic.spartan.abstraction.protocol.PlayerProtocol;
+import ai.idealistic.spartan.abstraction.world.ServerLocation;
 import ai.idealistic.spartan.compatibility.Compatibility;
 import ai.idealistic.spartan.compatibility.necessary.protocollib.ProtocolLib;
 import ai.idealistic.spartan.functionality.concurrent.GeneralThread;
@@ -29,7 +30,6 @@ public class PluginBase {
             dataThread = new GeneralThread.ThreadPool(1L);
 
     public static final PlayerInfo playerInfo = new PlayerInfo();
-    public static final PluginChargeMenu chargeMenu = new PluginChargeMenu();
     public static final DetailsMenu detailsMenu = new DetailsMenu();
     public static final EditionMenu editionMenu = new EditionMenu();
     public static final PreventionsMenu preventionsMenu = new PreventionsMenu();
@@ -42,7 +42,6 @@ public class PluginBase {
     public static final SubCommandsMenu subCommandsMenu = new SubCommandsMenu();
     public static final InventoryMenu[] menus = new InventoryMenu[]{
             playerInfo,
-            chargeMenu,
             detailsMenu,
             editionMenu,
             preventionsMenu,
@@ -110,14 +109,19 @@ public class PluginBase {
     }
 
     public static PlayerProtocol getProtocol(Player player, boolean updateLastInteraction) {
-        if (ProtocolLib.isTemporary(player)) {
+        if (ProtocolLib.isTemporary(player) || !player.isOnline()) { // if the player is "offline" 100% NPC / fake player
             return new PlayerProtocol(player);
         } else {
             PlayerProtocol protocol = playerProtocol.get(player.getUniqueId());
 
             if (protocol == null) {
                 protocol = new PlayerProtocol(player);
-                playerProtocol.put(player.getUniqueId(), protocol);
+                PlayerProtocol existing = playerProtocol.putIfAbsent(player.getUniqueId(), protocol);
+
+                if (existing != null) { // Another thread registered the player first
+                    protocol = existing;
+                    protocol.updateBukkit(player);
+                }
             } else {
                 protocol.updateBukkit(player);
             }
@@ -218,6 +222,10 @@ public class PluginBase {
 
     public static void runTask(World world, int x, int z, Runnable runnable) {
         ServerSchedulers.run(world, x, z, runnable, false);
+    }
+
+    public static void runTask(ServerLocation location, Runnable runnable) {
+        ServerSchedulers.run(location.getWorld(), location.getChunkX(), location.getChunkZ(), runnable, false);
     }
 
     public static void runTask(Block block, Runnable runnable) {

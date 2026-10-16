@@ -52,7 +52,7 @@ public class ConfigUtils {
 
     public static String replaceWithSyntax(PlayerProtocol p, String message, HackType hackType) {
         Location loc = p.getLocationOrVehicle();
-        String worldName = p.getWorld().getName();
+        String worldName = loc.getWorld().getName();
         message = replace(message, "{player}", p.bukkit().getName());
         message = replace(message, "{player:type}", p.getDataType().toString().toLowerCase());
         message = replace(message, "{uuid}", p.getUUID().toString());

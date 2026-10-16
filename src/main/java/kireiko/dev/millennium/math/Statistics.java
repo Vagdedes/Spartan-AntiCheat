@@ -53,13 +53,14 @@ public final class Statistics {
     }
 
     public static double getMax(final Collection<? extends Number> collection) {
-        double max = Double.MIN_VALUE;
+        // Double.MIN_VALUE is the smallest positive value, so it cannot be the starting point for negative numbers
+        double max = Double.NEGATIVE_INFINITY;
 
         for (final Number number : collection) {
             max = Math.max(max, number.doubleValue());
         }
 
-        return max;
+        return max == Double.NEGATIVE_INFINITY ? Double.MIN_VALUE : max;
     }
 
     public static double getStandardDeviation(final Collection<? extends Number> data) {

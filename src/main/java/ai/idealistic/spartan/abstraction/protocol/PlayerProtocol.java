@@ -431,8 +431,9 @@ public class PlayerProtocol {
 
     public ServerLocation getPastTickRotation() {
         Location l = this.getLocation().clone();
-        l.setYaw(this.from.getYaw());
-        l.setPitch(this.from.getPitch());
+        Location from = this.getFromLocation(); // The from location is null until the first movement
+        l.setYaw(from.getYaw());
+        l.setPitch(from.getPitch());
         return new ServerLocation(l);
     }
 
@@ -442,14 +443,15 @@ public class PlayerProtocol {
                 && location.getZ() == ServerLocation.bukkitDefault.getZ()) {
             return false;
         }
-        boolean sync = PluginBase.isSynchronised();
-
         if (MultiVersion.folia) {
-            if (sync) {
-                this.bukkit().leaveVehicle();
-            }
-            this.bukkit().teleportAsync(location);
-        } else if (sync) {
+            PluginBase.runTask(
+                    this,
+                    () -> {
+                        this.bukkit().leaveVehicle();
+                        this.bukkit().teleportAsync(location);
+                    }
+            );
+        } else if (PluginBase.isSynchronised()) {
             this.bukkit().leaveVehicle();
             this.bukkit().teleport(location);
         } else {
@@ -910,7 +912,7 @@ public class PlayerProtocol {
 
     public boolean isOutsideOfTheBorder(double deviation) {
         Location loc = this.getLocation();
-        WorldBorder border = this.getWorld().getWorldBorder();
+        WorldBorder border = loc.getWorld().getWorldBorder();
         double size = (border.getSize() / 2.0) + deviation;
         Location center = border.getCenter();
         return Math.abs(loc.getX() - center.getX()) > size

@@ -54,7 +54,7 @@ public class ServerBlock {
 
     public boolean isWaterLogged() {
         return this.block instanceof Block
-                ? BlockUtils.isWaterLogged((Block) this.block)
+                ? BlockUtils.isWaterLogged(((Block) this.block).getBlockData())
                 : BlockUtils.blockDataExists
                 && this.block instanceof BlockData
                 && BlockUtils.isWaterLogged((BlockData) this.block);

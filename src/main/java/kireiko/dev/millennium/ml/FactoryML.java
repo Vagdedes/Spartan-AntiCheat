@@ -5,6 +5,7 @@ import kireiko.dev.millennium.ml.logic.Logger;
 import kireiko.dev.millennium.ml.logic.Millennium;
 import kireiko.dev.millennium.ml.logic.ModelML;
 import kireiko.dev.millennium.ml.logic.ModelVer;
+import kireiko.dev.millennium.ml.logic.RNNModelML;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
@@ -18,8 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @UtilityClass
 public class FactoryML {
-    private static final Map<Integer, Millennium>
-                    runnableML = new ConcurrentHashMap<>();
+    private static final Map<Integer, Millennium> runnableML = new ConcurrentHashMap<>();
 
     public static void createModel(int id, int tableSize, ModelVer modelVer) {
         createModel(id, tableSize, 10, modelVer);
@@ -27,6 +27,10 @@ public class FactoryML {
     public static Millennium createModel(int id, int tableSize, int stackSize, ModelVer modelVer) {
         Millennium millennium;
         switch (modelVer) {
+            case VERSION_5: {
+                millennium = new RNNModelML(16, 32);
+                break;
+            }
             default: {
                 millennium = new ModelML(tableSize, stackSize);
                 break;
@@ -53,6 +57,26 @@ public class FactoryML {
         File modelFile = new File(modelsFolder, fileName);
         Path modelPath = modelFile.toPath();
 
+        if (modelVer == ModelVer.VERSION_5) {
+            RNNModelML model = new RNNModelML(16, 32);
+            if (modelFile.exists()) {
+                try (InputStream in = Files.newInputStream(modelPath)) {
+                    model.load(in);
+                    runnableML.put(id, model);
+                    Logger.info("ModelML was successfully loaded from " + modelFile.getPath() + " (" + model.parameters() + " parameters)");
+                    return model;
+                } catch (Exception e) {
+                    Logger.error("Failed to load v5 model " + fileName + ": " + e.getMessage() + " | created new model!");
+                }
+            } else {
+                Logger.warn("Model " + fileName + " not found. Creating new model file...");
+            }
+
+            model.saveToFile(modelFile.getAbsolutePath());
+            runnableML.put(id, model);
+            return model;
+        }
+
         try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(modelPath))) {
             Millennium model = (Millennium) ois.readObject();
             runnableML.put(id, model);
@@ -69,25 +93,27 @@ public class FactoryML {
     @SneakyThrows
     public static Millennium loadFromResources(int id, String fileName, int tableSize, int stackSize, ModelVer modelVer) {
         String resourcePath = "/ml/" + fileName;
-        try (InputStream is = Register.class.getResourceAsStream(resourcePath);
-             ObjectInputStream ois = new ObjectInputStream(is)) {
+        try (InputStream is = Register.class.getResourceAsStream(resourcePath)) {
+            if (is != null) {
+                if (modelVer == ModelVer.VERSION_5) {
+                    RNNModelML model = new RNNModelML(16, 32);
+                    model.load(is);
+                    runnableML.put(id, model);
+                    Logger.info("ModelML was successfully loaded from " + resourcePath + " (" + model.parameters() + " parameters)");
+                    return model;
+                }
 
-            Millennium model = (Millennium) ois.readObject();
-            runnableML.put(id, model);
-            Logger.info("ModelML was successfully loaded from " + resourcePath + " (" + model.parameters() + " parameters)");
-            return model;
-        } catch (Exception e) {
-            File dataFolder = new File("data");
-            File modelsFolder = new File(dataFolder, "models");
-            if (!modelsFolder.exists()) {
-                modelsFolder.mkdirs();
+                try (ObjectInputStream ois = new ObjectInputStream(is)) {
+                    Millennium model = (Millennium) ois.readObject();
+                    runnableML.put(id, model);
+                    Logger.info("ModelML was successfully loaded from " + resourcePath + " (" + model.parameters() + " parameters)");
+                    return model;
+                }
             }
-            File modelFile = new File(modelsFolder, fileName);
-
-            Logger.error("Failed to load model: " + e.getMessage() + " | Well, created new one!");
-            Millennium newModel = createModel(id, tableSize, stackSize, modelVer);
-            newModel.saveToFile(modelFile.getAbsolutePath());
-            return newModel;
+        } catch (Exception e) {
+            Logger.error("Failed to load model from resources: " + e.getMessage() + " | loading from file.");
         }
+
+        return loadFromFile(id, fileName, tableSize, stackSize, modelVer);
     }
 }

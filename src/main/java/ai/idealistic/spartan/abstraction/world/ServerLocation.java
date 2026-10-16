@@ -182,12 +182,15 @@ public class ServerLocation implements Cloneable {
     }
 
     private ServerBlock setAsyncBlock(PlayerProtocol protocol) {
-        Block block = ChunksEvent.getBlockAsync(this.bukkit());
-        return new ServerBlock(
-                block == null
-                        ? (protocol == null ? null : protocol.packetWorld.getBlockRaw(this.bukkit()))
-                        : block
-        );
+        if (protocol == null) {
+            return new ServerBlock(
+                    ChunksEvent.getBlockAsync(this.bukkit())
+            );
+        } else {
+            return new ServerBlock(
+                    protocol.packetWorld.getBlock(this.bukkit())
+            );
+        }
     }
 
     public ServerBlock getBlock() {

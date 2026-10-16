@@ -17,6 +17,8 @@ import ai.idealistic.spartan.utils.math.AlgebraUtils;
 import org.bukkit.Material;
 
 import java.sql.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class SQLFeature extends ConfigurationBuilder {
 
@@ -248,33 +250,30 @@ public class SQLFeature extends ConfigurationBuilder {
 
     public ResultSet query(final String command) {
         ResultSet[] rs = new ResultSet[1];
-        Thread thread = Thread.currentThread();
+        CountDownLatch latch = new CountDownLatch(1);
 
         sqlThread.execute(() -> {
-            connect();
-
             try {
+                connect();
+
                 if (con != null) {
                     final Statement st = con.createStatement();
                     rs[0] = st.executeQuery(command);
-
-                    synchronized (thread) {
-                        thread.notifyAll();
-                    }
                 }
             } catch (Exception e) {
                 AwarenessNotifications.forcefullySend("SQL Query Error:\n"
                         + "Command: " + command + "\n"
                         + "Exception: " + e.getMessage());
+            } finally {
+                // Always release the caller, otherwise a failed query would block it forever
+                latch.countDown();
             }
         });
-        synchronized (thread) {
-            if (rs[0] == null) {
-                try {
-                    thread.wait();
-                } catch (Exception ignored) {
-                }
-            }
+
+        try {
+            latch.await(30L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
         return rs[0];
     }
@@ -344,7 +343,8 @@ public class SQLFeature extends ConfigurationBuilder {
     }
 
     private String syntaxForColumn(Object obj) {
-        return "'" + obj.toString() + "'";
+        // Escape backslashes and quotes so logged text (item names, NPC names etc.) cannot break or alter the statement
+        return "'" + obj.toString().replace("\\", "\\\\").replace("'", "''") + "'";
     }
 
     @Override
